@@ -69,8 +69,23 @@ export function parsePlanningFromArrayBuffer(buf: ArrayBuffer): Planning {
     // Rows 2..N: first col is block label; other cols are content
     if (rows.length < 3) continue;
 
-    const headerRow = rows[0] ?? [];
-    const dayRow = rows[1] ?? [];
+    // Locate the SEMANA header row and the day row dynamically (some sheets
+    // have blank leading rows, so we can't assume row 0/1).
+    let headerRowIdx = -1;
+    for (let r = 0; r < Math.min(rows.length, 15); r++) {
+      if ((rows[r] ?? []).some(isWeekHeader)) { headerRowIdx = r; break; }
+    }
+    let dayRowIdx = -1;
+    const dayScanStart = headerRowIdx >= 0 ? headerRowIdx + 1 : 0;
+    for (let r = dayScanStart; r < Math.min(rows.length, dayScanStart + 5); r++) {
+      if ((rows[r] ?? []).some(isDay)) { dayRowIdx = r; break; }
+    }
+    if (dayRowIdx < 0) continue;
+    if (headerRowIdx < 0) headerRowIdx = dayRowIdx;
+
+    const headerRow = rows[headerRowIdx] ?? [];
+    const dayRow = rows[dayRowIdx] ?? [];
+    const dataStartRow = dayRowIdx + 1;
 
     // Detect week column ranges from headerRow
     const weekStarts: { index: number; col: number }[] = [];
@@ -110,7 +125,7 @@ export function parsePlanningFromArrayBuffer(buf: ArrayBuffer): Planning {
       // Collect blocks: first column of each row is block label, unless empty
       const days: Day[] = dayCols.map((d) => ({ key: d.key, blocks: [], isRest: false }));
 
-      for (let r = 2; r < rows.length; r++) {
+      for (let r = dataStartRow; r < rows.length; r++) {
         const rawLabel = rows[r]?.[0];
         const label = String(rawLabel ?? "").trim();
         if (!label) continue;

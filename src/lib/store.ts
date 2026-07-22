@@ -237,6 +237,89 @@ export function useSaveSettings() {
   });
 }
 
+// -------- Personal Records (1RM per exercise, per-user) --------
+export type PersonalRecord = {
+  id: string;
+  user_id: string;
+  exercise: string;
+  weight: number;
+  notes: string | null;
+  updated_at: string;
+  created_at: string;
+};
+
+export function usePersonalRecords() {
+  const uid = getCurrentUserId();
+  return useQuery({
+    queryKey: ["personal_records", uid],
+    enabled: !!uid,
+    queryFn: async (): Promise<PersonalRecord[]> => {
+      const { data, error } = await (supabase as any)
+        .from("personal_records")
+        .select("*")
+        .eq("user_id", uid!)
+        .order("exercise", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as PersonalRecord[];
+    },
+  });
+}
+
+export function useUpsertPersonalRecord() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+  return useMutation({
+    mutationFn: async (r: { exercise: string; weight: number; notes?: string | null }) => {
+      if (!uid) throw new Error("No hay perfil activo");
+      const { error } = await (supabase as any).from("personal_records").upsert(
+        {
+          user_id: uid,
+          exercise: r.exercise.trim(),
+          weight: r.weight,
+          notes: r.notes ?? null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,exercise" }
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["personal_records", uid] }),
+  });
+}
+
+export function useUpdatePersonalRecord() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+  return useMutation({
+    mutationFn: async (r: { id: string; exercise: string; weight: number; notes?: string | null }) => {
+      const { error } = await (supabase as any)
+        .from("personal_records")
+        .update({
+          exercise: r.exercise.trim(),
+          weight: r.weight,
+          notes: r.notes ?? null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", r.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["personal_records", uid] }),
+  });
+}
+
+export function useDeletePersonalRecord() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from("personal_records").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["personal_records", uid] }),
+  });
+}
+
+
 // -------- Helpers --------
 export function findDay(p: Planning, monthKey: string, week: number, dayKey: string): { month?: Month; day?: Day } {
   const month = p.months.find((m) => m.key === monthKey);

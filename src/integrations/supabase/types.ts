@@ -14,7 +14,159 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_settings: {
+        Row: {
+          bar_weights: Json
+          id: number
+          pin_hash: string | null
+          plate_weights: Json
+          updated_at: string
+        }
+        Insert: {
+          bar_weights?: Json
+          id?: number
+          pin_hash?: string | null
+          plate_weights?: Json
+          updated_at?: string
+        }
+        Update: {
+          bar_weights?: Json
+          id?: number
+          pin_hash?: string | null
+          plate_weights?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      exercise_log: {
+        Row: {
+          block_key: string | null
+          created_at: string
+          day_key: string | null
+          exercise: string
+          id: string
+          is_pr: boolean
+          month_key: string | null
+          notes: string | null
+          performed_on: string
+          reps: number | null
+          time_seconds: number | null
+          week: number | null
+          weight: number | null
+        }
+        Insert: {
+          block_key?: string | null
+          created_at?: string
+          day_key?: string | null
+          exercise: string
+          id?: string
+          is_pr?: boolean
+          month_key?: string | null
+          notes?: string | null
+          performed_on?: string
+          reps?: number | null
+          time_seconds?: number | null
+          week?: number | null
+          weight?: number | null
+        }
+        Update: {
+          block_key?: string | null
+          created_at?: string
+          day_key?: string | null
+          exercise?: string
+          id?: string
+          is_pr?: boolean
+          month_key?: string | null
+          notes?: string | null
+          performed_on?: string
+          reps?: number | null
+          time_seconds?: number | null
+          week?: number | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
+      planning: {
+        Row: {
+          data: Json
+          id: string
+          imported_at: string
+          is_active: boolean
+          source_filename: string | null
+          version: number
+        }
+        Insert: {
+          data: Json
+          id?: string
+          imported_at?: string
+          is_active?: boolean
+          source_filename?: string | null
+          version?: number
+        }
+        Update: {
+          data?: Json
+          id?: string
+          imported_at?: string
+          is_active?: boolean
+          source_filename?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
+      workout_results: {
+        Row: {
+          block_key: string
+          created_at: string
+          day_key: string
+          id: string
+          month_key: string
+          notes: string | null
+          reps: number | null
+          rpe: number | null
+          scale: string | null
+          sets: number | null
+          status: string
+          time_seconds: number | null
+          updated_at: string
+          week: number
+          weight: number | null
+        }
+        Insert: {
+          block_key: string
+          created_at?: string
+          day_key: string
+          id?: string
+          month_key: string
+          notes?: string | null
+          reps?: number | null
+          rpe?: number | null
+          scale?: string | null
+          sets?: number | null
+          status?: string
+          time_seconds?: number | null
+          updated_at?: string
+          week: number
+          weight?: number | null
+        }
+        Update: {
+          block_key?: string
+          created_at?: string
+          day_key?: string
+          id?: string
+          month_key?: string
+          notes?: string | null
+          reps?: number | null
+          rpe?: number | null
+          scale?: string | null
+          sets?: number | null
+          status?: string
+          time_seconds?: number | null
+          updated_at?: string
+          week?: number
+          weight?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

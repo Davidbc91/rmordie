@@ -89,6 +89,36 @@ export type Database = {
         }
         Relationships: []
       }
+      personal_records: {
+        Row: {
+          created_at: string
+          exercise: string
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          exercise: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          weight: number
+        }
+        Update: {
+          created_at?: string
+          exercise?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       planning: {
         Row: {
           data: Json

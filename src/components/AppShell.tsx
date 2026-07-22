@@ -1,9 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Calendar, Upload, Settings } from "lucide-react";
+import { Home, Calendar, Trophy, Upload, Settings } from "lucide-react";
 
 const tabs = [
   { to: "/", label: "Inicio", icon: Home },
   { to: "/calendar", label: "Calendario", icon: Calendar },
+  { to: "/records", label: "RM", icon: Trophy },
   { to: "/import", label: "Importar", icon: Upload },
   { to: "/settings", label: "Ajustes", icon: Settings },
 ];

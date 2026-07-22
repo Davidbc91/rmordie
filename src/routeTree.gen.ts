@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
@@ -18,6 +19,11 @@ import { Route as WorkoutMonthWeekDayRouteImport } from './routes/workout.$month
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecordsRoute = RecordsRouteImport.update({
+  id: '/records',
+  path: '/records',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImportRoute = ImportRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/import': typeof ImportRoute
+  '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/import': typeof ImportRoute
+  '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
@@ -60,6 +68,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/import': typeof ImportRoute
+  '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
@@ -69,15 +78,23 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/import'
+    | '/records'
     | '/settings'
     | '/workout/$month/$week/$day'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/calendar' | '/import' | '/settings' | '/workout/$month/$week/$day'
+  to:
+    | '/'
+    | '/calendar'
+    | '/import'
+    | '/records'
+    | '/settings'
+    | '/workout/$month/$week/$day'
   id:
     | '__root__'
     | '/'
     | '/calendar'
     | '/import'
+    | '/records'
     | '/settings'
     | '/workout/$month/$week/$day'
   fileRoutesById: FileRoutesById
@@ -86,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CalendarRoute: typeof CalendarRoute
   ImportRoute: typeof ImportRoute
+  RecordsRoute: typeof RecordsRoute
   SettingsRoute: typeof SettingsRoute
   WorkoutMonthWeekDayRoute: typeof WorkoutMonthWeekDayRoute
 }
@@ -97,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/records': {
+      id: '/records'
+      path: '/records'
+      fullPath: '/records'
+      preLoaderRoute: typeof RecordsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/import': {
@@ -134,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CalendarRoute: CalendarRoute,
   ImportRoute: ImportRoute,
+  RecordsRoute: RecordsRoute,
   SettingsRoute: SettingsRoute,
   WorkoutMonthWeekDayRoute: WorkoutMonthWeekDayRoute,
 }

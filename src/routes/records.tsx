@@ -27,16 +27,37 @@ const SUGGESTED = [
   "Back Squat",
   "Front Squat",
   "Overhead Squat",
+  "Box Squat",
   "Deadlift",
+  "Sumo Deadlift",
+  "Romanian Deadlift",
   "Clean",
   "Power Clean",
+  "Hang Clean",
+  "Hang Power Clean",
+  "Squat Clean",
   "Clean & Jerk",
+  "Jerk",
+  "Split Jerk",
+  "Push Jerk",
   "Snatch",
   "Power Snatch",
+  "Hang Snatch",
+  "Hang Power Snatch",
+  "Squat Snatch",
+  "Muscle Snatch",
   "Push Press",
   "Strict Press",
   "Bench Press",
+  "Close Grip Bench Press",
   "Thruster",
+  "Weighted Pull-up",
+  "Weighted Dip",
+  "Good Morning",
+  "Hip Thrust",
+  "Barbell Row",
+  "Pendlay Row",
+  "Turkish Get-up",
 ];
 
 function RecordsPage() {
@@ -48,12 +69,19 @@ function RecordsPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [newExercise, setNewExercise] = useState("");
   const [newWeight, setNewWeight] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editExercise, setEditExercise] = useState("");
   const [editWeight, setEditWeight] = useState("");
 
   const existingNames = new Set(records.map((r) => r.exercise.toLowerCase()));
-  const suggestions = SUGGESTED.filter((s) => !existingNames.has(s.toLowerCase()));
+  const query = newExercise.trim().toLowerCase();
+  const filteredSuggestions = SUGGESTED.filter((s) => {
+    if (existingNames.has(s.toLowerCase())) return false;
+    if (!query) return true;
+    return s.toLowerCase().includes(query);
+  }).slice(0, 8);
+
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -122,22 +150,42 @@ function RecordsPage() {
 
       {showAdd && (
         <form onSubmit={handleAdd} className="card-elevated mb-6 space-y-3 p-4">
-          <div>
+          <div className="relative">
             <label className="text-xs uppercase tracking-wider text-muted-foreground">Ejercicio</label>
             <input
-              list="pr-suggestions"
               value={newExercise}
-              onChange={(e) => setNewExercise(e.target.value)}
-              placeholder="Ej. Back Squat"
+              onChange={(e) => {
+                setNewExercise(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              placeholder="Escribe para buscar…"
               maxLength={60}
+              autoComplete="off"
               className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-gold/60"
             />
-            <datalist id="pr-suggestions">
-              {suggestions.map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
+            {showSuggestions && filteredSuggestions.length > 0 && (
+              <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-border bg-surface shadow-lg">
+                {filteredSuggestions.map((s) => (
+                  <li key={s}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setNewExercise(s);
+                        setShowSuggestions(false);
+                      }}
+                      className="block w-full px-3 py-2 text-left text-sm hover:bg-white/5"
+                    >
+                      {s}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+
           <div>
             <label className="text-xs uppercase tracking-wider text-muted-foreground">Peso (kg)</label>
             <input

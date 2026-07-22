@@ -27,16 +27,37 @@ const SUGGESTED = [
   "Back Squat",
   "Front Squat",
   "Overhead Squat",
+  "Box Squat",
   "Deadlift",
+  "Sumo Deadlift",
+  "Romanian Deadlift",
   "Clean",
   "Power Clean",
+  "Hang Clean",
+  "Hang Power Clean",
+  "Squat Clean",
   "Clean & Jerk",
+  "Jerk",
+  "Split Jerk",
+  "Push Jerk",
   "Snatch",
   "Power Snatch",
+  "Hang Snatch",
+  "Hang Power Snatch",
+  "Squat Snatch",
+  "Muscle Snatch",
   "Push Press",
   "Strict Press",
   "Bench Press",
+  "Close Grip Bench Press",
   "Thruster",
+  "Weighted Pull-up",
+  "Weighted Dip",
+  "Good Morning",
+  "Hip Thrust",
+  "Barbell Row",
+  "Pendlay Row",
+  "Turkish Get-up",
 ];
 
 function RecordsPage() {
@@ -48,12 +69,19 @@ function RecordsPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [newExercise, setNewExercise] = useState("");
   const [newWeight, setNewWeight] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editExercise, setEditExercise] = useState("");
   const [editWeight, setEditWeight] = useState("");
 
   const existingNames = new Set(records.map((r) => r.exercise.toLowerCase()));
-  const suggestions = SUGGESTED.filter((s) => !existingNames.has(s.toLowerCase()));
+  const query = newExercise.trim().toLowerCase();
+  const filteredSuggestions = SUGGESTED.filter((s) => {
+    if (existingNames.has(s.toLowerCase())) return false;
+    if (!query) return true;
+    return s.toLowerCase().includes(query);
+  }).slice(0, 8);
+
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();

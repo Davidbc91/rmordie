@@ -150,22 +150,42 @@ function RecordsPage() {
 
       {showAdd && (
         <form onSubmit={handleAdd} className="card-elevated mb-6 space-y-3 p-4">
-          <div>
+          <div className="relative">
             <label className="text-xs uppercase tracking-wider text-muted-foreground">Ejercicio</label>
             <input
-              list="pr-suggestions"
               value={newExercise}
-              onChange={(e) => setNewExercise(e.target.value)}
-              placeholder="Ej. Back Squat"
+              onChange={(e) => {
+                setNewExercise(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              placeholder="Escribe para buscar…"
               maxLength={60}
+              autoComplete="off"
               className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-gold/60"
             />
-            <datalist id="pr-suggestions">
-              {suggestions.map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
+            {showSuggestions && filteredSuggestions.length > 0 && (
+              <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-border bg-surface shadow-lg">
+                {filteredSuggestions.map((s) => (
+                  <li key={s}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setNewExercise(s);
+                        setShowSuggestions(false);
+                      }}
+                      className="block w-full px-3 py-2 text-left text-sm hover:bg-white/5"
+                    >
+                      {s}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+
           <div>
             <label className="text-xs uppercase tracking-wider text-muted-foreground">Peso (kg)</label>
             <input

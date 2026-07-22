@@ -1,8 +1,76 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentUserId, sha256 } from "./pin-gate";
 import type { Planning, Month, Day } from "./excel-parser";
 
-// -------- Planning --------
+// -------- Profiles --------
+export type Profile = {
+  id: string;
+  name: string;
+  pin_hash: string;
+  created_at: string;
+};
+
+export function useProfiles() {
+  return useQuery({
+    queryKey: ["profiles"],
+    queryFn: async (): Promise<Profile[]> => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as unknown as Profile[];
+    },
+  });
+}
+
+export function useCreateProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ name, pin }: { name: string; pin: string }) => {
+      const pin_hash = await sha256(pin);
+      const { data, error } = await supabase
+        .from("profiles")
+        .insert({ name: name.trim(), pin_hash })
+        .select()
+        .single();
+      if (error) throw error;
+      return data as unknown as Profile;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["profiles"] }),
+  });
+}
+
+export function useUpdateProfilePin() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, pin }: { id: string; pin: string }) => {
+      const pin_hash = await sha256(pin);
+      const { error } = await supabase.from("profiles").update({ pin_hash }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["profiles"] }),
+  });
+}
+
+export function useDeleteProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("workout_results").delete().eq("user_id", id);
+      await supabase.from("exercise_log").delete().eq("user_id", id);
+      await supabase.from("app_settings").delete().eq("user_id", id);
+      const { error } = await supabase.from("profiles").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["profiles"] });
+    },
+  });
+}
+
+// -------- Planning (shared) --------
 export type PlanningRow = {
   id: string;
   version: number;
@@ -33,7 +101,6 @@ export function useSavePlanning() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { planning: Planning; filename?: string }) => {
-      // Deactivate previous
       await supabase.from("planning").update({ is_active: false }).eq("is_active", true);
       const { data: latest } = await supabase
         .from("planning").select("version").order("version", { ascending: false }).limit(1).maybeSingle();
@@ -50,9 +117,10 @@ export function useSavePlanning() {
   });
 }
 
-// -------- Results --------
+// -------- Results (per-user) --------
 export type WorkoutResult = {
   id: string;
+  user_id: string | null;
   month_key: string;
   week: number;
   day_key: string;
@@ -69,12 +137,15 @@ export type WorkoutResult = {
 };
 
 export function useDayResults(monthKey: string, week: number, dayKey: string) {
+  const uid = getCurrentUserId();
   return useQuery({
-    queryKey: ["results", monthKey, week, dayKey],
+    queryKey: ["results", uid, monthKey, week, dayKey],
+    enabled: !!uid,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("workout_results")
         .select("*")
+        .eq("user_id", uid!)
         .eq("month_key", monthKey)
         .eq("week", week)
         .eq("day_key", dayKey);
@@ -85,12 +156,15 @@ export function useDayResults(monthKey: string, week: number, dayKey: string) {
 }
 
 export function useAllResults() {
+  const uid = getCurrentUserId();
   return useQuery({
-    queryKey: ["results", "all"],
+    queryKey: ["results", uid, "all"],
+    enabled: !!uid,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("workout_results")
         .select("*")
+        .eq("user_id", uid!)
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as WorkoutResult[];
@@ -100,55 +174,66 @@ export function useAllResults() {
 
 export function useSaveResult() {
   const qc = useQueryClient();
+  const uid = getCurrentUserId();
   return useMutation({
     mutationFn: async (r: Partial<WorkoutResult> & {
       month_key: string; week: number; day_key: string; block_key: string;
     }) => {
+      if (!uid) throw new Error("No hay perfil activo");
       const { error } = await supabase.from("workout_results").upsert(
-        { ...r, updated_at: new Date().toISOString() } as never,
-        { onConflict: "month_key,week,day_key,block_key" }
+        { ...r, user_id: uid, updated_at: new Date().toISOString() } as never,
+        { onConflict: "user_id,month_key,week,day_key,block_key" }
       );
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: ["results", vars.month_key, vars.week, vars.day_key] });
-      qc.invalidateQueries({ queryKey: ["results", "all"] });
+      qc.invalidateQueries({ queryKey: ["results", uid, vars.month_key, vars.week, vars.day_key] });
+      qc.invalidateQueries({ queryKey: ["results", uid, "all"] });
     },
   });
 }
 
-// -------- Settings --------
+// -------- Settings (per-user) --------
 export type AppSettings = {
-  id: number;
-  pin_hash: string | null;
+  id: string;
+  user_id: string;
   bar_weights: number[];
   plate_weights: number[];
 };
 
+const DEFAULT_SETTINGS = {
+  bar_weights: [10, 15, 20],
+  plate_weights: [20, 15, 10, 5, 2.5, 1.25],
+};
+
 export function useSettings() {
+  const uid = getCurrentUserId();
   return useQuery({
-    queryKey: ["settings"],
+    queryKey: ["settings", uid],
+    enabled: !!uid,
     queryFn: async (): Promise<AppSettings> => {
-      const { data, error } = await supabase.from("app_settings").select("*").eq("id", 1).maybeSingle();
+      const { data, error } = await supabase
+        .from("app_settings").select("*").eq("user_id", uid!).maybeSingle();
       if (error) throw error;
-      return (data as unknown as AppSettings) ?? {
-        id: 1, pin_hash: null, bar_weights: [10, 15, 20], plate_weights: [20, 15, 10, 5, 2.5, 1.25],
-      };
+      if (data) return data as unknown as AppSettings;
+      return { id: "", user_id: uid!, ...DEFAULT_SETTINGS };
     },
   });
 }
 
 export function useSaveSettings() {
   const qc = useQueryClient();
+  const uid = getCurrentUserId();
   return useMutation({
-    mutationFn: async (s: Partial<AppSettings>) => {
+    mutationFn: async (s: { bar_weights?: number[]; plate_weights?: number[] }) => {
+      if (!uid) throw new Error("No hay perfil activo");
       const { error } = await supabase.from("app_settings").upsert(
-        { id: 1, ...s, updated_at: new Date().toISOString() } as never,
-        { onConflict: "id" }
+        { user_id: uid, ...s, updated_at: new Date().toISOString() } as never,
+        { onConflict: "user_id" }
       );
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["settings"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["settings", uid] }),
   });
 }
 

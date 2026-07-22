@@ -17,24 +17,24 @@ export type Database = {
       app_settings: {
         Row: {
           bar_weights: Json
-          id: number
-          pin_hash: string | null
+          id: string
           plate_weights: Json
           updated_at: string
+          user_id: string
         }
         Insert: {
           bar_weights?: Json
-          id?: number
-          pin_hash?: string | null
+          id?: string
           plate_weights?: Json
           updated_at?: string
+          user_id: string
         }
         Update: {
           bar_weights?: Json
-          id?: number
-          pin_hash?: string | null
+          id?: string
           plate_weights?: Json
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -51,6 +51,7 @@ export type Database = {
           performed_on: string
           reps: number | null
           time_seconds: number | null
+          user_id: string | null
           week: number | null
           weight: number | null
         }
@@ -66,6 +67,7 @@ export type Database = {
           performed_on?: string
           reps?: number | null
           time_seconds?: number | null
+          user_id?: string | null
           week?: number | null
           weight?: number | null
         }
@@ -81,6 +83,7 @@ export type Database = {
           performed_on?: string
           reps?: number | null
           time_seconds?: number | null
+          user_id?: string | null
           week?: number | null
           weight?: number | null
         }
@@ -113,6 +116,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          pin_hash: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          pin_hash: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          pin_hash?: string
+        }
+        Relationships: []
+      }
       workout_results: {
         Row: {
           block_key: string
@@ -128,6 +152,7 @@ export type Database = {
           status: string
           time_seconds: number | null
           updated_at: string
+          user_id: string | null
           week: number
           weight: number | null
         }
@@ -145,6 +170,7 @@ export type Database = {
           status?: string
           time_seconds?: number | null
           updated_at?: string
+          user_id?: string | null
           week: number
           weight?: number | null
         }
@@ -162,6 +188,7 @@ export type Database = {
           status?: string
           time_seconds?: number | null
           updated_at?: string
+          user_id?: string | null
           week?: number
           weight?: number | null
         }

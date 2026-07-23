@@ -75,6 +75,8 @@ function RecordsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editExercise, setEditExercise] = useState("");
   const [editWeight, setEditWeight] = useState("");
+  const [historyFor, setHistoryFor] = useState<PersonalRecord | null>(null);
+
 
   const existingNames = new Set(records.map((r) => r.exercise.toLowerCase()));
   const query = newExercise.trim().toLowerCase();

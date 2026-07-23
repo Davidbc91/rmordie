@@ -141,12 +141,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
   const toggle = () => {
     unlock();
     if (running) {
-      // pause: bake elapsed into offset
       setRunning(false);
-      startRef.current = performance.now() - elapsed * 1000;
-      // adjust so resume continues
-      startRef.current = null;
-      // simplest: on resume we set start to now - elapsed
     } else {
       startRef.current = performance.now() - elapsed * 1000;
       setRunning(true);

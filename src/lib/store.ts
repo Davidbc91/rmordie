@@ -319,6 +319,35 @@ export function useDeletePersonalRecord() {
   });
 }
 
+// -------- Personal Record History --------
+export type PersonalRecordHistory = {
+  id: string;
+  user_id: string;
+  exercise: string;
+  previous_weight: number | null;
+  new_weight: number;
+  changed_at: string;
+};
+
+export function usePersonalRecordHistory(exercise: string | null) {
+  const uid = getCurrentUserId();
+  return useQuery({
+    queryKey: ["personal_record_history", uid, exercise],
+    enabled: !!uid && !!exercise,
+    queryFn: async (): Promise<PersonalRecordHistory[]> => {
+      const { data, error } = await (supabase as any)
+        .from("personal_record_history")
+        .select("*")
+        .eq("user_id", uid!)
+        .eq("exercise", exercise!)
+        .order("changed_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as PersonalRecordHistory[];
+    },
+  });
+}
+
+
 
 // -------- Helpers --------
 export function findDay(p: Planning, monthKey: string, week: number, dayKey: string): { month?: Month; day?: Day } {

@@ -9,8 +9,17 @@ import {
   type PersonalRecord,
 } from "@/lib/store";
 import { Trophy, Plus, Pencil, Trash2, Check, X, History, ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
 
 
 export const Route = createFileRoute("/records")({
@@ -357,7 +366,9 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
         ) : history.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin cambios registrados todavía.</p>
         ) : (
-          <ul className="max-h-[60vh] space-y-2 overflow-auto">
+          <>
+            <EvolutionChart history={history} />
+            <ul className="max-h-[40vh] space-y-2 overflow-auto">
             {history.map((h) => {
               const date = new Date(h.changed_at);
               const dateStr = date.toLocaleDateString(undefined, {
@@ -411,10 +422,105 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
                 </li>
               );
             })}
-          </ul>
+            </ul>
+          </>
         )}
       </div>
     </div>
   );
 }
+
+function EvolutionChart({
+  history,
+}: {
+  history: { changed_at: string; new_weight: number }[];
+}) {
+  const data = useMemo(() => {
+    return [...history]
+      .sort(
+        (a, b) =>
+          new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime(),
+      )
+      .map((h) => ({
+        date: new Date(h.changed_at).toLocaleDateString(undefined, {
+          day: "2-digit",
+          month: "short",
+        }),
+        weight: Number(h.new_weight),
+      }));
+  }, [history]);
+
+  if (data.length < 2) {
+    return (
+      <div className="mb-4 rounded-xl border border-border bg-background/40 p-4 text-center">
+        <p className="text-xs text-muted-foreground">
+          Necesitas al menos 2 registros para ver la evolución.
+        </p>
+        <p className="mt-1 text-lg font-semibold gold-text tabular">
+          {data[0]?.weight ?? 0} kg
+        </p>
+      </div>
+    );
+  }
+
+  const weights = data.map((d) => d.weight);
+  const min = Math.min(...weights);
+  const max = Math.max(...weights);
+  const pad = Math.max(2, (max - min) * 0.15);
+
+  return (
+    <div className="mb-4 rounded-xl border border-border bg-background/40 p-3">
+      <div className="mb-2 flex items-baseline justify-between">
+        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          Evolución
+        </p>
+        <p className="text-xs text-muted-foreground tabular">
+          <span className="gold-text font-semibold">{max} kg</span> máx ·{" "}
+          {min} kg mín
+        </p>
+      </div>
+      <div className="h-40 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
+            <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="date"
+              stroke="hsl(var(--muted-foreground))"
+              tick={{ fontSize: 10 }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              domain={[Math.floor(min - pad), Math.ceil(max + pad)]}
+              stroke="hsl(var(--muted-foreground))"
+              tick={{ fontSize: 10 }}
+              tickLine={false}
+              axisLine={false}
+              width={40}
+            />
+            <Tooltip
+              contentStyle={{
+                background: "hsl(var(--background))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: 8,
+                fontSize: 12,
+              }}
+              labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+              formatter={(v: number) => [`${v} kg`, "Peso"]}
+            />
+            <Line
+              type="monotone"
+              dataKey="weight"
+              stroke="var(--gold, #d4af37)"
+              strokeWidth={2.5}
+              dot={{ r: 3, fill: "var(--gold, #d4af37)", strokeWidth: 0 }}
+              activeDot={{ r: 5 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 

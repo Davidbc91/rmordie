@@ -13,6 +13,7 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { PinGate } from "@/components/ui/gate";
+import { SplashScreen } from "@/components/ui/splash";
 
 function NotFoundComponent() {
   return (
@@ -96,10 +97,12 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <PinGate>
-        <Outlet />
-      </PinGate>
-      <Toaster theme="dark" position="top-center" />
+      <SplashScreen>
+        <PinGate>
+          <Outlet />
+        </PinGate>
+        <Toaster theme="dark" position="top-center" />
+      </SplashScreen>
     </QueryClientProvider>
   );
 }

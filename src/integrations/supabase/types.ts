@@ -89,6 +89,33 @@ export type Database = {
         }
         Relationships: []
       }
+      personal_record_history: {
+        Row: {
+          changed_at: string
+          exercise: string
+          id: string
+          new_weight: number
+          previous_weight: number | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          exercise: string
+          id?: string
+          new_weight: number
+          previous_weight?: number | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          exercise?: string
+          id?: string
+          new_weight?: number
+          previous_weight?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       personal_records: {
         Row: {
           created_at: string

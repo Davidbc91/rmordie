@@ -5,11 +5,13 @@ import {
   useUpsertPersonalRecord,
   useUpdatePersonalRecord,
   useDeletePersonalRecord,
+  usePersonalRecordHistory,
   type PersonalRecord,
 } from "@/lib/store";
-import { Trophy, Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import { Trophy, Plus, Pencil, Trash2, Check, X, History, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/records")({
   head: () => ({

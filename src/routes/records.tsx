@@ -290,6 +290,13 @@ function RecordsPage() {
                       <span className="ml-1 text-xs text-muted-foreground">kg</span>
                     </div>
                     <button
+                      onClick={() => setHistoryFor(r)}
+                      className="rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground"
+                      aria-label="Historial"
+                    >
+                      <History className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={() => startEdit(r)}
                       className="rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground"
                       aria-label="Editar"
@@ -303,6 +310,7 @@ function RecordsPage() {
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
+
                   </div>
                 )}
               </li>

@@ -318,6 +318,103 @@ function RecordsPage() {
           })}
         </ul>
       )}
+
+      {historyFor && (
+        <HistoryModal record={historyFor} onClose={() => setHistoryFor(null)} />
+      )}
     </AppShell>
   );
 }
+
+function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: () => void }) {
+  const { data: history = [], isLoading } = usePersonalRecordHistory(record.exercise);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-t-2xl border border-border bg-surface p-5 shadow-2xl sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Historial</p>
+            <h2 className="mt-1 text-lg font-semibold">{record.exercise}</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-border p-2 text-muted-foreground"
+            aria-label="Cerrar"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Cargando…</p>
+        ) : history.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Sin cambios registrados todavía.</p>
+        ) : (
+          <ul className="max-h-[60vh] space-y-2 overflow-auto">
+            {history.map((h) => {
+              const date = new Date(h.changed_at);
+              const dateStr = date.toLocaleDateString(undefined, {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              });
+              const timeStr = date.toLocaleTimeString(undefined, {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+              const diff =
+                h.previous_weight != null ? h.new_weight - h.previous_weight : null;
+              return (
+                <li
+                  key={h.id}
+                  className="rounded-xl border border-border bg-background/40 p-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-xs text-muted-foreground">
+                      {dateStr} · {timeStr}
+                    </div>
+                    {diff != null && diff !== 0 && (
+                      <span
+                        className={`text-xs font-medium tabular ${
+                          diff > 0 ? "gold-text" : "text-muted-foreground"
+                        }`}
+                      >
+                        {diff > 0 ? "+" : ""}
+                        {diff} kg
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 text-sm tabular">
+                    {h.previous_weight != null ? (
+                      <>
+                        <span className="text-muted-foreground line-through">
+                          {h.previous_weight} kg
+                        </span>
+                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="font-semibold gold-text">{h.new_weight} kg</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-muted-foreground">Creación</span>
+                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="font-semibold gold-text">{h.new_weight} kg</span>
+                      </>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+

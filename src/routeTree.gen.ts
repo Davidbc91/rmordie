@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TimersRouteImport } from './routes/timers'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ImportRouteImport } from './routes/import'
@@ -17,6 +18,11 @@ import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkoutMonthWeekDayRouteImport } from './routes/workout.$month.$week.$day'
 
+const TimersRoute = TimersRouteImport.update({
+  id: '/timers',
+  path: '/timers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/import': typeof ImportRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
+  '/timers': typeof TimersRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/import': typeof ImportRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
+  '/timers': typeof TimersRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/import': typeof ImportRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
+  '/timers': typeof TimersRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/import'
     | '/records'
     | '/settings'
+    | '/timers'
     | '/workout/$month/$week/$day'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/import'
     | '/records'
     | '/settings'
+    | '/timers'
     | '/workout/$month/$week/$day'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/import'
     | '/records'
     | '/settings'
+    | '/timers'
     | '/workout/$month/$week/$day'
   fileRoutesById: FileRoutesById
 }
@@ -118,11 +130,19 @@ export interface RootRouteChildren {
   ImportRoute: typeof ImportRoute
   RecordsRoute: typeof RecordsRoute
   SettingsRoute: typeof SettingsRoute
+  TimersRoute: typeof TimersRoute
   WorkoutMonthWeekDayRoute: typeof WorkoutMonthWeekDayRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/timers': {
+      id: '/timers'
+      path: '/timers'
+      fullPath: '/timers'
+      preLoaderRoute: typeof TimersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImportRoute: ImportRoute,
   RecordsRoute: RecordsRoute,
   SettingsRoute: SettingsRoute,
+  TimersRoute: TimersRoute,
   WorkoutMonthWeekDayRoute: WorkoutMonthWeekDayRoute,
 }
 export const routeTree = rootRouteImport

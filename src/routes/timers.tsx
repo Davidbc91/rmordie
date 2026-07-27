@@ -263,16 +263,16 @@ function TimerRunner({ mode }: { mode: Mode }) {
     <div className="space-y-4">
       <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
         {(mode === "amrap" || mode === "emom" || mode === "fortime") && (
-          <NumberField label="Minutos" value={minutes} onChange={setMinutes} min={1} max={60} />
+          <NumberField label="Minutos" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={60} />
         )}
         {mode === "countdown" && (
-          <NumberField label="Segundos" value={countdownSec} onChange={setCountdownSec} min={5} max={3600} step={5} />
+          <NumberField label="Segundos" value={countdownSec} onChange={(n) => { reset(); setCountdownSec(n); }} min={5} max={3600} step={5} />
         )}
         {(mode === "tabata" || mode === "intervals") && (
           <>
-            <NumberField label="Rondas" value={rounds} onChange={setRounds} min={1} max={30} />
-            <NumberField label="Trabajo (s)" value={work} onChange={setWork} min={5} max={600} step={5} disabled={mode === "tabata"} />
-            <NumberField label="Descanso (s)" value={rest} onChange={setRest} min={0} max={600} step={5} disabled={mode === "tabata"} />
+            <NumberField label="Rondas" value={rounds} onChange={(n) => { reset(); setRounds(n); }} min={1} max={30} />
+            <NumberField label="Trabajo (s)" value={work} onChange={(n) => { reset(); setWork(n); }} min={5} max={600} step={5} disabled={mode === "tabata"} />
+            <NumberField label="Descanso (s)" value={rest} onChange={(n) => { reset(); setRest(n); }} min={0} max={600} step={5} disabled={mode === "tabata"} />
           </>
         )}
         {mode === "stopwatch" && (

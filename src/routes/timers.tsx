@@ -238,30 +238,50 @@ function TimerRunner({ mode }: { mode: Mode }) {
     }
   }, [elapsed, running, mode, work, rest, total, phase, beep]);
 
-  const canConfig = !running && elapsed === 0;
+  const [fullscreen, setFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (!running) return;
+    setFullscreen(true);
+  }, [running]);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFullscreen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [fullscreen]);
 
   return (
     <div className="space-y-4">
-      {canConfig && (
-        <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
-          {(mode === "amrap" || mode === "emom" || mode === "fortime") && (
-            <NumberField label="Minutos" value={minutes} onChange={setMinutes} min={1} max={60} />
-          )}
-          {mode === "countdown" && (
-            <NumberField label="Segundos" value={countdownSec} onChange={setCountdownSec} min={5} max={3600} step={5} />
-          )}
-          {(mode === "tabata" || mode === "intervals") && (
-            <>
-              <NumberField label="Rondas" value={rounds} onChange={setRounds} min={1} max={30} />
-              <NumberField label="Trabajo (s)" value={work} onChange={setWork} min={5} max={600} step={5} disabled={mode === "tabata"} />
-              <NumberField label="Descanso (s)" value={rest} onChange={setRest} min={0} max={600} step={5} disabled={mode === "tabata"} />
-            </>
-          )}
-          {mode === "stopwatch" && (
-            <p className="text-sm text-muted-foreground">Sin configuración. Pulsa play para empezar.</p>
-          )}
-        </div>
-      )}
+      <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
+        {(mode === "amrap" || mode === "emom" || mode === "fortime") && (
+          <NumberField label="Minutos" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={60} />
+        )}
+        {mode === "countdown" && (
+          <NumberField label="Segundos" value={countdownSec} onChange={(n) => { reset(); setCountdownSec(n); }} min={5} max={3600} step={5} />
+        )}
+        {(mode === "tabata" || mode === "intervals") && (
+          <>
+            <NumberField label="Rondas" value={rounds} onChange={(n) => { reset(); setRounds(n); }} min={1} max={30} />
+            <NumberField label="Trabajo (s)" value={work} onChange={(n) => { reset(); setWork(n); }} min={5} max={600} step={5} disabled={mode === "tabata"} />
+            <NumberField label="Descanso (s)" value={rest} onChange={(n) => { reset(); setRest(n); }} min={0} max={600} step={5} disabled={mode === "tabata"} />
+          </>
+        )}
+        {mode === "stopwatch" && (
+          <p className="text-sm text-muted-foreground">Sin configuración. Pulsa play para empezar.</p>
+        )}
+        {(running || elapsed > 0) && (
+          <p className="text-[11px] text-muted-foreground">Editar reinicia el temporizador.</p>
+        )}
+      </div>
 
       <div
         className="relative rounded-2xl border p-8 text-center overflow-hidden"
@@ -307,9 +327,62 @@ function TimerRunner({ mode }: { mode: Mode }) {
           <RotateCcw className="h-5 w-5" />
         </button>
       </div>
+
+      {fullscreen && (
+        <div
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
+          style={{ background: "#000" }}
+        >
+          <div
+            className="absolute inset-x-0 top-0 h-1"
+            style={{ background: "rgba(255,255,255,0.08)" }}
+          >
+            <div
+              className="h-full transition-[width] duration-200"
+              style={{
+                width: `${Math.min(100, progress * 100)}%`,
+                background: phase === "rest" ? "#64748b" : "var(--gold)",
+              }}
+            />
+          </div>
+          <div
+            className="font-mono font-bold tabular-nums leading-none"
+            style={{
+              fontSize: "min(40vw, 60vh)",
+              color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#94a3b8" : "#fff",
+            }}
+          >
+            {display}
+          </div>
+          <div className="mt-8 flex items-center gap-3">
+            <button
+              onClick={toggle}
+              className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold"
+              style={{ background: "var(--gold)", color: "#0a0a0a" }}
+            >
+              {running ? <><Pause className="h-5 w-5" /> Pausar</> : <><Play className="h-5 w-5" /> Reanudar</>}
+            </button>
+            <button
+              onClick={() => { reset(); setFullscreen(false); }}
+              className="flex items-center justify-center gap-2 rounded-xl border px-5 py-3"
+              style={{ borderColor: "rgba(255,255,255,0.2)", color: "#fff" }}
+            >
+              <RotateCcw className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setFullscreen(false)}
+              className="rounded-xl border px-4 py-3 text-sm"
+              style={{ borderColor: "rgba(255,255,255,0.2)", color: "#fff" }}
+            >
+              Salir
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 function NumberField({
   label, value, onChange, min = 0, max = 999, step = 1, disabled = false,

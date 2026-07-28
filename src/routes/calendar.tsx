@@ -1,8 +1,38 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults } from "@/lib/store";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Check, Circle, Moon } from "lucide-react";
+import type { Month } from "@/lib/excel-parser";
+
+const CALENDAR_MONTH_KEY = "malitos_calendar_month_key";
+
+const MONTH_ABBR: Record<number, string> = {
+  0: "ENE", 1: "FEB", 2: "MAR", 3: "ABR", 4: "MAY", 5: "JUN",
+  6: "JUL", 7: "AGO", 8: "SEP", 9: "OCT", 10: "NOV", 11: "DIC",
+};
+
+function getCurrentMonthAbbr() {
+  return MONTH_ABBR[new Date().getMonth()];
+}
+
+function findMonthIndexForDate(months: Month[]) {
+  const current = getCurrentMonthAbbr();
+  const idx = months.findIndex((m) =>
+    m.key.toUpperCase().includes(current)
+  );
+  return idx >= 0 ? idx : 0;
+}
+
+function getInitialMonthIndex(months: Month[]) {
+  if (typeof window === "undefined") return 0;
+  const saved = window.localStorage.getItem(CALENDAR_MONTH_KEY);
+  if (saved) {
+    const savedIdx = months.findIndex((m) => m.key === saved);
+    if (savedIdx >= 0) return savedIdx;
+  }
+  return findMonthIndexForDate(months);
+}
 
 export const Route = createFileRoute("/calendar")({
   head: () => ({ meta: [{ title: "Calendario — Malitos" }] }),
@@ -22,6 +52,20 @@ function CalendarPage() {
     );
   }
   const months = planning.data.months;
+
+  // Initialize to the saved month, or the current calendar month, or the first one.
+  useEffect(() => {
+    setIdx(getInitialMonthIndex(months));
+  }, [months]);
+
+  // Persist the last viewed month key.
+  useEffect(() => {
+    const month = months[idx];
+    if (month) {
+      window.localStorage.setItem(CALENDAR_MONTH_KEY, month.key);
+    }
+  }, [idx, months]);
+
   const month = months[Math.min(idx, months.length - 1)];
 
   const doneMap = useMemo(() => {

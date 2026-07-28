@@ -346,10 +346,11 @@ function TimerRunner({ mode }: { mode: Mode }) {
             />
           </div>
           <div
-            className="font-mono font-bold tabular-nums leading-none"
+            className="font-mono font-bold tabular-nums leading-none text-center px-4 max-w-full"
             style={{
-              fontSize: "min(40vw, 60vh)",
+              fontSize: "min(28vw, 55vh)",
               color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#94a3b8" : "#fff",
+              letterSpacing: "-0.03em",
             }}
           >
             {display}

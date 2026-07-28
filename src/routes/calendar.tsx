@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults } from "@/lib/store";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Check, Circle, Moon, Calendar } from "lucide-react";
 import type { Month } from "@/lib/excel-parser";
 

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults } from "@/lib/store";
 import { useMemo, useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Check, Circle, Moon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Circle, Moon, Calendar } from "lucide-react";
 import type { Month } from "@/lib/excel-parser";
 
 const CALENDAR_MONTH_KEY = "malitos_calendar_month_key";

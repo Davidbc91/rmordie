@@ -95,6 +95,16 @@ function CalendarPage() {
         ><ChevronRight className="h-5 w-5" /></button>
       </div>
 
+      <div className="mt-3 flex justify-center">
+        <button
+          onClick={() => setIdx(findMonthIndexForDate(months))}
+          className="flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-medium text-gold hover:bg-gold/20"
+        >
+          <Calendar className="h-3.5 w-3.5" />
+          Ir a hoy
+        </button>
+      </div>
+
       <div className="mt-8 space-y-6">
         {month.weeks.map((w) => (
           <section key={w.index}>

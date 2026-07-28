@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults } from "@/lib/store";
 import { useMemo, useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Check, Circle, Moon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Circle, Moon, Calendar } from "lucide-react";
 import type { Month } from "@/lib/excel-parser";
 
 const CALENDAR_MONTH_KEY = "malitos_calendar_month_key";
@@ -93,6 +93,16 @@ function CalendarPage() {
           className="rounded-full p-2 text-muted-foreground hover:text-foreground disabled:opacity-30"
           disabled={idx === months.length - 1}
         ><ChevronRight className="h-5 w-5" /></button>
+      </div>
+
+      <div className="mt-3 flex justify-center">
+        <button
+          onClick={() => setIdx(findMonthIndexForDate(months))}
+          className="flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-medium text-gold hover:bg-gold/20"
+        >
+          <Calendar className="h-3.5 w-3.5" />
+          Ir a hoy
+        </button>
       </div>
 
       <div className="mt-8 space-y-6">

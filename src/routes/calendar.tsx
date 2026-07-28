@@ -52,6 +52,20 @@ function CalendarPage() {
     );
   }
   const months = planning.data.months;
+
+  // Initialize to the saved month, or the current calendar month, or the first one.
+  useEffect(() => {
+    setIdx(getInitialMonthIndex(months));
+  }, [months]);
+
+  // Persist the last viewed month key.
+  useEffect(() => {
+    const month = months[idx];
+    if (month) {
+      window.localStorage.setItem(CALENDAR_MONTH_KEY, month.key);
+    }
+  }, [idx, months]);
+
   const month = months[Math.min(idx, months.length - 1)];
 
   const doneMap = useMemo(() => {

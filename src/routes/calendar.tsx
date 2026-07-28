@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults } from "@/lib/store";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Check, Circle, Moon, Calendar } from "lucide-react";
 import type { Month } from "@/lib/excel-parser";
 
@@ -43,6 +43,8 @@ function CalendarPage() {
   const { data: planning } = usePlanning();
   const { data: results = [] } = useAllResults();
   const [idx, setIdx] = useState(0);
+  const initialized = useRef(false);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   if (!planning) {
     return (
@@ -53,8 +55,10 @@ function CalendarPage() {
   }
   const months = planning.data.months;
 
-  // Initialize to the saved month, or the current calendar month, or the first one.
+  // Initialize only once so interactions never recenter the calendar.
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
     setIdx(getInitialMonthIndex(months));
   }, [months]);
 
@@ -68,6 +72,33 @@ function CalendarPage() {
 
   const month = months[Math.min(idx, months.length - 1)];
 
+  const goPrev = useCallback(() => {
+    setIdx((i) => Math.max(0, i - 1));
+  }, []);
+
+  const goNext = useCallback(() => {
+    setIdx((i) => Math.min(months.length - 1, i + 1));
+  }, [months.length]);
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, []);
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStart.current) return;
+    const start = touchStart.current;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const dx = endX - start.x;
+    const dy = endY - start.y;
+    touchStart.current = null;
+
+    // Only handle horizontal swipes that are longer than vertical movement.
+    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+    if (dx > 0) goPrev();
+    else goNext();
+  }, [goPrev, goNext]);
+
   const doneMap = useMemo(() => {
     const m = new Set<string>();
     for (const r of results) {
@@ -78,66 +109,78 @@ function CalendarPage() {
 
   return (
     <AppShell>
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => setIdx((i) => Math.max(0, i - 1))}
-          className="rounded-full p-2 text-muted-foreground hover:text-foreground disabled:opacity-30"
-          disabled={idx === 0}
-        ><ChevronLeft className="h-5 w-5" /></button>
-        <div className="text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{month.key}</p>
-          <h1 className="text-xl font-semibold">{month.label}</h1>
+      <div
+        className="select-none"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <div className="flex items-center justify-between">
+          <button
+            onClick={goPrev}
+            className="rounded-full p-2 text-muted-foreground hover:text-foreground disabled:opacity-30 active:scale-95"
+            disabled={idx === 0}
+            aria-label="Mes anterior"
+          ><ChevronLeft className="h-5 w-5" /></button>
+          <div className="text-center">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{month.key}</p>
+            <h1 className="text-xl font-semibold">{month.label}</h1>
+          </div>
+          <button
+            onClick={goNext}
+            className="rounded-full p-2 text-muted-foreground hover:text-foreground disabled:opacity-30 active:scale-95"
+            disabled={idx === months.length - 1}
+            aria-label="Mes siguiente"
+          ><ChevronRight className="h-5 w-5" /></button>
         </div>
-        <button
-          onClick={() => setIdx((i) => Math.min(months.length - 1, i + 1))}
-          className="rounded-full p-2 text-muted-foreground hover:text-foreground disabled:opacity-30"
-          disabled={idx === months.length - 1}
-        ><ChevronRight className="h-5 w-5" /></button>
-      </div>
 
-      <div className="mt-3 flex justify-center">
-        <button
-          onClick={() => setIdx(findMonthIndexForDate(months))}
-          className="flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-medium text-gold hover:bg-gold/20"
-        >
-          <Calendar className="h-3.5 w-3.5" />
-          Ir a hoy
-        </button>
-      </div>
+        <div className="mt-3 flex justify-center">
+          <button
+            onClick={() => setIdx(findMonthIndexForDate(months))}
+            className="flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-medium text-gold hover:bg-gold/20 active:bg-gold/30"
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            Ir a hoy
+          </button>
+        </div>
 
-      <div className="mt-8 space-y-6">
-        {month.weeks.map((w) => (
-          <section key={w.index}>
-            <h2 className="mb-3 text-xs uppercase tracking-widest text-muted-foreground">Semana {w.index}</h2>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {w.days.map((d) => {
-                const done = doneMap.has(`${month.key}|${w.index}|${d.key}`);
-                return (
-                  <Link
-                    key={d.key}
-                    to="/workout/$month/$week/$day"
-                    params={{ month: month.key, week: String(w.index), day: d.key }}
-                    className="flex flex-col items-start gap-2 rounded-xl border border-border bg-surface p-3 transition hover:border-gold/40"
-                  >
-                    <div className="flex w-full items-center justify-between">
-                      <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{d.key.slice(0, 3)}</span>
-                      {d.isRest ? (
-                        <Moon className="h-3.5 w-3.5 text-muted-foreground" />
-                      ) : done ? (
-                        <Check className="h-3.5 w-3.5 text-gold" />
-                      ) : (
-                        <Circle className="h-3.5 w-3.5 text-muted-foreground/60" />
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground/80 line-clamp-2">
-                      {d.isRest ? "Descanso" : (d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ?? d.blocks[0]?.content.split("\n")[0] ?? "—")}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        ))}
+        <div className="mt-2 text-center text-[10px] text-muted-foreground/60 sm:hidden">
+          Desliza para cambiar de mes
+        </div>
+
+        <div className="mt-8 space-y-6">
+          {month.weeks.map((w) => (
+            <section key={w.index}>
+              <h2 className="mb-3 text-xs uppercase tracking-widest text-muted-foreground">Semana {w.index}</h2>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {w.days.map((d) => {
+                  const done = doneMap.has(`${month.key}|${w.index}|${d.key}`);
+                  return (
+                    <Link
+                      key={d.key}
+                      to="/workout/$month/$week/$day"
+                      params={{ month: month.key, week: String(w.index), day: d.key }}
+                      className="flex flex-col items-start gap-2 rounded-xl border border-border bg-surface p-3 transition hover:border-gold/40 active:scale-[0.98]"
+                    >
+                      <div className="flex w-full items-center justify-between">
+                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{d.key.slice(0, 3)}</span>
+                        {d.isRest ? (
+                          <Moon className="h-3.5 w-3.5 text-muted-foreground" />
+                        ) : done ? (
+                          <Check className="h-3.5 w-3.5 text-gold" />
+                        ) : (
+                          <Circle className="h-3.5 w-3.5 text-muted-foreground/60" />
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground/80 line-clamp-2">
+                        {d.isRest ? "Descanso" : (d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ?? d.blocks[0]?.content.split("\n")[0] ?? "—")}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
     </AppShell>
   );

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Upload, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/import")({
-  head: () => ({ meta: [{ title: "Importar planificación — Malitos" }] }),
+  head: () => ({ meta: [{ title: "Importar planificación — RM OR DIE" }] }),
   component: ImportPage,
 });
 

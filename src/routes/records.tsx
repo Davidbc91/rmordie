@@ -25,9 +25,9 @@ import {
 export const Route = createFileRoute("/records")({
   head: () => ({
     meta: [
-      { title: "RM — Malitos Premium Check" },
+      { title: "RM — RM OR DIE" },
       { name: "description", content: "Consulta y edita tus récords máximos por ejercicio." },
-      { property: "og:title", content: "RM — Malitos Premium Check" },
+      { property: "og:title", content: "RM — RM OR DIE" },
       { property: "og:description", content: "Tus récords máximos personales." },
     ],
   }),

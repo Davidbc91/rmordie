@@ -5,7 +5,7 @@ import { Calendar, Upload, Flame, Trophy, ChevronRight } from "lucide-react";
 import { useMemo } from "react";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "Inicio — Malitos Premium Check" }] }),
+  head: () => ({ meta: [{ title: "Inicio — RM OR DIE" }] }),
   component: Home,
 });
 
@@ -22,9 +22,9 @@ function Home() {
 
   return (
     <AppShell>
-      <header className="mb-8">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Team Vader</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Malitos Premium Check</h1>
+      <header className="mb-10">
+        <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">RM OR DIE</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight">Bienvenido.</h1>
       </header>
 
       {!planning && !isLoading && <EmptyState />}

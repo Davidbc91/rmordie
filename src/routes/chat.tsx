@@ -10,9 +10,9 @@ import { Send, MessageCircle } from "lucide-react";
 export const Route = createFileRoute("/chat")({
   head: () => ({
     meta: [
-      { title: "Chat — Malitos Premium Check" },
+      { title: "Chat — RM OR DIE" },
       { name: "description", content: "Chat común para todos los miembros del box." },
-      { property: "og:title", content: "Chat — Malitos Premium Check" },
+      { property: "og:title", content: "Chat — RM OR DIE" },
       { property: "og:description", content: "Habla con el resto del box en tiempo real." },
     ],
   }),
@@ -130,7 +130,7 @@ function ChatPage() {
           <div>
             <h1 className="text-xl font-bold">Chat del box</h1>
             <p className="text-xs text-muted-foreground">
-              Conversación en tiempo real con todos los Malitos.
+              Conversación en tiempo real con todos los RM OR DIE.
             </p>
           </div>
         </header>

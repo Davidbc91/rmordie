@@ -6,9 +6,9 @@ import { Play, Pause, RotateCcw, Timer as TimerIcon, Plus, Minus } from "lucide-
 export const Route = createFileRoute("/timers")({
   head: () => ({
     meta: [
-      { title: "Temporizador — Malitos Premium Check" },
+      { title: "Temporizador — RM OR DIE" },
       { name: "description", content: "AMRAP, EMOM, For Time, Tabata e Intervalos para tus WODs." },
-      { property: "og:title", content: "Temporizador — Malitos Premium Check" },
+      { property: "og:title", content: "Temporizador — RM OR DIE" },
       { property: "og:description", content: "Temporizadores CrossFit: AMRAP, EMOM, Tabata y más." },
     ],
   }),
@@ -295,7 +295,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
             className="h-full transition-[width] duration-200"
             style={{
               width: `${Math.min(100, progress * 100)}%`,
-              background: phase === "rest" ? "#64748b" : "var(--gold)",
+              background: phase === "rest" ? "#6F6F6F" : "var(--gold)",
             }}
           />
         </div>
@@ -341,7 +341,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
               className="h-full transition-[width] duration-200"
               style={{
                 width: `${Math.min(100, progress * 100)}%`,
-                background: phase === "rest" ? "#64748b" : "var(--gold)",
+                background: phase === "rest" ? "#6F6F6F" : "var(--gold)",
               }}
             />
           </div>
@@ -349,7 +349,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
             className="font-mono font-bold tabular-nums leading-none text-center px-4 max-w-full"
             style={{
               fontSize: "min(28vw, 55vh)",
-              color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#94a3b8" : "#fff",
+              color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#B8B8B8" : "#fff",
               letterSpacing: "-0.03em",
             }}
           >

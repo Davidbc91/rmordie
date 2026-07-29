@@ -5,11 +5,11 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-2xl: calc(var(--radius) + 10px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
@@ -35,53 +35,54 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --shadow-gold: 0 0 40px -10px color-mix(in oklab, var(--gold) 50%, transparent);
-  --shadow-elevated: 0 20px 60px -30px oklch(0 0 0 / 0.8);
+  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+  --shadow-gold: none;
+  --shadow-elevated: 0 1px 2px rgba(0,0,0,0.4);
 }
 
 :root, .dark {
-  --radius: 0.875rem;
+  --radius: 1.25rem;
 
-  /* Deep near-black */
-  --background: oklch(0.145 0.005 260);
-  --foreground: oklch(0.985 0 0);
+  /* Pure black canvas */
+  --background: #000000;
+  --foreground: #FFFFFF;
 
-  /* Slightly lifted surface */
-  --surface: oklch(0.19 0.006 260);
-  --surface-2: oklch(0.225 0.008 260);
+  /* Layered surfaces */
+  --surface: #111111;
+  --surface-2: #181818;
 
-  --card: oklch(0.19 0.006 260);
-  --card-foreground: oklch(0.985 0 0);
+  /* Cards default to elevated dark; card-elevated overrides to white */
+  --card: #111111;
+  --card-foreground: #FFFFFF;
 
-  --popover: oklch(0.19 0.006 260);
-  --popover-foreground: oklch(0.985 0 0);
+  --popover: #111111;
+  --popover-foreground: #FFFFFF;
 
-  /* Gold — the star */
-  --gold: oklch(0.82 0.145 85);
-  --gold-soft: oklch(0.72 0.11 82);
-  --gold-foreground: oklch(0.15 0.01 260);
+  /* "Gold" is remapped to monochrome white — primary accent on dark */
+  --gold: #FFFFFF;
+  --gold-soft: #FFFFFF;
+  --gold-foreground: #000000;
 
-  --primary: oklch(0.82 0.145 85);
-  --primary-foreground: oklch(0.15 0.01 260);
+  --primary: #FFFFFF;
+  --primary-foreground: #000000;
 
-  --secondary: oklch(0.26 0.008 260);
-  --secondary-foreground: oklch(0.985 0 0);
+  --secondary: #181818;
+  --secondary-foreground: #FFFFFF;
 
-  --muted: oklch(0.24 0.007 260);
-  --muted-foreground: oklch(0.68 0.01 260);
+  --muted: #181818;
+  --muted-foreground: #B8B8B8;
 
-  --accent: oklch(0.28 0.01 260);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent: #1F1F1F;
+  --accent-foreground: #FFFFFF;
 
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.985 0 0);
+  --destructive: #E5484D;
+  --destructive-foreground: #FFFFFF;
 
-  --success: oklch(0.72 0.15 155);
+  --success: #FFFFFF;
 
-  --border: oklch(1 0 0 / 0.08);
-  --input: oklch(1 0 0 / 0.1);
-  --ring: oklch(0.82 0.145 85);
+  --border: #2A2A2A;
+  --input: #181818;
+  --ring: #FFFFFF;
 }
 
 @layer base {
@@ -90,36 +91,72 @@
   body {
     font-family: var(--font-display);
     font-feature-settings: "cv11", "ss01";
+    letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
-  ::selection { background: color-mix(in oklab, var(--gold) 40%, transparent); color: var(--foreground); }
+  ::selection { background: #FFFFFF; color: #000000; }
 
-  /* Numeric emphasis */
+  h1, h2, h3, h4 { letter-spacing: -0.02em; }
   .tabular { font-variant-numeric: tabular-nums; }
 }
 
+/* Legacy "gold" utilities remapped to monochrome */
 @utility gold-text {
   color: var(--gold);
 }
 
 @utility gold-gradient {
-  background-image: linear-gradient(135deg, var(--gold) 0%, var(--gold-soft) 100%);
+  background-image: none;
+  background-color: var(--gold);
+  color: var(--gold-foreground);
 }
 
+/* Signature card: crisp white surface, black content.
+   Scopes tokens so nested muted/border/gold styles read correctly on white. */
 @utility card-elevated {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-elevated);
+  background-color: #FFFFFF;
+  color: #000000;
+  border: 1px solid #ECECEC;
+  border-radius: 24px;
+  box-shadow: none;
+  --foreground: #000000;
+  --muted-foreground: #6F6F6F;
+  --border: #EDEDED;
+  --input: #F5F5F5;
+  --surface: #FFFFFF;
+  --surface-2: #F7F7F7;
+  --card: #FFFFFF;
+  --card-foreground: #000000;
+  --gold: #000000;
+  --gold-soft: #000000;
+  --gold-foreground: #FFFFFF;
+  --primary: #000000;
+  --primary-foreground: #FFFFFF;
+  --ring: #000000;
+  --accent: #F2F2F2;
+}
+
+/* Subtle separator */
+@utility hairline {
+  background-color: #2A2A2A;
+  height: 1px;
+  width: 100%;
 }
 
 @keyframes pr-pop {
-  0% { transform: scale(0.6); opacity: 0; }
-  60% { transform: scale(1.15); opacity: 1; }
+  0% { transform: scale(0.92); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
 @utility animate-pr {
-  animation: pr-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: pr-pop 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@utility animate-fade {
+  animation: fade-in 240ms ease-out both;
 }

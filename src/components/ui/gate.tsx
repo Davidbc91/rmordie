@@ -79,12 +79,12 @@ export function PinGate({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border" style={{ background: "linear-gradient(135deg, var(--gold), var(--gold-soft))" }}>
-            <span className="text-2xl font-bold" style={{ color: "var(--gold-foreground)" }}>M</span>
+        <div className="mb-10 text-center">
+          <div className="text-white font-bold tracking-tight leading-none" style={{ fontSize: "56px", letterSpacing: "-0.06em" }}>
+            RM
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">Malitos Premium Check</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <div className="mt-2 text-white/70 text-[10px] uppercase" style={{ letterSpacing: "0.4em" }}>OR DIE</div>
+          <p className="mt-6 text-sm text-muted-foreground">
             {mode === "pick" && "Selecciona tu perfil"}
             {mode === "pin" && `Introduce el PIN de ${selected?.name ?? ""}`}
             {mode === "create" && "Crea tu perfil"}

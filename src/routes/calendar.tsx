@@ -133,10 +133,10 @@ function CalendarPage() {
           ><ChevronRight className="h-5 w-5" /></button>
         </div>
 
-        <div className="mt-3 flex justify-center">
+        <div className="mt-4 flex justify-center">
           <button
             onClick={() => setIdx(findMonthIndexForDate(months))}
-            className="flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-medium text-gold hover:bg-gold/20 active:bg-gold/30"
+            className="flex items-center gap-2 rounded-full border border-border px-4 py-1.5 text-xs font-medium text-foreground hover:bg-white/5 active:bg-white/10"
           >
             <Calendar className="h-3.5 w-3.5" />
             Ir a hoy
@@ -147,32 +147,38 @@ function CalendarPage() {
           Desliza para cambiar de mes
         </div>
 
-        <div className="mt-8 space-y-6">
+        <div className="mt-10 space-y-8">
           {month.weeks.map((w) => (
             <section key={w.index}>
-              <h2 className="mb-3 text-xs uppercase tracking-widest text-muted-foreground">Semana {w.index}</h2>
+              <h2 className="mb-4 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Semana {w.index}</h2>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                 {w.days.map((d) => {
                   const done = doneMap.has(`${month.key}|${w.index}|${d.key}`);
+                  const isRest = d.isRest;
                   return (
                     <Link
                       key={d.key}
                       to="/workout/$month/$week/$day"
                       params={{ month: month.key, week: String(w.index), day: d.key }}
-                      className="flex flex-col items-start gap-2 rounded-xl border border-border bg-surface p-3 transition hover:border-gold/40 active:scale-[0.98]"
+                      className="flex flex-col items-start gap-2 rounded-2xl border p-3 transition active:scale-[0.98]"
+                      style={{
+                        background: done ? "#FFFFFF" : "#000000",
+                        borderColor: done ? "#FFFFFF" : "#2A2A2A",
+                        color: done ? "#000000" : "#FFFFFF",
+                      }}
                     >
                       <div className="flex w-full items-center justify-between">
-                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{d.key.slice(0, 3)}</span>
-                        {d.isRest ? (
-                          <Moon className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-[10px] uppercase tracking-[0.2em]" style={{ opacity: done ? 0.6 : 0.55 }}>{d.key.slice(0, 3)}</span>
+                        {isRest ? (
+                          <Moon className="h-3.5 w-3.5" style={{ opacity: 0.5 }} />
                         ) : done ? (
-                          <Check className="h-3.5 w-3.5 text-gold" />
+                          <Check className="h-3.5 w-3.5" />
                         ) : (
-                          <Circle className="h-3.5 w-3.5 text-muted-foreground/60" />
+                          <Circle className="h-3.5 w-3.5" style={{ opacity: 0.4 }} />
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground/80 line-clamp-2">
-                        {d.isRest ? "Descanso" : (d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ?? d.blocks[0]?.content.split("\n")[0] ?? "—")}
+                      <div className="text-xs line-clamp-2" style={{ opacity: done ? 0.7 : 0.6 }}>
+                        {isRest ? "Descanso" : (d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ?? d.blocks[0]?.content.split("\n")[0] ?? "—")}
                       </div>
                     </Link>
                   );

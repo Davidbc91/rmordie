@@ -295,7 +295,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
             className="h-full transition-[width] duration-200"
             style={{
               width: `${Math.min(100, progress * 100)}%`,
-              background: phase === "rest" ? "#64748b" : "var(--gold)",
+              background: phase === "rest" ? "#6F6F6F" : "var(--gold)",
             }}
           />
         </div>
@@ -341,7 +341,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
               className="h-full transition-[width] duration-200"
               style={{
                 width: `${Math.min(100, progress * 100)}%`,
-                background: phase === "rest" ? "#64748b" : "var(--gold)",
+                background: phase === "rest" ? "#6F6F6F" : "var(--gold)",
               }}
             />
           </div>
@@ -349,7 +349,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
             className="font-mono font-bold tabular-nums leading-none text-center px-4 max-w-full"
             style={{
               fontSize: "min(28vw, 55vh)",
-              color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#94a3b8" : "#fff",
+              color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#B8B8B8" : "#fff",
               letterSpacing: "-0.03em",
             }}
           >

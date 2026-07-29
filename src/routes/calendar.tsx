@@ -35,7 +35,7 @@ function getInitialMonthIndex(months: Month[]) {
 }
 
 export const Route = createFileRoute("/calendar")({
-  head: () => ({ meta: [{ title: "Calendario — Malitos" }] }),
+  head: () => ({ meta: [{ title: "Calendario — RM OR DIE" }] }),
   component: CalendarPage,
 });
 

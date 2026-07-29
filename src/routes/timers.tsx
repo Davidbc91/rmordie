@@ -6,9 +6,9 @@ import { Play, Pause, RotateCcw, Timer as TimerIcon, Plus, Minus } from "lucide-
 export const Route = createFileRoute("/timers")({
   head: () => ({
     meta: [
-      { title: "Temporizador — Malitos Premium Check" },
+      { title: "Temporizador — RM OR DIE" },
       { name: "description", content: "AMRAP, EMOM, For Time, Tabata e Intervalos para tus WODs." },
-      { property: "og:title", content: "Temporizador — Malitos Premium Check" },
+      { property: "og:title", content: "Temporizador — RM OR DIE" },
       { property: "og:description", content: "Temporizadores CrossFit: AMRAP, EMOM, Tabata y más." },
     ],
   }),

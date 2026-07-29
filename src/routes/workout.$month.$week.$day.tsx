@@ -7,7 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
-  head: () => ({ meta: [{ title: "Entrenamiento — Malitos" }] }),
+  head: () => ({ meta: [{ title: "Entrenamiento — RM OR DIE" }] }),
   component: WorkoutPage,
 });
 

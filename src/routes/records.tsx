@@ -8,7 +8,16 @@ import {
   usePersonalRecordHistory,
   type PersonalRecord,
 } from "@/lib/store";
-import { Trophy, Plus, Pencil, Trash2, Check, X, History, ArrowRight } from "lucide-react";
+import {
+  Trophy,
+  Plus,
+  Pencil,
+  Trash2,
+  Check,
+  X,
+  ChevronRight,
+  ArrowRight,
+} from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import {
@@ -21,18 +30,29 @@ import {
   CartesianGrid,
 } from "recharts";
 
-
 export const Route = createFileRoute("/records")({
   head: () => ({
     meta: [
-      { title: "RM — RM OR DIE" },
-      { name: "description", content: "Consulta y edita tus récords máximos por ejercicio." },
-      { property: "og:title", content: "RM — RM OR DIE" },
+      { title: "Personal Records — RM OR DIE" },
+      {
+        name: "description",
+        content: "Consulta y edita tus RM (1RM, 3RM, 5RM, 10RM) con su evolución.",
+      },
+      { property: "og:title", content: "Personal Records — RM OR DIE" },
       { property: "og:description", content: "Tus récords máximos personales." },
     ],
   }),
   component: RecordsPage,
 });
+
+const REP_MAXES = [1, 3, 5, 10] as const;
+const TABS: { label: string; value: number | "all" }[] = [
+  { label: "1RM", value: 1 },
+  { label: "3RM", value: 3 },
+  { label: "5RM", value: 5 },
+  { label: "10RM", value: 10 },
+  { label: "MAX", value: "all" },
+];
 
 const SUGGESTED = [
   "Back Squat",
@@ -77,24 +97,34 @@ function RecordsPage() {
   const update = useUpdatePersonalRecord();
   const del = useDeletePersonalRecord();
 
+  const [tab, setTab] = useState<number | "all">(1);
   const [showAdd, setShowAdd] = useState(false);
   const [newExercise, setNewExercise] = useState("");
   const [newWeight, setNewWeight] = useState("");
+  const [newRepMax, setNewRepMax] = useState<number>(1);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editExercise, setEditExercise] = useState("");
   const [editWeight, setEditWeight] = useState("");
-  const [historyFor, setHistoryFor] = useState<PersonalRecord | null>(null);
+  const [detailFor, setDetailFor] = useState<PersonalRecord | null>(null);
 
+  const visible = useMemo(() => {
+    const list = tab === "all" ? records : records.filter((r) => (r.rep_max ?? 1) === tab);
+    return [...list].sort(
+      (a, b) =>
+        a.exercise.localeCompare(b.exercise) || (a.rep_max ?? 1) - (b.rep_max ?? 1),
+    );
+  }, [records, tab]);
 
-  const existingNames = new Set(records.map((r) => r.exercise.toLowerCase()));
+  const existingNames = new Set(
+    records.filter((r) => (r.rep_max ?? 1) === newRepMax).map((r) => r.exercise.toLowerCase()),
+  );
   const query = newExercise.trim().toLowerCase();
   const filteredSuggestions = SUGGESTED.filter((s) => {
     if (existingNames.has(s.toLowerCase())) return false;
     if (!query) return true;
     return s.toLowerCase().includes(query);
   }).slice(0, 8);
-
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -104,11 +134,12 @@ function RecordsPage() {
     if (!Number.isFinite(w) || w <= 0) return toast.error("Peso inválido");
     if (ex.length > 60) return toast.error("Nombre demasiado largo");
     try {
-      await upsert.mutateAsync({ exercise: ex, weight: w });
+      await upsert.mutateAsync({ exercise: ex, weight: w, rep_max: newRepMax });
       setNewExercise("");
       setNewWeight("");
       setShowAdd(false);
-      toast.success("RM guardado");
+      if (tab !== "all") setTab(newRepMax);
+      toast.success(`${newRepMax}RM guardado`);
     } catch (err: any) {
       toast.error(err?.message ?? "Error al guardar");
     }
@@ -135,7 +166,7 @@ function RecordsPage() {
   }
 
   async function handleDelete(r: PersonalRecord) {
-    if (!window.confirm(`¿Eliminar el RM de "${r.exercise}"?`)) return;
+    if (!window.confirm(`¿Eliminar el ${r.rep_max ?? 1}RM de "${r.exercise}"?`)) return;
     try {
       await del.mutateAsync(r.id);
       toast.success("Eliminado");
@@ -146,25 +177,71 @@ function RecordsPage() {
 
   return (
     <AppShell>
-      <header className="mb-6 flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Récords</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Mis RM</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Tus máximos por ejercicio.</p>
+      <header className="mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
+            Personal Records
+          </p>
+          <h1 className="mt-2 text-[32px] font-semibold leading-none tracking-tight">
+            Mis RM
+          </h1>
         </div>
         <button
           onClick={() => setShowAdd((v) => !v)}
-          className="inline-flex items-center gap-1.5 rounded-xl gold-gradient px-3 py-2 text-sm font-medium"
-          style={{ color: "var(--gold-foreground)" }}
+          className="shrink-0 inline-flex items-center gap-1.5 rounded-2xl bg-foreground px-4 py-2.5 text-sm font-medium text-background transition active:scale-[0.98]"
         >
           <Plus className="h-4 w-4" /> Añadir
         </button>
       </header>
 
+      {/* Segmented rep-max control */}
+      <div className="mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-1">
+        {TABS.map((t) => {
+          const active = tab === t.value;
+          return (
+            <button
+              key={t.label}
+              onClick={() => setTab(t.value)}
+              className={`flex-1 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold tracking-wide transition ${
+                active
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
       {showAdd && (
-        <form onSubmit={handleAdd} className="card-elevated mb-6 space-y-3 p-4">
+        <form onSubmit={handleAdd} className="card-elevated animate-fade mb-6 space-y-4 p-5">
+          <div>
+            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              Tipo de RM
+            </label>
+            <div className="mt-2 flex gap-2">
+              {REP_MAXES.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setNewRepMax(n)}
+                  className={`flex-1 rounded-xl border px-2 py-2 text-xs font-semibold transition ${
+                    newRepMax === n
+                      ? "border-transparent bg-foreground text-background"
+                      : "border-border text-muted-foreground"
+                  }`}
+                >
+                  {n}RM
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="relative">
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">Ejercicio</label>
+            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              Ejercicio
+            </label>
             <input
               value={newExercise}
               onChange={(e) => {
@@ -176,7 +253,7 @@ function RecordsPage() {
               placeholder="Escribe para buscar…"
               maxLength={60}
               autoComplete="off"
-              className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-gold/60"
+              className="mt-1.5 w-full rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm outline-none focus:border-foreground/40"
             />
             {showSuggestions && filteredSuggestions.length > 0 && (
               <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-border bg-surface shadow-lg">
@@ -189,7 +266,7 @@ function RecordsPage() {
                         setNewExercise(s);
                         setShowSuggestions(false);
                       }}
-                      className="block w-full px-3 py-2 text-left text-sm hover:bg-white/5"
+                      className="block w-full px-3.5 py-2.5 text-left text-sm hover:bg-surface-2"
                     >
                       {s}
                     </button>
@@ -200,7 +277,9 @@ function RecordsPage() {
           </div>
 
           <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">Peso (kg)</label>
+            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              Peso (kg)
+            </label>
             <input
               type="number"
               inputMode="decimal"
@@ -209,22 +288,21 @@ function RecordsPage() {
               value={newWeight}
               onChange={(e) => setNewWeight(e.target.value)}
               placeholder="0"
-              className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-gold/60"
+              className="mt-1.5 w-full rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm outline-none focus:border-foreground/40"
             />
           </div>
           <div className="flex gap-2">
             <button
               type="submit"
               disabled={upsert.isPending}
-              className="flex-1 rounded-xl gold-gradient py-2 text-sm font-medium"
-              style={{ color: "var(--gold-foreground)" }}
+              className="flex-1 rounded-2xl bg-foreground py-3 text-sm font-medium text-background transition active:scale-[0.99]"
             >
               Guardar
             </button>
             <button
               type="button"
               onClick={() => setShowAdd(false)}
-              className="rounded-xl border border-border px-4 py-2 text-sm"
+              className="rounded-2xl border border-border px-5 py-3 text-sm"
             >
               Cancelar
             </button>
@@ -234,29 +312,31 @@ function RecordsPage() {
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando…</p>
-      ) : records.length === 0 ? (
-        <div className="card-elevated p-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl gold-gradient">
-            <Trophy className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} />
+      ) : visible.length === 0 ? (
+        <div className="card-elevated p-10 text-center">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-border">
+            <Trophy className="h-5 w-5" strokeWidth={1.5} />
           </div>
-          <h2 className="text-lg font-semibold">Aún no tienes RM</h2>
+          <h2 className="text-lg font-semibold">
+            {tab === "all" ? "Aún no tienes RM" : `Sin ${tab}RM registrados`}
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Añade tus máximos para usarlos en el asistente de porcentajes.
           </p>
         </div>
       ) : (
-        <ul className="space-y-2">
-          {records.map((r) => {
+        <ul className="card-elevated divide-y divide-border overflow-hidden p-0">
+          {visible.map((r) => {
             const isEditing = editingId === r.id;
             return (
-              <li key={r.id} className="card-elevated p-4">
+              <li key={r.id} className="px-5 py-4">
                 {isEditing ? (
                   <div className="space-y-2">
                     <input
                       value={editExercise}
                       onChange={(e) => setEditExercise(e.target.value)}
                       maxLength={60}
-                      className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-gold/60"
+                      className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-foreground/40"
                     />
                     <div className="flex items-center gap-2">
                       <input
@@ -266,13 +346,12 @@ function RecordsPage() {
                         min="0"
                         value={editWeight}
                         onChange={(e) => setEditWeight(e.target.value)}
-                        className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-gold/60"
+                        className="flex-1 rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-foreground/40"
                       />
                       <span className="text-xs text-muted-foreground">kg</span>
                       <button
                         onClick={() => saveEdit(r.id)}
-                        className="rounded-lg gold-gradient p-2"
-                        style={{ color: "var(--gold-foreground)" }}
+                        className="rounded-lg bg-foreground p-2 text-background"
                         aria-label="Guardar"
                       >
                         <Check className="h-4 w-4" />
@@ -288,38 +367,53 @@ function RecordsPage() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate text-sm font-medium">{r.exercise}</div>
-                      <div className="text-xs text-muted-foreground">
-                        Actualizado {new Date(r.updated_at).toLocaleDateString()}
+                    <button
+                      onClick={() => setDetailFor(r)}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                          {r.exercise}
+                        </div>
+                        <div className="mt-1 flex items-baseline gap-1.5">
+                          <span className="text-2xl font-semibold tabular leading-none">
+                            {r.weight}
+                          </span>
+                          <span className="text-xs text-muted-foreground">kg</span>
+                          <span className="ml-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                            {r.rep_max ?? 1}RM
+                          </span>
+                        </div>
+                        <div className="mt-1 text-[11px] text-muted-foreground">
+                          {new Date(r.updated_at).toLocaleDateString(undefined, {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </div>
                       </div>
+                      <Sparkline exercise={r.exercise} repMax={r.rep_max ?? 1} />
+                      <ChevronRight
+                        className="h-4 w-4 shrink-0 text-muted-foreground"
+                        strokeWidth={1.5}
+                      />
+                    </button>
+                    <div className="flex shrink-0 gap-1">
+                      <button
+                        onClick={() => startEdit(r)}
+                        className="rounded-lg p-2 text-muted-foreground hover:text-foreground"
+                        aria-label="Editar"
+                      >
+                        <Pencil className="h-4 w-4" strokeWidth={1.5} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(r)}
+                        className="rounded-lg p-2 text-muted-foreground hover:text-destructive"
+                        aria-label="Eliminar"
+                      >
+                        <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+                      </button>
                     </div>
-                    <div className="gold-text text-xl font-semibold tabular">
-                      {r.weight}
-                      <span className="ml-1 text-xs text-muted-foreground">kg</span>
-                    </div>
-                    <button
-                      onClick={() => setHistoryFor(r)}
-                      className="rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground"
-                      aria-label="Historial"
-                    >
-                      <History className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => startEdit(r)}
-                      className="rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground"
-                      aria-label="Editar"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(r)}
-                      className="rounded-lg border border-border p-2 text-muted-foreground hover:text-destructive"
-                      aria-label="Eliminar"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-
                   </div>
                 )}
               </li>
@@ -328,36 +422,72 @@ function RecordsPage() {
         </ul>
       )}
 
-      {historyFor && (
-        <HistoryModal record={historyFor} onClose={() => setHistoryFor(null)} />
+      {detailFor && (
+        <HistoryModal record={detailFor} onClose={() => setDetailFor(null)} />
       )}
     </AppShell>
   );
 }
 
+function Sparkline({ exercise, repMax }: { exercise: string; repMax: number }) {
+  const { data: history = [] } = usePersonalRecordHistory(exercise, repMax);
+  const points = useMemo(() => {
+    const sorted = [...history].sort(
+      (a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime(),
+    );
+    return sorted.map((h) => Number(h.new_weight));
+  }, [history]);
+
+  if (points.length < 2) return <div className="h-8 w-16 shrink-0" />;
+
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const span = max - min || 1;
+  const w = 64;
+  const h = 28;
+  const d = points
+    .map((p, i) => {
+      const x = (i / (points.length - 1)) * (w - 4) + 2;
+      const y = h - 3 - ((p - min) / span) * (h - 6);
+      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  return (
+    <svg width={w} height={h} className="shrink-0" aria-hidden="true">
+      <path d={d} fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.85" />
+    </svg>
+  );
+}
+
 function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: () => void }) {
-  const { data: history = [], isLoading } = usePersonalRecordHistory(record.exercise);
+  const repMax = record.rep_max ?? 1;
+  const { data: history = [], isLoading } = usePersonalRecordHistory(record.exercise, repMax);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 sm:items-center"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-t-2xl border border-border bg-surface p-5 shadow-2xl sm:rounded-2xl"
+        className="card-elevated animate-fade max-h-[88vh] w-full max-w-md overflow-auto rounded-b-none p-5 sm:rounded-b-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Historial</p>
-            <h2 className="mt-1 text-lg font-semibold">{record.exercise}</h2>
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+              {repMax}RM · Evolución
+            </p>
+            <h2 className="mt-1.5 truncate text-xl font-semibold tracking-tight">
+              {record.exercise}
+            </h2>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg border border-border p-2 text-muted-foreground"
+            className="shrink-0 rounded-full border border-border p-2 text-muted-foreground"
             aria-label="Cerrar"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
         </div>
 
@@ -368,60 +498,52 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
         ) : (
           <>
             <EvolutionChart history={history} />
-            <ul className="max-h-[40vh] space-y-2 overflow-auto">
-            {history.map((h) => {
-              const date = new Date(h.changed_at);
-              const dateStr = date.toLocaleDateString(undefined, {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              });
-              const timeStr = date.toLocaleTimeString(undefined, {
-                hour: "2-digit",
-                minute: "2-digit",
-              });
-              const diff =
-                h.previous_weight != null ? h.new_weight - h.previous_weight : null;
-              return (
-                <li
-                  key={h.id}
-                  className="rounded-xl border border-border bg-background/40 p-3"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-xs text-muted-foreground">
-                      {dateStr} · {timeStr}
-                    </div>
-                    {diff != null && diff !== 0 && (
-                      <span
-                        className={`text-xs font-medium tabular ${
-                          diff > 0 ? "gold-text" : "text-muted-foreground"
-                        }`}
-                      >
-                        {diff > 0 ? "+" : ""}
-                        {diff} kg
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-2 flex items-center gap-2 text-sm tabular">
-                    {h.previous_weight != null ? (
-                      <>
-                        <span className="text-muted-foreground line-through">
-                          {h.previous_weight} kg
+            <ul className="space-y-2">
+              {history.map((h) => {
+                const date = new Date(h.changed_at);
+                const dateStr = date.toLocaleDateString(undefined, {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                });
+                const timeStr = date.toLocaleTimeString(undefined, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                const diff = h.previous_weight != null ? h.new_weight - h.previous_weight : null;
+                return (
+                  <li key={h.id} className="rounded-2xl border border-border p-3.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-[11px] text-muted-foreground">
+                        {dateStr} · {timeStr}
+                      </div>
+                      {diff != null && diff !== 0 && (
+                        <span className="text-xs font-medium tabular">
+                          {diff > 0 ? "+" : ""}
+                          {diff} kg
                         </span>
-                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="font-semibold gold-text">{h.new_weight} kg</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-muted-foreground">Creación</span>
-                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="font-semibold gold-text">{h.new_weight} kg</span>
-                      </>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
+                      )}
+                    </div>
+                    <div className="mt-2 flex items-center gap-2 text-sm tabular">
+                      {h.previous_weight != null ? (
+                        <>
+                          <span className="text-muted-foreground line-through">
+                            {h.previous_weight} kg
+                          </span>
+                          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="font-semibold">{h.new_weight} kg</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-muted-foreground">Creación</span>
+                          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="font-semibold">{h.new_weight} kg</span>
+                        </>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </>
         )}
@@ -438,8 +560,7 @@ function EvolutionChart({
   const data = useMemo(() => {
     return [...history]
       .sort(
-        (a, b) =>
-          new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime(),
+        (a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime(),
       )
       .map((h) => ({
         date: new Date(h.changed_at).toLocaleDateString(undefined, {
@@ -452,13 +573,11 @@ function EvolutionChart({
 
   if (data.length < 2) {
     return (
-      <div className="mb-4 rounded-xl border border-border bg-background/40 p-4 text-center">
+      <div className="mb-5 rounded-2xl border border-border p-5 text-center">
         <p className="text-xs text-muted-foreground">
           Necesitas al menos 2 registros para ver la evolución.
         </p>
-        <p className="mt-1 text-lg font-semibold gold-text tabular">
-          {data[0]?.weight ?? 0} kg
-        </p>
+        <p className="mt-2 text-2xl font-semibold tabular">{data[0]?.weight ?? 0} kg</p>
       </div>
     );
   }
@@ -469,52 +588,52 @@ function EvolutionChart({
   const pad = Math.max(2, (max - min) * 0.15);
 
   return (
-    <div className="mb-4 rounded-xl border border-border bg-background/40 p-3">
-      <div className="mb-2 flex items-baseline justify-between">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+    <div className="mb-5 rounded-2xl border border-border p-4">
+      <div className="mb-3 flex items-baseline justify-between">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
           Evolución
         </p>
-        <p className="text-xs text-muted-foreground tabular">
-          <span className="gold-text font-semibold">{max} kg</span> máx ·{" "}
-          {min} kg mín
+        <p className="text-[11px] text-muted-foreground tabular">
+          <span className="font-semibold text-foreground">{max} kg</span> máx · {min} kg mín
         </p>
       </div>
       <div className="h-40 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
-            <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+            <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="date"
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fontSize: 10 }}
+              stroke="var(--muted-foreground)"
+              tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
               domain={[Math.floor(min - pad), Math.ceil(max + pad)]}
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fontSize: 10 }}
+              stroke="var(--muted-foreground)"
+              tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
               tickLine={false}
               axisLine={false}
               width={40}
             />
             <Tooltip
               contentStyle={{
-                background: "hsl(var(--background))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: 8,
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: 12,
                 fontSize: 12,
+                color: "var(--foreground)",
               }}
-              labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+              labelStyle={{ color: "var(--muted-foreground)" }}
               formatter={(v: number) => [`${v} kg`, "Peso"]}
             />
             <Line
               type="monotone"
               dataKey="weight"
-              stroke="var(--gold, #d4af37)"
-              strokeWidth={2.5}
-              dot={{ r: 3, fill: "var(--gold, #d4af37)", strokeWidth: 0 }}
-              activeDot={{ r: 5 }}
+              stroke="currentColor"
+              strokeWidth={2}
+              dot={{ r: 2.5, fill: "currentColor", strokeWidth: 0 }}
+              activeDot={{ r: 4.5 }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -522,5 +641,3 @@ function EvolutionChart({
     </div>
   );
 }
-
-

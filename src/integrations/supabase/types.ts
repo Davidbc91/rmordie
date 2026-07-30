@@ -128,6 +128,7 @@ export type Database = {
           id: string
           new_weight: number
           previous_weight: number | null
+          rep_max: number
           user_id: string
         }
         Insert: {
@@ -136,6 +137,7 @@ export type Database = {
           id?: string
           new_weight: number
           previous_weight?: number | null
+          rep_max?: number
           user_id: string
         }
         Update: {
@@ -144,6 +146,7 @@ export type Database = {
           id?: string
           new_weight?: number
           previous_weight?: number | null
+          rep_max?: number
           user_id?: string
         }
         Relationships: []
@@ -154,6 +157,7 @@ export type Database = {
           exercise: string
           id: string
           notes: string | null
+          rep_max: number
           updated_at: string
           user_id: string
           weight: number
@@ -163,6 +167,7 @@ export type Database = {
           exercise: string
           id?: string
           notes?: string | null
+          rep_max?: number
           updated_at?: string
           user_id: string
           weight: number
@@ -172,6 +177,7 @@ export type Database = {
           exercise?: string
           id?: string
           notes?: string | null
+          rep_max?: number
           updated_at?: string
           user_id?: string
           weight?: number

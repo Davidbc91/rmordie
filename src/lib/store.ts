@@ -237,12 +237,13 @@ export function useSaveSettings() {
   });
 }
 
-// -------- Personal Records (1RM per exercise, per-user) --------
+// -------- Personal Records (per exercise + rep max, per-user) --------
 export type PersonalRecord = {
   id: string;
   user_id: string;
   exercise: string;
   weight: number;
+  rep_max: number;
   notes: string | null;
   updated_at: string;
   created_at: string;
@@ -269,21 +270,30 @@ export function useUpsertPersonalRecord() {
   const qc = useQueryClient();
   const uid = getCurrentUserId();
   return useMutation({
-    mutationFn: async (r: { exercise: string; weight: number; notes?: string | null }) => {
+    mutationFn: async (r: {
+      exercise: string;
+      weight: number;
+      rep_max?: number;
+      notes?: string | null;
+    }) => {
       if (!uid) throw new Error("No hay perfil activo");
       const { error } = await (supabase as any).from("personal_records").upsert(
         {
           user_id: uid,
           exercise: r.exercise.trim(),
           weight: r.weight,
+          rep_max: r.rep_max ?? 1,
           notes: r.notes ?? null,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "user_id,exercise" }
+        { onConflict: "user_id,exercise,rep_max" }
       );
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["personal_records", uid] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["personal_records", uid] });
+      qc.invalidateQueries({ queryKey: ["personal_record_history", uid] });
+    },
   });
 }
 
@@ -303,7 +313,10 @@ export function useUpdatePersonalRecord() {
         .eq("id", r.id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["personal_records", uid] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["personal_records", uid] });
+      qc.invalidateQueries({ queryKey: ["personal_record_history", uid] });
+    },
   });
 }
 
@@ -324,28 +337,31 @@ export type PersonalRecordHistory = {
   id: string;
   user_id: string;
   exercise: string;
+  rep_max: number;
   previous_weight: number | null;
   new_weight: number;
   changed_at: string;
 };
 
-export function usePersonalRecordHistory(exercise: string | null) {
+export function usePersonalRecordHistory(exercise: string | null, repMax?: number) {
   const uid = getCurrentUserId();
   return useQuery({
-    queryKey: ["personal_record_history", uid, exercise],
+    queryKey: ["personal_record_history", uid, exercise, repMax ?? null],
     enabled: !!uid && !!exercise,
     queryFn: async (): Promise<PersonalRecordHistory[]> => {
-      const { data, error } = await (supabase as any)
+      let q = (supabase as any)
         .from("personal_record_history")
         .select("*")
         .eq("user_id", uid!)
-        .eq("exercise", exercise!)
-        .order("changed_at", { ascending: false });
+        .eq("exercise", exercise!);
+      if (repMax != null) q = q.eq("rep_max", repMax);
+      const { data, error } = await q.order("changed_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as PersonalRecordHistory[];
     },
   });
 }
+
 
 
 

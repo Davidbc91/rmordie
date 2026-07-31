@@ -160,3 +160,109 @@
 @utility animate-fade {
   animation: fade-in 240ms ease-out both;
 }
+
+/* ————— Capa visual premium (monocromo) ————— */
+
+/* Grano sutil sobre el fondo negro */
+@utility grain {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+/* Halo radial muy tenue para dar profundidad al fondo */
+@utility aura {
+  background-image: radial-gradient(120% 70% at 50% -10%, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0) 60%);
+}
+
+/* Rejilla de puntos discreta */
+@utility dotgrid {
+  background-image: radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* Feedback táctil coherente */
+@utility pressable {
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease, border-color 200ms ease;
+  &:active { transform: scale(0.975); }
+}
+
+/* Entrada escalonada */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@utility rise {
+  animation: rise-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rise-1 { animation-delay: 40ms; }
+.rise-2 { animation-delay: 90ms; }
+.rise-3 { animation-delay: 140ms; }
+.rise-4 { animation-delay: 200ms; }
+.rise-5 { animation-delay: 260ms; }
+
+/* Brillo que barre una tarjeta blanca al aparecer */
+@keyframes sheen-sweep {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+@utility sheen {
+  position: relative;
+  overflow: hidden;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.55), transparent);
+    animation: sheen-sweep 1600ms cubic-bezier(0.22, 1, 0.36, 1) 300ms both;
+    pointer-events: none;
+  }
+}
+
+/* Cifras enormes tipo panel deportivo */
+@utility display-xl {
+  font-size: clamp(2.75rem, 16vw, 4.5rem);
+  line-height: 0.86;
+  letter-spacing: -0.055em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Etiqueta pequeña en versalitas */
+@utility eyebrow {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--muted-foreground);
+}
+
+/* Línea degradada de separación */
+@utility rule-fade {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.22), rgba(255,255,255,0.02));
+}
+
+/* Latido lento para indicar "hoy" / estado activo */
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.82); }
+}
+@utility live-dot {
+  animation: soft-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

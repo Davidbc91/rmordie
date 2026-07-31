@@ -147,45 +147,63 @@ function CalendarPage() {
           Desliza para cambiar de mes
         </div>
 
-        <div className="mt-10 space-y-8">
-          {month.weeks.map((w) => (
-            <section key={w.index}>
-              <h2 className="mb-4 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Semana {w.index}</h2>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {w.days.map((d) => {
-                  const done = doneMap.has(`${month.key}|${w.index}|${d.key}`);
-                  const isRest = d.isRest;
-                  return (
-                    <Link
-                      key={d.key}
-                      to="/workout/$month/$week/$day"
-                      params={{ month: month.key, week: String(w.index), day: d.key }}
-                      className="flex flex-col items-start gap-2 rounded-2xl border p-3 transition active:scale-[0.98]"
-                      style={{
-                        background: done ? "#FFFFFF" : "#000000",
-                        borderColor: done ? "#FFFFFF" : "#2A2A2A",
-                        color: done ? "#000000" : "#FFFFFF",
-                      }}
-                    >
-                      <div className="flex w-full items-center justify-between">
-                        <span className="text-[10px] uppercase tracking-[0.2em]" style={{ opacity: done ? 0.6 : 0.55 }}>{d.key.slice(0, 3)}</span>
-                        {isRest ? (
-                          <Moon className="h-3.5 w-3.5" style={{ opacity: 0.5 }} />
-                        ) : done ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <Circle className="h-3.5 w-3.5" style={{ opacity: 0.4 }} />
-                        )}
-                      </div>
-                      <div className="text-xs line-clamp-2" style={{ opacity: done ? 0.7 : 0.6 }}>
-                        {isRest ? "Descanso" : (d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ?? d.blocks[0]?.content.split("\n")[0] ?? "—")}
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+        <div className="mt-10 space-y-9">
+          {month.weeks.map((w, wi) => {
+            const trainDays = w.days.filter((d) => !d.isRest);
+            const doneCount = trainDays.filter((d) => doneMap.has(`${month.key}|${w.index}|${d.key}`)).length;
+            const pct = trainDays.length ? Math.round((doneCount / trainDays.length) * 100) : 0;
+            return (
+              <section key={w.index} className={`rise rise-${Math.min(wi + 1, 5)}`}>
+                <div className="mb-3 flex items-end justify-between gap-4">
+                  <h2 className="eyebrow">Semana {w.index}</h2>
+                  <span className="text-[10px] tabular text-muted-foreground">
+                    {doneCount}/{trainDays.length}
+                  </span>
+                </div>
+                <div className="mb-4 h-[2px] w-full overflow-hidden rounded-full" style={{ background: "#1F1F1F" }}>
+                  <div
+                    className="h-full rounded-full transition-[width] duration-700"
+                    style={{ width: `${pct}%`, background: "#FFFFFF" }}
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {w.days.map((d) => {
+                    const done = doneMap.has(`${month.key}|${w.index}|${d.key}`);
+                    const isRest = d.isRest;
+                    return (
+                      <Link
+                        key={d.key}
+                        to="/workout/$month/$week/$day"
+                        params={{ month: month.key, week: String(w.index), day: d.key }}
+                        className="pressable flex min-h-[104px] flex-col items-start gap-2 rounded-[22px] border p-3"
+                        style={{
+                          background: done ? "#FFFFFF" : isRest ? "#0B0B0B" : "#0E0E0E",
+                          borderColor: done ? "#FFFFFF" : "#232323",
+                          color: done ? "#000000" : "#FFFFFF",
+                        }}
+                      >
+                        <div className="flex w-full items-center justify-between">
+                          <span className="text-[10px] uppercase tracking-[0.2em]" style={{ opacity: done ? 0.6 : 0.55 }}>{d.key.slice(0, 3)}</span>
+                          {isRest ? (
+                            <Moon className="h-3.5 w-3.5" style={{ opacity: 0.5 }} />
+                          ) : done ? (
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: "#000000" }}>
+                              <Check className="h-3 w-3" style={{ color: "#FFFFFF" }} />
+                            </span>
+                          ) : (
+                            <Circle className="h-3.5 w-3.5" style={{ opacity: 0.35 }} />
+                          )}
+                        </div>
+                        <div className="text-xs leading-snug line-clamp-3" style={{ opacity: done ? 0.75 : 0.55 }}>
+                          {isRest ? "Descanso" : (d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ?? d.blocks[0]?.content.split("\n")[0] ?? "—")}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
         </div>
       </div>
     </AppShell>

@@ -177,7 +177,7 @@ function RecordsPage() {
 
   return (
     <AppShell>
-      <header className="mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+      <header className="rise rise-1 mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
             Personal Records
@@ -195,7 +195,7 @@ function RecordsPage() {
       </header>
 
       {/* Segmented rep-max control */}
-      <div className="mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-1">
+      <div className="rise rise-2 mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-1">
         {TABS.map((t) => {
           const active = tab === t.value;
           return (
@@ -325,7 +325,7 @@ function RecordsPage() {
           </p>
         </div>
       ) : (
-        <ul className="card-elevated divide-y divide-border overflow-hidden p-0">
+        <ul className="rise rise-3 card-elevated divide-y divide-border overflow-hidden p-0">
           {visible.map((r) => {
             const isEditing = editingId === r.id;
             return (

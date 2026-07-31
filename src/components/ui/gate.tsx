@@ -77,13 +77,20 @@ export function PinGate({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-6">
-      <div className="w-full max-w-sm">
-        <div className="mb-10 text-center">
-          <div className="text-white font-bold tracking-tight leading-none" style={{ fontSize: "56px", letterSpacing: "-0.06em" }}>
+    <div className="grain relative flex min-h-screen items-center justify-center px-6 py-12">
+      <div aria-hidden className="aura pointer-events-none absolute inset-x-0 top-0 h-[380px]" />
+      <div
+        aria-hidden
+        className="dotgrid pointer-events-none absolute inset-0 opacity-[0.3]"
+        style={{ maskImage: "radial-gradient(70% 50% at 50% 20%, #000, transparent)", WebkitMaskImage: "radial-gradient(70% 50% at 50% 20%, #000, transparent)" }}
+      />
+      <div className="relative w-full max-w-sm">
+        <div className="rise rise-1 mb-10 flex flex-col items-center text-center">
+          <div className="font-bold leading-none tracking-tight" style={{ fontSize: "60px", letterSpacing: "-0.06em", color: "#FFFFFF" }}>
             RM
           </div>
-          <div className="mt-2 text-white/70 text-[10px] uppercase" style={{ letterSpacing: "0.4em" }}>OR DIE</div>
+          <div className="mt-2 text-[10px] uppercase text-white/70" style={{ letterSpacing: "0.42em" }}>OR DIE</div>
+          <div className="rule-fade mt-6 w-24" />
           <p className="mt-6 text-sm text-muted-foreground">
             {mode === "pick" && "Selecciona tu perfil"}
             {mode === "pin" && `Introduce el PIN de ${selected?.name ?? ""}`}
@@ -92,25 +99,26 @@ export function PinGate({ children }: { children: React.ReactNode }) {
         </div>
 
         {mode === "pick" && (
-          <div className="space-y-2">
+          <div className="rise rise-2 space-y-2">
             {profiles.map((p) => (
               <button
                 key={p.id}
                 onClick={() => { setSelectedId(p.id); setPin(""); setError(null); setMode("pin"); }}
-                className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-left transition hover:border-gold/50"
+                className="pressable group flex w-full items-center gap-3 rounded-[20px] border border-border bg-surface px-4 py-3.5 text-left hover:border-white/35"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-2 text-gold">
+                <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-surface-2 text-foreground">
                   <User className="h-4 w-4" />
                 </div>
                 <div className="flex-1 text-sm font-medium">{p.name}</div>
+                <ChevronLeft className="h-4 w-4 rotate-180 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
               </button>
             ))}
             <button
               onClick={() => { setMode("create"); setName(""); setPin(""); setPin2(""); setError(null); }}
-              className="flex w-full items-center gap-3 rounded-xl border border-dashed border-border px-4 py-3 text-left text-sm text-muted-foreground transition hover:border-gold/50 hover:text-foreground"
+              className="pressable flex w-full items-center gap-3 rounded-[20px] border border-dashed border-border px-4 py-3.5 text-left text-sm text-muted-foreground hover:border-white/35 hover:text-foreground"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg gold-gradient">
-                <UserPlus className="h-4 w-4" style={{ color: "var(--gold-foreground)" }} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-[14px]" style={{ background: "#FFFFFF" }}>
+                <UserPlus className="h-4 w-4" style={{ color: "#000000" }} />
               </div>
               Crear nuevo perfil
             </button>

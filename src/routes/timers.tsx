@@ -350,7 +350,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
           className="flex-1 flex items-center justify-center gap-2 rounded-xl py-4 font-semibold"
           style={{ background: "var(--gold)", color: "#0a0a0a" }}
         >
-          {running ? <><Pause className="h-5 w-5" /> Pausar</> : <><Play className="h-5 w-5" /> {elapsed > 0 ? "Reanudar" : "Empezar"}</>}
+          {isPrep ? <><Pause className="h-5 w-5" /> Cancelar</> : running ? <><Pause className="h-5 w-5" /> Pausar</> : <><Play className="h-5 w-5" /> {elapsed > 0 ? "Reanudar" : "Empezar"}</>}
         </button>
         <button
           onClick={reset}

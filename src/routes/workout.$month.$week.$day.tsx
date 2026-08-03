@@ -182,7 +182,7 @@ function PercentAssistant({ percentages, settings }: { percentages: number[]; se
           placeholder="Tu 1RM (kg)"
           value={oneRm}
           onChange={(e) => setOneRm(e.target.value)}
-          className="w-32 rounded-lg border border-border bg-background px-3 py-2 text-sm tabular outline-none focus:border-gold"
+          className="w-32 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground tabular outline-none placeholder:text-muted-foreground focus:border-foreground/40"
         />
         <span className="text-xs text-muted-foreground">→ peso recomendado, redondeado a tus discos</span>
       </div>
@@ -192,10 +192,10 @@ function PercentAssistant({ percentages, settings }: { percentages: number[]; se
             const target = (rm * p) / 100;
             const rec = roundToPlates(target, cfg);
             return (
-              <div key={p} className="rounded-lg border border-border bg-background px-3 py-2 text-xs">
+              <div key={p} className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs text-foreground">
                 <span className="text-muted-foreground">{p}%</span>
                 <span className="mx-2 text-muted-foreground/50">·</span>
-                <span className="font-semibold gold-text tabular">{rec} kg</span>
+                <span className="font-semibold text-foreground tabular">{rec} kg</span>
                 <span className="ml-1 text-muted-foreground/60">({target.toFixed(1)})</span>
               </div>
             );

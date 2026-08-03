@@ -110,6 +110,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0); // seconds since start (running time)
   const [rounds_done, setRoundsDone] = useState(0);
+  const [prep, setPrep] = useState<number | null>(null); // 10s countdown before start
   const startRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
   const { beep, unlock } = useBeeper();
@@ -117,6 +118,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
 
   const reset = () => {
     setRunning(false);
+    setPrep(null);
     setElapsed(0);
     setRoundsDone(0);
     startRef.current = null;
@@ -124,6 +126,21 @@ function TimerRunner({ mode }: { mode: Mode }) {
   };
 
   useEffect(() => { reset(); /* on mode change */ }, [mode]);
+
+  // Prep countdown (10s) before the official mode starts
+  useEffect(() => {
+    if (prep == null) return;
+    if (prep <= 0) {
+      beep(1400, 0.35, 0.35);
+      setPrep(null);
+      startRef.current = performance.now();
+      setRunning(true);
+      return;
+    }
+    beep(prep <= 3 ? 1100 : 700, 0.12, 0.25);
+    const t = setTimeout(() => setPrep((p) => (p == null ? null : p - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [prep]);
 
   useEffect(() => {
     if (!running) return;

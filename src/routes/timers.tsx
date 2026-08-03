@@ -394,7 +394,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
               className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold"
               style={{ background: "var(--gold)", color: "#0a0a0a" }}
             >
-              {running ? <><Pause className="h-5 w-5" /> Pausar</> : <><Play className="h-5 w-5" /> Reanudar</>}
+              {isPrep ? <><Pause className="h-5 w-5" /> Cancelar</> : running ? <><Pause className="h-5 w-5" /> Pausar</> : <><Play className="h-5 w-5" /> Reanudar</>}
             </button>
             <button
               onClick={() => { reset(); setFullscreen(false); }}

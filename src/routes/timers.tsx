@@ -157,11 +157,17 @@ function TimerRunner({ mode }: { mode: Mode }) {
 
   const toggle = () => {
     unlock();
+    if (prep != null) {
+      setPrep(null);
+      return;
+    }
     if (running) {
       setRunning(false);
-    } else {
+    } else if (elapsed > 0) {
       startRef.current = performance.now() - elapsed * 1000;
       setRunning(true);
+    } else {
+      setPrep(10);
     }
   };
 

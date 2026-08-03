@@ -229,6 +229,16 @@ function TimerRunner({ mode }: { mode: Mode }) {
     }
   }
 
+  const isPrep = prep != null;
+  if (isPrep) {
+    display = String(prep);
+    sub = "Preparados";
+    phase = "run";
+    progress = (10 - (prep ?? 0)) / 10;
+  }
+
+
+
   // Auto-stop + beeps
   useEffect(() => {
     if (!running) return;

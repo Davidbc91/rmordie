@@ -274,9 +274,9 @@ function TimerRunner({ mode }: { mode: Mode }) {
   const [fullscreen, setFullscreen] = useState(false);
 
   useEffect(() => {
-    if (!running) return;
+    if (!running && !isPrep) return;
     setFullscreen(true);
-  }, [running]);
+  }, [running, isPrep]);
 
   useEffect(() => {
     if (!fullscreen) return;

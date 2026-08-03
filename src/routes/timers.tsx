@@ -110,6 +110,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0); // seconds since start (running time)
   const [rounds_done, setRoundsDone] = useState(0);
+  const [prep, setPrep] = useState<number | null>(null); // 10s countdown before start
   const startRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
   const { beep, unlock } = useBeeper();
@@ -117,6 +118,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
 
   const reset = () => {
     setRunning(false);
+    setPrep(null);
     setElapsed(0);
     setRoundsDone(0);
     startRef.current = null;
@@ -124,6 +126,21 @@ function TimerRunner({ mode }: { mode: Mode }) {
   };
 
   useEffect(() => { reset(); /* on mode change */ }, [mode]);
+
+  // Prep countdown (10s) before the official mode starts
+  useEffect(() => {
+    if (prep == null) return;
+    if (prep <= 0) {
+      beep(1400, 0.35, 0.35);
+      setPrep(null);
+      startRef.current = performance.now();
+      setRunning(true);
+      return;
+    }
+    beep(prep <= 3 ? 1100 : 700, 0.12, 0.25);
+    const t = setTimeout(() => setPrep((p) => (p == null ? null : p - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [prep]);
 
   useEffect(() => {
     if (!running) return;
@@ -140,11 +157,17 @@ function TimerRunner({ mode }: { mode: Mode }) {
 
   const toggle = () => {
     unlock();
+    if (prep != null) {
+      setPrep(null);
+      return;
+    }
     if (running) {
       setRunning(false);
-    } else {
+    } else if (elapsed > 0) {
       startRef.current = performance.now() - elapsed * 1000;
       setRunning(true);
+    } else {
+      setPrep(10);
     }
   };
 
@@ -206,6 +229,16 @@ function TimerRunner({ mode }: { mode: Mode }) {
     }
   }
 
+  const isPrep = prep != null;
+  if (isPrep) {
+    display = String(prep);
+    sub = "Preparados";
+    phase = "run";
+    progress = (10 - (prep ?? 0)) / 10;
+  }
+
+
+
   // Auto-stop + beeps
   useEffect(() => {
     if (!running) return;
@@ -241,9 +274,9 @@ function TimerRunner({ mode }: { mode: Mode }) {
   const [fullscreen, setFullscreen] = useState(false);
 
   useEffect(() => {
-    if (!running) return;
+    if (!running && !isPrep) return;
     setFullscreen(true);
-  }, [running]);
+  }, [running, isPrep]);
 
   useEffect(() => {
     if (!fullscreen) return;
@@ -317,7 +350,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
           className="flex-1 flex items-center justify-center gap-2 rounded-xl py-4 font-semibold"
           style={{ background: "var(--gold)", color: "#0a0a0a" }}
         >
-          {running ? <><Pause className="h-5 w-5" /> Pausar</> : <><Play className="h-5 w-5" /> {elapsed > 0 ? "Reanudar" : "Empezar"}</>}
+          {isPrep ? <><Pause className="h-5 w-5" /> Cancelar</> : running ? <><Pause className="h-5 w-5" /> Pausar</> : <><Play className="h-5 w-5" /> {elapsed > 0 ? "Reanudar" : "Empezar"}</>}
         </button>
         <button
           onClick={reset}
@@ -361,7 +394,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
               className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold"
               style={{ background: "var(--gold)", color: "#0a0a0a" }}
             >
-              {running ? <><Pause className="h-5 w-5" /> Pausar</> : <><Play className="h-5 w-5" /> Reanudar</>}
+              {isPrep ? <><Pause className="h-5 w-5" /> Cancelar</> : running ? <><Pause className="h-5 w-5" /> Pausar</> : <><Play className="h-5 w-5" /> Reanudar</>}
             </button>
             <button
               onClick={() => { reset(); setFullscreen(false); }}

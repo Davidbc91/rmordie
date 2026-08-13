@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { LinkedText } from "@/components/LinkedText";
 import { usePlanning, useDayResults, useSaveResult, useSettings, findDay } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { ChevronLeft, Sparkles, Check } from "lucide-react";
@@ -114,7 +115,7 @@ function BlockCard({
       </summary>
 
       <div className="border-t border-border/60 px-5 pb-5 pt-4">
-        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground/85">{content}</pre>
+        <LinkedText text={content} className="opacity-90" />
 
         {pcts.length > 0 && settings && (
           <PercentAssistant percentages={pcts} settings={settings} />

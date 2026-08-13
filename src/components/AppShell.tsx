@@ -1,10 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings } from "lucide-react";
+import { Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, Dumbbell } from "lucide-react";
 
 const tabs = [
   { to: "/", label: "Inicio", icon: Home },
   { to: "/calendar", label: "Calendario", icon: Calendar },
   { to: "/records", label: "RM", icon: Trophy },
+  { to: "/movements", label: "Movs", icon: Dumbbell },
   { to: "/timers", label: "Timer", icon: Timer },
   { to: "/chat", label: "Chat", icon: MessageCircle },
   { to: "/import", label: "Importar", icon: Upload },

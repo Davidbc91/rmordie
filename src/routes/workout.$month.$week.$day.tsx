@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { LinkedText } from "@/components/LinkedText";
 import { usePlanning, useDayResults, useSaveResult, useSettings, findDay } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { ChevronLeft, Sparkles, Check } from "lucide-react";

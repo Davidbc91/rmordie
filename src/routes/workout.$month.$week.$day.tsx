@@ -114,7 +114,7 @@ function BlockCard({
       </summary>
 
       <div className="border-t border-border/60 px-5 pb-5 pt-4">
-        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground/85">{content}</pre>
+        <LinkedText text={content} className="opacity-90" />
 
         {pcts.length > 0 && settings && (
           <PercentAssistant percentages={pcts} settings={settings} />

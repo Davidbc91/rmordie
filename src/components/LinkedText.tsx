@@ -7,7 +7,7 @@ export function LinkedText({ text, className }: { text: string; className?: stri
     <p className={`whitespace-pre-wrap font-sans text-sm leading-relaxed ${className ?? ""}`}>
       {parts.map((part, i) => {
         if (i % 2 === 1) {
-          const href = part.startsWith («http») ? part : `https://${part}`;
+          const href = part.startsWith("http") ? part : `https://${part}`;
           return (
             <a
               key={i}

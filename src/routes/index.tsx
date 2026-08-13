@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults } from "@/lib/store";
-import { Calendar, Upload, Flame, Trophy, ChevronRight, Timer, Dumbbell } from "lucide-react";
+import { Calendar, Upload, Flame, Trophy, ChevronRight, Timer, Dumbbell, User } from "lucide-react";
 import { useMemo } from "react";
 
 export const Route = createFileRoute("/")({
@@ -80,6 +80,7 @@ function Home() {
             <h2 className="eyebrow mb-3">Accesos</h2>
             <div className="space-y-2">
               <QuickAction to="/calendar" icon={<Calendar className="h-[18px] w-[18px]" />} title="Calendario" subtitle="Tu planificación mes a mes" />
+              <QuickAction to="/profile" icon={<User className="h-[18px] w-[18px]" />} title="Mi perfil" subtitle="Progreso, fuerza, constancia e informes" />
               <QuickAction to="/records" icon={<Trophy className="h-[18px] w-[18px]" />} title="Récords" subtitle="1RM, 3RM, 5RM y evolución" />
               <QuickAction to="/timers" icon={<Timer className="h-[18px] w-[18px]" />} title="Temporizadores" subtitle="AMRAP · EMOM · Tabata" />
               <QuickAction

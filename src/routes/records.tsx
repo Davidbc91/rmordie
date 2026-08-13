@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
 import {
   LineChart,
   Line,
@@ -107,6 +108,7 @@ function RecordsPage() {
   const [editExercise, setEditExercise] = useState("");
   const [editWeight, setEditWeight] = useState("");
   const [detailFor, setDetailFor] = useState<PersonalRecord | null>(null);
+  const [celebrate, setCelebrate] = useState<PrCelebrationData | null>(null);
 
   const visible = useMemo(() => {
     const list = tab === "all" ? records : records.filter((r) => (r.rep_max ?? 1) === tab);
@@ -134,7 +136,18 @@ function RecordsPage() {
     if (!Number.isFinite(w) || w <= 0) return toast.error("Peso inválido");
     if (ex.length > 60) return toast.error("Nombre demasiado largo");
     try {
+      const prevRec = records.find(
+        (r) => r.exercise.toLowerCase() === ex.toLowerCase() && (r.rep_max ?? 1) === newRepMax,
+      );
       await upsert.mutateAsync({ exercise: ex, weight: w, rep_max: newRepMax });
+      if (!prevRec || w > Number(prevRec.weight)) {
+        setCelebrate({
+          exercise: ex,
+          weight: w,
+          delta: prevRec ? Math.round((w - Number(prevRec.weight)) * 100) / 100 : null,
+          repMax: newRepMax,
+        });
+      }
       setNewExercise("");
       setNewWeight("");
       setShowAdd(false);
@@ -157,7 +170,16 @@ function RecordsPage() {
     if (!ex) return toast.error("Nombre requerido");
     if (!Number.isFinite(w) || w <= 0) return toast.error("Peso inválido");
     try {
+      const prevRec = records.find((r) => r.id === id);
       await update.mutateAsync({ id, exercise: ex, weight: w });
+      if (prevRec && w > Number(prevRec.weight)) {
+        setCelebrate({
+          exercise: ex,
+          weight: w,
+          delta: Math.round((w - Number(prevRec.weight)) * 100) / 100,
+          repMax: prevRec.rep_max ?? 1,
+        });
+      }
       setEditingId(null);
       toast.success("Actualizado");
     } catch (err: any) {
@@ -177,6 +199,7 @@ function RecordsPage() {
 
   return (
     <AppShell>
+      {celebrate && <PrCelebration data={celebrate} onClose={() => setCelebrate(null)} />}
       <header className="rise rise-1 mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground">

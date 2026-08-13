@@ -38,6 +38,159 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_goals: {
+        Row: {
+          created_at: string
+          current_value: number | null
+          exercise: string | null
+          goal_type: string
+          id: string
+          start_value: number | null
+          status: string
+          target_date: string | null
+          target_value: number
+          title: string
+          unit: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: number | null
+          exercise?: string | null
+          goal_type?: string
+          id?: string
+          start_value?: number | null
+          status?: string
+          target_date?: string | null
+          target_value: number
+          title: string
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: number | null
+          exercise?: string | null
+          goal_type?: string
+          id?: string
+          start_value?: number | null
+          status?: string
+          target_date?: string | null
+          target_value?: number
+          title?: string
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      athlete_profile: {
+        Row: {
+          avatar_url: string | null
+          birth_date: string | null
+          box_name: string | null
+          created_at: string
+          crossfit_start_date: string | null
+          current_weight_kg: number | null
+          display_name: string | null
+          goals: Json
+          height_cm: number | null
+          id: string
+          level: string | null
+          sex: string | null
+          target_weight_kg: number | null
+          updated_at: string
+          user_id: string
+          weekly_target: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          box_name?: string | null
+          created_at?: string
+          crossfit_start_date?: string | null
+          current_weight_kg?: number | null
+          display_name?: string | null
+          goals?: Json
+          height_cm?: number | null
+          id?: string
+          level?: string | null
+          sex?: string | null
+          target_weight_kg?: number | null
+          updated_at?: string
+          user_id: string
+          weekly_target?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          box_name?: string | null
+          created_at?: string
+          crossfit_start_date?: string | null
+          current_weight_kg?: number | null
+          display_name?: string | null
+          goals?: Json
+          height_cm?: number | null
+          id?: string
+          level?: string | null
+          sex?: string | null
+          target_weight_kg?: number | null
+          updated_at?: string
+          user_id?: string
+          weekly_target?: number | null
+        }
+        Relationships: []
+      }
+      body_metrics: {
+        Row: {
+          arm_cm: number | null
+          body_fat_pct: number | null
+          chest_cm: number | null
+          created_at: string
+          hip_cm: number | null
+          id: string
+          measured_on: string
+          muscle_mass_kg: number | null
+          notes: string | null
+          thigh_cm: number | null
+          user_id: string
+          waist_cm: number | null
+          weight_kg: number | null
+        }
+        Insert: {
+          arm_cm?: number | null
+          body_fat_pct?: number | null
+          chest_cm?: number | null
+          created_at?: string
+          hip_cm?: number | null
+          id?: string
+          measured_on?: string
+          muscle_mass_kg?: number | null
+          notes?: string | null
+          thigh_cm?: number | null
+          user_id: string
+          waist_cm?: number | null
+          weight_kg?: number | null
+        }
+        Update: {
+          arm_cm?: number | null
+          body_fat_pct?: number | null
+          chest_cm?: number | null
+          created_at?: string
+          hip_cm?: number | null
+          id?: string
+          measured_on?: string
+          muscle_mass_kg?: number | null
+          notes?: string | null
+          thigh_cm?: number | null
+          user_id?: string
+          waist_cm?: number | null
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -118,6 +271,33 @@ export type Database = {
           user_id?: string | null
           week?: number | null
           weight?: number | null
+        }
+        Relationships: []
+      }
+      milestones: {
+        Row: {
+          achieved_at: string
+          code: string
+          detail: string | null
+          id: string
+          label: string
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string
+          code: string
+          detail?: string | null
+          id?: string
+          label: string
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string
+          code?: string
+          detail?: string | null
+          id?: string
+          label?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -229,6 +409,45 @@ export type Database = {
           id?: string
           name?: string
           pin_hash?: string
+        }
+        Relationships: []
+      }
+      wellness_logs: {
+        Row: {
+          created_at: string
+          energy: number | null
+          fatigue: number | null
+          id: string
+          logged_on: string
+          mood: number | null
+          notes: string | null
+          sleep_hours: number | null
+          soreness: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          energy?: number | null
+          fatigue?: number | null
+          id?: string
+          logged_on?: string
+          mood?: number | null
+          notes?: string | null
+          sleep_hours?: number | null
+          soreness?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          energy?: number | null
+          fatigue?: number | null
+          id?: string
+          logged_on?: string
+          mood?: number | null
+          notes?: string | null
+          sleep_hours?: number | null
+          soreness?: number | null
+          user_id?: string
         }
         Relationships: []
       }

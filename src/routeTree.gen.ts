@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TimersRouteImport } from './routes/timers'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RecordsRouteImport } from './routes/records'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MovementsRouteImport } from './routes/movements'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -32,6 +33,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const RecordsRoute = RecordsRouteImport.update({
   id: '/records',
   path: '/records',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MovementsRoute = MovementsRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/import': typeof ImportRoute
   '/movements': typeof MovementsRoute
+  '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/import': typeof ImportRoute
   '/movements': typeof MovementsRoute
+  '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/import': typeof ImportRoute
   '/movements': typeof MovementsRoute
+  '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/import'
     | '/movements'
+    | '/profile'
     | '/records'
     | '/settings'
     | '/timers'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/import'
     | '/movements'
+    | '/profile'
     | '/records'
     | '/settings'
     | '/timers'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/import'
     | '/movements'
+    | '/profile'
     | '/records'
     | '/settings'
     | '/timers'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   ImportRoute: typeof ImportRoute
   MovementsRoute: typeof MovementsRoute
+  ProfileRoute: typeof ProfileRoute
   RecordsRoute: typeof RecordsRoute
   SettingsRoute: typeof SettingsRoute
   TimersRoute: typeof TimersRoute
@@ -168,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/records'
       fullPath: '/records'
       preLoaderRoute: typeof RecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/movements': {
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   ImportRoute: ImportRoute,
   MovementsRoute: MovementsRoute,
+  ProfileRoute: ProfileRoute,
   RecordsRoute: RecordsRoute,
   SettingsRoute: SettingsRoute,
   TimersRoute: TimersRoute,

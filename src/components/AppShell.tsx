@@ -1,9 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, Dumbbell } from "lucide-react";
+import { Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, Dumbbell, User } from "lucide-react";
 
 const tabs = [
   { to: "/", label: "Inicio", icon: Home },
   { to: "/calendar", label: "Calendario", icon: Calendar },
+  { to: "/profile", label: "Perfil", icon: User },
   { to: "/records", label: "RM", icon: Trophy },
   { to: "/movements", label: "Movs", icon: Dumbbell },
   { to: "/timers", label: "Timer", icon: Timer },
@@ -34,7 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           WebkitBackdropFilter: "saturate(160%) blur(24px)",
         }}
       >
-        <div className="mx-auto flex max-w-2xl items-center justify-around px-2 py-2 safe-bottom">
+        <div className="mx-auto flex max-w-2xl items-center gap-1 overflow-x-auto no-scrollbar px-2 py-2 safe-bottom">
           {tabs.map((t) => {
             const active = pathname === t.to || (t.to !== "/" && pathname.startsWith(t.to));
             const Icon = t.icon;
@@ -42,7 +43,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={t.to}
                 to={t.to}
-                className="pressable relative flex flex-1 flex-col items-center gap-1 rounded-[14px] py-2 text-[10px]"
+                className="pressable relative flex min-w-[58px] flex-1 shrink-0 flex-col items-center gap-1 rounded-[14px] py-2 text-[10px]"
                 style={{ color: active ? "#FFFFFF" : "#6F6F6F", letterSpacing: "0.02em" }}
               >
                 <span

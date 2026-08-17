@@ -194,13 +194,14 @@ function TimerRunner({ mode }: { mode: Mode }) {
     progress = Math.min(1, elapsed / total);
     if (elapsed >= total) phase = "done";
   } else if (mode === "emom") {
-    total = minutes * 60;
-    const currentMin = Math.floor(elapsed / 60);
-    const inMin = elapsed - currentMin * 60;
-    const remain = 60 - inMin;
+    const iv = Math.max(5, emomInterval);
+    total = minutes * iv;
+    const currentMin = Math.floor(elapsed / iv);
+    const inMin = elapsed - currentMin * iv;
+    const remain = iv - inMin;
     display = fmt(remain);
-    sub = `EMOM ${currentMin + 1}/${minutes}`;
-    progress = inMin / 60;
+    sub = `EMOM ${Math.min(currentMin + 1, minutes)}/${minutes} · ${iv}s`;
+    progress = inMin / iv;
     if (elapsed >= total) phase = "done";
   } else if (mode === "stopwatch") {
     display = fmt(elapsed);

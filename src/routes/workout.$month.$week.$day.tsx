@@ -3,8 +3,8 @@ import { AppShell } from "@/components/AppShell";
 import { LinkedText } from "@/components/LinkedText";
 import { usePlanning, useDayResults, useSaveResult, useSettings, findDay } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
-import { ChevronLeft, Sparkles, Check } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, Sparkles, Check, CheckCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({

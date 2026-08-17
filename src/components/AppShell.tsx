@@ -6,7 +6,7 @@ const tabs = [
   { to: "/calendar", label: "Calendario", icon: Calendar },
   { to: "/profile", label: "Perfil", icon: User },
   { to: "/records", label: "RM", icon: Trophy },
-  { to: "/movements", label: "Movs", icon: Dumbbell },
+  
   { to: "/timers", label: "Timer", icon: Timer },
   { to: "/chat", label: "Chat", icon: MessageCircle },
   { to: "/import", label: "Importar", icon: Upload },

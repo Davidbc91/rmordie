@@ -105,6 +105,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
   const [work, setWork] = useState(mode === "tabata" ? 20 : 40);
   const [rest, setRest] = useState(mode === "tabata" ? 10 : 20);
   const [countdownSec, setCountdownSec] = useState(60);
+  const [emomInterval, setEmomInterval] = useState(60); // seconds per EMOM round
 
   // State
   const [running, setRunning] = useState(false);
@@ -193,13 +194,14 @@ function TimerRunner({ mode }: { mode: Mode }) {
     progress = Math.min(1, elapsed / total);
     if (elapsed >= total) phase = "done";
   } else if (mode === "emom") {
-    total = minutes * 60;
-    const currentMin = Math.floor(elapsed / 60);
-    const inMin = elapsed - currentMin * 60;
-    const remain = 60 - inMin;
+    const iv = Math.max(5, emomInterval);
+    total = minutes * iv;
+    const currentMin = Math.floor(elapsed / iv);
+    const inMin = elapsed - currentMin * iv;
+    const remain = iv - inMin;
     display = fmt(remain);
-    sub = `EMOM ${currentMin + 1}/${minutes}`;
-    progress = inMin / 60;
+    sub = `EMOM ${Math.min(currentMin + 1, minutes)}/${minutes} · ${iv}s`;
+    progress = inMin / iv;
     if (elapsed >= total) phase = "done";
   } else if (mode === "stopwatch") {
     display = fmt(elapsed);
@@ -247,8 +249,9 @@ function TimerRunner({ mode }: { mode: Mode }) {
       lastTickRef.current = secTick;
       // Beep at last 3 seconds of each key segment
       if (mode === "emom") {
-        const inMin = secTick % 60;
-        const remain = 60 - inMin;
+        const iv = Math.max(5, emomInterval);
+        const inMin = secTick % iv;
+        const remain = iv - inMin;
         if (remain <= 3 && remain > 0) beep(880, 0.12);
         if (inMin === 0 && secTick > 0) beep(1400, 0.25, 0.3);
       } else if (mode === "tabata" || mode === "intervals") {
@@ -269,7 +272,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
       beep(500, 0.6, 0.35);
       setRunning(false);
     }
-  }, [elapsed, running, mode, work, rest, total, phase, beep]);
+  }, [elapsed, running, mode, work, rest, total, phase, beep, emomInterval]);
 
   const [fullscreen, setFullscreen] = useState(false);
 
@@ -295,8 +298,32 @@ function TimerRunner({ mode }: { mode: Mode }) {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
-        {(mode === "amrap" || mode === "emom" || mode === "fortime") && (
-          <NumberField label="Minutos" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={60} />
+        {(mode === "amrap" || mode === "fortime") && (
+          <NumberField label="Minutos" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={120} />
+        )}
+        {mode === "emom" && (
+          <>
+            <NumberField label="Rondas" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={120} />
+            <NumberField label="Intervalo (s)" value={emomInterval} onChange={(n) => { reset(); setEmomInterval(n); }} min={5} max={600} step={5} />
+            <div className="flex flex-wrap gap-2">
+              {[30, 60, 90, 120, 180].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => { reset(); setEmomInterval(s); }}
+                  className="rounded-lg border px-3 py-1.5 text-xs font-medium"
+                  style={{
+                    borderColor: emomInterval === s ? "var(--gold)" : "var(--border)",
+                    color: emomInterval === s ? "var(--gold)" : "var(--muted-foreground)",
+                  }}
+                >
+                  {s % 60 === 0 ? `E${s / 60 === 1 ? "" : s / 60}MOM` : `${s}s`}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Duración total: {Math.floor((minutes * emomInterval) / 60)}:{String((minutes * emomInterval) % 60).padStart(2, "0")}
+            </p>
+          </>
         )}
         {mode === "countdown" && (
           <NumberField label="Segundos" value={countdownSec} onChange={(n) => { reset(); setCountdownSec(n); }} min={5} max={3600} step={5} />
@@ -425,6 +452,7 @@ function NumberField({
   min?: number; max?: number; step?: number; disabled?: boolean;
 }) {
   const clamp = (n: number) => Math.max(min, Math.min(max, n));
+  const [draft, setDraft] = useState<string | null>(null);
   return (
     <div className="flex items-center justify-between gap-3">
       <label className="text-sm text-muted-foreground">{label}</label>
@@ -439,8 +467,14 @@ function NumberField({
         </button>
         <input
           disabled={disabled}
-          value={value}
-          onChange={(e) => onChange(clamp(parseInt(e.target.value || "0", 10) || 0))}
+          value={draft ?? String(value)}
+          onFocus={(e) => e.currentTarget.select()}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/[^0-9]/g, "");
+            setDraft(raw);
+            if (raw !== "") onChange(clamp(parseInt(raw, 10)));
+          }}
+          onBlur={() => setDraft(null)}
           className="w-16 rounded-lg border bg-transparent px-2 py-2 text-center font-mono disabled:opacity-40"
           style={{ borderColor: "var(--border)" }}
           inputMode="numeric"

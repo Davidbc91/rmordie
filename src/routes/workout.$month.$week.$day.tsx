@@ -3,8 +3,8 @@ import { AppShell } from "@/components/AppShell";
 import { LinkedText } from "@/components/LinkedText";
 import { usePlanning, useDayResults, useSaveResult, useSettings, findDay } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
-import { ChevronLeft, Sparkles, Check } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, Sparkles, Check, CheckCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
@@ -12,17 +12,52 @@ export const Route = createFileRoute("/workout/$month/$week/$day")({
   component: WorkoutPage,
 });
 
+type BlockPayload = {
+  block_key: string;
+  status: "completed";
+  weight: number | null;
+  sets: number | null;
+  reps: number | null;
+  time_seconds: number | null;
+  rpe: number | null;
+  notes: string | null;
+};
+
 function WorkoutPage() {
   const { month, week, day } = Route.useParams();
   const weekN = Number(week);
   const { data: planning } = usePlanning();
   const { data: results = [] } = useDayResults(month, weekN, day);
   const { data: settings } = useSettings();
+  const save = useSaveResult();
+  const formsRef = useRef<Record<string, () => BlockPayload>>({});
+  const [savingAll, setSavingAll] = useState(false);
 
   if (!planning) return <AppShell><p className="text-sm text-muted-foreground">Importa primero tu planificación.</p></AppShell>;
 
   const { month: mo, day: d } = findDay(planning.data, month, weekN, day);
   if (!mo || !d) return <AppShell><p className="text-sm text-muted-foreground">Día no encontrado.</p></AppShell>;
+
+  async function saveAll() {
+    const getters = Object.values(formsRef.current);
+    if (getters.length === 0) return;
+    setSavingAll(true);
+    try {
+      for (const get of getters) {
+        await save.mutateAsync({
+          month_key: month,
+          week: weekN,
+          day_key: day,
+          ...get(),
+        });
+      }
+      toast.success("Entreno completo guardado");
+    } catch {
+      toast.error("No se pudo guardar el entreno");
+    } finally {
+      setSavingAll(false);
+    }
+  }
 
   return (
     <AppShell>
@@ -40,6 +75,17 @@ function WorkoutPage() {
         </div>
       )}
 
+      {d.blocks.length > 0 && (
+        <button
+          onClick={saveAll}
+          disabled={savingAll}
+          className="mb-4 flex w-full items-center justify-center gap-2 rounded-[18px] bg-white py-3 text-sm font-semibold text-black disabled:opacity-50"
+        >
+          <CheckCheck className="h-4 w-4" />
+          {savingAll ? "Guardando entreno…" : "Guardar entreno completo"}
+        </button>
+      )}
+
       <div className="space-y-4">
         {d.blocks.map((b) => {
           const existing = results.find((r) => r.block_key === b.key);
@@ -50,10 +96,7 @@ function WorkoutPage() {
               content={b.content}
               existing={existing}
               settings={settings}
-              onSave={async (partial) => {
-                // handled inside
-                return partial;
-              }}
+              register={(fn) => { formsRef.current[b.key] = fn; }}
               contextIds={{ month_key: month, week: weekN, day_key: day }}
             />
           );
@@ -63,13 +106,14 @@ function WorkoutPage() {
   );
 }
 
+
 function BlockCard({
-  blockKey, content, existing, settings, contextIds,
+  blockKey, content, existing, settings, contextIds, register,
 }: {
   blockKey: string; content: string;
   existing: import("@/lib/store").WorkoutResult | undefined;
   settings: import("@/lib/store").AppSettings | undefined;
-  onSave: (r: unknown) => Promise<unknown>;
+  register: (fn: () => BlockPayload) => void;
   contextIds: { month_key: string; week: number; day_key: string };
 }) {
   const save = useSaveResult();
@@ -82,9 +126,8 @@ function BlockCard({
 
   const pcts = extractPercentages(content);
 
-  async function onSaveClick() {
-    await save.mutateAsync({
-      ...contextIds,
+  function payload(): BlockPayload {
+    return {
       block_key: blockKey,
       status: "completed",
       weight: weight ? Number(weight) : null,
@@ -93,7 +136,16 @@ function BlockCard({
       time_seconds: time ? parseTime(time) : null,
       rpe: rpe ? Number(rpe) : null,
       notes: notes || null,
-    });
+    };
+  }
+
+  useEffect(() => {
+    register(payload);
+  });
+
+  async function onSaveClick() {
+    await save.mutateAsync({ ...contextIds, ...payload() });
+
     toast.success(`${blockKey} guardado`);
   }
 

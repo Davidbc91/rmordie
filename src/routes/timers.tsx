@@ -466,8 +466,14 @@ function NumberField({
         </button>
         <input
           disabled={disabled}
-          value={value}
-          onChange={(e) => onChange(clamp(parseInt(e.target.value || "0", 10) || 0))}
+          value={draft ?? String(value)}
+          onFocus={(e) => e.currentTarget.select()}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/[^0-9]/g, "");
+            setDraft(raw);
+            if (raw !== "") onChange(clamp(parseInt(raw, 10)));
+          }}
+          onBlur={() => setDraft(null)}
           className="w-16 rounded-lg border bg-transparent px-2 py-2 text-center font-mono disabled:opacity-40"
           style={{ borderColor: "var(--border)" }}
           inputMode="numeric"

@@ -105,6 +105,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
   const [work, setWork] = useState(mode === "tabata" ? 20 : 40);
   const [rest, setRest] = useState(mode === "tabata" ? 10 : 20);
   const [countdownSec, setCountdownSec] = useState(60);
+  const [emomInterval, setEmomInterval] = useState(60); // seconds per EMOM round
 
   // State
   const [running, setRunning] = useState(false);

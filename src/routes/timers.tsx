@@ -272,7 +272,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
       beep(500, 0.6, 0.35);
       setRunning(false);
     }
-  }, [elapsed, running, mode, work, rest, total, phase, beep]);
+  }, [elapsed, running, mode, work, rest, total, phase, beep, emomInterval]);
 
   const [fullscreen, setFullscreen] = useState(false);
 

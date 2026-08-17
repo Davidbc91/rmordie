@@ -108,12 +108,12 @@ function WorkoutPage() {
 
 
 function BlockCard({
-  blockKey, content, existing, settings, contextIds,
+  blockKey, content, existing, settings, contextIds, register,
 }: {
   blockKey: string; content: string;
   existing: import("@/lib/store").WorkoutResult | undefined;
   settings: import("@/lib/store").AppSettings | undefined;
-  onSave: (r: unknown) => Promise<unknown>;
+  register: (fn: () => BlockPayload) => void;
   contextIds: { month_key: string; week: number; day_key: string };
 }) {
   const save = useSaveResult();
@@ -126,9 +126,8 @@ function BlockCard({
 
   const pcts = extractPercentages(content);
 
-  async function onSaveClick() {
-    await save.mutateAsync({
-      ...contextIds,
+  function payload(): BlockPayload {
+    return {
       block_key: blockKey,
       status: "completed",
       weight: weight ? Number(weight) : null,
@@ -137,7 +136,16 @@ function BlockCard({
       time_seconds: time ? parseTime(time) : null,
       rpe: rpe ? Number(rpe) : null,
       notes: notes || null,
-    });
+    };
+  }
+
+  useEffect(() => {
+    register(payload);
+  });
+
+  async function onSaveClick() {
+    await save.mutateAsync({ ...contextIds, ...payload() });
+
     toast.success(`${blockKey} guardado`);
   }
 

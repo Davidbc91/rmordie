@@ -298,8 +298,32 @@ function TimerRunner({ mode }: { mode: Mode }) {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
-        {(mode === "amrap" || mode === "emom" || mode === "fortime") && (
-          <NumberField label="Minutos" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={60} />
+        {(mode === "amrap" || mode === "fortime") && (
+          <NumberField label="Minutos" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={120} />
+        )}
+        {mode === "emom" && (
+          <>
+            <NumberField label="Rondas" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={120} />
+            <NumberField label="Intervalo (s)" value={emomInterval} onChange={(n) => { reset(); setEmomInterval(n); }} min={5} max={600} step={5} />
+            <div className="flex flex-wrap gap-2">
+              {[30, 60, 90, 120, 180].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => { reset(); setEmomInterval(s); }}
+                  className="rounded-lg border px-3 py-1.5 text-xs font-medium"
+                  style={{
+                    borderColor: emomInterval === s ? "var(--gold)" : "var(--border)",
+                    color: emomInterval === s ? "var(--gold)" : "var(--muted-foreground)",
+                  }}
+                >
+                  {s % 60 === 0 ? `E${s / 60 === 1 ? "" : s / 60}MOM` : `${s}s`}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Duración total: {Math.floor((minutes * emomInterval) / 60)}:{String((minutes * emomInterval) % 60).padStart(2, "0")}
+            </p>
+          </>
         )}
         {mode === "countdown" && (
           <NumberField label="Segundos" value={countdownSec} onChange={(n) => { reset(); setCountdownSec(n); }} min={5} max={3600} step={5} />

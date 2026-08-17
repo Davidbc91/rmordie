@@ -62,39 +62,41 @@ function useBeeper() {
 function TimersPage() {
   const [mode, setMode] = useState<Mode>("amrap");
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <div className="flex items-center gap-2">
-          <TimerIcon className="h-6 w-6" style={{ color: "var(--gold)" }} />
-          <h1 className="text-2xl font-semibold">Temporizador</h1>
+    <AppShell>
+      <div className="space-y-6">
+        <header className="space-y-2">
+          <div className="flex items-center gap-2">
+            <TimerIcon className="h-6 w-6" style={{ color: "var(--gold)" }} />
+            <h1 className="text-2xl font-semibold">Temporizador</h1>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Elige el formato de tu WOD.
+          </p>
+        </header>
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {MODES.map((m) => {
+            const active = mode === m.id;
+            return (
+              <button
+                key={m.id}
+                onClick={() => setMode(m.id)}
+                className="rounded-xl border p-3 text-left transition"
+                style={{
+                  borderColor: active ? "var(--gold)" : "var(--border)",
+                  background: active ? "color-mix(in oklab, var(--gold) 12%, transparent)" : "var(--card)",
+                }}
+              >
+                <div className="text-sm font-semibold" style={{ color: active ? "var(--gold)" : "inherit" }}>{m.label}</div>
+                <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">{m.desc}</div>
+              </button>
+            );
+          })}
         </div>
-        <p className="text-sm text-muted-foreground">
-          Elige el formato de tu WOD.
-        </p>
-      </header>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {MODES.map((m) => {
-          const active = mode === m.id;
-          return (
-            <button
-              key={m.id}
-              onClick={() => setMode(m.id)}
-              className="rounded-xl border p-3 text-left transition"
-              style={{
-                borderColor: active ? "var(--gold)" : "var(--border)",
-                background: active ? "color-mix(in oklab, var(--gold) 12%, transparent)" : "var(--card)",
-              }}
-            >
-              <div className="text-sm font-semibold" style={{ color: active ? "var(--gold)" : "inherit" }}>{m.label}</div>
-              <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">{m.desc}</div>
-            </button>
-          );
-        })}
+        <TimerRunner key={mode} mode={mode} />
       </div>
-
-      <TimerRunner key={mode} mode={mode} />
-    </div>
+    </AppShell>
   );
 }
 

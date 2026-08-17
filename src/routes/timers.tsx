@@ -452,6 +452,7 @@ function NumberField({
   min?: number; max?: number; step?: number; disabled?: boolean;
 }) {
   const clamp = (n: number) => Math.max(min, Math.min(max, n));
+  const [draft, setDraft] = useState<string | null>(null);
   return (
     <div className="flex items-center justify-between gap-3">
       <label className="text-sm text-muted-foreground">{label}</label>

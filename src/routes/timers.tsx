@@ -249,8 +249,9 @@ function TimerRunner({ mode }: { mode: Mode }) {
       lastTickRef.current = secTick;
       // Beep at last 3 seconds of each key segment
       if (mode === "emom") {
-        const inMin = secTick % 60;
-        const remain = 60 - inMin;
+        const iv = Math.max(5, emomInterval);
+        const inMin = secTick % iv;
+        const remain = iv - inMin;
         if (remain <= 3 && remain > 0) beep(880, 0.12);
         if (inMin === 0 && secTick > 0) beep(1400, 0.25, 0.3);
       } else if (mode === "tabata" || mode === "intervals") {

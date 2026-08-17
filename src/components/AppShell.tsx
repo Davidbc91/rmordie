@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, Dumbbell, User } from "lucide-react";
+import { Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User } from "lucide-react";
 
 const tabs = [
   { to: "/", label: "Inicio", icon: Home },

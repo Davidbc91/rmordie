@@ -157,7 +157,7 @@ export function parsePlanningFromArrayBuffer(buf: ArrayBuffer): Planning {
 
         dayCols.forEach((d, di) => {
           const raw = rows[r]?.[d.col];
-          const content = String(raw ?? "").trim();
+          const content = withLink(r, d.col, String(raw ?? "").trim());
           if (content) {
             days[di].blocks.push({ key: blockKey, content });
           }

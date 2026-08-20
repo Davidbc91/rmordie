@@ -64,6 +64,28 @@ export function parsePlanningFromArrayBuffer(buf: ArrayBuffer): Planning {
     const ws = wb.Sheets[sheetName];
     const rows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", blankrows: true });
 
+    // Excel hyperlinks live on the cell object (cell.l.Target), not in the text.
+    // Collect them so we can append the URL to the cell content.
+    const links = new Map<string, string>();
+    const refRange = ws["!ref"] ? XLSX.utils.decode_range(ws["!ref"] as string) : null;
+    if (refRange) {
+      for (let R = refRange.s.r; R <= refRange.e.r; R++) {
+        for (let C = refRange.s.c; C <= refRange.e.c; C++) {
+          const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })] as
+            | { l?: { Target?: string } }
+            | undefined;
+          const target = cell?.l?.Target;
+          if (target && /^https?:\/\//i.test(target)) links.set(`${R}|${C}`, target);
+        }
+      }
+    }
+    const withLink = (r: number, c: number, content: string) => {
+      const url = links.get(`${r}|${c}`);
+      if (!url) return content;
+      if (content.includes(url)) return content;
+      return content ? `${content}\n${url}` : url;
+    };
+
     // Row 0 typically has "SEMANA 1", "", ..., "SEMANA 2", ...
     // Row 1 has day headers repeated per week
     // Rows 2..N: first col is block label; other cols are content
@@ -135,7 +157,7 @@ export function parsePlanningFromArrayBuffer(buf: ArrayBuffer): Planning {
 
         dayCols.forEach((d, di) => {
           const raw = rows[r]?.[d.col];
-          const content = String(raw ?? "").trim();
+          const content = withLink(r, d.col, String(raw ?? "").trim());
           if (content) {
             days[di].blocks.push({ key: blockKey, content });
           }

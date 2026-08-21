@@ -44,6 +44,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
       <main className="relative mx-auto max-w-2xl px-5 pt-10">{children}</main>
 
+      {showResume && active && (
+        <div className="fixed inset-x-0 bottom-[72px] z-40 px-4 pb-2">
+          <div
+            className="mx-auto flex max-w-2xl items-center gap-3 rounded-[18px] border px-4 py-3"
+            style={{
+              background: "rgba(255,255,255,0.96)",
+              borderColor: "rgba(255,255,255,0.2)",
+              color: "#000",
+              backdropFilter: "blur(18px)",
+            }}
+          >
+            <Link
+              to="/workout/$month/$week/$day"
+              params={{ month: active.month, week: String(active.week), day: active.day }}
+              className="flex min-w-0 flex-1 items-center gap-3"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black">
+                <Play className="h-4 w-4 text-white" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[11px] uppercase tracking-[0.16em] opacity-60">Entreno en curso</span>
+                <span className="block truncate text-sm font-semibold">{active.label}</span>
+              </span>
+            </Link>
+            <button
+              aria-label="Descartar entreno en curso"
+              onClick={() => { clearActiveWorkout(); setActive(null); }}
+              className="shrink-0 rounded-full p-1.5 opacity-50 hover:opacity-100"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t"
         style={{

@@ -6,6 +6,7 @@ import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { ChevronLeft, Sparkles, Check, CheckCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { setActiveWorkout, clearActiveWorkout, loadDraft, saveDraft, clearDraft } from "@/lib/active-workout";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
   head: () => ({ meta: [{ title: "Entrenamiento — RM OR DIE" }] }),
@@ -33,6 +34,11 @@ function WorkoutPage() {
   const formsRef = useRef<Record<string, () => BlockPayload>>({});
   const [savingAll, setSavingAll] = useState(false);
 
+  useEffect(() => {
+    setActiveWorkout({ month, week: weekN, day, label: `${month} · S${weekN} · ${day}` });
+  }, [month, weekN, day]);
+
+
   if (!planning) return <AppShell><p className="text-sm text-muted-foreground">Importa primero tu planificación.</p></AppShell>;
 
   const { month: mo, day: d } = findDay(planning.data, month, weekN, day);
@@ -51,6 +57,8 @@ function WorkoutPage() {
           ...get(),
         });
       }
+      d!.blocks.forEach((b) => clearDraft(month, weekN, day, b.key));
+      clearActiveWorkout();
       toast.success("Entreno completo guardado");
     } catch {
       toast.error("No se pudo guardar el entreno");
@@ -123,6 +131,34 @@ function BlockCard({
   const [time, setTime] = useState<string>(existing?.time_seconds ? formatTime(existing.time_seconds) : "");
   const [rpe, setRpe] = useState<string>(existing?.rpe?.toString() ?? "");
   const [notes, setNotes] = useState<string>(existing?.notes ?? "");
+  const [open, setOpen] = useState<boolean>(!!existing || /^[A-D]$/.test(blockKey));
+  const loadedRef = useRef(false);
+
+  // Restaurar borrador (valores escritos y no guardados) al volver a la pantalla
+  useEffect(() => {
+    const d = loadDraft<{
+      weight?: string; sets?: string; reps?: string; time?: string; rpe?: string; notes?: string; open?: boolean;
+    }>(contextIds.month_key, contextIds.week, contextIds.day_key, blockKey);
+    if (d) {
+      if (d.weight !== undefined) setWeight(d.weight);
+      if (d.sets !== undefined) setSets(d.sets);
+      if (d.reps !== undefined) setReps(d.reps);
+      if (d.time !== undefined) setTime(d.time);
+      if (d.rpe !== undefined) setRpe(d.rpe);
+      if (d.notes !== undefined) setNotes(d.notes);
+      if (d.open !== undefined) setOpen(d.open);
+    }
+    loadedRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blockKey]);
+
+  useEffect(() => {
+    if (!loadedRef.current) return;
+    saveDraft(contextIds.month_key, contextIds.week, contextIds.day_key, blockKey, {
+      weight, sets, reps, time, rpe, notes, open,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weight, sets, reps, time, rpe, notes, open, blockKey]);
 
   const pcts = extractPercentages(content);
 
@@ -150,7 +186,11 @@ function BlockCard({
   }
 
   return (
-    <details className="card-elevated group" open={!!existing || /^[A-D]$/.test(blockKey)}>
+    <details
+      className="card-elevated group"
+      open={open}
+      onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
+    >
       <summary className="flex cursor-pointer items-center justify-between p-5 [&::-webkit-details-marker]:hidden">
         <div className="flex items-center gap-3">
           <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-surface-2 px-2 text-xs font-semibold uppercase tracking-wide text-gold">

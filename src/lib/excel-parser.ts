@@ -64,26 +64,62 @@ export function parsePlanningFromArrayBuffer(buf: ArrayBuffer): Planning {
     const ws = wb.Sheets[sheetName];
     const rows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", blankrows: true });
 
-    // Excel hyperlinks live on the cell object (cell.l.Target), not in the text.
-    // Collect them so we can append the URL to the cell content.
-    const links = new Map<string, string>();
+    // Los hipervínculos de Excel viven en el objeto celda (cell.l.Target) o en
+    // fórmulas HYPERLINK(), no en el texto. Una misma celda (o celda combinada)
+    // puede tener varios: los recogemos todos.
+    const links = new Map<string, string[]>();
+    const addLink = (r: number, c: number, url: string | undefined) => {
+      if (!url) return;
+      const clean = url.trim();
+      if (!/^https?:\/\//i.test(clean)) return;
+      const key = `${r}|${c}`;
+      const list = links.get(key) ?? [];
+      if (!list.includes(clean)) list.push(clean);
+      links.set(key, list);
+    };
+
     const refRange = ws["!ref"] ? XLSX.utils.decode_range(ws["!ref"] as string) : null;
     if (refRange) {
       for (let R = refRange.s.r; R <= refRange.e.r; R++) {
         for (let C = refRange.s.c; C <= refRange.e.c; C++) {
           const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })] as
-            | { l?: { Target?: string } }
+            | { l?: { Target?: string }; f?: string; h?: string }
             | undefined;
-          const target = cell?.l?.Target;
-          if (target && /^https?:\/\//i.test(target)) links.set(`${R}|${C}`, target);
+          if (!cell) continue;
+          addLink(R, C, cell.l?.Target);
+          // Fórmulas =HYPERLINK("url";"texto") — puede haber varias concatenadas
+          if (cell.f) {
+            for (const m of cell.f.matchAll(/HYPERLINK\(\s*"([^"]+)"/gi)) addLink(R, C, m[1]);
+          }
+          // Texto enriquecido renderizado a HTML con anclas
+          if (cell.h) {
+            for (const m of cell.h.matchAll(/href\s*=\s*"([^"]+)"/gi)) addLink(R, C, m[1]);
+          }
         }
       }
     }
+
+    // Celdas combinadas: los enlaces de cualquier celda del rango pertenecen a
+    // la celda ancla (arriba-izquierda), que es la que aporta el contenido.
+    const merges = (ws["!merges"] as XLSX.Range[] | undefined) ?? [];
+    for (const mg of merges) {
+      for (let R = mg.s.r; R <= mg.e.r; R++) {
+        for (let C = mg.s.c; C <= mg.e.c; C++) {
+          if (R === mg.s.r && C === mg.s.c) continue;
+          const list = links.get(`${R}|${C}`);
+          if (!list) continue;
+          for (const url of list) addLink(mg.s.r, mg.s.c, url);
+          links.delete(`${R}|${C}`);
+        }
+      }
+    }
+
     const withLink = (r: number, c: number, content: string) => {
-      const url = links.get(`${r}|${c}`);
-      if (!url) return content;
-      if (content.includes(url)) return content;
-      return content ? `${content}\n${url}` : url;
+      const urls = links.get(`${r}|${c}`);
+      if (!urls || urls.length === 0) return content;
+      const missing = urls.filter((u) => !content.includes(u));
+      if (missing.length === 0) return content;
+      return content ? `${content}\n${missing.join("\n")}` : missing.join("\n");
     };
 
     // Row 0 typically has "SEMANA 1", "", ..., "SEMANA 2", ...

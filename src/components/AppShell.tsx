@@ -17,6 +17,22 @@ const tabs = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [active, setActive] = useState<ActiveWorkout | null>(null);
+
+  useEffect(() => {
+    const read = () => setActive(getActiveWorkout());
+    read();
+    window.addEventListener("rmordie:active-workout", read);
+    window.addEventListener("focus", read);
+    return () => {
+      window.removeEventListener("rmordie:active-workout", read);
+      window.removeEventListener("focus", read);
+    };
+  }, [pathname]);
+
+  const activePath = active ? `/workout/${active.month}/${active.week}/${active.day}` : null;
+  const showResume = !!active && pathname !== activePath;
+
   return (
     <div className="grain relative min-h-screen pb-28">
       {/* Halo superior + rejilla muy tenue para dar profundidad al negro */}

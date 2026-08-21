@@ -57,6 +57,8 @@ function WorkoutPage() {
           ...get(),
         });
       }
+      d!.blocks.forEach((b) => clearDraft(month, weekN, day, b.key));
+      clearActiveWorkout();
       toast.success("Entreno completo guardado");
     } catch {
       toast.error("No se pudo guardar el entreno");

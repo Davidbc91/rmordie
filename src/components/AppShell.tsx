@@ -1,5 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User } from "lucide-react";
+import { Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User, Play, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getActiveWorkout, clearActiveWorkout, type ActiveWorkout } from "@/lib/active-workout";
 
 const tabs = [
   { to: "/", label: "Inicio", icon: Home },

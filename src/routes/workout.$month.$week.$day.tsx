@@ -186,7 +186,11 @@ function BlockCard({
   }
 
   return (
-    <details className="card-elevated group" open={!!existing || /^[A-D]$/.test(blockKey)}>
+    <details
+      className="card-elevated group"
+      open={open}
+      onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
+    >
       <summary className="flex cursor-pointer items-center justify-between p-5 [&::-webkit-details-marker]:hidden">
         <div className="flex items-center gap-3">
           <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-surface-2 px-2 text-xs font-semibold uppercase tracking-wide text-gold">

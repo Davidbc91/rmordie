@@ -6,6 +6,7 @@ import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { ChevronLeft, Sparkles, Check, CheckCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { setActiveWorkout, clearActiveWorkout, loadDraft, saveDraft, clearDraft } from "@/lib/active-workout";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
   head: () => ({ meta: [{ title: "Entrenamiento — RM OR DIE" }] }),

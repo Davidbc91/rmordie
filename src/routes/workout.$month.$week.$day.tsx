@@ -131,6 +131,34 @@ function BlockCard({
   const [time, setTime] = useState<string>(existing?.time_seconds ? formatTime(existing.time_seconds) : "");
   const [rpe, setRpe] = useState<string>(existing?.rpe?.toString() ?? "");
   const [notes, setNotes] = useState<string>(existing?.notes ?? "");
+  const [open, setOpen] = useState<boolean>(!!existing || /^[A-D]$/.test(blockKey));
+  const loadedRef = useRef(false);
+
+  // Restaurar borrador (valores escritos y no guardados) al volver a la pantalla
+  useEffect(() => {
+    const d = loadDraft<{
+      weight?: string; sets?: string; reps?: string; time?: string; rpe?: string; notes?: string; open?: boolean;
+    }>(contextIds.month_key, contextIds.week, contextIds.day_key, blockKey);
+    if (d) {
+      if (d.weight !== undefined) setWeight(d.weight);
+      if (d.sets !== undefined) setSets(d.sets);
+      if (d.reps !== undefined) setReps(d.reps);
+      if (d.time !== undefined) setTime(d.time);
+      if (d.rpe !== undefined) setRpe(d.rpe);
+      if (d.notes !== undefined) setNotes(d.notes);
+      if (d.open !== undefined) setOpen(d.open);
+    }
+    loadedRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blockKey]);
+
+  useEffect(() => {
+    if (!loadedRef.current) return;
+    saveDraft(contextIds.month_key, contextIds.week, contextIds.day_key, blockKey, {
+      weight, sets, reps, time, rpe, notes, open,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weight, sets, reps, time, rpe, notes, open, blockKey]);
 
   const pcts = extractPercentages(content);
 

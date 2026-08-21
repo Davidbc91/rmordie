@@ -34,6 +34,11 @@ function WorkoutPage() {
   const formsRef = useRef<Record<string, () => BlockPayload>>({});
   const [savingAll, setSavingAll] = useState(false);
 
+  useEffect(() => {
+    setActiveWorkout({ month, week: weekN, day, label: `${month} · S${weekN} · ${day}` });
+  }, [month, weekN, day]);
+
+
   if (!planning) return <AppShell><p className="text-sm text-muted-foreground">Importa primero tu planificación.</p></AppShell>;
 
   const { month: mo, day: d } = findDay(planning.data, month, weekN, day);

@@ -18,6 +18,7 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SocialIndexRouteImport } from './routes/social.index'
+import { Route as SocialSettingsRouteImport } from './routes/social.settings'
 import { Route as SocialNotificationsRouteImport } from './routes/social.notifications'
 import { Route as SocialDiscoverRouteImport } from './routes/social.discover'
 import { Route as SocialBoardRouteImport } from './routes/social.board'
@@ -69,6 +70,11 @@ const SocialIndexRoute = SocialIndexRouteImport.update({
   path: '/social/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SocialSettingsRoute = SocialSettingsRouteImport.update({
+  id: '/social/settings',
+  path: '/social/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SocialNotificationsRoute = SocialNotificationsRouteImport.update({
   id: '/social/notifications',
   path: '/social/notifications',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
   '/social/notifications': typeof SocialNotificationsRoute
+  '/social/settings': typeof SocialSettingsRoute
   '/social/': typeof SocialIndexRoute
   '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
   '/social/notifications': typeof SocialNotificationsRoute
+  '/social/settings': typeof SocialSettingsRoute
   '/social': typeof SocialIndexRoute
   '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
   '/social/notifications': typeof SocialNotificationsRoute
+  '/social/settings': typeof SocialSettingsRoute
   '/social/': typeof SocialIndexRoute
   '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/social/board'
     | '/social/discover'
     | '/social/notifications'
+    | '/social/settings'
     | '/social/'
     | '/social/u/$username'
     | '/workout/$month/$week/$day'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/social/board'
     | '/social/discover'
     | '/social/notifications'
+    | '/social/settings'
     | '/social'
     | '/social/u/$username'
     | '/workout/$month/$week/$day'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/social/board'
     | '/social/discover'
     | '/social/notifications'
+    | '/social/settings'
     | '/social/'
     | '/social/u/$username'
     | '/workout/$month/$week/$day'
@@ -207,6 +219,7 @@ export interface RootRouteChildren {
   SocialBoardRoute: typeof SocialBoardRoute
   SocialDiscoverRoute: typeof SocialDiscoverRoute
   SocialNotificationsRoute: typeof SocialNotificationsRoute
+  SocialSettingsRoute: typeof SocialSettingsRoute
   SocialIndexRoute: typeof SocialIndexRoute
   SocialUUsernameRoute: typeof SocialUUsernameRoute
   WorkoutMonthWeekDayRoute: typeof WorkoutMonthWeekDayRoute
@@ -277,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SocialIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/social/settings': {
+      id: '/social/settings'
+      path: '/social/settings'
+      fullPath: '/social/settings'
+      preLoaderRoute: typeof SocialSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/social/notifications': {
       id: '/social/notifications'
       path: '/social/notifications'
@@ -327,6 +347,7 @@ const rootRouteChildren: RootRouteChildren = {
   SocialBoardRoute: SocialBoardRoute,
   SocialDiscoverRoute: SocialDiscoverRoute,
   SocialNotificationsRoute: SocialNotificationsRoute,
+  SocialSettingsRoute: SocialSettingsRoute,
   SocialIndexRoute: SocialIndexRoute,
   SocialUUsernameRoute: SocialUUsernameRoute,
   WorkoutMonthWeekDayRoute: WorkoutMonthWeekDayRoute,

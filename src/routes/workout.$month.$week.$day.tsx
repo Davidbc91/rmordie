@@ -1,12 +1,25 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { LinkedText } from "@/components/LinkedText";
 import { usePlanning, useDayResults, useSaveResult, useSettings, findDay } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
-import { ChevronLeft, Sparkles, Check, CheckCheck } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { setActiveWorkout, clearActiveWorkout, loadDraft, saveDraft, clearDraft } from "@/lib/active-workout";
+import {
+  detectWod,
+  formatScore,
+  formatDelta,
+  parseClockInput,
+  SCALE_LABEL,
+  WOD_TYPE_LABEL,
+  type WodScale,
+} from "@/lib/wod";
+import { useWodResults, useSaveWodResult, type WodResult, type WodSaveInput, type PrOutcome } from "@/lib/wod-store";
+import { WodScoreFields } from "@/components/WodRecords";
+import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
+import { useCreatePost } from "@/lib/social";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
   head: () => ({ meta: [{ title: "Entrenamiento — RM OR DIE" }] }),
@@ -24,42 +37,79 @@ type BlockPayload = {
   notes: string | null;
 };
 
+const SCALES: WodScale[] = ["rx", "scaled", "custom"];
+
 function WorkoutPage() {
   const { month, week, day } = Route.useParams();
   const weekN = Number(week);
+  const navigate = useNavigate();
   const { data: planning } = usePlanning();
   const { data: results = [] } = useDayResults(month, weekN, day);
+  const { data: wodResults = [] } = useWodResults();
   const { data: settings } = useSettings();
   const save = useSaveResult();
+  const saveWod = useSaveWodResult();
+  const createPost = useCreatePost();
   const formsRef = useRef<Record<string, () => BlockPayload>>({});
+  const wodRef = useRef<Record<string, () => WodSaveInput | null>>({});
   const [savingAll, setSavingAll] = useState(false);
+  const [celebrate, setCelebrate] = useState<{ data: PrCelebrationData; outcome: PrOutcome } | null>(null);
 
   useEffect(() => {
     setActiveWorkout({ month, week: weekN, day, label: `${month} · S${weekN} · ${day}` });
   }, [month, weekN, day]);
 
+  const dayWods = useMemo(
+    () => wodResults.filter((r) => r.month_key === month && r.week === weekN && r.day_key === day),
+    [wodResults, month, weekN, day],
+  );
 
   if (!planning) return <AppShell><p className="text-sm text-muted-foreground">Importa primero tu planificación.</p></AppShell>;
 
   const { month: mo, day: d } = findDay(planning.data, month, weekN, day);
   if (!mo || !d) return <AppShell><p className="text-sm text-muted-foreground">Día no encontrado.</p></AppShell>;
 
+  function celebrationFor(out: PrOutcome): PrCelebrationData {
+    return {
+      exercise: out.wod_name,
+      valueText: formatScore(out.result),
+      subtitle: `${WOD_TYPE_LABEL[out.wod_type]} · ${SCALE_LABEL[out.scale]}`,
+      deltaText: out.previousBest ? formatDelta(out.wod_type, out.result, out.previousBest) : "Primera marca",
+      matched: out.kind === "matched",
+    };
+  }
+
+  async function persistWod(blockKey: string): Promise<PrOutcome | null> {
+    const getter = wodRef.current[blockKey];
+    if (!getter) return null;
+    const payload = getter();
+    if (!payload) return null;
+    return saveWod.mutateAsync({
+      ...payload,
+      source: "workout",
+      month_key: month,
+      week: weekN,
+      day_key: day,
+      block_key: blockKey,
+    });
+  }
+
   async function saveAll() {
-    const getters = Object.values(formsRef.current);
-    if (getters.length === 0) return;
+    const entries = Object.entries(formsRef.current);
+    if (entries.length === 0) return;
     setSavingAll(true);
     try {
-      for (const get of getters) {
-        await save.mutateAsync({
-          month_key: month,
-          week: weekN,
-          day_key: day,
-          ...get(),
-        });
+      const prs: PrOutcome[] = [];
+      for (const [blockKey, get] of entries) {
+        await save.mutateAsync({ month_key: month, week: weekN, day_key: day, ...get() });
+        const out = await persistWod(blockKey);
+        if (out && (out.kind === "pr" || out.kind === "matched")) prs.push(out);
       }
       d!.blocks.forEach((b) => clearDraft(month, weekN, day, b.key));
       clearActiveWorkout();
       toast.success("Entreno completo guardado");
+      const first = prs.find((p) => p.kind === "pr") ?? prs[0];
+      if (first) setCelebrate({ data: celebrationFor(first), outcome: first });
     } catch {
       toast.error("No se pudo guardar el entreno");
     } finally {
@@ -67,8 +117,45 @@ function WorkoutPage() {
     }
   }
 
+  async function shareCelebrated() {
+    if (!celebrate) return;
+    const out = celebrate.outcome;
+    try {
+      await createPost.mutateAsync({
+        kind: "wod",
+        caption: `Nuevo PR en ${out.wod_name} · ${formatScore(out.result)} ${SCALE_LABEL[out.scale]} #wodpr`,
+        data: {
+          wod_name: out.wod_name,
+          wod_type: out.wod_type,
+          scale: out.scale,
+          score: formatScore(out.result),
+          time_seconds: out.result.time_seconds,
+          rounds: out.result.rounds,
+          reps: out.result.reps,
+          is_pr: out.kind === "pr",
+        },
+      });
+      toast.success("Compartido en tu feed");
+      setCelebrate(null);
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo compartir");
+    }
+  }
+
   return (
     <AppShell>
+      {celebrate && (
+        <PrCelebration
+          data={celebrate.data}
+          onClose={() => setCelebrate(null)}
+          onView={() => {
+            const slug = celebrate.outcome.result.wod_slug;
+            setCelebrate(null);
+            navigate({ to: "/records", search: { tab: "wods", wod: slug } });
+          }}
+          onShare={shareCelebrated}
+        />
+      )}
       <Link to="/calendar" className="mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
         <ChevronLeft className="h-3.5 w-3.5" /> Calendario
       </Link>
@@ -97,14 +184,23 @@ function WorkoutPage() {
       <div className="space-y-4">
         {d.blocks.map((b) => {
           const existing = results.find((r) => r.block_key === b.key);
+          const existingWod = dayWods.find((r) => r.block_key === b.key) ?? null;
           return (
             <BlockCard
               key={b.key}
               blockKey={b.key}
               content={b.content}
               existing={existing}
+              existingWod={existingWod}
               settings={settings}
               register={(fn) => { formsRef.current[b.key] = fn; }}
+              registerWod={(fn) => { wodRef.current[b.key] = fn; }}
+              onWodSaved={(out) => {
+                if (out.kind === "pr" || out.kind === "matched") {
+                  setCelebrate({ data: celebrationFor(out), outcome: out });
+                }
+              }}
+              persistWod={() => persistWod(b.key)}
               contextIds={{ month_key: month, week: weekN, day_key: day }}
             />
           );
@@ -116,12 +212,16 @@ function WorkoutPage() {
 
 
 function BlockCard({
-  blockKey, content, existing, settings, contextIds, register,
+  blockKey, content, existing, existingWod, settings, contextIds, register, registerWod, persistWod, onWodSaved,
 }: {
   blockKey: string; content: string;
   existing: import("@/lib/store").WorkoutResult | undefined;
+  existingWod: WodResult | null;
   settings: import("@/lib/store").AppSettings | undefined;
   register: (fn: () => BlockPayload) => void;
+  registerWod: (fn: () => WodSaveInput | null) => void;
+  persistWod: () => Promise<PrOutcome | null>;
+  onWodSaved: (out: PrOutcome) => void;
   contextIds: { month_key: string; week: number; day_key: string };
 }) {
   const save = useSaveResult();
@@ -134,10 +234,19 @@ function BlockCard({
   const [open, setOpen] = useState<boolean>(!!existing || /^[A-D]$/.test(blockKey));
   const loadedRef = useRef(false);
 
+  const wod = useMemo(() => detectWod(content), [content]);
+  const [wodScale, setWodScale] = useState<WodScale>((existingWod?.scale as WodScale) ?? "rx");
+  const [wodCap, setWodCap] = useState<boolean>(existingWod?.status === "cap");
+  const [wodTime, setWodTime] = useState<string>(existingWod?.time_seconds ? formatTime(existingWod.time_seconds) : "");
+  const [wodRounds, setWodRounds] = useState<string>(existingWod?.rounds?.toString() ?? "");
+  const [wodReps, setWodReps] = useState<string>(existingWod?.reps?.toString() ?? "");
+  const [savingWod, setSavingWod] = useState(false);
+
   // Restaurar borrador (valores escritos y no guardados) al volver a la pantalla
   useEffect(() => {
     const d = loadDraft<{
       weight?: string; sets?: string; reps?: string; time?: string; rpe?: string; notes?: string; open?: boolean;
+      wodScale?: WodScale; wodCap?: boolean; wodTime?: string; wodRounds?: string; wodReps?: string;
     }>(contextIds.month_key, contextIds.week, contextIds.day_key, blockKey);
     if (d) {
       if (d.weight !== undefined) setWeight(d.weight);
@@ -147,6 +256,11 @@ function BlockCard({
       if (d.rpe !== undefined) setRpe(d.rpe);
       if (d.notes !== undefined) setNotes(d.notes);
       if (d.open !== undefined) setOpen(d.open);
+      if (d.wodScale !== undefined) setWodScale(d.wodScale);
+      if (d.wodCap !== undefined) setWodCap(d.wodCap);
+      if (d.wodTime !== undefined) setWodTime(d.wodTime);
+      if (d.wodRounds !== undefined) setWodRounds(d.wodRounds);
+      if (d.wodReps !== undefined) setWodReps(d.wodReps);
     }
     loadedRef.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -155,10 +269,10 @@ function BlockCard({
   useEffect(() => {
     if (!loadedRef.current) return;
     saveDraft(contextIds.month_key, contextIds.week, contextIds.day_key, blockKey, {
-      weight, sets, reps, time, rpe, notes, open,
+      weight, sets, reps, time, rpe, notes, open, wodScale, wodCap, wodTime, wodRounds, wodReps,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weight, sets, reps, time, rpe, notes, open, blockKey]);
+  }, [weight, sets, reps, time, rpe, notes, open, wodScale, wodCap, wodTime, wodRounds, wodReps, blockKey]);
 
   const pcts = extractPercentages(content);
 
@@ -175,13 +289,44 @@ function BlockCard({
     };
   }
 
+  function wodPayload(): WodSaveInput | null {
+    if (!wod) return null;
+    const t = parseClockInput(wodTime);
+    const hasScore =
+      t != null || wodRounds.trim() !== "" || wodReps.trim() !== "";
+    if (!hasScore) return null;
+    return {
+      wod_slug: wod.slug,
+      wod_name: wod.name,
+      wod_type: wod.type,
+      scale: wodScale,
+      status: wodCap ? "cap" : "completed",
+      time_seconds: t,
+      rounds: wodRounds ? Number(wodRounds) : null,
+      reps: wod.type === "max_calories" || wod.type === "max_distance" ? null : wodReps ? Number(wodReps) : null,
+      calories: wod.type === "max_calories" && wodReps ? Number(wodReps) : null,
+      distance: wod.type === "max_distance" && wodReps ? Number(wodReps) : null,
+      rpe: rpe ? Number(rpe) : null,
+      notes: notes || null,
+    };
+  }
+
   useEffect(() => {
     register(payload);
+    registerWod(wodPayload);
   });
 
   async function onSaveClick() {
     await save.mutateAsync({ ...contextIds, ...payload() });
-
+    if (wod) {
+      setSavingWod(true);
+      try {
+        const out = await persistWod();
+        if (out) onWodSaved(out);
+      } finally {
+        setSavingWod(false);
+      }
+    }
     toast.success(`${blockKey} guardado`);
   }
 
@@ -197,6 +342,12 @@ function BlockCard({
             {blockKey}
           </span>
           {existing && <Check className="h-4 w-4 text-gold" />}
+          {wod && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+              <Timer className="h-3 w-3" /> {WOD_TYPE_LABEL[wod.type]}
+            </span>
+          )}
+          {existingWod?.is_pr && <Trophy className="h-4 w-4" />}
         </div>
         {pcts.length > 0 && (
           <div className="flex items-center gap-1 text-[11px] text-gold">
@@ -211,6 +362,54 @@ function BlockCard({
 
         {pcts.length > 0 && settings && (
           <PercentAssistant percentages={pcts} settings={settings} />
+        )}
+
+        {wod && (
+          <div className="mt-5 rounded-xl border border-border bg-surface-2 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">
+                Resultado WOD · {wod.name}
+              </p>
+              {existingWod && (
+                <span className="text-[11px] text-muted-foreground">{formatScore(existingWod)}</span>
+              )}
+            </div>
+            {wod.timeCapSeconds && (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Time cap detectado: {formatTime(wod.timeCapSeconds)}
+              </p>
+            )}
+            <div className="mt-3 flex gap-2">
+              {SCALES.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setWodScale(s)}
+                  className={`flex-1 rounded-xl border px-2 py-1.5 text-[11px] font-semibold transition ${
+                    wodScale === s ? "border-transparent bg-foreground text-background" : "border-border text-muted-foreground"
+                  }`}
+                >
+                  {SCALE_LABEL[s]}
+                </button>
+              ))}
+            </div>
+            <div className="mt-3">
+              <WodScoreFields
+                type={wod.type}
+                cap={wodCap}
+                setCap={setWodCap}
+                time={wodTime}
+                setTime={setWodTime}
+                rounds={wodRounds}
+                setRounds={setWodRounds}
+                reps={wodReps}
+                setReps={setWodReps}
+              />
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Se guardará automáticamente como marca en WOD PRs.
+            </p>
+          </div>
         )}
 
         <div className="mt-5 grid grid-cols-2 gap-3">
@@ -230,11 +429,11 @@ function BlockCard({
 
         <button
           onClick={onSaveClick}
-          disabled={save.isPending}
+          disabled={save.isPending || savingWod}
           className="mt-4 w-full rounded-xl gold-gradient py-2.5 text-sm font-semibold disabled:opacity-50"
           style={{ color: "var(--gold-foreground)" }}
         >
-          {save.isPending ? "Guardando…" : (existing ? "Actualizar" : "Guardar")}
+          {save.isPending || savingWod ? "Guardando…" : (existing ? "Actualizar" : "Guardar")}
         </button>
       </div>
     </details>

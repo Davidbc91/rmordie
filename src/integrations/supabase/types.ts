@@ -860,6 +860,87 @@ export type Database = {
         }
         Relationships: []
       }
+      wod_results: {
+        Row: {
+          block_key: string | null
+          calories: number | null
+          created_at: string
+          day_key: string | null
+          distance: number | null
+          id: string
+          is_pr: boolean
+          month_key: string | null
+          notes: string | null
+          performed_on: string
+          reps: number | null
+          rounds: number | null
+          rpe: number | null
+          scale: string
+          source: string
+          status: string
+          time_seconds: number | null
+          updated_at: string
+          user_id: string
+          week: number | null
+          weight: number | null
+          wod_name: string
+          wod_slug: string
+          wod_type: string
+        }
+        Insert: {
+          block_key?: string | null
+          calories?: number | null
+          created_at?: string
+          day_key?: string | null
+          distance?: number | null
+          id?: string
+          is_pr?: boolean
+          month_key?: string | null
+          notes?: string | null
+          performed_on?: string
+          reps?: number | null
+          rounds?: number | null
+          rpe?: number | null
+          scale?: string
+          source?: string
+          status?: string
+          time_seconds?: number | null
+          updated_at?: string
+          user_id: string
+          week?: number | null
+          weight?: number | null
+          wod_name: string
+          wod_slug: string
+          wod_type?: string
+        }
+        Update: {
+          block_key?: string | null
+          calories?: number | null
+          created_at?: string
+          day_key?: string | null
+          distance?: number | null
+          id?: string
+          is_pr?: boolean
+          month_key?: string | null
+          notes?: string | null
+          performed_on?: string
+          reps?: number | null
+          rounds?: number | null
+          rpe?: number | null
+          scale?: string
+          source?: string
+          status?: string
+          time_seconds?: number | null
+          updated_at?: string
+          user_id?: string
+          week?: number | null
+          weight?: number | null
+          wod_name?: string
+          wod_slug?: string
+          wod_type?: string
+        }
+        Relationships: []
+      }
       workout_results: {
         Row: {
           block_key: string

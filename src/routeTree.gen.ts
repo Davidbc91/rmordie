@@ -17,6 +17,13 @@ import { Route as ImportRouteImport } from './routes/import'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SocialIndexRouteImport } from './routes/social.index'
+import { Route as SocialSettingsRouteImport } from './routes/social.settings'
+import { Route as SocialNotificationsRouteImport } from './routes/social.notifications'
+import { Route as SocialDiscoverRouteImport } from './routes/social.discover'
+import { Route as SocialBoardRouteImport } from './routes/social.board'
+import { Route as SocialUUsernameRouteImport } from './routes/social.u.$username'
+import { Route as SocialHashtagTagRouteImport } from './routes/social.hashtag.$tag'
 import { Route as WorkoutMonthWeekDayRouteImport } from './routes/workout.$month.$week.$day'
 
 const TimersRoute = TimersRouteImport.update({
@@ -59,6 +66,41 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SocialIndexRoute = SocialIndexRouteImport.update({
+  id: '/social/',
+  path: '/social/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialSettingsRoute = SocialSettingsRouteImport.update({
+  id: '/social/settings',
+  path: '/social/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialNotificationsRoute = SocialNotificationsRouteImport.update({
+  id: '/social/notifications',
+  path: '/social/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialDiscoverRoute = SocialDiscoverRouteImport.update({
+  id: '/social/discover',
+  path: '/social/discover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialBoardRoute = SocialBoardRouteImport.update({
+  id: '/social/board',
+  path: '/social/board',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialUUsernameRoute = SocialUUsernameRouteImport.update({
+  id: '/social/u/$username',
+  path: '/social/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialHashtagTagRoute = SocialHashtagTagRouteImport.update({
+  id: '/social/hashtag/$tag',
+  path: '/social/hashtag/$tag',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkoutMonthWeekDayRoute = WorkoutMonthWeekDayRouteImport.update({
   id: '/workout/$month/$week/$day',
   path: '/workout/$month/$week/$day',
@@ -74,6 +116,13 @@ export interface FileRoutesByFullPath {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/social/board': typeof SocialBoardRoute
+  '/social/discover': typeof SocialDiscoverRoute
+  '/social/notifications': typeof SocialNotificationsRoute
+  '/social/settings': typeof SocialSettingsRoute
+  '/social/': typeof SocialIndexRoute
+  '/social/hashtag/$tag': typeof SocialHashtagTagRoute
+  '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +134,13 @@ export interface FileRoutesByTo {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/social/board': typeof SocialBoardRoute
+  '/social/discover': typeof SocialDiscoverRoute
+  '/social/notifications': typeof SocialNotificationsRoute
+  '/social/settings': typeof SocialSettingsRoute
+  '/social': typeof SocialIndexRoute
+  '/social/hashtag/$tag': typeof SocialHashtagTagRoute
+  '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesById {
@@ -97,6 +153,13 @@ export interface FileRoutesById {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/social/board': typeof SocialBoardRoute
+  '/social/discover': typeof SocialDiscoverRoute
+  '/social/notifications': typeof SocialNotificationsRoute
+  '/social/settings': typeof SocialSettingsRoute
+  '/social/': typeof SocialIndexRoute
+  '/social/hashtag/$tag': typeof SocialHashtagTagRoute
+  '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +173,13 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/social/board'
+    | '/social/discover'
+    | '/social/notifications'
+    | '/social/settings'
+    | '/social/'
+    | '/social/hashtag/$tag'
+    | '/social/u/$username'
     | '/workout/$month/$week/$day'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +191,13 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/social/board'
+    | '/social/discover'
+    | '/social/notifications'
+    | '/social/settings'
+    | '/social'
+    | '/social/hashtag/$tag'
+    | '/social/u/$username'
     | '/workout/$month/$week/$day'
   id:
     | '__root__'
@@ -132,6 +209,13 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/social/board'
+    | '/social/discover'
+    | '/social/notifications'
+    | '/social/settings'
+    | '/social/'
+    | '/social/hashtag/$tag'
+    | '/social/u/$username'
     | '/workout/$month/$week/$day'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +228,13 @@ export interface RootRouteChildren {
   RecordsRoute: typeof RecordsRoute
   SettingsRoute: typeof SettingsRoute
   TimersRoute: typeof TimersRoute
+  SocialBoardRoute: typeof SocialBoardRoute
+  SocialDiscoverRoute: typeof SocialDiscoverRoute
+  SocialNotificationsRoute: typeof SocialNotificationsRoute
+  SocialSettingsRoute: typeof SocialSettingsRoute
+  SocialIndexRoute: typeof SocialIndexRoute
+  SocialHashtagTagRoute: typeof SocialHashtagTagRoute
+  SocialUUsernameRoute: typeof SocialUUsernameRoute
   WorkoutMonthWeekDayRoute: typeof WorkoutMonthWeekDayRoute
 }
 
@@ -205,6 +296,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/social/': {
+      id: '/social/'
+      path: '/social'
+      fullPath: '/social/'
+      preLoaderRoute: typeof SocialIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social/settings': {
+      id: '/social/settings'
+      path: '/social/settings'
+      fullPath: '/social/settings'
+      preLoaderRoute: typeof SocialSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social/notifications': {
+      id: '/social/notifications'
+      path: '/social/notifications'
+      fullPath: '/social/notifications'
+      preLoaderRoute: typeof SocialNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social/discover': {
+      id: '/social/discover'
+      path: '/social/discover'
+      fullPath: '/social/discover'
+      preLoaderRoute: typeof SocialDiscoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social/board': {
+      id: '/social/board'
+      path: '/social/board'
+      fullPath: '/social/board'
+      preLoaderRoute: typeof SocialBoardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social/u/$username': {
+      id: '/social/u/$username'
+      path: '/social/u/$username'
+      fullPath: '/social/u/$username'
+      preLoaderRoute: typeof SocialUUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social/hashtag/$tag': {
+      id: '/social/hashtag/$tag'
+      path: '/social/hashtag/$tag'
+      fullPath: '/social/hashtag/$tag'
+      preLoaderRoute: typeof SocialHashtagTagRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/workout/$month/$week/$day': {
       id: '/workout/$month/$week/$day'
       path: '/workout/$month/$week/$day'
@@ -224,6 +364,13 @@ const rootRouteChildren: RootRouteChildren = {
   RecordsRoute: RecordsRoute,
   SettingsRoute: SettingsRoute,
   TimersRoute: TimersRoute,
+  SocialBoardRoute: SocialBoardRoute,
+  SocialDiscoverRoute: SocialDiscoverRoute,
+  SocialNotificationsRoute: SocialNotificationsRoute,
+  SocialSettingsRoute: SocialSettingsRoute,
+  SocialIndexRoute: SocialIndexRoute,
+  SocialHashtagTagRoute: SocialHashtagTagRoute,
+  SocialUUsernameRoute: SocialUUsernameRoute,
   WorkoutMonthWeekDayRoute: WorkoutMonthWeekDayRoute,
 }
 export const routeTree = rootRouteImport

@@ -21,6 +21,7 @@ import { Route as SocialIndexRouteImport } from './routes/social.index'
 import { Route as SocialNotificationsRouteImport } from './routes/social.notifications'
 import { Route as SocialDiscoverRouteImport } from './routes/social.discover'
 import { Route as SocialBoardRouteImport } from './routes/social.board'
+import { Route as SocialUUsernameRouteImport } from './routes/social.u.$username'
 import { Route as WorkoutMonthWeekDayRouteImport } from './routes/workout.$month.$week.$day'
 
 const TimersRoute = TimersRouteImport.update({
@@ -83,6 +84,11 @@ const SocialBoardRoute = SocialBoardRouteImport.update({
   path: '/social/board',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SocialUUsernameRoute = SocialUUsernameRouteImport.update({
+  id: '/social/u/$username',
+  path: '/social/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkoutMonthWeekDayRoute = WorkoutMonthWeekDayRouteImport.update({
   id: '/workout/$month/$week/$day',
   path: '/workout/$month/$week/$day',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/social/discover': typeof SocialDiscoverRoute
   '/social/notifications': typeof SocialNotificationsRoute
   '/social/': typeof SocialIndexRoute
+  '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesByTo {
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/social/discover': typeof SocialDiscoverRoute
   '/social/notifications': typeof SocialNotificationsRoute
   '/social': typeof SocialIndexRoute
+  '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesById {
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/social/discover': typeof SocialDiscoverRoute
   '/social/notifications': typeof SocialNotificationsRoute
   '/social/': typeof SocialIndexRoute
+  '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRouteTypes {
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/social/discover'
     | '/social/notifications'
     | '/social/'
+    | '/social/u/$username'
     | '/workout/$month/$week/$day'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/social/discover'
     | '/social/notifications'
     | '/social'
+    | '/social/u/$username'
     | '/workout/$month/$week/$day'
   id:
     | '__root__'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/social/discover'
     | '/social/notifications'
     | '/social/'
+    | '/social/u/$username'
     | '/workout/$month/$week/$day'
   fileRoutesById: FileRoutesById
 }
@@ -196,6 +208,7 @@ export interface RootRouteChildren {
   SocialDiscoverRoute: typeof SocialDiscoverRoute
   SocialNotificationsRoute: typeof SocialNotificationsRoute
   SocialIndexRoute: typeof SocialIndexRoute
+  SocialUUsernameRoute: typeof SocialUUsernameRoute
   WorkoutMonthWeekDayRoute: typeof WorkoutMonthWeekDayRoute
 }
 
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SocialBoardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/social/u/$username': {
+      id: '/social/u/$username'
+      path: '/social/u/$username'
+      fullPath: '/social/u/$username'
+      preLoaderRoute: typeof SocialUUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/workout/$month/$week/$day': {
       id: '/workout/$month/$week/$day'
       path: '/workout/$month/$week/$day'
@@ -308,6 +328,7 @@ const rootRouteChildren: RootRouteChildren = {
   SocialDiscoverRoute: SocialDiscoverRoute,
   SocialNotificationsRoute: SocialNotificationsRoute,
   SocialIndexRoute: SocialIndexRoute,
+  SocialUUsernameRoute: SocialUUsernameRoute,
   WorkoutMonthWeekDayRoute: WorkoutMonthWeekDayRoute,
 }
 export const routeTree = rootRouteImport

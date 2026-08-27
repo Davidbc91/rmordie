@@ -17,6 +17,7 @@ import { Route as ImportRouteImport } from './routes/import'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SocialIndexRouteImport } from './routes/social.index'
 import { Route as WorkoutMonthWeekDayRouteImport } from './routes/workout.$month.$week.$day'
 
 const TimersRoute = TimersRouteImport.update({
@@ -59,6 +60,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SocialIndexRoute = SocialIndexRouteImport.update({
+  id: '/social/',
+  path: '/social/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkoutMonthWeekDayRoute = WorkoutMonthWeekDayRouteImport.update({
   id: '/workout/$month/$week/$day',
   path: '/workout/$month/$week/$day',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/social/': typeof SocialIndexRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/social': typeof SocialIndexRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/social/': typeof SocialIndexRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/social/'
     | '/workout/$month/$week/$day'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/social'
     | '/workout/$month/$week/$day'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/social/'
     | '/workout/$month/$week/$day'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   RecordsRoute: typeof RecordsRoute
   SettingsRoute: typeof SettingsRoute
   TimersRoute: typeof TimersRoute
+  SocialIndexRoute: typeof SocialIndexRoute
   WorkoutMonthWeekDayRoute: typeof WorkoutMonthWeekDayRoute
 }
 
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/social/': {
+      id: '/social/'
+      path: '/social'
+      fullPath: '/social/'
+      preLoaderRoute: typeof SocialIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/workout/$month/$week/$day': {
       id: '/workout/$month/$week/$day'
       path: '/workout/$month/$week/$day'
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecordsRoute: RecordsRoute,
   SettingsRoute: SettingsRoute,
   TimersRoute: TimersRoute,
+  SocialIndexRoute: SocialIndexRoute,
   WorkoutMonthWeekDayRoute: WorkoutMonthWeekDayRoute,
 }
 export const routeTree = rootRouteImport

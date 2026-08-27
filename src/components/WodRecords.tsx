@@ -343,7 +343,9 @@ function ManualWodForm({ onClose }: { onClose: () => void }) {
         status: cap ? "cap" : "completed",
         time_seconds: parseClockInput(time),
         rounds: rounds ? Number(rounds) : null,
-        reps: reps ? Number(reps) : null,
+        reps: type === "max_calories" || type === "max_distance" ? null : reps ? Number(reps) : null,
+        calories: type === "max_calories" && reps ? Number(reps) : null,
+        distance: type === "max_distance" && reps ? Number(reps) : null,
         notes: notes || null,
         source: "manual",
       });

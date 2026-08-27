@@ -143,6 +143,27 @@ export type Database = {
         }
         Relationships: []
       }
+      blocked_users: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       body_metrics: {
         Row: {
           arm_cm: number | null
@@ -223,6 +244,35 @@ export type Database = {
           },
         ]
       }
+      comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercise_log: {
         Row: {
           block_key: string | null
@@ -274,6 +324,27 @@ export type Database = {
         }
         Relationships: []
       }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       milestones: {
         Row: {
           achieved_at: string
@@ -300,6 +371,57 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          comment_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          kind: string
+          message: string | null
+          post_id: string | null
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          kind: string
+          message?: string | null
+          post_id?: string | null
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          kind?: string
+          message?: string | null
+          post_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       personal_record_history: {
         Row: {
@@ -391,6 +513,163 @@ export type Database = {
         }
         Relationships: []
       }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          likes_count: number
+          parent_id: string | null
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          parent_id?: string | null
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          parent_id?: string | null
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_media: {
+        Row: {
+          created_at: string
+          id: string
+          media_type: string
+          position: number
+          post_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          media_type?: string
+          position?: number
+          post_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          media_type?: string
+          position?: number
+          post_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_media_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          caption: string | null
+          comments_count: number
+          created_at: string
+          data: Json
+          hashtags: string[]
+          id: string
+          is_hidden: boolean
+          kind: string
+          likes_count: number
+          saves_count: number
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          caption?: string | null
+          comments_count?: number
+          created_at?: string
+          data?: Json
+          hashtags?: string[]
+          id?: string
+          is_hidden?: boolean
+          kind?: string
+          likes_count?: number
+          saves_count?: number
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          caption?: string | null
+          comments_count?: number
+          created_at?: string
+          data?: Json
+          hashtags?: string[]
+          id?: string
+          is_hidden?: boolean
+          kind?: string
+          likes_count?: number
+          saves_count?: number
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -409,6 +688,136 @@ export type Database = {
           id?: string
           name?: string
           pin_hash?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          post_id: string | null
+          reason: string
+          reported_user_id: string | null
+          reporter_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          post_id?: string | null
+          reason: string
+          reported_user_id?: string | null
+          reporter_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          post_id?: string | null
+          reason?: string
+          reported_user_id?: string | null
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_posts: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_posts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_profiles: {
+        Row: {
+          allow_comments: boolean
+          avatar_url: string | null
+          bio: string | null
+          box_name: string | null
+          created_at: string
+          crossfit_start_date: string | null
+          display_name: string | null
+          id: string
+          is_admin: boolean
+          is_private: boolean
+          level: string | null
+          public_exercises: Json
+          show_prs: boolean
+          show_stats: boolean
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          allow_comments?: boolean
+          avatar_url?: string | null
+          bio?: string | null
+          box_name?: string | null
+          created_at?: string
+          crossfit_start_date?: string | null
+          display_name?: string | null
+          id?: string
+          is_admin?: boolean
+          is_private?: boolean
+          level?: string | null
+          public_exercises?: Json
+          show_prs?: boolean
+          show_stats?: boolean
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          allow_comments?: boolean
+          avatar_url?: string | null
+          bio?: string | null
+          box_name?: string | null
+          created_at?: string
+          crossfit_start_date?: string | null
+          display_name?: string | null
+          id?: string
+          is_admin?: boolean
+          is_private?: boolean
+          level?: string | null
+          public_exercises?: Json
+          show_prs?: boolean
+          show_stats?: boolean
+          updated_at?: string
+          user_id?: string
+          username?: string
         }
         Relationships: []
       }

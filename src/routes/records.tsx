@@ -21,6 +21,7 @@ import {
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
+import { WodRecords } from "@/components/WodRecords";
 import {
   LineChart,
   Line,
@@ -31,7 +32,13 @@ import {
   CartesianGrid,
 } from "recharts";
 
+type RecordsSearch = { tab?: "strength" | "wods"; wod?: string };
+
 export const Route = createFileRoute("/records")({
+  validateSearch: (search: Record<string, unknown>): RecordsSearch => ({
+    tab: search.tab === "wods" ? "wods" : "strength",
+    wod: typeof search.wod === "string" ? search.wod : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Personal Records — RM OR DIE" },
@@ -45,6 +52,50 @@ export const Route = createFileRoute("/records")({
   }),
   component: RecordsPage,
 });
+
+function RecordsPage() {
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const category = search.tab === "wods" ? "wods" : "strength";
+
+  return (
+    <AppShell>
+      <header className="rise rise-1 mb-5">
+        <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
+          Personal Records
+        </p>
+        <h1 className="mt-2 text-[32px] font-semibold leading-none tracking-tight">
+          {category === "wods" ? "WOD PRs" : "Mis RM"}
+        </h1>
+      </header>
+
+      <div className="rise rise-2 mb-5 flex gap-1 rounded-2xl border border-border bg-surface p-1">
+        {([
+          { label: "Fuerza", value: "strength" as const },
+          { label: "WODs", value: "wods" as const },
+        ]).map((c) => (
+          <button
+            key={c.value}
+            onClick={() => navigate({ search: { tab: c.value }, replace: true })}
+            className={`flex-1 rounded-xl px-3 py-2 text-xs font-semibold tracking-wide transition ${
+              category === c.value
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      {category === "wods" ? (
+        <WodRecords focusSlug={search.wod} />
+      ) : (
+        <StrengthRecords />
+      )}
+    </AppShell>
+  );
+}
 
 const REP_MAXES = [1, 3, 5, 10] as const;
 const TABS: { label: string; value: number | "all" }[] = [
@@ -92,7 +143,7 @@ const SUGGESTED = [
   "Turkish Get-up",
 ];
 
-function RecordsPage() {
+function StrengthRecords() {
   const { data: records = [], isLoading } = usePersonalRecords();
   const upsert = useUpsertPersonalRecord();
   const update = useUpdatePersonalRecord();
@@ -198,24 +249,16 @@ function RecordsPage() {
   }
 
   return (
-    <AppShell>
+    <>
       {celebrate && <PrCelebration data={celebrate} onClose={() => setCelebrate(null)} />}
-      <header className="rise rise-1 mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-            Personal Records
-          </p>
-          <h1 className="mt-2 text-[32px] font-semibold leading-none tracking-tight">
-            Mis RM
-          </h1>
-        </div>
+      <div className="mb-4 flex justify-end">
         <button
           onClick={() => setShowAdd((v) => !v)}
-          className="shrink-0 inline-flex items-center gap-1.5 rounded-2xl bg-foreground px-4 py-2.5 text-sm font-medium text-background transition active:scale-[0.98]"
+          className="inline-flex items-center gap-1.5 rounded-2xl bg-foreground px-4 py-2.5 text-sm font-medium text-background transition active:scale-[0.98]"
         >
-          <Plus className="h-4 w-4" /> Añadir
+          <Plus className="h-4 w-4" /> Añadir RM
         </button>
-      </header>
+      </div>
 
       {/* Segmented rep-max control */}
       <div className="rise rise-2 mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-1">
@@ -448,7 +491,7 @@ function RecordsPage() {
       {detailFor && (
         <HistoryModal record={detailFor} onClose={() => setDetailFor(null)} />
       )}
-    </AppShell>
+    </>
   );
 }
 

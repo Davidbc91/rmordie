@@ -36,7 +36,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "app_settings_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       athlete_goals: {
         Row: {
@@ -84,7 +92,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "athlete_goals_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       athlete_profile: {
         Row: {
@@ -141,7 +157,15 @@ export type Database = {
           user_id?: string
           weekly_target?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "athlete_profile_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blocked_users: {
         Row: {
@@ -210,7 +234,15 @@ export type Database = {
           waist_cm?: number | null
           weight_kg?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "body_metrics_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_messages: {
         Row: {
@@ -286,7 +318,7 @@ export type Database = {
           performed_on: string
           reps: number | null
           time_seconds: number | null
-          user_id: string | null
+          user_id: string
           week: number | null
           weight: number | null
         }
@@ -302,7 +334,7 @@ export type Database = {
           performed_on?: string
           reps?: number | null
           time_seconds?: number | null
-          user_id?: string | null
+          user_id: string
           week?: number | null
           weight?: number | null
         }
@@ -318,11 +350,19 @@ export type Database = {
           performed_on?: string
           reps?: number | null
           time_seconds?: number | null
-          user_id?: string | null
+          user_id?: string
           week?: number | null
           weight?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "exercise_log_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       follows: {
         Row: {
@@ -370,7 +410,15 @@ export type Database = {
           label?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "milestones_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -421,6 +469,13 @@ export type Database = {
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "notifications_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       personal_record_history: {
@@ -451,7 +506,15 @@ export type Database = {
           rep_max?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "personal_record_history_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       personal_records: {
         Row: {
@@ -484,7 +547,15 @@ export type Database = {
           user_id?: string
           weight?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "personal_records_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       planning: {
         Row: {
@@ -493,6 +564,7 @@ export type Database = {
           imported_at: string
           is_active: boolean
           source_filename: string | null
+          user_id: string | null
           version: number
         }
         Insert: {
@@ -501,6 +573,7 @@ export type Database = {
           imported_at?: string
           is_active?: boolean
           source_filename?: string | null
+          user_id?: string | null
           version?: number
         }
         Update: {
@@ -509,9 +582,18 @@ export type Database = {
           imported_at?: string
           is_active?: boolean
           source_filename?: string | null
+          user_id?: string | null
           version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "planning_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_comments: {
         Row: {
@@ -672,18 +754,21 @@ export type Database = {
       }
       profiles: {
         Row: {
+          auth_user_id: string | null
           created_at: string
           id: string
           name: string
           pin_hash: string
         }
         Insert: {
+          auth_user_id?: string | null
           created_at?: string
           id?: string
           name: string
           pin_hash: string
         }
         Update: {
+          auth_user_id?: string | null
           created_at?: string
           id?: string
           name?: string
@@ -760,6 +845,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_config: {
+        Row: {
+          id: boolean
+          owner_rls_enforced: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          owner_rls_enforced?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          owner_rls_enforced?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       social_profiles: {
         Row: {
@@ -858,7 +961,15 @@ export type Database = {
           soreness?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "wellness_logs_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wod_results: {
         Row: {
@@ -939,7 +1050,15 @@ export type Database = {
           wod_slug?: string
           wod_type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "wod_results_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workout_results: {
         Row: {
@@ -956,7 +1075,7 @@ export type Database = {
           status: string
           time_seconds: number | null
           updated_at: string
-          user_id: string | null
+          user_id: string
           week: number
           weight: number | null
         }
@@ -974,7 +1093,7 @@ export type Database = {
           status?: string
           time_seconds?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
           week: number
           weight?: number | null
         }
@@ -992,18 +1111,29 @@ export type Database = {
           status?: string
           time_seconds?: number | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
           week?: number
           weight?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "workout_results_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_profile_id: { Args: never; Returns: string }
+      is_data_owner: { Args: { _owner: string }; Returns: boolean }
+      is_shared_or_owner: { Args: { _owner: string }; Returns: boolean }
+      owner_rls_enforced: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

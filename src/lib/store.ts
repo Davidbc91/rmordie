@@ -325,7 +325,7 @@ export function useDeletePersonalRecord() {
   const uid = getCurrentUserId();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase as any).from("personal_records").delete().eq("id", id);
+      const { error } = await (supabase as any).from("personal_records").delete().eq("id", id).eq("user_id", uid!);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["personal_records", uid] }),

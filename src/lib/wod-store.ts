@@ -227,7 +227,7 @@ export function useDeleteWodResult() {
   const uid = getCurrentUserId();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await sb.from("wod_results").delete().eq("id", id);
+      const { error } = await sb.from("wod_results").delete().eq("id", id).eq("user_id", uid!);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["wod_results", uid] }),

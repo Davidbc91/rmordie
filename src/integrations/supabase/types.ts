@@ -1130,10 +1130,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      current_profile_id: { Args: never; Returns: string }
-      is_data_owner: { Args: { _owner: string }; Returns: boolean }
-      is_shared_or_owner: { Args: { _owner: string }; Returns: boolean }
-      owner_rls_enforced: { Args: never; Returns: boolean }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

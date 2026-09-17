@@ -118,7 +118,7 @@ export function useDeleteBodyMetric() {
   const uid = getCurrentUserId();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await sb.from("body_metrics").delete().eq("id", id);
+      const { error } = await sb.from("body_metrics").delete().eq("id", id).eq("user_id", uid!);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["body_metrics", uid] }),
@@ -175,7 +175,7 @@ export function useDeleteWellness() {
   const uid = getCurrentUserId();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await sb.from("wellness_logs").delete().eq("id", id);
+      const { error } = await sb.from("wellness_logs").delete().eq("id", id).eq("user_id", uid!);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["wellness_logs", uid] }),
@@ -222,7 +222,7 @@ export function useSaveGoal() {
     mutationFn: async (g: Partial<AthleteGoal> & { target_value: number; title: string }) => {
       if (!uid) throw new Error("No hay perfil activo");
       if (g.id) {
-        const { error } = await sb.from("athlete_goals").update(g).eq("id", g.id);
+        const { error } = await sb.from("athlete_goals").update({ ...g, user_id: uid }).eq("id", g.id).eq("user_id", uid);
         if (error) throw error;
       } else {
         const { error } = await sb.from("athlete_goals").insert({ ...g, user_id: uid });
@@ -238,7 +238,7 @@ export function useDeleteGoal() {
   const uid = getCurrentUserId();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await sb.from("athlete_goals").delete().eq("id", id);
+      const { error } = await sb.from("athlete_goals").delete().eq("id", id).eq("user_id", uid!);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["athlete_goals", uid] }),

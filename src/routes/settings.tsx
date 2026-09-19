@@ -38,8 +38,9 @@ function SettingsPage() {
     toast.success("PIN actualizado");
   }
 
-  function switchProfile() {
+  async function switchProfile() {
     signOut();
+    await supabase.auth.signOut();
     navigate({ to: "/" });
     setTimeout(() => window.location.reload(), 50);
   }
@@ -50,8 +51,10 @@ function SettingsPage() {
     if (!ok) return;
     await deleteProfile.mutateAsync(uid);
     signOut();
+    await supabase.auth.signOut();
     window.location.reload();
   }
+
 
   return (
     <AppShell>

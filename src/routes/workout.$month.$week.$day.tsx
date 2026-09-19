@@ -156,16 +156,26 @@ function WorkoutPage() {
           onShare={shareCelebrated}
         />
       )}
-      <Link to="/calendar" className="mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+      <Link
+        to="/calendar"
+        className="pressable mb-4 inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+      >
         <ChevronLeft className="h-3.5 w-3.5" /> Calendario
       </Link>
-      <div className="mb-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{mo.label} · Semana {weekN}</p>
-        <h1 className="mt-1 text-2xl font-semibold">{d.key}</h1>
-      </div>
+
+      <header className="glass glass-sheen rise rise-1 mb-4 p-5">
+        <p className="eyebrow">{mo.label} · Semana {weekN}</p>
+        <div className="mt-3 flex items-end justify-between gap-4">
+          <h1 className="display-lg min-w-0 truncate">{d.key}</h1>
+          <div className="shrink-0 text-right">
+            <div className="metric gold-text">{d.blocks.length}</div>
+            <p className="eyebrow mt-1.5">Bloques</p>
+          </div>
+        </div>
+      </header>
 
       {d.isRest && (
-        <div className="card-elevated p-6 text-center">
+        <div className="glass glass-sheen p-6 text-center">
           <p className="text-sm text-muted-foreground">Día de descanso y movilidad</p>
         </div>
       )}
@@ -174,9 +184,9 @@ function WorkoutPage() {
         <button
           onClick={saveAll}
           disabled={savingAll}
-          className="mb-4 flex w-full items-center justify-center gap-2 rounded-[18px] bg-white py-3 text-sm font-semibold text-black disabled:opacity-50"
+          className="pressable gold-gradient mb-4 flex min-h-[54px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] text-[15px] font-semibold disabled:opacity-45"
         >
-          <CheckCheck className="h-4 w-4" />
+          <CheckCheck className="h-[18px] w-[18px]" />
           {savingAll ? "Guardando entreno…" : "Guardar entreno completo"}
         </button>
       )}

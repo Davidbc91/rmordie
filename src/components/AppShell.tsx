@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getActiveWorkout, clearActiveWorkout, type ActiveWorkout } from "@/lib/active-workout";
+import { useChatUnread } from "@/lib/chat-unread";
 
 const tabs = [
   { to: "/", label: "Inicio", icon: Home },
@@ -24,6 +25,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [active, setActive] = useState<ActiveWorkout | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  const chatUnread = useChatUnread();
 
   useEffect(() => {
     const read = () => setActive(getActiveWorkout());
@@ -112,6 +114,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       <span className="block text-sm font-semibold">{l.label}</span>
                       <span className="block truncate text-xs text-muted-foreground">{l.hint}</span>
                     </span>
+                    {l.to === "/chat" && chatUnread > 0 && (
+                      <span
+                        className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-[10px] font-bold gold-gradient"
+                        style={{ color: "var(--gold-foreground)" }}
+                      >
+                        {chatUnread > 99 ? "99+" : chatUnread}
+                      </span>
+                    )}
                     <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </Link>
                 );
@@ -169,6 +179,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 style={{ background: "rgba(216,180,107,0.10)", opacity: moreActive || moreOpen ? 1 : 0 }}
               />
               <MoreHorizontal className="relative h-[21px] w-[21px]" strokeWidth={moreActive || moreOpen ? 2.1 : 1.6} />
+              {chatUnread > 0 && (
+                <span
+                  aria-hidden
+                  className="absolute right-[26%] top-[6px] grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-bold gold-gradient"
+                  style={{ color: "var(--gold-foreground)" }}
+                >
+                  {chatUnread > 9 ? "9+" : chatUnread}
+                </span>
+              )}
               <span className="relative text-[10px] font-semibold" style={{ letterSpacing: "0.03em" }}>Más</span>
             </button>
           </div>

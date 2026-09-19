@@ -100,6 +100,16 @@ function CalendarPage() {
     return m;
   }, [results]);
 
+  if (!planning || !month) {
+    return (
+      <AppShell>
+        <div className="glass glass-sheen p-6 text-center">
+          <p className="text-sm text-muted-foreground">Importa primero tu planificación.</p>
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <div className="select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>

@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         style={{ maskImage: "linear-gradient(#000, transparent)", WebkitMaskImage: "linear-gradient(#000, transparent)" }}
       />
 
-      <main className="safe-x safe-top relative mx-auto max-w-2xl px-4 pt-8 sm:px-6 sm:pt-12">{children}</main>
+      <main className="safe-x safe-top relative mx-auto max-w-2xl overflow-x-clip px-4 pt-8 sm:px-6 sm:pt-12">{children}</main>
 
       {showResume && active && (
         <div className="fixed inset-x-0 bottom-[86px] z-40 px-4">

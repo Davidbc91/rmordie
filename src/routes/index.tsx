@@ -6,6 +6,13 @@ import {
   Calendar, Upload, Flame, Trophy, ChevronRight, Timer, Dumbbell, User, Play, ArrowUpRight, Users,
 } from "lucide-react";
 import { useMemo } from "react";
+import {
+  completedBlockMap,
+  isSessionCompleted,
+  planningCompletion,
+  sessionProgress,
+} from "@/lib/session-progress";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,23 +35,13 @@ function Home() {
   const { data: results = [] } = useAllResults();
   const { data: records = [] } = usePersonalRecords();
 
-  const doneSet = useMemo(() => {
-    const s = new Set<string>();
-    for (const r of results) if (r.status === "completed") s.add(`${r.month_key}|${r.week}|${r.day_key}`);
-    return s;
-  }, [results]);
+  const blockMap = useMemo(() => completedBlockMap(results), [results]);
 
   const stats = useMemo(() => {
     const done = results.filter((r) => r.status === "completed");
-    let totalDays = 0;
-    if (planning) {
-      for (const m of planning.data.months)
-        for (const w of m.weeks)
-          for (const d of w.days) if (!d.isRest) totalDays++;
-    }
-    const pct = totalDays ? Math.min(100, Math.round((doneSet.size / totalDays) * 100)) : 0;
-    return { blocks: done.length, sessions: doneSet.size, totalDays, pct };
-  }, [results, planning, doneSet]);
+    const comp = planningCompletion(planning?.data, results);
+    return { blocks: done.length, sessions: comp.completed, totalDays: comp.total, pct: comp.pct };
+  }, [results, planning]);
 
   const next = useMemo(() => {
     if (!planning) return null;
@@ -56,15 +53,24 @@ function Home() {
       for (const w of m.weeks)
         for (const d of w.days) {
           if (d.isRest) continue;
-          if (doneSet.has(`${m.key}|${w.index}|${d.key}`)) continue;
+          const prog = sessionProgress(d, m.key, w.index, blockMap);
+          if (prog.state === "completed") continue;
           const headline =
             d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ??
             d.blocks[0]?.content.split("\n")[0] ??
             "Sesión";
-          return { monthKey: m.key, monthLabel: m.label, week: w.index, dayKey: d.key, headline, blocks: d.blocks.length };
+          return {
+            monthKey: m.key,
+            monthLabel: m.label,
+            week: w.index,
+            dayKey: d.key,
+            headline,
+            blocks: d.blocks.length,
+            progress: prog,
+          };
         }
     return null;
-  }, [planning, doneSet]);
+  }, [planning, blockMap]);
 
   const weekProgress = useMemo(() => {
     if (!planning || !next) return null;
@@ -72,9 +78,10 @@ function Home() {
     const w = m?.weeks.find((x) => x.index === next.week);
     if (!m || !w) return null;
     const train = w.days.filter((d) => !d.isRest);
-    const done = train.filter((d) => doneSet.has(`${m.key}|${w.index}|${d.key}`)).length;
+    const done = train.filter((d) => isSessionCompleted(d, m.key, w.index, blockMap)).length;
     return { done, total: train.length };
-  }, [planning, next, doneSet]);
+  }, [planning, next, blockMap]);
+
 
   const topRecords = useMemo(
     () =>
@@ -104,7 +111,9 @@ function Home() {
           {next ? (
             <GlassCard level={3} gold className="rise rise-2 sheen p-5">
               <div className="flex items-center justify-between gap-3">
-                <GlassBadge tone="gold">Siguiente sesión</GlassBadge>
+                <GlassBadge tone="gold">
+                  {next.progress.state === "in_progress" ? "Sesión en curso" : "Siguiente sesión"}
+                </GlassBadge>
                 {weekProgress && (
                   <span className="text-[11px] tabular text-muted-foreground">
                     Semana {next.week} · {weekProgress.done}/{weekProgress.total}
@@ -118,10 +127,28 @@ function Home() {
                   <p className="eyebrow mt-2.5">{next.monthLabel}</p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="metric">{next.blocks}</div>
+                  <div className="metric tabular">
+                    {next.progress.done} / {next.progress.total}
+                  </div>
                   <p className="eyebrow mt-1.5">Bloques</p>
                 </div>
               </div>
+
+              <div
+                className="mt-4 h-[3px] w-full overflow-hidden rounded-full"
+                style={{ background: "rgba(255,255,255,0.09)" }}
+              >
+                <div
+                  className="h-full rounded-full transition-[width] duration-700"
+                  style={{
+                    width: `${Math.max(next.progress.pct, 2)}%`,
+                    background: "linear-gradient(90deg,#EBD6A6,#D8B46B)",
+                  }}
+                />
+              </div>
+              <p className="eyebrow mt-2.5">
+                {next.progress.state === "in_progress" ? "Sesión en curso" : "Sesión pendiente"}
+              </p>
 
               <p className="mt-4 line-clamp-2 text-sm text-muted-foreground">{next.headline}</p>
 
@@ -130,8 +157,10 @@ function Home() {
                 params={{ month: next.monthKey, week: String(next.week), day: next.dayKey }}
                 className="pressable gold-gradient mt-5 flex min-h-[54px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] text-[15px] font-semibold"
               >
-                <Play className="h-4 w-4" fill="currentColor" /> Empezar entreno
+                <Play className="h-4 w-4" fill="currentColor" />{" "}
+                {next.progress.state === "in_progress" ? "Continuar entreno" : "Empezar entreno"}
               </Link>
+
             </GlassCard>
           ) : (
             <GlassCard level={3} className="rise rise-2 p-6 text-center">

@@ -3,9 +3,19 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Send, MessageCircle } from "lucide-react";
+import { Send, MessageCircle, Bell, BellOff } from "lucide-react";
+import { markChatSeen } from "@/lib/chat-unread";
+import {
+  disablePush,
+  enablePush,
+  iosNeedsInstall,
+  isPushActive,
+  pushSupported,
+} from "@/lib/push";
+import { notifyChatMessage } from "@/lib/push.functions";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({

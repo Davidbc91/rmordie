@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { usePlanning, useAllResults, usePersonalRecords } from "@/lib/store";
+import { usePlanning, useAllResults, usePersonalRecords, type WorkoutResult } from "@/lib/store";
+import { useMilestones, useGoals } from "@/lib/profile-store";
+import { streaks, sessionDays } from "@/lib/analytics";
 import { GlassCard, GlassSection, GlassBadge } from "@/components/glass";
 import {
   Calendar, Upload, Flame, Trophy, ChevronRight, Timer, Dumbbell, User, Play, ArrowUpRight, Users,
+  Award, Target, CalendarCheck, Activity, Layers,
 } from "lucide-react";
 import { useMemo } from "react";
 import {
@@ -12,6 +15,7 @@ import {
   planningCompletion,
   sessionProgress,
 } from "@/lib/session-progress";
+
 
 
 export const Route = createFileRoute("/")({

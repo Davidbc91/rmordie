@@ -137,7 +137,7 @@ function ProfilePage() {
   return (
     <AppShell>
       <header className="rise rise-1 mb-5">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground">My Profile</p>
+        <p className="eyebrow">Mi perfil</p>
         <h1 className="mt-2 text-[32px] font-semibold leading-none tracking-tight">
           {profile?.display_name || "Atleta"}
         </h1>

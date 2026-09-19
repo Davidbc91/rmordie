@@ -7,7 +7,6 @@ import type { Planning, Month, Day } from "./excel-parser";
 export type Profile = {
   id: string;
   name: string;
-  pin_hash: string;
   created_at: string;
 };
 
@@ -17,12 +16,23 @@ export function useProfiles() {
     queryFn: async (): Promise<Profile[]> => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id,name,created_at")
         .order("created_at", { ascending: true });
       if (error) throw error;
       return (data ?? []) as unknown as Profile[];
     },
   });
+}
+
+/** PIN check happens inside the database; the hash is never sent to the client. */
+export async function verifyProfilePin(profileId: string, pin: string): Promise<boolean> {
+  const pin_hash = await sha256(pin);
+  const { data, error } = await supabase.rpc("verify_profile_pin", {
+    _profile_id: profileId,
+    _pin_hash: pin_hash,
+  });
+  if (error) throw error;
+  return data === true;
 }
 
 export function useCreateProfile() {
@@ -33,7 +43,7 @@ export function useCreateProfile() {
       const { data, error } = await supabase
         .from("profiles")
         .insert({ name: name.trim(), pin_hash })
-        .select()
+        .select("id,name,created_at")
         .single();
       if (error) throw error;
       return data as unknown as Profile;
@@ -41,6 +51,7 @@ export function useCreateProfile() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profiles"] }),
   });
 }
+
 
 export function useUpdateProfilePin() {
   const qc = useQueryClient();
@@ -70,9 +81,10 @@ export function useDeleteProfile() {
   });
 }
 
-// -------- Planning (shared) --------
+// -------- Planning (shared rows are read-only; new imports belong to the athlete) --------
 export type PlanningRow = {
   id: string;
+  user_id: string | null;
   version: number;
   source_filename: string | null;
   data: Planning;
@@ -81,18 +93,19 @@ export type PlanningRow = {
 };
 
 export function usePlanning() {
+  const uid = getCurrentUserId();
   return useQuery({
-    queryKey: ["planning"],
+    queryKey: ["planning", uid],
     queryFn: async (): Promise<PlanningRow | null> => {
       const { data, error } = await supabase
         .from("planning")
         .select("*")
         .eq("is_active", true)
-        .order("imported_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order("imported_at", { ascending: false });
       if (error) throw error;
-      return (data as unknown as PlanningRow) ?? null;
+      const rows = (data ?? []) as unknown as PlanningRow[];
+      // prefer the athlete's own active planning, fall back to the shared one
+      return rows.find((r) => uid && r.user_id === uid) ?? rows.find((r) => r.user_id === null) ?? rows[0] ?? null;
     },
   });
 }
@@ -101,11 +114,19 @@ export function useSavePlanning() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { planning: Planning; filename?: string }) => {
-      await supabase.from("planning").update({ is_active: false }).eq("is_active", true);
+      const uid = getCurrentUserId();
+      if (!uid) throw new Error("No hay perfil activo");
+      // only the athlete's own planning rows can be deactivated; shared ones are read-only
+      await supabase.from("planning").update({ is_active: false }).eq("user_id", uid).eq("is_active", true);
       const { data: latest } = await supabase
-        .from("planning").select("version").order("version", { ascending: false }).limit(1).maybeSingle();
+        .from("planning")
+        .select("version")
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
       const nextVersion = ((latest?.version as number | undefined) ?? 0) + 1;
       const { error } = await supabase.from("planning").insert({
+        user_id: uid,
         version: nextVersion,
         source_filename: input.filename ?? null,
         data: input.planning as unknown as never,
@@ -116,6 +137,7 @@ export function useSavePlanning() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["planning"] }),
   });
 }
+
 
 // -------- Results (per-user) --------
 export type WorkoutResult = {

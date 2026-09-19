@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { setUnlocked, sha256, setCurrentUserId, getCurrentUserId, isUnlocked } from "@/lib/pin-gate";
-import { useProfiles, useCreateProfile } from "@/lib/store";
+import { setUnlocked, setCurrentUserId, getCurrentUserId, isUnlocked } from "@/lib/pin-gate";
+import { useProfiles, useCreateProfile, verifyProfilePin } from "@/lib/store";
+
 import { UserPlus, ChevronLeft, User } from "lucide-react";
 
 type Mode = "pick" | "pin" | "create";
@@ -45,16 +46,21 @@ export function PinGate({ children }: { children: React.ReactNode }) {
     e.preventDefault();
     setError(null);
     if (!selected) return;
-    const hash = await sha256(pin);
-    if (hash === selected.pin_hash) {
-      setCurrentUserId(selected.id);
-      setUnlocked(true);
-      setUL(true);
-    } else {
-      setError("PIN incorrecto");
-      setPin("");
+    try {
+      const ok = await verifyProfilePin(selected.id, pin);
+      if (ok) {
+        setCurrentUserId(selected.id);
+        setUnlocked(true);
+        setUL(true);
+      } else {
+        setError("PIN incorrecto");
+        setPin("");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo verificar el PIN");
     }
   }
+
 
   async function submitCreate(e: React.FormEvent) {
     e.preventDefault();

@@ -92,7 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {moreOpen && (
         <div className="fixed inset-0 z-50 flex items-end">
           <button aria-label="Cerrar menú" onClick={() => setMoreOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-[6px]" />
-          <div className="glass-elevated glass-sheen animate-fade relative mx-3 mb-[92px] w-full max-w-2xl p-3 sm:mx-auto">
+          <div className="glass-elevated glass-sheen animate-fade relative mx-4 mb-[96px] max-w-2xl flex-1 p-3 sm:mx-auto">
             <p className="eyebrow px-2 pb-2 pt-1">Más</p>
             <div className="space-y-1.5">
               {moreLinks.map((l) => {

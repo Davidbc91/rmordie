@@ -5,11 +5,11 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 6px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 10px);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 12px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
@@ -36,134 +36,321 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
-  --shadow-gold: none;
-  --shadow-elevated: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-gold: 0 10px 30px -12px rgba(216, 178, 106, 0.35);
+  --shadow-elevated: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
 }
 
 :root, .dark {
   --radius: 1.25rem;
 
-  /* Pure black canvas */
-  --background: #000000;
-  --foreground: #FFFFFF;
+  /* ————— Depth levels ————— */
+  --level-0: #050506;   /* canvas */
+  --level-1: #0b0c0e;   /* graphite */
+  --level-2: #121316;   /* smoke */
 
-  /* Layered surfaces */
-  --surface: #111111;
-  --surface-2: #181818;
+  --background: #050506;
+  --foreground: #F4F4F5;
 
-  /* Cards default to elevated dark; card-elevated overrides to white */
-  --card: #111111;
-  --card-foreground: #FFFFFF;
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface-2: rgba(255, 255, 255, 0.075);
 
-  --popover: #111111;
-  --popover-foreground: #FFFFFF;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-foreground: #F4F4F5;
 
-  /* "Gold" is remapped to monochrome white — primary accent on dark */
-  --gold: #FFFFFF;
-  --gold-soft: #FFFFFF;
-  --gold-foreground: #000000;
+  --popover: #101114;
+  --popover-foreground: #F4F4F5;
 
-  --primary: #FFFFFF;
-  --primary-foreground: #000000;
+  /* Dorado RMORDIE: acento premium, uso reservado */
+  --gold: #D8B46B;
+  --gold-soft: #EBD6A6;
+  --gold-foreground: #0A0A0B;
 
-  --secondary: #181818;
-  --secondary-foreground: #FFFFFF;
+  --primary: #F4F4F5;
+  --primary-foreground: #08080A;
 
-  --muted: #181818;
-  --muted-foreground: #B8B8B8;
+  --secondary: rgba(255, 255, 255, 0.07);
+  --secondary-foreground: #F4F4F5;
 
-  --accent: #1F1F1F;
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: #96979C;
+
+  --accent: rgba(255, 255, 255, 0.09);
   --accent-foreground: #FFFFFF;
 
   --destructive: #E5484D;
   --destructive-foreground: #FFFFFF;
 
-  --success: #FFFFFF;
+  --success: #7BD88F;
 
-  --border: #2A2A2A;
-  --input: #181818;
-  --ring: #FFFFFF;
+  --border: rgba(255, 255, 255, 0.09);
+  --input: rgba(255, 255, 255, 0.05);
+  --ring: rgba(216, 180, 107, 0.6);
+
+  /* ————— Liquid Glass ————— */
+  --glass-bg: rgba(255, 255, 255, 0.045);
+  --glass-bg-2: rgba(255, 255, 255, 0.07);
+  --glass-bg-3: rgba(20, 21, 25, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-border-strong: rgba(255, 255, 255, 0.16);
+  --glass-highlight: rgba(255, 255, 255, 0.35);
+  --glass-blur: 18px;
+  --glass-blur-strong: 28px;
+  --glass-shadow: 0 18px 40px -26px rgba(0, 0, 0, 0.95);
+  --glass-shadow-lg: 0 34px 80px -34px rgba(0, 0, 0, 1);
+
+  /* Escala de espaciado / radios coherente */
+  --r-sm: 14px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 30px;
 }
 
 @layer base {
   * { border-color: var(--color-border); }
-  html, body { background-color: var(--color-background); color: var(--color-foreground); }
+  html {
+    background-color: var(--level-0);
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
+    color: var(--color-foreground);
     font-family: var(--font-display);
     font-feature-settings: "cv11", "ss01";
-    letter-spacing: -0.01em;
+    letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    background-color: var(--level-0);
+    background-image:
+      radial-gradient(120% 60% at 50% -12%, rgba(216, 180, 107, 0.09) 0%, rgba(216, 180, 107, 0) 58%),
+      radial-gradient(90% 50% at 12% 8%, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0) 60%),
+      radial-gradient(110% 60% at 88% 110%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 64%),
+      linear-gradient(180deg, #0a0b0d 0%, #050506 42%, #07080a 100%);
+    background-attachment: fixed;
+    min-height: 100dvh;
   }
-  ::selection { background: #FFFFFF; color: #000000; }
+  ::selection { background: var(--gold); color: var(--gold-foreground); }
 
-  h1, h2, h3, h4 { letter-spacing: -0.02em; }
+  h1, h2, h3, h4 { letter-spacing: -0.028em; }
   .tabular { font-variant-numeric: tabular-nums; }
+
+  input, textarea, select, button { font-family: inherit; }
+  input, textarea, select { font-size: 16px; } /* evita el zoom en iOS */
 }
 
-/* Legacy "gold" utilities remapped to monochrome */
+/* ————— Safe areas ————— */
+@utility safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 8px);
+}
+@utility safe-top {
+  padding-top: max(env(safe-area-inset-top), 0px);
+}
+@utility safe-x {
+  padding-left: max(env(safe-area-inset-left), 0px);
+  padding-right: max(env(safe-area-inset-right), 0px);
+}
+
+/* ————— Liquid Glass: 3 niveles de profundidad ————— */
+
+/* LEVEL 2 — superficie de vidrio estándar (sin blur: rendimiento) */
+@utility glass {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.02) 46%, rgba(255, 255, 255, 0.012) 100%),
+    var(--level-1);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* LEVEL 2+ — vidrio con blur real (uso limitado: cards principales) */
+@utility glass-blur {
+  position: relative;
+  background: var(--glass-bg-2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+}
+
+/* LEVEL 3 — vidrio elevado / modal / elemento activo */
+@utility glass-elevated {
+  position: relative;
+  background: var(--glass-bg-3);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--r-xl);
+  box-shadow: var(--glass-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(160%);
+}
+
+/* Superficie sutil sin vidrio (listas, filas internas) */
+@utility glass-quiet {
+  background: rgba(255, 255, 255, 0.032);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--r-md);
+}
+
+/* Reflejo superior del vidrio */
+@utility glass-sheen {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+    pointer-events: none;
+  }
+}
+
+/* Contorno dorado para lo destacado (PRs, acción principal) */
+@utility glass-gold {
+  border-color: rgba(216, 180, 107, 0.34);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(235, 214, 166, 0.18), 0 0 0 1px rgba(216, 180, 107, 0.06);
+}
+
+/* Legado: todas las pantallas usan card-elevated → ahora es vidrio nivel 2 */
+@utility card-elevated {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.02) 46%, rgba(255, 255, 255, 0.012) 100%),
+    var(--level-1);
+  color: var(--foreground);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-2: rgba(255, 255, 255, 0.075);
+  --card: rgba(255, 255, 255, 0.05);
+}
+
+@utility hairline {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03));
+  height: 1px;
+  width: 100%;
+}
+
+@utility rule-fade {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.015));
+}
+
+/* ————— Acento dorado ————— */
 @utility gold-text {
   color: var(--gold);
 }
 
 @utility gold-gradient {
-  background-image: none;
-  background-color: var(--gold);
+  background-image: linear-gradient(140deg, var(--gold-soft) 0%, var(--gold) 52%, #BE9751 100%);
   color: var(--gold-foreground);
 }
 
-/* Signature card: crisp white surface, black content.
-   Scopes tokens so nested muted/border/gold styles read correctly on white. */
-@utility card-elevated {
-  background-color: #FFFFFF;
-  color: #000000;
-  border: 1px solid #ECECEC;
-  border-radius: 24px;
-  box-shadow: none;
-  --foreground: #000000;
-  --muted-foreground: #6F6F6F;
-  --border: #EDEDED;
-  --input: #F5F5F5;
-  --surface: #FFFFFF;
-  --surface-2: #F7F7F7;
-  --card: #FFFFFF;
-  --card-foreground: #000000;
-  --gold: #000000;
-  --gold-soft: #000000;
-  --gold-foreground: #FFFFFF;
-  --primary: #000000;
-  --primary-foreground: #FFFFFF;
-  --ring: #000000;
-  --accent: #F2F2F2;
-}
-
-/* Subtle separator */
-@utility hairline {
-  background-color: #2A2A2A;
+@utility gold-hairline {
   height: 1px;
-  width: 100%;
+  background: linear-gradient(90deg, rgba(216, 180, 107, 0.65), rgba(216, 180, 107, 0));
 }
 
-@keyframes pr-pop {
-  0% { transform: scale(0.92); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+/* ————— Tipografía editorial ————— */
+@utility display-xl {
+  font-size: clamp(3rem, 18vw, 5rem);
+  line-height: 0.84;
+  letter-spacing: -0.055em;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
 }
 
-@utility animate-pr {
-  animation: pr-pop 240ms cubic-bezier(0.22, 1, 0.36, 1);
+@utility display-lg {
+  font-size: clamp(2.25rem, 12vw, 3.25rem);
+  line-height: 0.88;
+  letter-spacing: -0.045em;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
 }
+
+@utility metric {
+  font-size: 1.75rem;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility eyebrow {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.26em;
+  font-weight: 560;
+  color: var(--muted-foreground);
+}
+
+/* ————— Touch UX ————— */
+@utility tap {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@utility pressable {
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1), opacity 140ms ease,
+    border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+  &:active { transform: scale(0.976); }
+}
+
+/* ————— Microinteracciones ————— */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@utility rise {
+  animation: rise-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rise-1 { animation-delay: 20ms; }
+.rise-2 { animation-delay: 55ms; }
+.rise-3 { animation-delay: 90ms; }
+.rise-4 { animation-delay: 125ms; }
+.rise-5 { animation-delay: 160ms; }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(3px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @utility animate-fade {
-  animation: fade-in 240ms ease-out both;
+  animation: fade-in 200ms ease-out both;
 }
 
-/* ————— Capa visual premium (monocromo) ————— */
+@keyframes pr-pop {
+  0% { transform: scale(0.94); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@utility animate-pr {
+  animation: pr-pop 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
 
-/* Grano sutil sobre el fondo negro */
+@keyframes sheen-sweep {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(240%); }
+}
+@utility sheen {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 36%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.10), transparent);
+    animation: sheen-sweep 1100ms cubic-bezier(0.22, 1, 0.36, 1) 180ms both;
+    pointer-events: none;
+  }
+}
+
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+@utility live-dot {
+  animation: soft-pulse 2.4s ease-in-out infinite;
+}
+
+/* Grano finísimo para romper los degradados */
 @utility grain {
   position: relative;
   &::after {
@@ -171,92 +358,18 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0.035;
+    opacity: 0.028;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 }
 
-/* Halo radial muy tenue para dar profundidad al fondo */
 @utility aura {
-  background-image: radial-gradient(120% 70% at 50% -10%, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0) 60%);
+  background-image: radial-gradient(120% 70% at 50% -10%, rgba(216, 180, 107, 0.10) 0%, rgba(216, 180, 107, 0) 60%);
 }
 
-/* Rejilla de puntos discreta */
 @utility dotgrid {
-  background-image: radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1px);
-  background-size: 18px 18px;
-}
-
-/* Feedback táctil coherente */
-@utility pressable {
-  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease, border-color 200ms ease;
-  &:active { transform: scale(0.975); }
-}
-
-/* Entrada escalonada */
-@keyframes rise-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@utility rise {
-  animation: rise-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.rise-1 { animation-delay: 40ms; }
-.rise-2 { animation-delay: 90ms; }
-.rise-3 { animation-delay: 140ms; }
-.rise-4 { animation-delay: 200ms; }
-.rise-5 { animation-delay: 260ms; }
-
-/* Brillo que barre una tarjeta blanca al aparecer */
-@keyframes sheen-sweep {
-  0% { transform: translateX(-120%); }
-  100% { transform: translateX(220%); }
-}
-@utility sheen {
-  position: relative;
-  overflow: hidden;
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 40%;
-    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.55), transparent);
-    animation: sheen-sweep 1600ms cubic-bezier(0.22, 1, 0.36, 1) 300ms both;
-    pointer-events: none;
-  }
-}
-
-/* Cifras enormes tipo panel deportivo */
-@utility display-xl {
-  font-size: clamp(2.75rem, 16vw, 4.5rem);
-  line-height: 0.86;
-  letter-spacing: -0.055em;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Etiqueta pequeña en versalitas */
-@utility eyebrow {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.3em;
-  color: var(--muted-foreground);
-}
-
-/* Línea degradada de separación */
-@utility rule-fade {
-  height: 1px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.22), rgba(255,255,255,0.02));
-}
-
-/* Latido lento para indicar "hoy" / estado activo */
-@keyframes soft-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.82); }
-}
-@utility live-dot {
-  animation: soft-pulse 2.4s ease-in-out infinite;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 @media (prefers-reduced-motion: reduce) {

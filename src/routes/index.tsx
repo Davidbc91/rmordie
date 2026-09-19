@@ -38,6 +38,9 @@ function Home() {
   const { data: planning, isLoading } = usePlanning();
   const { data: results = [] } = useAllResults();
   const { data: records = [] } = usePersonalRecords();
+  const { data: milestones = [] } = useMilestones();
+  const { data: goals = [] } = useGoals();
+
 
   const blockMap = useMemo(() => completedBlockMap(results), [results]);
 

@@ -31,6 +31,9 @@ export function PinGate({ children }: { children: React.ReactNode }) {
     }
   }, [ready, isLoading, profiles.length, mode]);
 
+  // Already unlocked: never wait on the network (works with no connection).
+  if (ready && unlocked && getCurrentUserId()) return <>{children}</>;
+
   if (!ready || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -38,7 +41,6 @@ export function PinGate({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  if (unlocked && getCurrentUserId()) return <>{children}</>;
 
   const selected = profiles.find((p) => p.id === selectedId);
 

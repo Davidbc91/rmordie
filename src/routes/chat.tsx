@@ -6,7 +6,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Send, MessageCircle, Bell, BellOff } from "lucide-react";
+import { Send, MessageCircle, Bell, BellOff, CloudOff } from "lucide-react";
+import { useOnline } from "@/lib/offline/use-sync";
 import { markChatSeen } from "@/lib/chat-unread";
 import {
   disablePush,
@@ -72,6 +73,8 @@ function ChatPage() {
       setPushBusy(false);
     }
   }, [uid, pushOn, pushBusy]);
+
+  const online = useOnline();
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["chat_messages"],
@@ -199,6 +202,14 @@ function ChatPage() {
           )}
         </header>
 
+        {!online && (
+          <div className="glass mb-3 flex items-center gap-2 rounded-2xl px-3 py-2.5 text-xs text-muted-foreground">
+            <CloudOff className="h-4 w-4 shrink-0" />
+            Chat necesita conexión a Internet.
+          </div>
+        )}
+
+
         <div
           ref={scrollRef}
           className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-border bg-surface/40 p-3"
@@ -265,13 +276,14 @@ function ChatPage() {
             }}
             rows={1}
             maxLength={500}
-            placeholder="Escribe un mensaje…"
-            className="flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-[var(--gold)]"
+            disabled={!online}
+            placeholder={online ? "Escribe un mensaje…" : "Sin conexión"}
+            className="flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-[var(--gold)] disabled:opacity-50"
             style={{ maxHeight: 120 }}
           />
           <button
             type="submit"
-            disabled={!text.trim() || sending}
+            disabled={!text.trim() || sending || !online}
             className="flex h-12 w-12 items-center justify-center rounded-full gold-gradient disabled:opacity-40"
             style={{ color: "var(--gold-foreground)" }}
             aria-label="Enviar"

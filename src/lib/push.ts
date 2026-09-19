@@ -9,7 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const VAPID_PUBLIC_KEY =
   "BF2E0_zeT-VRUlU2PHAKvUGmlsMzTn5KK6eYkbstsKZuiY45_lvmUmxXqZiuo8Ah2IUlUgPYtQwBGIu1T1M4WY0";
 
-const SW_URL = "/push-sw.js";
+// In production the offline worker (/sw.js) also imports the push handlers, so a
+// single registration serves both. In dev/preview only the push worker exists.
+const SW_URL = import.meta.env.PROD ? "/sw.js" : "/push-sw.js";
 
 export function pushSupported(): boolean {
   return (

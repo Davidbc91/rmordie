@@ -5,6 +5,7 @@ import {
 import { useEffect, useState } from "react";
 import { getActiveWorkout, clearActiveWorkout, type ActiveWorkout } from "@/lib/active-workout";
 import { useChatUnread } from "@/lib/chat-unread";
+import { SyncIndicator } from "@/components/SyncIndicator";
 
 const tabs = [
   { to: "/", label: "Inicio", icon: Home },
@@ -130,6 +131,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
+
+      <SyncIndicator />
 
       <nav className="fixed inset-x-0 bottom-0" style={{ zIndex: 2147483000 }}>
         <div

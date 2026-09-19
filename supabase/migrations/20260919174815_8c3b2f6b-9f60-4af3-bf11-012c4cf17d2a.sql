@@ -1,0 +1,1 @@
+UPDATE public.security_config SET owner_rls_enforced = FALSE;

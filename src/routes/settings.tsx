@@ -2,8 +2,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useSettings, useSaveSettings, useProfiles, useUpdateProfilePin, useDeleteProfile } from "@/lib/store";
 import { signOut, getCurrentUserId } from "@/lib/pin-gate";
-import { supabase } from "@/integrations/supabase/client";
-
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -40,9 +38,8 @@ function SettingsPage() {
     toast.success("PIN actualizado");
   }
 
-  async function switchProfile() {
+  function switchProfile() {
     signOut();
-    await supabase.auth.signOut();
     navigate({ to: "/" });
     setTimeout(() => window.location.reload(), 50);
   }
@@ -53,10 +50,8 @@ function SettingsPage() {
     if (!ok) return;
     await deleteProfile.mutateAsync(uid);
     signOut();
-    await supabase.auth.signOut();
     window.location.reload();
   }
-
 
   return (
     <AppShell>

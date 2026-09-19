@@ -1130,15 +1130,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      claim_profile: {
-        Args: { _pin_hash: string; _profile_id: string }
-        Returns: boolean
-      }
-      create_linked_profile: {
-        Args: { _name: string; _pin_hash: string }
-        Returns: string
-      }
-      my_profile_id: { Args: never; Returns: string }
       verify_profile_pin: {
         Args: { _pin_hash: string; _profile_id: string }
         Returns: boolean

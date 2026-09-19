@@ -7,7 +7,6 @@ import type { Planning, Month, Day } from "./excel-parser";
 export type Profile = {
   id: string;
   name: string;
-  pin_hash: string;
   created_at: string;
 };
 
@@ -17,12 +16,23 @@ export function useProfiles() {
     queryFn: async (): Promise<Profile[]> => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id,name,created_at")
         .order("created_at", { ascending: true });
       if (error) throw error;
       return (data ?? []) as unknown as Profile[];
     },
   });
+}
+
+/** PIN check happens inside the database; the hash is never sent to the client. */
+export async function verifyProfilePin(profileId: string, pin: string): Promise<boolean> {
+  const pin_hash = await sha256(pin);
+  const { data, error } = await supabase.rpc("verify_profile_pin", {
+    _profile_id: profileId,
+    _pin_hash: pin_hash,
+  });
+  if (error) throw error;
+  return data === true;
 }
 
 export function useCreateProfile() {
@@ -33,7 +43,7 @@ export function useCreateProfile() {
       const { data, error } = await supabase
         .from("profiles")
         .insert({ name: name.trim(), pin_hash })
-        .select()
+        .select("id,name,created_at")
         .single();
       if (error) throw error;
       return data as unknown as Profile;
@@ -41,6 +51,7 @@ export function useCreateProfile() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profiles"] }),
   });
 }
+
 
 export function useUpdateProfilePin() {
   const qc = useQueryClient();

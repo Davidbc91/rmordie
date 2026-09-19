@@ -31,7 +31,7 @@ function Discover() {
           <ArrowLeft className="h-3.5 w-3.5" /> Social
         </Link>
         <h1 className="text-[2rem] font-semibold leading-none tracking-tight">Descubrir</h1>
-        <div className="mt-5 flex items-center gap-2 rounded-[16px] border px-3.5 py-3" style={{ borderColor: "#242424" }}>
+        <div className="mt-5 flex items-center gap-2 rounded-[16px] border px-3.5 py-3" style={{ borderColor: "rgba(255,255,255,0.09)" }}>
           <Search className="h-4 w-4 text-muted-foreground" />
           <input
             value={term}
@@ -73,7 +73,7 @@ function Discover() {
                     to="/social/u/$username"
                     params={{ username: p.username }}
                     className="w-28 shrink-0 rounded-[18px] border p-3 text-center"
-                    style={{ borderColor: "#1F1F1F", background: "#111" }}
+                    style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}
                   >
                     <div className="flex justify-center">
                       <Avatar profile={p} size={44} />
@@ -133,7 +133,7 @@ function AthleteRow({ p }: { p: SocialProfile }) {
       to="/social/u/$username"
       params={{ username: p.username }}
       className="flex items-center gap-3 rounded-[18px] border p-3"
-      style={{ borderColor: "#1F1F1F", background: "#111" }}
+      style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}
     >
       <Avatar profile={p} />
       <div className="min-w-0">

@@ -54,7 +54,7 @@ export function Composer({
       <div
         onClick={(e) => e.stopPropagation()}
         className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-[24px] border-t p-5 pb-10"
-        style={{ background: "#0C0C0C", borderColor: "#1F1F1F" }}
+        style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.09)" }}
       >
         <div className="flex items-center justify-between">
           <p className="eyebrow">Nueva publicación</p>
@@ -69,7 +69,7 @@ export function Composer({
               key={k.k}
               onClick={() => setKind(k.k)}
               className="shrink-0 rounded-full px-3.5 py-2 text-xs"
-              style={kind === k.k ? { background: "#FFFFFF", color: "#000" } : { background: "#181818", color: "#9A9A9A" }}
+              style={kind === k.k ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
             >
               {k.label}
             </button>
@@ -110,11 +110,11 @@ export function Composer({
           rows={3}
           placeholder="Cuenta cómo fue… usa #hashtags"
           className="mt-3 w-full rounded-[16px] border bg-transparent px-3.5 py-3 text-sm outline-none focus:border-foreground/40"
-          style={{ borderColor: "#242424" }}
+          style={{ borderColor: "rgba(255,255,255,0.09)" }}
         />
 
         <div className="mt-3 flex items-center gap-2">
-          <label className="pressable flex cursor-pointer items-center gap-2 rounded-[14px] border px-3.5 py-2.5 text-xs" style={{ borderColor: "#242424" }}>
+          <label className="pressable flex cursor-pointer items-center gap-2 rounded-[14px] border px-3.5 py-2.5 text-xs" style={{ borderColor: "rgba(255,255,255,0.09)" }}>
             <ImagePlus className="h-4 w-4" />
             {files.length ? `${files.length} archivo(s)` : "Añadir media"}
             <input
@@ -128,7 +128,7 @@ export function Composer({
           <button
             onClick={() => setVisibility((v) => (v === "public" ? "private" : "public"))}
             className="rounded-[14px] border px-3.5 py-2.5 text-xs"
-            style={{ borderColor: "#242424" }}
+            style={{ borderColor: "rgba(255,255,255,0.09)" }}
           >
             {visibility === "public" ? "Público" : "Solo yo"}
           </button>
@@ -138,7 +138,7 @@ export function Composer({
           onClick={submit}
           disabled={create.isPending}
           className="pressable mt-5 flex w-full items-center justify-center gap-2 rounded-[18px] py-3.5 text-sm font-semibold"
-          style={{ background: "#FFFFFF", color: "#000" }}
+          style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}
         >
           {create.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           Publicar
@@ -173,7 +173,7 @@ function Field({
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         className="mt-1 w-full rounded-[14px] border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
-        style={{ borderColor: "#242424" }}
+        style={{ borderColor: "rgba(255,255,255,0.09)" }}
       />
     </label>
   );

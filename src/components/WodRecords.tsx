@@ -66,7 +66,7 @@ export function WodRecords({ focusSlug }: { focusSlug?: string }) {
         />
         <button
           onClick={() => setShowAdd(true)}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-2xl bg-foreground px-4 py-2.5 text-sm font-medium text-background"
+          className="pressable gold-gradient inline-flex min-h-[46px] items-center gap-1.5 rounded-[var(--r-md)] px-4 text-sm font-semibold shrink-0"
         >
           <Plus className="h-4 w-4" /> Registrar
         </button>
@@ -378,7 +378,7 @@ function ManualWodForm({ onClose }: { onClose: () => void }) {
               type="button"
               onClick={() => setType(t)}
               className={`rounded-xl border px-3 py-1.5 text-[11px] font-semibold transition ${
-                type === t ? "border-transparent bg-foreground text-background" : "border-border text-muted-foreground"
+                type === t ? "gold-gradient border-transparent" : "border-border text-muted-foreground"
               }`}
             >
               {WOD_TYPE_LABEL[t]}
@@ -392,7 +392,7 @@ function ManualWodForm({ onClose }: { onClose: () => void }) {
               type="button"
               onClick={() => setScale(s)}
               className={`flex-1 rounded-xl border px-2 py-2 text-xs font-semibold transition ${
-                scale === s ? "border-transparent bg-foreground text-background" : "border-border text-muted-foreground"
+                scale === s ? "gold-gradient border-transparent" : "border-border text-muted-foreground"
               }`}
             >
               {SCALE_LABEL[s]}
@@ -418,7 +418,7 @@ function ManualWodForm({ onClose }: { onClose: () => void }) {
           className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-foreground/40"
         />
         <div className="flex gap-2">
-          <button type="submit" disabled={save.isPending} className="flex-1 rounded-2xl bg-foreground py-3 text-sm font-medium text-background">
+          <button type="submit" disabled={save.isPending} className="pressable gold-gradient min-h-[50px] flex-1 rounded-[var(--r-md)] text-sm font-semibold">
             Guardar
           </button>
           <button type="button" onClick={onClose} className="rounded-2xl border border-border px-5 py-3 text-sm">

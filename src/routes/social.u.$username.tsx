@@ -78,13 +78,13 @@ function PublicProfile() {
           <button
             onClick={() => toggleFollow.mutate({ targetId: profile.user_id, following })}
             className="pressable mt-5 w-full rounded-[18px] py-3 text-sm font-semibold"
-            style={following ? { background: "#181818", color: "#FFF" } : { background: "#FFFFFF", color: "#000" }}
+            style={following ? { background: "rgba(255,255,255,0.07)", color: "var(--foreground)" } : { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}
           >
             {following ? "Siguiendo" : "Seguir"}
           </button>
         )}
         {isMe && (
-          <Link to="/social/settings" className="pressable mt-5 block rounded-[18px] border py-3 text-center text-sm font-semibold" style={{ borderColor: "#242424" }}>
+          <Link to="/social/settings" className="pressable mt-5 block rounded-[18px] border py-3 text-center text-sm font-semibold" style={{ borderColor: "rgba(255,255,255,0.09)" }}>
             Editar perfil
           </Link>
         )}
@@ -104,7 +104,7 @@ function PublicProfile() {
                 key={t}
                 onClick={() => setTab(t)}
                 className="rounded-full px-3.5 py-2 text-xs"
-                style={tab === t ? { background: "#FFFFFF", color: "#000" } : { background: "#181818", color: "#9A9A9A" }}
+                style={tab === t ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
               >
                 {t === "posts" ? "Publicaciones" : "PRs"}
               </button>
@@ -121,7 +121,7 @@ function PublicProfile() {
           ) : profile.show_prs ? (
             <div className="space-y-2">
               {prs.map((r) => (
-                <div key={`${r.exercise}-${r.rep_max}`} className="flex items-center justify-between rounded-[18px] border p-4" style={{ borderColor: "#1A1A1A", background: "#111" }}>
+                <div key={`${r.exercise}-${r.rep_max}`} className="flex items-center justify-between rounded-[18px] border p-4" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{r.exercise}</p>
                     <p className="text-[11px] text-muted-foreground">{r.rep_max}RM</p>

@@ -22,7 +22,7 @@ import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebratio
 import { useCreatePost } from "@/lib/social";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
-  head: () => ({ meta: [{ title: "Entrenamiento — RM OR DIE" }] }),
+  head: () => ({ meta: [{ title: "Entrenamiento — RMORDIE" }] }),
   component: WorkoutPage,
 });
 
@@ -156,16 +156,26 @@ function WorkoutPage() {
           onShare={shareCelebrated}
         />
       )}
-      <Link to="/calendar" className="mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+      <Link
+        to="/calendar"
+        className="pressable mb-4 inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+      >
         <ChevronLeft className="h-3.5 w-3.5" /> Calendario
       </Link>
-      <div className="mb-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{mo.label} · Semana {weekN}</p>
-        <h1 className="mt-1 text-2xl font-semibold">{d.key}</h1>
-      </div>
+
+      <header className="glass glass-sheen rise rise-1 mb-4 p-5">
+        <p className="eyebrow">{mo.label} · Semana {weekN}</p>
+        <div className="mt-3 flex items-end justify-between gap-4">
+          <h1 className="display-lg min-w-0 truncate">{d.key}</h1>
+          <div className="shrink-0 text-right">
+            <div className="metric gold-text">{d.blocks.length}</div>
+            <p className="eyebrow mt-1.5">Bloques</p>
+          </div>
+        </div>
+      </header>
 
       {d.isRest && (
-        <div className="card-elevated p-6 text-center">
+        <div className="glass glass-sheen p-6 text-center">
           <p className="text-sm text-muted-foreground">Día de descanso y movilidad</p>
         </div>
       )}
@@ -174,9 +184,9 @@ function WorkoutPage() {
         <button
           onClick={saveAll}
           disabled={savingAll}
-          className="mb-4 flex w-full items-center justify-center gap-2 rounded-[18px] bg-white py-3 text-sm font-semibold text-black disabled:opacity-50"
+          className="pressable gold-gradient mb-4 flex min-h-[54px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] text-[15px] font-semibold disabled:opacity-45"
         >
-          <CheckCheck className="h-4 w-4" />
+          <CheckCheck className="h-[18px] w-[18px]" />
           {savingAll ? "Guardando entreno…" : "Guardar entreno completo"}
         </button>
       )}
@@ -332,13 +342,13 @@ function BlockCard({
 
   return (
     <details
-      className="card-elevated group"
+      className="glass glass-sheen group"
       open={open}
       onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
     >
-      <summary className="flex cursor-pointer items-center justify-between p-5 [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-[56px] cursor-pointer items-center justify-between gap-3 p-5 [&::-webkit-details-marker]:hidden">
         <div className="flex items-center gap-3">
-          <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-surface-2 px-2 text-xs font-semibold uppercase tracking-wide text-gold">
+          <span className="grid h-9 min-w-9 place-items-center rounded-[12px] border border-[rgba(216,180,107,0.32)] bg-[rgba(216,180,107,0.12)] px-2 text-xs font-bold uppercase tracking-wide text-gold">
             {blockKey}
           </span>
           {existing && <Check className="h-4 w-4 text-gold" />}
@@ -365,7 +375,7 @@ function BlockCard({
         )}
 
         {wod && (
-          <div className="mt-5 rounded-xl border border-border bg-surface-2 p-4">
+          <div className="glass-quiet mt-5 p-4">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">
                 Resultado WOD · {wod.name}
@@ -386,7 +396,7 @@ function BlockCard({
                   type="button"
                   onClick={() => setWodScale(s)}
                   className={`flex-1 rounded-xl border px-2 py-1.5 text-[11px] font-semibold transition ${
-                    wodScale === s ? "border-transparent bg-foreground text-background" : "border-border text-muted-foreground"
+                    wodScale === s ? "gold-gradient border-transparent" : "border-border text-muted-foreground"
                   }`}
                 >
                   {SCALE_LABEL[s]}
@@ -424,14 +434,13 @@ function BlockCard({
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Notas, escala, sensaciones…"
           rows={2}
-          className="mt-3 w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-gold"
+          className="mt-3 w-full rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] outline-none transition focus:border-[rgba(216,180,107,0.55)]"
         />
 
         <button
           onClick={onSaveClick}
           disabled={save.isPending || savingWod}
-          className="mt-4 w-full rounded-xl gold-gradient py-2.5 text-sm font-semibold disabled:opacity-50"
-          style={{ color: "var(--gold-foreground)" }}
+          className="pressable mt-4 min-h-[50px] w-full rounded-[var(--r-md)] border border-[color:var(--glass-border-strong)] bg-[color:var(--glass-bg-2)] text-sm font-semibold text-foreground disabled:opacity-45"
         >
           {save.isPending || savingWod ? "Guardando…" : (existing ? "Actualizar" : "Guardar")}
         </button>
@@ -452,7 +461,7 @@ function Field({ label, value, onChange, type = "text", placeholder }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular outline-none focus:border-gold"
+        className="tap w-full rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] tabular outline-none transition focus:border-[rgba(216,180,107,0.55)]"
       />
     </label>
   );
@@ -463,7 +472,7 @@ function PercentAssistant({ percentages, settings }: { percentages: number[]; se
   const cfg = { bars: settings.bar_weights, plates: settings.plate_weights };
   const rm = Number(oneRm);
   return (
-    <div className="mt-4 rounded-xl border border-gold/30 bg-surface-2 p-4">
+    <div className="mt-4 rounded-[var(--r-md)] border border-[rgba(216,180,107,0.3)] bg-[rgba(216,180,107,0.06)] p-4">
       <div className="flex items-center gap-2 text-xs font-medium text-gold">
         <Sparkles className="h-3.5 w-3.5" /> Asistente de %
       </div>
@@ -474,7 +483,7 @@ function PercentAssistant({ percentages, settings }: { percentages: number[]; se
           placeholder="Tu 1RM (kg)"
           value={oneRm}
           onChange={(e) => setOneRm(e.target.value)}
-          className="w-32 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground tabular outline-none placeholder:text-muted-foreground focus:border-foreground/40"
+          className="tap w-32 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] text-foreground tabular outline-none placeholder:text-muted-foreground/70 focus:border-[rgba(216,180,107,0.55)]"
         />
         <span className="text-xs text-muted-foreground">→ peso recomendado, redondeado a tus discos</span>
       </div>
@@ -484,7 +493,7 @@ function PercentAssistant({ percentages, settings }: { percentages: number[]; se
             const target = (rm * p) / 100;
             const rec = roundToPlates(target, cfg);
             return (
-              <div key={p} className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs text-foreground">
+              <div key={p} className="glass-quiet px-3 py-2 text-xs text-foreground">
                 <span className="text-muted-foreground">{p}%</span>
                 <span className="mx-2 text-muted-foreground/50">·</span>
                 <span className="font-semibold text-foreground tabular">{rec} kg</span>

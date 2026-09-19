@@ -50,7 +50,7 @@ function DataBlock({ post }: { post: Post }) {
   const d = post.data || {};
   if (post.kind === "pr") {
     return (
-      <div className="mt-3 rounded-[18px] p-4" style={{ background: "#FFFFFF", color: "#000" }}>
+      <div className="mt-3 rounded-[18px] p-4" style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}>
         <p className="text-[10px] uppercase tracking-[0.3em]" style={{ color: "#6F6F6F" }}>
           {d.rep_max ? `${d.rep_max}RM` : "PR"}
         </p>
@@ -69,7 +69,7 @@ function DataBlock({ post }: { post: Post }) {
   }
   if (post.kind === "wod" || post.kind === "benchmark") {
     return (
-      <div className="mt-3 rounded-[18px] border p-4" style={{ borderColor: "#1F1F1F", background: "#0D0D0D" }}>
+      <div className="mt-3 rounded-[18px] border p-4" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.04)" }}>
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm font-semibold">{d.name || d.benchmark || "WOD"}</p>
           <span className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]" style={{ background: "#1C1C1C" }}>
@@ -94,7 +94,7 @@ function DataBlock({ post }: { post: Post }) {
     if (d.rpe != null) items.push(["RPE", String(d.rpe)]);
     if (!items.length && !d.title) return null;
     return (
-      <div className="mt-3 rounded-[18px] border p-4" style={{ borderColor: "#1F1F1F", background: "#0D0D0D" }}>
+      <div className="mt-3 rounded-[18px] border p-4" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.04)" }}>
         {d.title && <p className="text-sm font-semibold">{d.title}</p>}
         {items.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-5">
@@ -151,7 +151,7 @@ export function PostCard({ post }: { post: Post }) {
   const [openComments, setOpenComments] = useState(false);
 
   return (
-    <article className="rise relative overflow-hidden rounded-[22px] border p-4" style={{ borderColor: "#1A1A1A", background: "#111111" }}>
+    <article className="rise relative overflow-hidden rounded-[22px] border p-4" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}>
       <header className="flex items-center gap-3">
         <Link to="/social/u/$username" params={{ username: post.author?.username ?? "" }} className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar profile={post.author} />
@@ -169,7 +169,7 @@ export function PostCard({ post }: { post: Post }) {
       </header>
 
       {menu && (
-        <div className="absolute right-3 top-14 z-20 w-52 overflow-hidden rounded-[16px] border text-sm" style={{ borderColor: "#242424", background: "#161616" }}>
+        <div className="absolute right-3 top-14 z-20 w-52 overflow-hidden rounded-[16px] border text-sm" style={{ borderColor: "rgba(255,255,255,0.09)", background: "#161616" }}>
           {mine ? (
             <button
               className="flex w-full items-center gap-2 px-4 py-3 text-left"
@@ -224,7 +224,7 @@ export function PostCard({ post }: { post: Post }) {
 
 function ActionBtn({ icon, value, onClick, active, label }: { icon: React.ReactNode; value: number; onClick: () => void; active?: boolean; label: string }) {
   return (
-    <button aria-label={label} onClick={onClick} className="pressable flex items-center gap-1.5 rounded-full px-3 py-2" style={{ color: active ? "#FFFFFF" : undefined }}>
+    <button aria-label={label} onClick={onClick} className="pressable flex items-center gap-1.5 rounded-full px-3 py-2" style={{ color: active ? "var(--gold)" : undefined }}>
       {icon}
       <span className="tabular">{value}</span>
     </button>
@@ -275,9 +275,9 @@ function Comments({ post }: { post: Post }) {
             onChange={(e) => setText(e.target.value)}
             placeholder="Añade un comentario"
             className="flex-1 rounded-[14px] border bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground/40"
-            style={{ borderColor: "#242424" }}
+            style={{ borderColor: "rgba(255,255,255,0.09)" }}
           />
-          <button type="submit" aria-label="Enviar" className="pressable rounded-full p-2.5" style={{ background: "#FFFFFF", color: "#000" }}>
+          <button type="submit" aria-label="Enviar" className="pressable rounded-full p-2.5" style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}>
             <Send className="h-4 w-4" />
           </button>
         </form>

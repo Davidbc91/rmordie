@@ -33,7 +33,7 @@ function BoardPage() {
               key={v}
               onClick={() => setView(v)}
               className="rounded-full px-3.5 py-2 text-xs"
-              style={view === v ? { background: "#FFFFFF", color: "#000" } : { background: "#181818", color: "#9A9A9A" }}
+              style={view === v ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
             >
               {v === "pr" ? "Récords" : "WODs"}
             </button>
@@ -64,7 +64,7 @@ function PrBoard() {
             key={r}
             onClick={() => setRepMax(r)}
             className="shrink-0 rounded-full px-3.5 py-2 text-xs"
-            style={repMax === r ? { background: "#FFFFFF", color: "#000" } : { background: "#181818", color: "#9A9A9A" }}
+            style={repMax === r ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
           >
             {r}RM
           </button>
@@ -76,7 +76,7 @@ function PrBoard() {
             key={e}
             onClick={() => setExercise(e)}
             className="shrink-0 rounded-full border px-3.5 py-2 text-xs"
-            style={{ borderColor: active === e ? "#FFFFFF" : "#242424", color: active === e ? "#FFFFFF" : "#9A9A9A" }}
+            style={{ borderColor: active === e ? "rgba(216,180,107,0.5)" : "rgba(255,255,255,0.09)", color: active === e ? "var(--gold)" : "var(--muted-foreground)" }}
           >
             {e}
           </button>
@@ -87,7 +87,7 @@ function PrBoard() {
           <div
             key={`${r.user_id}-${r.exercise}`}
             className="flex items-center gap-3 rounded-[18px] border p-4"
-            style={{ borderColor: "#1A1A1A", background: i === 0 ? "#FFFFFF" : "#111", color: i === 0 ? "#000" : undefined }}
+            style={{ borderColor: "rgba(255,255,255,0.09)", background: i === 0 ? "rgba(216,180,107,0.14)" : "rgba(255,255,255,0.045)", color: i === 0 ? "var(--gold)" : undefined }}
           >
             <span className="w-5 text-center text-sm font-semibold tabular">{i + 1}</span>
             <Avatar profile={r.author} size={34} />
@@ -128,7 +128,7 @@ function WodBoard() {
             key={n}
             onClick={() => setName(n)}
             className="shrink-0 rounded-full border px-3.5 py-2 text-xs"
-            style={{ borderColor: active === n ? "#FFFFFF" : "#242424", color: active === n ? "#FFFFFF" : "#9A9A9A" }}
+            style={{ borderColor: active === n ? "rgba(216,180,107,0.5)" : "rgba(255,255,255,0.09)", color: active === n ? "var(--gold)" : "var(--muted-foreground)" }}
           >
             {n}
           </button>
@@ -139,7 +139,7 @@ function WodBoard() {
           <div
             key={r.post.id}
             className="flex items-center gap-3 rounded-[18px] border p-4"
-            style={{ borderColor: "#1A1A1A", background: i === 0 ? "#FFFFFF" : "#111", color: i === 0 ? "#000" : undefined }}
+            style={{ borderColor: "rgba(255,255,255,0.09)", background: i === 0 ? "rgba(216,180,107,0.14)" : "rgba(255,255,255,0.045)", color: i === 0 ? "var(--gold)" : undefined }}
           >
             <span className="w-5 text-center text-sm font-semibold tabular">{i + 1}</span>
             <Avatar profile={r.post.author} size={34} />

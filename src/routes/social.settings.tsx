@@ -88,7 +88,7 @@ function SocialSettings() {
           value={form.bio}
           onChange={(e) => setForm({ ...form, bio: e.target.value })}
           className="mt-1 w-full rounded-[16px] border bg-transparent px-3.5 py-3 text-sm outline-none focus:border-foreground/40"
-          style={{ borderColor: "#242424" }}
+          style={{ borderColor: "rgba(255,255,255,0.09)" }}
         />
       </label>
 
@@ -103,7 +103,7 @@ function SocialSettings() {
         onClick={submit}
         disabled={save.isPending}
         className="pressable mt-6 w-full rounded-[18px] py-3.5 text-sm font-semibold"
-        style={{ background: "#FFFFFF", color: "#000" }}
+        style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}
       >
         Guardar perfil
       </button>
@@ -121,7 +121,7 @@ function Moderation() {
       <h2 className="eyebrow mb-3">Moderación</h2>
       <div className="space-y-2">
         {reports.map((r) => (
-          <div key={r.id} className="rounded-[18px] border p-4" style={{ borderColor: "#1F1F1F", background: "#111" }}>
+          <div key={r.id} className="rounded-[18px] border p-4" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}>
             <p className="text-sm font-semibold">{r.reason}</p>
             <p className="text-[11px] text-muted-foreground">{timeAgo(r.created_at)} · {r.status}</p>
             {r.detail && <p className="mt-1 text-xs text-muted-foreground">{r.detail}</p>}
@@ -130,14 +130,14 @@ function Moderation() {
                 <button
                   onClick={() => moderate.mutate({ postId: r.post_id, hidden: true }, { onSuccess: () => toast.success("Publicación oculta") })}
                   className="pressable flex items-center gap-1.5 rounded-[14px] border px-3 py-2 text-xs"
-                  style={{ borderColor: "#242424" }}
+                  style={{ borderColor: "rgba(255,255,255,0.09)" }}
                 >
                   <EyeOff className="h-3.5 w-3.5" /> Ocultar
                 </button>
                 <button
                   onClick={() => moderate.mutate({ postId: r.post_id, hidden: false }, { onSuccess: () => toast.success("Publicación restaurada") })}
                   className="pressable flex items-center gap-1.5 rounded-[14px] border px-3 py-2 text-xs"
-                  style={{ borderColor: "#242424" }}
+                  style={{ borderColor: "rgba(255,255,255,0.09)" }}
                 >
                   <Eye className="h-3.5 w-3.5" /> Restaurar
                 </button>
@@ -159,7 +159,7 @@ function Text({ label, value, onChange, className = "" }: { label: string; value
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="mt-1 w-full rounded-[14px] border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
-        style={{ borderColor: "#242424" }}
+        style={{ borderColor: "rgba(255,255,255,0.09)" }}
       />
     </label>
   );
@@ -170,10 +170,10 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
     <button
       onClick={() => onChange(!value)}
       className="flex w-full items-center justify-between rounded-[16px] border px-4 py-3 text-sm"
-      style={{ borderColor: "#1F1F1F", background: "#111" }}
+      style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}
     >
       {label}
-      <span className="relative h-6 w-11 rounded-full transition-colors" style={{ background: value ? "#FFFFFF" : "#2A2A2A" }}>
+      <span className="relative h-6 w-11 rounded-full transition-colors" style={{ background: value ? "var(--gold)" : "rgba(255,255,255,0.12)" }}>
         <span
           className="absolute top-1 h-4 w-4 rounded-full transition-all"
           style={{ left: value ? 24 : 4, background: value ? "#000" : "#8A8A8A" }}

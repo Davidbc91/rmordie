@@ -52,35 +52,26 @@ export function PrCelebration({
       aria-live="polite"
     >
       <div
-        className="w-full max-w-xs rounded-[24px] p-7 text-center"
-        style={{
-          background: "#FFFFFF",
-          color: "#000000",
-          animation: "pr-pop 520ms cubic-bezier(0.22,1,0.36,1)",
-        }}
+        className="glass-elevated glass-sheen glass-gold w-full max-w-xs p-7 text-center"
+        style={{ animation: "pr-pop 420ms cubic-bezier(0.22,1,0.36,1)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-[11px] uppercase tracking-[0.34em]" style={{ color: "#6F6F6F" }}>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-gold">
           {data.matched ? "Matched PR" : "New PR"}
         </p>
-        <p className="mt-3 text-sm font-semibold uppercase tracking-[0.12em]">{data.exercise}</p>
-        <p className="mt-1 text-[52px] font-semibold leading-none tabular tracking-tight">
+        <p className="mt-3 text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">{data.exercise}</p>
+        <p className="gold-text mt-2 text-[52px] font-semibold leading-none tabular tracking-tight">
           {value}
           {isWeight && <span className="text-lg"> kg</span>}
         </p>
-        {!!sub && (
-          <p className="mt-2 text-xs" style={{ color: "#6F6F6F" }}>
-            {sub}
-          </p>
-        )}
+        {!!sub && <p className="mt-2 text-xs text-muted-foreground">{sub}</p>}
 
         {hasActions && (
           <div className="mt-6 space-y-2">
             {onView && (
               <button
                 onClick={onView}
-                className="w-full rounded-[18px] py-3 text-xs font-semibold uppercase tracking-[0.18em]"
-                style={{ background: "#000000", color: "#FFFFFF" }}
+                className="pressable gold-gradient min-h-[48px] w-full rounded-[var(--r-md)] text-xs font-semibold uppercase tracking-[0.18em]"
               >
                 Ver PR
               </button>
@@ -88,16 +79,14 @@ export function PrCelebration({
             {onShare && (
               <button
                 onClick={onShare}
-                className="w-full rounded-[18px] border py-3 text-xs font-semibold uppercase tracking-[0.18em]"
-                style={{ borderColor: "#D4D4D4", color: "#000000" }}
+                className="pressable min-h-[48px] w-full rounded-[var(--r-md)] border border-[color:var(--glass-border-strong)] bg-[color:var(--glass-bg)] text-xs font-semibold uppercase tracking-[0.18em] text-foreground"
               >
                 Compartir
               </button>
             )}
             <button
               onClick={onClose}
-              className="w-full py-2 text-xs uppercase tracking-[0.18em]"
-              style={{ color: "#6F6F6F" }}
+              className="w-full py-2.5 text-xs uppercase tracking-[0.18em] text-muted-foreground"
             >
               Cerrar
             </button>

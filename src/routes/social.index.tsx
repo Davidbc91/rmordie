@@ -51,7 +51,7 @@ function SocialFeed() {
       </header>
 
       {!profile && (
-        <Link to="/social/settings" className="rise rise-2 mb-5 block rounded-[20px] border p-4 text-sm" style={{ borderColor: "#242424", background: "#111" }}>
+        <Link to="/social/settings" className="rise rise-2 mb-5 block rounded-[20px] border p-4 text-sm" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}>
           Crea tu perfil social para publicar y seguir a otros atletas →
         </Link>
       )}
@@ -62,7 +62,7 @@ function SocialFeed() {
             key={t.id}
             onClick={() => setTab(t.id)}
             className="shrink-0 rounded-full px-3.5 py-2 text-xs"
-            style={tab === t.id ? { background: "#FFFFFF", color: "#000" } : { background: "#181818", color: "#9A9A9A" }}
+            style={tab === t.id ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
           >
             {t.id === "saved" ? <Bookmark className="mr-1 inline h-3 w-3" /> : null}
             {t.label}
@@ -86,7 +86,7 @@ function SocialFeed() {
         aria-label="Crear publicación"
         onClick={() => setComposing(true)}
         className="pressable fixed bottom-[92px] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full"
-        style={{ background: "#FFFFFF", color: "#000", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}
+        style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}
       >
         <Plus className="h-6 w-6" />
       </button>
@@ -101,12 +101,12 @@ function IconLink({ to, label, icon, badge }: { to: string; label: string; icon:
     <Link
       to={to}
       className="pressable relative flex flex-1 flex-col items-center gap-1.5 rounded-[16px] border py-3 text-[10px] uppercase tracking-[0.14em]"
-      style={{ borderColor: "#1F1F1F", background: "#111" }}
+      style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}
     >
       {icon}
       {label}
       {!!badge && (
-        <span className="absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px]" style={{ background: "#FFF", color: "#000" }}>
+        <span className="absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px]" style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}>
           {badge}
         </span>
       )}

@@ -41,7 +41,7 @@ export const Route = createFileRoute("/records")({
   }),
   head: () => ({
     meta: [
-      { title: "Personal Records — RM OR DIE" },
+      { title: "Personal Records — RMORDIE" },
       {
         name: "description",
         content: "Consulta y edita tus RM (1RM, 3RM, 5RM, 10RM) con su evolución.",
@@ -69,7 +69,7 @@ function RecordsPage() {
         </h1>
       </header>
 
-      <div className="rise rise-2 mb-5 flex gap-1 rounded-2xl border border-border bg-surface p-1">
+      <div className="rise rise-2 glass glass-sheen mb-5 flex gap-1 p-1">
         {([
           { label: "Fuerza", value: "strength" as const },
           { label: "WODs", value: "wods" as const },
@@ -79,7 +79,7 @@ function RecordsPage() {
             onClick={() => navigate({ search: { tab: c.value }, replace: true })}
             className={`flex-1 rounded-xl px-3 py-2 text-xs font-semibold tracking-wide transition ${
               category === c.value
-                ? "bg-foreground text-background"
+                ? "gold-gradient shadow-[0_10px_22px_-16px_rgba(216,180,107,0.8)]"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -254,14 +254,14 @@ function StrengthRecords() {
       <div className="mb-4 flex justify-end">
         <button
           onClick={() => setShowAdd((v) => !v)}
-          className="inline-flex items-center gap-1.5 rounded-2xl bg-foreground px-4 py-2.5 text-sm font-medium text-background transition active:scale-[0.98]"
+          className="pressable gold-gradient inline-flex min-h-[46px] items-center gap-1.5 rounded-[var(--r-md)] px-4 text-sm font-semibold"
         >
           <Plus className="h-4 w-4" /> Añadir RM
         </button>
       </div>
 
       {/* Segmented rep-max control */}
-      <div className="rise rise-2 mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-1">
+      <div className="rise rise-2 glass glass-sheen no-scrollbar mb-5 flex gap-1 overflow-x-auto p-1">
         {TABS.map((t) => {
           const active = tab === t.value;
           return (
@@ -270,7 +270,7 @@ function StrengthRecords() {
               onClick={() => setTab(t.value)}
               className={`flex-1 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold tracking-wide transition ${
                 active
-                  ? "bg-foreground text-background"
+                  ? "gold-gradient shadow-[0_10px_22px_-16px_rgba(216,180,107,0.8)]"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -294,7 +294,7 @@ function StrengthRecords() {
                   onClick={() => setNewRepMax(n)}
                   className={`flex-1 rounded-xl border px-2 py-2 text-xs font-semibold transition ${
                     newRepMax === n
-                      ? "border-transparent bg-foreground text-background"
+                      ? "gold-gradient border-transparent"
                       : "border-border text-muted-foreground"
                   }`}
                 >
@@ -361,7 +361,7 @@ function StrengthRecords() {
             <button
               type="submit"
               disabled={upsert.isPending}
-              className="flex-1 rounded-2xl bg-foreground py-3 text-sm font-medium text-background transition active:scale-[0.99]"
+              className="pressable gold-gradient min-h-[50px] flex-1 rounded-[var(--r-md)] text-sm font-semibold"
             >
               Guardar
             </button>
@@ -417,7 +417,7 @@ function StrengthRecords() {
                       <span className="text-xs text-muted-foreground">kg</span>
                       <button
                         onClick={() => saveEdit(r.id)}
-                        className="rounded-lg bg-foreground p-2 text-background"
+                        className="gold-gradient tap grid place-items-center rounded-[12px]"
                         aria-label="Guardar"
                       >
                         <Check className="h-4 w-4" />
@@ -442,7 +442,7 @@ function StrengthRecords() {
                           {r.exercise}
                         </div>
                         <div className="mt-1 flex items-baseline gap-1.5">
-                          <span className="text-2xl font-semibold tabular leading-none">
+                          <span className="metric gold-text">
                             {r.weight}
                           </span>
                           <span className="text-xs text-muted-foreground">kg</span>
@@ -696,9 +696,9 @@ function EvolutionChart({
             <Line
               type="monotone"
               dataKey="weight"
-              stroke="currentColor"
+              stroke="var(--gold)"
               strokeWidth={2}
-              dot={{ r: 2.5, fill: "currentColor", strokeWidth: 0 }}
+              dot={{ r: 2.5, fill: "var(--gold)", strokeWidth: 0 }}
               activeDot={{ r: 4.5 }}
             />
           </LineChart>

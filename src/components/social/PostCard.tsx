@@ -224,7 +224,7 @@ export function PostCard({ post }: { post: Post }) {
 
 function ActionBtn({ icon, value, onClick, active, label }: { icon: React.ReactNode; value: number; onClick: () => void; active?: boolean; label: string }) {
   return (
-    <button aria-label={label} onClick={onClick} className="pressable flex items-center gap-1.5 rounded-full px-3 py-2" style={{ color: active ? "#FFFFFF" : undefined }}>
+    <button aria-label={label} onClick={onClick} className="pressable flex items-center gap-1.5 rounded-full px-3 py-2" style={{ color: active ? "var(--gold)" : undefined }}>
       {icon}
       <span className="tabular">{value}</span>
     </button>

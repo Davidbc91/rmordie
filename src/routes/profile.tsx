@@ -844,7 +844,7 @@ function ConsistencySection({ results, plannedDays, weeklyTarget }: any) {
               key={c.date}
               title={c.date}
               className="aspect-square rounded-[5px]"
-              style={{ background: c.done ? "#000000" : "rgba(255,255,255,0.10)" }}
+              style={{ background: c.done ? "var(--gold)" : "rgba(255,255,255,0.10)" }}
             />
           ))}
         </div>

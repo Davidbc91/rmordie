@@ -92,7 +92,7 @@ export function PinGate({ children }: { children: React.ReactNode }) {
       />
       <div className="relative w-full max-w-sm">
         <div className="rise rise-1 mb-10 flex flex-col items-center text-center">
-          <div className="font-bold leading-none tracking-tight" style={{ fontSize: "60px", letterSpacing: "-0.06em", color: "#FFFFFF" }}>
+          <div className="font-bold leading-none tracking-tight" style={{ fontSize: "60px", letterSpacing: "-0.06em", color: "var(--foreground)" }}>
             RM
           </div>
           <div className="mt-2 text-[10px] uppercase text-white/70" style={{ letterSpacing: "0.42em" }}>OR DIE</div>

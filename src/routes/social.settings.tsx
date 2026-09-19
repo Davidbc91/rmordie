@@ -173,7 +173,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
       style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}
     >
       {label}
-      <span className="relative h-6 w-11 rounded-full transition-colors" style={{ background: value ? "#FFFFFF" : "rgba(255,255,255,0.10)" }}>
+      <span className="relative h-6 w-11 rounded-full transition-colors" style={{ background: value ? "var(--gold)" : "rgba(255,255,255,0.12)" }}>
         <span
           className="absolute top-1 h-4 w-4 rounded-full transition-all"
           style={{ left: value ? 24 : 4, background: value ? "#000" : "#8A8A8A" }}

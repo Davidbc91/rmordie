@@ -179,6 +179,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 style={{ background: "rgba(216,180,107,0.10)", opacity: moreActive || moreOpen ? 1 : 0 }}
               />
               <MoreHorizontal className="relative h-[21px] w-[21px]" strokeWidth={moreActive || moreOpen ? 2.1 : 1.6} />
+              {chatUnread > 0 && (
+                <span
+                  aria-hidden
+                  className="absolute right-[26%] top-[6px] grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-bold gold-gradient"
+                  style={{ color: "var(--gold-foreground)" }}
+                >
+                  {chatUnread > 9 ? "9+" : chatUnread}
+                </span>
+              )}
               <span className="relative text-[10px] font-semibold" style={{ letterSpacing: "0.03em" }}>Más</span>
             </button>
           </div>

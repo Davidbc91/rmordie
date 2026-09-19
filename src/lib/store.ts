@@ -35,6 +35,35 @@ export async function verifyProfilePin(profileId: string, pin: string): Promise<
   return data === true;
 }
 
+/** Links the signed-in account to an existing athlete card after PIN confirmation. */
+export async function claimProfile(profileId: string, pin: string): Promise<boolean> {
+  const pin_hash = await sha256(pin);
+  const { data, error } = await supabase.rpc("claim_profile", {
+    _profile_id: profileId,
+    _pin_hash: pin_hash,
+  });
+  if (error) throw error;
+  return data === true;
+}
+
+/** Creates a new athlete card already linked to the signed-in account. */
+export async function createLinkedProfile(name: string, pin: string): Promise<string> {
+  const pin_hash = await sha256(pin);
+  const { data, error } = await supabase.rpc("create_linked_profile", {
+    _name: name.trim(),
+    _pin_hash: pin_hash,
+  });
+  if (error) throw error;
+  return data as unknown as string;
+}
+
+/** Athlete card linked to the current account, if any. */
+export async function fetchMyProfileId(): Promise<string | null> {
+  const { data, error } = await supabase.rpc("my_profile_id");
+  if (error) throw error;
+  return (data as unknown as string | null) ?? null;
+}
+
 export function useCreateProfile() {
   const qc = useQueryClient();
   return useMutation({

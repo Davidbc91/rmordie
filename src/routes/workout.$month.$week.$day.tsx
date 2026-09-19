@@ -22,7 +22,7 @@ import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebratio
 import { useCreatePost } from "@/lib/social";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
-  head: () => ({ meta: [{ title: "Entrenamiento — RM OR DIE" }] }),
+  head: () => ({ meta: [{ title: "Entrenamiento — RMORDIE" }] }),
   component: WorkoutPage,
 });
 
@@ -396,7 +396,7 @@ function BlockCard({
                   type="button"
                   onClick={() => setWodScale(s)}
                   className={`flex-1 rounded-xl border px-2 py-1.5 text-[11px] font-semibold transition ${
-                    wodScale === s ? "border-transparent bg-foreground text-background" : "border-border text-muted-foreground"
+                    wodScale === s ? "gold-gradient border-transparent" : "border-border text-muted-foreground"
                   }`}
                 >
                   {SCALE_LABEL[s]}
@@ -434,14 +434,13 @@ function BlockCard({
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Notas, escala, sensaciones…"
           rows={2}
-          className="mt-3 w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-gold"
+          className="mt-3 w-full rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] outline-none transition focus:border-[rgba(216,180,107,0.55)]"
         />
 
         <button
           onClick={onSaveClick}
           disabled={save.isPending || savingWod}
-          className="mt-4 w-full rounded-xl gold-gradient py-2.5 text-sm font-semibold disabled:opacity-50"
-          style={{ color: "var(--gold-foreground)" }}
+          className="pressable mt-4 min-h-[50px] w-full rounded-[var(--r-md)] border border-[color:var(--glass-border-strong)] bg-[color:var(--glass-bg-2)] text-sm font-semibold text-foreground disabled:opacity-45"
         >
           {save.isPending || savingWod ? "Guardando…" : (existing ? "Actualizar" : "Guardar")}
         </button>
@@ -462,7 +461,7 @@ function Field({ label, value, onChange, type = "text", placeholder }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular outline-none focus:border-gold"
+        className="tap w-full rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] tabular outline-none transition focus:border-[rgba(216,180,107,0.55)]"
       />
     </label>
   );

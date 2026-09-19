@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentUserId } from "./pin-gate";
+import { offlineRead } from "./offline/cache";
 
 const sb = supabase as any;
 
@@ -28,15 +29,16 @@ export function useAthleteProfile() {
   return useQuery({
     queryKey: ["athlete_profile", uid],
     enabled: !!uid,
-    queryFn: async (): Promise<AthleteProfile | null> => {
-      const { data, error } = await sb
-        .from("athlete_profile")
-        .select("*")
-        .eq("user_id", uid!)
-        .maybeSingle();
-      if (error) throw error;
-      return (data as AthleteProfile) ?? null;
-    },
+    queryFn: async (): Promise<AthleteProfile | null> =>
+      offlineRead(`athlete_profile:${uid}`, async () => {
+        const { data, error } = await sb
+          .from("athlete_profile")
+          .select("*")
+          .eq("user_id", uid!)
+          .maybeSingle();
+        if (error) throw error;
+        return (data as AthleteProfile) ?? null;
+      }),
   });
 }
 
@@ -77,15 +79,16 @@ export function useBodyMetrics() {
   return useQuery({
     queryKey: ["body_metrics", uid],
     enabled: !!uid,
-    queryFn: async (): Promise<BodyMetric[]> => {
-      const { data, error } = await sb
-        .from("body_metrics")
-        .select("*")
-        .eq("user_id", uid!)
-        .order("measured_on", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as BodyMetric[];
-    },
+    queryFn: async (): Promise<BodyMetric[]> =>
+      offlineRead(`body_metrics:${uid}`, async () => {
+        const { data, error } = await sb
+          .from("body_metrics")
+          .select("*")
+          .eq("user_id", uid!)
+          .order("measured_on", { ascending: true });
+        if (error) throw error;
+        return (data ?? []) as BodyMetric[];
+      }),
   });
 }
 
@@ -143,15 +146,16 @@ export function useWellnessLogs() {
   return useQuery({
     queryKey: ["wellness_logs", uid],
     enabled: !!uid,
-    queryFn: async (): Promise<WellnessLog[]> => {
-      const { data, error } = await sb
-        .from("wellness_logs")
-        .select("*")
-        .eq("user_id", uid!)
-        .order("logged_on", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as WellnessLog[];
-    },
+    queryFn: async (): Promise<WellnessLog[]> =>
+      offlineRead(`wellness_logs:${uid}`, async () => {
+        const { data, error } = await sb
+          .from("wellness_logs")
+          .select("*")
+          .eq("user_id", uid!)
+          .order("logged_on", { ascending: true });
+        if (error) throw error;
+        return (data ?? []) as WellnessLog[];
+      }),
   });
 }
 
@@ -203,15 +207,16 @@ export function useGoals() {
   return useQuery({
     queryKey: ["athlete_goals", uid],
     enabled: !!uid,
-    queryFn: async (): Promise<AthleteGoal[]> => {
-      const { data, error } = await sb
-        .from("athlete_goals")
-        .select("*")
-        .eq("user_id", uid!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as AthleteGoal[];
-    },
+    queryFn: async (): Promise<AthleteGoal[]> =>
+      offlineRead(`athlete_goals:${uid}`, async () => {
+        const { data, error } = await sb
+          .from("athlete_goals")
+          .select("*")
+          .eq("user_id", uid!)
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return (data ?? []) as AthleteGoal[];
+      }),
   });
 }
 
@@ -260,15 +265,16 @@ export function useMilestones() {
   return useQuery({
     queryKey: ["milestones", uid],
     enabled: !!uid,
-    queryFn: async (): Promise<Milestone[]> => {
-      const { data, error } = await sb
-        .from("milestones")
-        .select("*")
-        .eq("user_id", uid!)
-        .order("achieved_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as Milestone[];
-    },
+    queryFn: async (): Promise<Milestone[]> =>
+      offlineRead(`milestones:${uid}`, async () => {
+        const { data, error } = await sb
+          .from("milestones")
+          .select("*")
+          .eq("user_id", uid!)
+          .order("achieved_at", { ascending: false });
+        if (error) throw error;
+        return (data ?? []) as Milestone[];
+      }),
   });
 }
 
@@ -303,15 +309,16 @@ export function useAllPrHistory() {
   return useQuery({
     queryKey: ["personal_record_history", uid, "all"],
     enabled: !!uid,
-    queryFn: async (): Promise<PrHistoryRow[]> => {
-      const { data, error } = await sb
-        .from("personal_record_history")
-        .select("*")
-        .eq("user_id", uid!)
-        .order("changed_at", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as PrHistoryRow[];
-    },
+    queryFn: async (): Promise<PrHistoryRow[]> =>
+      offlineRead(`pr_history_all:${uid}`, async () => {
+        const { data, error } = await sb
+          .from("personal_record_history")
+          .select("*")
+          .eq("user_id", uid!)
+          .order("changed_at", { ascending: true });
+        if (error) throw error;
+        return (data ?? []) as PrHistoryRow[];
+      }),
   });
 }
 

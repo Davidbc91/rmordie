@@ -153,7 +153,7 @@ function ProfilePage() {
                 onClick={() => setSection(s.key)}
                 className={`whitespace-nowrap rounded-2xl border px-4 py-2 text-xs font-semibold transition ${
                   active
-                    ? "border-transparent bg-foreground text-background"
+                    ? "border-transparent gold-gradient"
                     : "border-border text-muted-foreground"
                 }`}
               >
@@ -264,7 +264,7 @@ function RangePicker({ range, setRange }: { range: RangeKey; setRange: (r: Range
           key={r.key}
           onClick={() => setRange(r.key)}
           className={`flex-1 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold transition ${
-            range === r.key ? "bg-foreground text-background" : "text-muted-foreground"
+            range === r.key ? "gold-gradient" : "text-muted-foreground"
           }`}
         >
           {r.label}
@@ -416,7 +416,7 @@ function ProfileForm() {
                   key={g}
                   onClick={() => set("goals", active ? goals.filter((x) => x !== g) : [...goals, g])}
                   className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                    active ? "border-transparent bg-foreground text-background" : "border-border text-muted-foreground"
+                    active ? "border-transparent gold-gradient" : "border-border text-muted-foreground"
                   }`}
                 >
                   {g}
@@ -429,7 +429,7 @@ function ProfileForm() {
         <button
           onClick={onSave}
           disabled={save.isPending}
-          className="mt-6 w-full rounded-[18px] bg-foreground py-3 text-sm font-semibold text-background transition active:scale-[0.99]"
+          className="mt-6 w-full rounded-[18px] gold-gradient py-3 text-sm font-semibold transition active:scale-[0.99]"
         >
           {save.isPending ? "Guardando…" : "Guardar perfil"}
         </button>
@@ -509,7 +509,7 @@ function BodySection() {
     <div className="space-y-4">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-center gap-2 rounded-[18px] bg-foreground py-3 text-sm font-semibold text-background"
+        className="flex w-full items-center justify-center gap-2 rounded-[18px] gold-gradient py-3 text-sm font-semibold"
       >
         <Plus className="h-4 w-4" /> Nuevo registro corporal
       </button>
@@ -531,7 +531,7 @@ function BodySection() {
               <input className={inputCls} value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} maxLength={200} />
             </Field>
           </div>
-          <button onClick={submit} className="mt-5 w-full rounded-[18px] bg-foreground py-3 text-sm font-semibold text-background">
+          <button onClick={submit} className="mt-5 w-full rounded-[18px] gold-gradient py-3 text-sm font-semibold">
             Guardar
           </button>
         </Card>
@@ -935,7 +935,7 @@ function RecoverySection({ logs, results, days }: any) {
         <Field label="Notas">
           <input className={inputCls} value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} maxLength={200} />
         </Field>
-        <button onClick={submit} className="mt-4 w-full rounded-[18px] bg-foreground py-3 text-sm font-semibold text-background">
+        <button onClick={submit} className="mt-4 w-full rounded-[18px] gold-gradient py-3 text-sm font-semibold">
           Guardar día
         </button>
       </Card>
@@ -1034,7 +1034,7 @@ function GoalsSection({ records, results, metrics }: any) {
 
   return (
     <div className="space-y-4">
-      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-center gap-2 rounded-[18px] bg-foreground py-3 text-sm font-semibold text-background">
+      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-center gap-2 rounded-[18px] gold-gradient py-3 text-sm font-semibold">
         <Plus className="h-4 w-4" /> Nuevo objetivo
       </button>
 
@@ -1064,7 +1064,7 @@ function GoalsSection({ records, results, metrics }: any) {
               <input type="date" className={inputCls} value={form.target_date ?? ""} onChange={(e) => setForm({ ...form, target_date: e.target.value })} />
             </Field>
           </div>
-          <button onClick={submit} className="mt-5 w-full rounded-[18px] bg-foreground py-3 text-sm font-semibold text-background">Crear</button>
+          <button onClick={submit} className="mt-5 w-full rounded-[18px] gold-gradient py-3 text-sm font-semibold">Crear</button>
         </Card>
       )}
 

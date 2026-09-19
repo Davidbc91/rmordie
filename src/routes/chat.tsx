@@ -43,6 +43,35 @@ function ChatPage() {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [pushOn, setPushOn] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const notify = useServerFn(notifyChatMessage);
+
+  useEffect(() => {
+    isPushActive().then(setPushOn);
+  }, []);
+
+  const togglePush = useCallback(async () => {
+    if (!uid || pushBusy) return;
+    setPushBusy(true);
+    try {
+      if (pushOn) {
+        await disablePush();
+        setPushOn(false);
+        toast.success("Avisos desactivados en este dispositivo");
+        return;
+      }
+      const res = await enablePush(uid);
+      if (res.ok) {
+        setPushOn(true);
+        toast.success("Avisos activados en este dispositivo");
+      } else {
+        toast.error(res.message);
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  }, [uid, pushOn, pushBusy]);
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["chat_messages"],

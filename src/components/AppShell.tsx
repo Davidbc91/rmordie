@@ -92,7 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       {moreOpen && (
-        <div className="fixed inset-0 z-50 flex items-end">
+        <div className="fixed inset-0 flex items-end" style={{ zIndex: 2147483001 }}>
           <button aria-label="Cerrar menú" onClick={() => setMoreOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-[6px]" />
           <div className="glass-elevated glass-sheen animate-fade relative mx-4 mb-[96px] max-w-2xl flex-1 p-3 sm:mx-auto">
             <p className="eyebrow px-2 pb-2 pt-1">Más</p>
@@ -131,7 +131,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-50">
+      <nav className="fixed inset-x-0 bottom-0" style={{ zIndex: 2147483000 }}>
         <div
           className="safe-x border-t"
           style={{

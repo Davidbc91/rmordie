@@ -46,18 +46,11 @@ function CalendarPage() {
   const initialized = useRef(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
-  if (!planning) {
-    return (
-      <AppShell>
-        <p className="text-muted-foreground text-sm">Importa primero tu planificación.</p>
-      </AppShell>
-    );
-  }
-  const months = planning.data.months;
+  const months = planning?.data.months ?? [];
 
   // Initialize only once so interactions never recenter the calendar.
   useEffect(() => {
-    if (initialized.current) return;
+    if (initialized.current || months.length === 0) return;
     initialized.current = true;
     setIdx(getInitialMonthIndex(months));
   }, [months]);

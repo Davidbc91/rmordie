@@ -51,7 +51,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         style={{ maskImage: "linear-gradient(#000, transparent)", WebkitMaskImage: "linear-gradient(#000, transparent)" }}
       />
 
-      <main className="safe-x safe-top relative mx-auto max-w-2xl overflow-x-clip px-4 pt-8 sm:px-6 sm:pt-12">{children}</main>
+      <main
+        className="relative mx-auto max-w-2xl overflow-x-clip"
+        style={{
+          paddingLeft: "max(env(safe-area-inset-left), 1.25rem)",
+          paddingRight: "max(env(safe-area-inset-right), 1.25rem)",
+          paddingTop: "calc(env(safe-area-inset-top) + 2rem)",
+        }}
+      >
+        {children}
+      </main>
 
       {showResume && active && (
         <div className="fixed inset-x-0 bottom-[86px] z-40 px-4">

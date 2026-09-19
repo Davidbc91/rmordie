@@ -123,8 +123,8 @@ export function PinGate({ children }: { children: React.ReactNode }) {
               onClick={() => { setMode("create"); setName(""); setPin(""); setPin2(""); setError(null); }}
               className="pressable flex w-full items-center gap-3 rounded-[20px] border border-dashed border-border px-4 py-3.5 text-left text-sm text-muted-foreground hover:border-white/35 hover:text-foreground"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-[14px]" style={{ background: "#FFFFFF" }}>
-                <UserPlus className="h-4 w-4" style={{ color: "#000000" }} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-[14px]" style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)" }}>
+                <UserPlus className="h-4 w-4" style={{ color: "var(--foreground)" }} />
               </div>
               Crear nuevo perfil
             </button>

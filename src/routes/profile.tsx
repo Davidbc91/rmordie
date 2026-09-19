@@ -284,10 +284,10 @@ function MonoChart({ data, dataKey = "value" }: { data: { label: string; value: 
           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#6F6F6F" }} tickLine={false} axisLine={false} />
           <YAxis tick={{ fontSize: 10, fill: "#6F6F6F" }} tickLine={false} axisLine={false} width={44} domain={["auto", "auto"]} />
           <Tooltip
-            contentStyle={{ background: "#000000", border: "1px solid #2A2A2A", borderRadius: 14, color: "#FFFFFF", fontSize: 12 }}
+            contentStyle={{ background: "#101114", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, color: "#FFFFFF", fontSize: 12 }}
             labelStyle={{ color: "#B8B8B8" }}
           />
-          <Line type="monotone" dataKey={dataKey} stroke="#000000" strokeWidth={2} dot={{ r: 2.5, fill: "#000000" }} />
+          <Line type="monotone" dataKey={dataKey} stroke="var(--gold)" strokeWidth={2} dot={{ r: 2.5, fill: "var(--gold)" }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -344,7 +344,7 @@ function ProfileForm() {
           <button
             onClick={() => fileRef.current?.click()}
             className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[24px]"
-            style={{ background: "#000000", color: "#FFFFFF" }}
+            style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}
           >
             {form.avatar_url ? (
               <img src={form.avatar_url} alt="Foto de perfil" className="h-full w-full object-cover" />
@@ -546,7 +546,7 @@ function BodySection() {
               className="whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition"
               style={
                 metricKey === f.key
-                  ? { background: "#000000", color: "#FFFFFF" }
+                  ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }
                   : { background: "#F1F1F1", color: "#6F6F6F" }
               }
             >
@@ -675,7 +675,7 @@ function PerformanceSection({ results, history, records, bodyWeight, days, range
         </p>
         <div className="mt-4 space-y-3">
           {statuses.map((s) => (
-            <div key={s.label} className="flex items-center justify-between gap-3 border-b pb-3 last:border-0 last:pb-0" style={{ borderColor: "#ECECEC" }}>
+            <div key={s.label} className="flex items-center justify-between gap-3 border-b pb-3 last:border-0 last:pb-0" style={{ borderColor: "rgba(255,255,255,0.10)" }}>
               <div>
                 <div className="text-sm font-semibold uppercase tracking-[0.1em]">{s.label}</div>
                 <div className="text-[11px]" style={{ color: "#6F6F6F" }}>{s.detail}</div>
@@ -799,7 +799,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
       <span>{label}</span>
-      <span className="font-semibold" style={{ color: "#000000" }}>{value}</span>
+      <span className="font-semibold" style={{ color: "var(--foreground)" }}>{value}</span>
     </div>
   );
 }
@@ -844,7 +844,7 @@ function ConsistencySection({ results, plannedDays, weeklyTarget }: any) {
               key={c.date}
               title={c.date}
               className="aspect-square rounded-[5px]"
-              style={{ background: c.done ? "#000000" : "#E8E8E8" }}
+              style={{ background: c.done ? "#000000" : "rgba(255,255,255,0.10)" }}
             />
           ))}
         </div>
@@ -1091,8 +1091,8 @@ function GoalsSection({ records, results, metrics }: any) {
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
-            <div className="mt-4 h-[6px] w-full overflow-hidden rounded-full" style={{ background: "#ECECEC" }}>
-              <div className="h-full rounded-full" style={{ width: `${pct ?? 0}%`, background: "#000000" }} />
+            <div className="mt-4 h-[6px] w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.10)" }}>
+              <div className="h-full rounded-full" style={{ width: `${pct ?? 0}%`, background: "linear-gradient(140deg,#EBD6A6,#D8B46B)" }} />
             </div>
             <p className="mt-2 text-[11px]" style={{ color: "#6F6F6F" }}>
               {pct != null ? `${pct}% completado` : "Sin datos suficientes"}
@@ -1183,9 +1183,9 @@ function ReportSection({ results, history, metrics, records }: any) {
 
           <Card>
             <ReportList title="Improving" items={improving.map((s) => `${s.exercise} +${s.changePct!.toFixed(1)}%`)} />
-            <div className="my-4 h-px" style={{ background: "#ECECEC" }} />
+            <div className="my-4 h-px" style={{ background: "rgba(255,255,255,0.10)" }} />
             <ReportList title="Stable" items={stable.map((s) => s.exercise)} />
-            <div className="my-4 h-px" style={{ background: "#ECECEC" }} />
+            <div className="my-4 h-px" style={{ background: "rgba(255,255,255,0.10)" }} />
             <ReportList title="Stalled" items={stalled.map((s) => `${s.exercise} · sin PR desde ${new Date(s.lastPrDate!).toLocaleDateString("es-ES")}`)} />
           </Card>
         </>
@@ -1257,7 +1257,7 @@ function DataSection() {
         <p className="mt-3 text-sm" style={{ color: "#6F6F6F" }}>
           Tus datos son tuyos. Puedes exportarlos en cualquier momento o eliminarlos por completo. Nunca se borra nada de forma automática.
         </p>
-        <button onClick={doExport} disabled={busy} className="mt-5 w-full rounded-[18px] py-3 text-sm font-semibold" style={{ background: "#000000", color: "#FFFFFF" }}>
+        <button onClick={doExport} disabled={busy} className="mt-5 w-full rounded-[18px] py-3 text-sm font-semibold" style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}>
           Exportar todos mis datos (JSON)
         </button>
       </Card>

@@ -20,22 +20,52 @@ function ImportPage() {
   async function onFile(f: File) {
     setBusy(true);
     try {
-      const buf = await f.arrayBuffer();
-      const planning = parsePlanningFromArrayBuffer(buf);
-      if (planning.months.length === 0) {
-        toast.error("No se detectaron meses en el Excel.");
+      // 1) Lectura del archivo Excel
+      let planning;
+      try {
+        const buf = await f.arrayBuffer();
+        planning = parsePlanningFromArrayBuffer(buf);
+      } catch (e) {
+        console.error("[import] error leyendo el Excel:", e);
+        toast.error("No pude leer el Excel. Revisa el formato del archivo.");
         return;
       }
-      await save.mutateAsync({ planning, filename: f.name });
+
+      if (planning.months.length === 0) {
+        toast.error("El Excel se ha leído, pero no se detectaron meses.");
+        return;
+      }
+
+      // 2) Guardado en la base de datos
+      try {
+        await save.mutateAsync({ planning, filename: f.name });
+      } catch (e) {
+        const err = e as { message?: string; code?: string; details?: string; hint?: string };
+        console.error("[import] error guardando la planificación:", err);
+        const raw = `${err?.code ?? ""} ${err?.message ?? ""} ${err?.details ?? ""}`.toLowerCase();
+        const isPermission =
+          raw.includes("row-level security") ||
+          raw.includes("row level security") ||
+          raw.includes("permission denied") ||
+          raw.includes("violates row") ||
+          err?.code === "42501" ||
+          err?.code === "401" ||
+          err?.code === "403";
+        if (isPermission) {
+          toast.error("Sin permisos para guardar la planificación (reglas de acceso). El Excel se leyó bien.");
+        } else {
+          toast.error(`El Excel se leyó bien, pero falló al guardar: ${err?.message ?? "error desconocido"}`);
+        }
+        return;
+      }
+
       toast.success(`Planificación importada: ${planning.months.length} meses. Tus registros están intactos.`);
       navigate({ to: "/calendar" });
-    } catch (e) {
-      console.error(e);
-      toast.error("No pude leer el Excel. Revisa el formato.");
     } finally {
       setBusy(false);
     }
   }
+
 
   return (
     <AppShell>

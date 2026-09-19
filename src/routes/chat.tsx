@@ -176,12 +176,27 @@ function ChatPage() {
       <div className="flex flex-col" style={{ height: "calc(100vh - 10rem)" }}>
         <header className="mb-3 flex items-center gap-2">
           <MessageCircle className="h-5 w-5" style={{ color: "var(--gold)" }} />
-          <div>
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold">Chat del box</h1>
             <p className="text-xs text-muted-foreground">
               Conversación en tiempo real con todos los RM OR DIE.
             </p>
           </div>
+          {(pushSupported() || iosNeedsInstall()) && (
+            <button
+              type="button"
+              onClick={togglePush}
+              disabled={pushBusy}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border disabled:opacity-40 ${
+                pushOn ? "gold-gradient" : "bg-background/60"
+              }`}
+              style={pushOn ? { color: "var(--gold-foreground)" } : undefined}
+              aria-label={pushOn ? "Desactivar avisos" : "Activar avisos"}
+              title={pushOn ? "Avisos activados" : "Activar avisos de mensajes"}
+            >
+              {pushOn ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
+            </button>
+          )}
         </header>
 
         <div

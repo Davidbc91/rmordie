@@ -117,10 +117,11 @@ function ChatPage() {
     };
   }, [qc]);
 
-  // Auto-scroll
+  // Auto-scroll y marca de leído
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
+    markChatSeen();
   }, [messages.length]);
 
   async function handleSend(e: React.FormEvent) {
@@ -139,11 +140,20 @@ function ChatPage() {
         .eq("id", uid)
         .single();
       const user_name = (profile as { name?: string } | null)?.name ?? "Malito";
-      const { error } = await supabase
+      const { data: inserted, error } = await supabase
         .from("chat_messages")
-        .insert({ user_id: uid, user_name, content });
+        .insert({ user_id: uid, user_name, content })
+        .select("id")
+        .single();
       if (error) throw error;
       setText("");
+      markChatSeen();
+      const messageId = (inserted as { id?: string } | null)?.id;
+      if (messageId) {
+        void notify({ data: { messageId } }).catch(() => {
+          /* el mensaje ya está guardado: un aviso fallido no molesta al usuario */
+        });
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al enviar");
     } finally {

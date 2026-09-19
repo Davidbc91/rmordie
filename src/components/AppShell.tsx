@@ -114,6 +114,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       <span className="block text-sm font-semibold">{l.label}</span>
                       <span className="block truncate text-xs text-muted-foreground">{l.hint}</span>
                     </span>
+                    {l.to === "/chat" && chatUnread > 0 && (
+                      <span
+                        className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-[10px] font-bold gold-gradient"
+                        style={{ color: "var(--gold-foreground)" }}
+                      >
+                        {chatUnread > 99 ? "99+" : chatUnread}
+                      </span>
+                    )}
                     <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </Link>
                 );

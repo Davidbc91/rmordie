@@ -251,14 +251,12 @@ function StrengthRecords() {
   return (
     <>
       {celebrate && <PrCelebration data={celebrate} onClose={() => setCelebrate(null)} />}
-      <div className="mb-4 flex justify-end">
-        <button
-          onClick={() => setShowAdd((v) => !v)}
-          className="pressable gold-gradient inline-flex min-h-[46px] items-center gap-1.5 rounded-[var(--r-md)] px-4 text-sm font-semibold"
-        >
-          <Plus className="h-4 w-4" /> Añadir RM
-        </button>
-      </div>
+      <button
+        onClick={() => setShowAdd((v) => !v)}
+        className="pressable gold-gradient mb-4 flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[var(--r-md)] px-4 text-sm font-semibold"
+      >
+        <Plus className="h-4 w-4" /> Añadir RM
+      </button>
 
       {/* Segmented rep-max control */}
       <div className="rise rise-2 glass glass-sheen no-scrollbar mb-5 flex gap-1 overflow-x-auto p-1">

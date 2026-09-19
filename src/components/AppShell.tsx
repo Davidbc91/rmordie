@@ -51,7 +51,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         style={{ maskImage: "linear-gradient(#000, transparent)", WebkitMaskImage: "linear-gradient(#000, transparent)" }}
       />
 
-      <main className="safe-x safe-top relative mx-auto max-w-2xl px-4 pt-8 sm:px-6 sm:pt-12">{children}</main>
+      <main
+        className="relative mx-auto max-w-2xl overflow-x-clip"
+        style={{
+          paddingLeft: "max(env(safe-area-inset-left), 1.25rem)",
+          paddingRight: "max(env(safe-area-inset-right), 1.25rem)",
+          paddingTop: "calc(env(safe-area-inset-top) + 2rem)",
+        }}
+      >
+        {children}
+      </main>
 
       {showResume && active && (
         <div className="fixed inset-x-0 bottom-[86px] z-40 px-4">
@@ -83,7 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {moreOpen && (
         <div className="fixed inset-0 z-50 flex items-end">
           <button aria-label="Cerrar menú" onClick={() => setMoreOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-[6px]" />
-          <div className="glass-elevated glass-sheen animate-fade relative mx-3 mb-[92px] w-full max-w-2xl p-3 sm:mx-auto">
+          <div className="glass-elevated glass-sheen animate-fade relative mx-4 mb-[96px] max-w-2xl flex-1 p-3 sm:mx-auto">
             <p className="eyebrow px-2 pb-2 pt-1">Más</p>
             <div className="space-y-1.5">
               {moreLinks.map((l) => {

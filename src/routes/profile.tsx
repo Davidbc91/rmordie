@@ -56,6 +56,7 @@ import {
   streaks,
   sessionDays,
   plannedTrainingDays,
+
   exerciseStats,
   progressionInsights,
   bodyChange,
@@ -68,6 +69,7 @@ import {
   type Trend,
 } from "@/lib/analytics";
 
+import { planningCompletion } from "@/lib/session-progress";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
@@ -172,6 +174,8 @@ function ProfilePage() {
           history={history}
           metrics={metrics}
           plannedDays={plannedTrainingDays(planning?.data)}
+          completedSessions={planningCompletion(planning?.data, results).completed}
+
         />
       )}
       {(section === "performance" || section === "strength" || section === "recovery") && (
@@ -196,7 +200,7 @@ function ProfilePage() {
         />
       )}
       {section === "consistency" && (
-        <ConsistencySection results={results} plannedDays={plannedTrainingDays(planning?.data)} weeklyTarget={profile?.weekly_target ?? null} />
+        <ConsistencySection results={results} plannedDays={plannedTrainingDays(planning?.data)} completedSessions={planningCompletion(planning?.data, results).completed} weeklyTarget={profile?.weekly_target ?? null} />
       )}
       {section === "recovery" && <RecoverySection logs={wellness} results={results} days={days} />}
       {section === "goals" && <GoalsSection records={records} results={results} metrics={metrics} />}
@@ -590,12 +594,12 @@ function BodySection() {
 
 /* ---------------- 3. Progress dashboard ---------------- */
 
-function ProgressSection({ results, history, metrics, plannedDays }: any) {
+function ProgressSection({ results, history, metrics, plannedDays, completedSessions }: any) {
   const all = windowStats(results, history, null);
   const last4 = windowStats(results, history, 28);
   const s = streaks(results);
   const body = bodyChange(metrics);
-  const completion = plannedDays ? Math.min(100, Math.round((all.sessions / plannedDays) * 100)) : null;
+  const completion = plannedDays ? Math.min(100, Math.round((completedSessions / plannedDays) * 100)) : null;
 
   if (all.sessions === 0 && metrics.length === 0) {
     return <Empty text="Registra entrenamientos y datos corporales para activar tu dashboard." />;
@@ -619,7 +623,7 @@ function ProgressSection({ results, history, metrics, plannedDays }: any) {
       </Card>
 
       <div className="grid grid-cols-2 gap-3">
-        <Stat label="Entrenos" value={String(all.sessions)} sub={`${all.blocks} bloques`} />
+        <Stat label="Sesiones completas" value={String(completedSessions)} sub={`${all.blocks} bloques`} />
         <Stat label="Cumplimiento" value={completion != null ? `${completion}%` : "—"} sub={plannedDays ? `de ${plannedDays} días` : undefined} />
         <Stat label="Racha actual" value={`${s.current} d`} />
         <Stat label="Racha máxima" value={`${s.best} d`} />
@@ -806,11 +810,11 @@ function Row({ label, value }: { label: string; value: string }) {
 
 /* ---------------- 11. Consistency ---------------- */
 
-function ConsistencySection({ results, plannedDays, weeklyTarget }: any) {
+function ConsistencySection({ results, plannedDays, completedSessions, weeklyTarget }: any) {
   const days = sessionDays(results);
   const s = streaks(results);
   const stats = windowStats(results, [], null);
-  const completion = plannedDays ? Math.min(100, Math.round((stats.sessions / plannedDays) * 100)) : null;
+  const completion = plannedDays ? Math.min(100, Math.round((completedSessions / plannedDays) * 100)) : null;
 
   const grid = useMemo(() => {
     const set = new Set(days);
@@ -828,8 +832,8 @@ function ConsistencySection({ results, plannedDays, weeklyTarget }: any) {
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <Stat label="Planificados" value={plannedDays ? String(plannedDays) : "—"} />
-        <Stat label="Completados" value={String(stats.sessions)} />
-        <Stat label="Perdidos" value={plannedDays ? String(Math.max(0, plannedDays - stats.sessions)) : "—"} />
+        <Stat label="Completados" value={String(completedSessions)} />
+        <Stat label="Perdidos" value={plannedDays ? String(Math.max(0, plannedDays - completedSessions)) : "—"} />
         <Stat label="Cumplimiento" value={completion != null ? `${completion}%` : "—"} />
         <Stat label="Racha actual" value={`${s.current} d`} />
         <Stat label="Racha máxima" value={`${s.best} d`} />

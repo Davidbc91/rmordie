@@ -4,6 +4,8 @@ import { usePlanning, useAllResults } from "@/lib/store";
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Check, Circle, Moon, Calendar } from "lucide-react";
 import type { Month } from "@/lib/excel-parser";
+import { completedBlockMap, isSessionCompleted, sessionProgress } from "@/lib/session-progress";
+
 
 const CALENDAR_MONTH_KEY = "malitos_calendar_month_key";
 
@@ -92,13 +94,8 @@ function CalendarPage() {
     else goNext();
   }, [goPrev, goNext]);
 
-  const doneMap = useMemo(() => {
-    const m = new Set<string>();
-    for (const r of results) {
-      if (r.status === "completed") m.add(`${r.month_key}|${r.week}|${r.day_key}`);
-    }
-    return m;
-  }, [results]);
+  const blockMap = useMemo(() => completedBlockMap(results), [results]);
+
 
   if (!planning || !month) {
     return (
@@ -150,8 +147,9 @@ function CalendarPage() {
         <div className="mt-7 space-y-7">
           {month.weeks.map((w, wi) => {
             const trainDays = w.days.filter((d) => !d.isRest);
-            const doneCount = trainDays.filter((d) => doneMap.has(`${month.key}|${w.index}|${d.key}`)).length;
+            const doneCount = trainDays.filter((d) => isSessionCompleted(d, month.key, w.index, blockMap)).length;
             const pct = trainDays.length ? Math.round((doneCount / trainDays.length) * 100) : 0;
+
             return (
               <section key={w.index} className={`rise rise-${Math.min(wi + 1, 5)}`}>
                 <div className="mb-2.5 flex items-end justify-between gap-4">
@@ -168,7 +166,10 @@ function CalendarPage() {
                 </div>
                 <div className="space-y-2">
                   {w.days.map((d) => {
-                    const done = doneMap.has(`${month.key}|${w.index}|${d.key}`);
+                    const prog = sessionProgress(d, month.key, w.index, blockMap);
+                    const done = prog.state === "completed";
+                    const partial = prog.state === "in_progress";
+
                     const isRest = d.isRest;
                     const headline = isRest
                       ? "Descanso y movilidad"
@@ -196,7 +197,9 @@ function CalendarPage() {
                           <span className="block truncate text-sm font-semibold">
                             {isRest ? "Descanso" : d.key}
                           </span>
-                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">{headline}</span>
+                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                            {isRest ? headline : `${prog.done}/${prog.total} bloques · ${headline}`}
+                          </span>
                         </span>
                         {isRest ? (
                           <Moon className="h-4 w-4 shrink-0 text-muted-foreground/70" strokeWidth={1.7} />
@@ -204,9 +207,14 @@ function CalendarPage() {
                           <span className="gold-gradient grid h-6 w-6 shrink-0 place-items-center rounded-full">
                             <Check className="h-3.5 w-3.5" strokeWidth={2.6} />
                           </span>
+                        ) : partial ? (
+                          <span className="shrink-0 text-[11px] font-semibold tabular text-gold">
+                            {prog.done}/{prog.total}
+                          </span>
                         ) : (
                           <Circle className="h-4 w-4 shrink-0 text-muted-foreground/45" strokeWidth={1.7} />
                         )}
+
                       </Link>
                     );
                   })}

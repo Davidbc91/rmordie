@@ -3,9 +3,19 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Send, MessageCircle } from "lucide-react";
+import { Send, MessageCircle, Bell, BellOff } from "lucide-react";
+import { markChatSeen } from "@/lib/chat-unread";
+import {
+  disablePush,
+  enablePush,
+  iosNeedsInstall,
+  isPushActive,
+  pushSupported,
+} from "@/lib/push";
+import { notifyChatMessage } from "@/lib/push.functions";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -33,6 +43,35 @@ function ChatPage() {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [pushOn, setPushOn] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const notify = useServerFn(notifyChatMessage);
+
+  useEffect(() => {
+    isPushActive().then(setPushOn);
+  }, []);
+
+  const togglePush = useCallback(async () => {
+    if (!uid || pushBusy) return;
+    setPushBusy(true);
+    try {
+      if (pushOn) {
+        await disablePush();
+        setPushOn(false);
+        toast.success("Avisos desactivados en este dispositivo");
+        return;
+      }
+      const res = await enablePush(uid);
+      if (res.ok) {
+        setPushOn(true);
+        toast.success("Avisos activados en este dispositivo");
+      } else {
+        toast.error(res.message);
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  }, [uid, pushOn, pushBusy]);
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["chat_messages"],
@@ -78,10 +117,11 @@ function ChatPage() {
     };
   }, [qc]);
 
-  // Auto-scroll
+  // Auto-scroll y marca de leído
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
+    markChatSeen();
   }, [messages.length]);
 
   async function handleSend(e: React.FormEvent) {
@@ -100,11 +140,20 @@ function ChatPage() {
         .eq("id", uid)
         .single();
       const user_name = (profile as { name?: string } | null)?.name ?? "Malito";
-      const { error } = await supabase
+      const { data: inserted, error } = await supabase
         .from("chat_messages")
-        .insert({ user_id: uid, user_name, content });
+        .insert({ user_id: uid, user_name, content })
+        .select("id")
+        .single();
       if (error) throw error;
       setText("");
+      markChatSeen();
+      const messageId = (inserted as { id?: string } | null)?.id;
+      if (messageId) {
+        void notify({ data: { messageId } }).catch(() => {
+          /* el mensaje ya está guardado: un aviso fallido no molesta al usuario */
+        });
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al enviar");
     } finally {
@@ -127,12 +176,27 @@ function ChatPage() {
       <div className="flex flex-col" style={{ height: "calc(100vh - 10rem)" }}>
         <header className="mb-3 flex items-center gap-2">
           <MessageCircle className="h-5 w-5" style={{ color: "var(--gold)" }} />
-          <div>
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold">Chat del box</h1>
             <p className="text-xs text-muted-foreground">
               Conversación en tiempo real con todos los RM OR DIE.
             </p>
           </div>
+          {(pushSupported() || iosNeedsInstall()) && (
+            <button
+              type="button"
+              onClick={togglePush}
+              disabled={pushBusy}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border disabled:opacity-40 ${
+                pushOn ? "gold-gradient" : "bg-background/60"
+              }`}
+              style={pushOn ? { color: "var(--gold-foreground)" } : undefined}
+              aria-label={pushOn ? "Desactivar avisos" : "Activar avisos"}
+              title={pushOn ? "Avisos activados" : "Activar avisos de mensajes"}
+            >
+              {pushOn ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
+            </button>
+          )}
         </header>
 
         <div

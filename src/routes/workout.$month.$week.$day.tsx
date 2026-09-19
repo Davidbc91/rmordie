@@ -342,13 +342,13 @@ function BlockCard({
 
   return (
     <details
-      className="card-elevated group"
+      className="glass glass-sheen group"
       open={open}
       onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
     >
-      <summary className="flex cursor-pointer items-center justify-between p-5 [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-[56px] cursor-pointer items-center justify-between gap-3 p-5 [&::-webkit-details-marker]:hidden">
         <div className="flex items-center gap-3">
-          <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-surface-2 px-2 text-xs font-semibold uppercase tracking-wide text-gold">
+          <span className="grid h-9 min-w-9 place-items-center rounded-[12px] border border-[rgba(216,180,107,0.32)] bg-[rgba(216,180,107,0.12)] px-2 text-xs font-bold uppercase tracking-wide text-gold">
             {blockKey}
           </span>
           {existing && <Check className="h-4 w-4 text-gold" />}
@@ -375,7 +375,7 @@ function BlockCard({
         )}
 
         {wod && (
-          <div className="mt-5 rounded-xl border border-border bg-surface-2 p-4">
+          <div className="glass-quiet mt-5 p-4">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">
                 Resultado WOD · {wod.name}
@@ -472,7 +472,7 @@ function PercentAssistant({ percentages, settings }: { percentages: number[]; se
   const cfg = { bars: settings.bar_weights, plates: settings.plate_weights };
   const rm = Number(oneRm);
   return (
-    <div className="mt-4 rounded-xl border border-gold/30 bg-surface-2 p-4">
+    <div className="mt-4 rounded-[var(--r-md)] border border-[rgba(216,180,107,0.3)] bg-[rgba(216,180,107,0.06)] p-4">
       <div className="flex items-center gap-2 text-xs font-medium text-gold">
         <Sparkles className="h-3.5 w-3.5" /> Asistente de %
       </div>
@@ -483,7 +483,7 @@ function PercentAssistant({ percentages, settings }: { percentages: number[]; se
           placeholder="Tu 1RM (kg)"
           value={oneRm}
           onChange={(e) => setOneRm(e.target.value)}
-          className="w-32 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground tabular outline-none placeholder:text-muted-foreground focus:border-foreground/40"
+          className="tap w-32 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] text-foreground tabular outline-none placeholder:text-muted-foreground/70 focus:border-[rgba(216,180,107,0.55)]"
         />
         <span className="text-xs text-muted-foreground">→ peso recomendado, redondeado a tus discos</span>
       </div>
@@ -493,7 +493,7 @@ function PercentAssistant({ percentages, settings }: { percentages: number[]; se
             const target = (rm * p) / 100;
             const rec = roundToPlates(target, cfg);
             return (
-              <div key={p} className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs text-foreground">
+              <div key={p} className="glass-quiet px-3 py-2 text-xs text-foreground">
                 <span className="text-muted-foreground">{p}%</span>
                 <span className="mx-2 text-muted-foreground/50">·</span>
                 <span className="font-semibold text-foreground tabular">{rec} kg</span>

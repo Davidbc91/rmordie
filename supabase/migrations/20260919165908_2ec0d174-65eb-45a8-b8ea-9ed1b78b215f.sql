@@ -1,0 +1,2 @@
+ALTER TABLE public.workout_results
+  DROP CONSTRAINT IF EXISTS workout_results_month_key_week_day_key_block_key_key;

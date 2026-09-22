@@ -315,9 +315,22 @@ function ProfileForm() {
   const goals: string[] = form.goals ?? [];
 
   async function onAvatar(file: File) {
-    if (file.size > 8 * 1024 * 1024) return toast.error("Imagen demasiado grande");
-    const dataUrl = await resizeImage(file, 320);
+    if (!file.type.startsWith("image/") && !/\.(jpe?g|png|webp|heic|heif|gif)$/i.test(file.name)) {
+      return toast.error("Selecciona una imagen");
+    }
+    let dataUrl: string;
+    try {
+      dataUrl = await resizeImage(file, 320);
+    } catch {
+      return toast.error("No se ha podido leer la imagen. Prueba con una foto JPG o PNG.");
+    }
     set("avatar_url", dataUrl);
+    try {
+      await save.mutateAsync({ avatar_url: dataUrl } as any);
+      toast.success("Foto actualizada");
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se ha podido guardar la foto");
+    }
   }
 
   async function onSave() {

@@ -287,6 +287,10 @@ function BlockCard({
   }, [weight, sets, reps, time, rpe, notes, open, wodScale, wodCap, wodTime, wodRounds, wodReps, blockKey]);
 
   const pcts = extractPercentages(content);
+  const detected = useMemo(
+    () => (pcts.length > 0 ? detectExercise(content, records) : null),
+    [content, records, pcts.length],
+  );
 
   function payload(): BlockPayload {
     return {

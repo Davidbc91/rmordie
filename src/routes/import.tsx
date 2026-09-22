@@ -93,6 +93,14 @@ function ImportPage() {
         + CREAR PLANIFICACIÓN
       </button>
 
+      <button
+        onClick={() => navigate({ to: "/import-generic" })}
+        className="tap mt-3 w-full rounded-[var(--r-md)] glass px-4 text-sm font-semibold"
+      >
+        IMPORTAR PLANIFICACIÓN (.xlsx / .csv)
+      </button>
+
+
       <label className="mt-3 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-border bg-surface p-10 text-center transition hover:border-gold/50">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl gold-gradient">
           <Upload className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} />

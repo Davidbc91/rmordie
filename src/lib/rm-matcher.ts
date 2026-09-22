@@ -22,14 +22,17 @@ export function normalizeExerciseName(s: string): string {
  * personal_records; the longest matching name wins ("Squat Clean" beats "Clean").
  */
 export function detectExercise(content: string, records: PersonalRecord[]): PersonalRecord | null {
-  const text = ` ${normalizeExerciseName(content)} `;
+  const norm = normalizeExerciseName(content);
+  const text = ` ${norm} `;
+  const compact = norm.replace(/\s+/g, "");
   const sorted = [...records].sort(
     (a, b) => normalizeExerciseName(b.exercise).length - normalizeExerciseName(a.exercise).length,
   );
   for (const r of sorted) {
     const name = normalizeExerciseName(r.exercise);
     if (!name) continue;
-    if (text.includes(` ${name} `) || text.includes(` ${name}`)) return r;
+    // Word-boundary match, and a space-insensitive match ("Dead Lift" == "Deadlift").
+    if (text.includes(` ${name} `) || compact.includes(name.replace(/\s+/g, ""))) return r;
   }
   return null;
 }

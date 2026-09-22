@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { LinkedText } from "@/components/LinkedText";
 import { usePlanning, useDayResults, useSaveResult, useSettings, usePersonalRecords, findDay } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
-import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
+import { detectExercise, loadsForPercentages, formatKg, compareLoads, LOAD_STATUS_LABEL } from "@/lib/rm-matcher";
 import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -299,6 +299,21 @@ function BlockCard({
     targetLoads.length > 0
       ? `Objetivo: ${targetLoads.map((l) => `${l.suggested} kg`).join(" · ")}`
       : undefined;
+
+  // Carga realizada vs carga objetivo: indicador calculado, sin escribir nada.
+  const actualLoad = useMemo(() => {
+    const w = weight.replace(",", ".").trim();
+    const n = Number(w);
+    return w !== "" && Number.isFinite(n) && n > 0 ? n : null;
+  }, [weight]);
+  const loadCompare = useMemo(
+    () =>
+      actualLoad != null && targetLoads.length > 0
+        ? compareLoads(actualLoad, targetLoads[0].suggested)
+        : null,
+    [actualLoad, targetLoads],
+  );
+
 
   function payload(): BlockPayload {
     const w = weight.replace(",", ".").trim();

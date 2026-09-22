@@ -396,8 +396,9 @@ function BlockCard({
             {pcts.map((p) => `${p}%`).join(" · ")}
           </div>
         )}
-      </summary>
+      </button>
 
+      {open && (
       <div className="border-t border-border/60 px-5 pb-5 pt-4">
         <LinkedText text={content} className="opacity-90" />
 

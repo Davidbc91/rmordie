@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { LinkedText } from "@/components/LinkedText";
-import { usePlanning, useDayResults, useSaveResult, useSettings, findDay } from "@/lib/store";
+import { usePlanning, useDayResults, useSaveResult, useSettings, usePersonalRecords, findDay } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
+import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
 import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";

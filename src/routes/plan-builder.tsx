@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ArrowDown, ArrowUp, Plus, Save, Trash2 } from "lucide-react";
 import { GlassBadge, GlassButton, GlassCard, GlassInput, GlassSection, GlassTextarea } from "@/components/glass";
-import { usePlanning, useSavePlanning, usePersonalRecords, getCurrentUserId } from "@/lib/store";
+import { usePlanning, useSavePlanning, usePersonalRecords } from "@/lib/store";
+import { getCurrentUserId } from "@/lib/pin-gate";
 import type { Planning } from "@/lib/excel-parser";
 import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
 import {

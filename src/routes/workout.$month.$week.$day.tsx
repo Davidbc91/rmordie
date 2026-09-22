@@ -484,7 +484,6 @@ function PercentAssistant({ percentages, settings, record }: {
 
   // Automatic mode: exercise detected in the planning and RM found in records.
   if (record) {
-    const rm = record.rep_max === 1 ? record.weight : record.weight; // stored value is the reference load
     const loads = loadsForPercentages(record.weight, percentages);
     return (
       <div className="mt-4 rounded-[var(--r-md)] border border-[rgba(216,180,107,0.3)] bg-[rgba(216,180,107,0.06)] p-4">

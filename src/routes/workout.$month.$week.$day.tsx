@@ -507,10 +507,11 @@ function BlockCard({
           disabled={save.isPending || savingWod}
           className="pressable mt-4 min-h-[50px] w-full rounded-[var(--r-md)] border border-[color:var(--glass-border-strong)] bg-[color:var(--glass-bg-2)] text-sm font-semibold text-foreground disabled:opacity-45"
         >
-          {save.isPending || savingWod ? "Guardando…" : (existing ? "Actualizar" : "Guardar")}
+        {save.isPending || savingWod ? "Guardando…" : (existing ? "Actualizar" : "Guardar")}
         </button>
       </div>
-    </details>
+      )}
+    </div>
   );
 }
 

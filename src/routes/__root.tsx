@@ -103,7 +103,17 @@ function RootComponent() {
   useEffect(() => {
     const stop = startSyncEngine(queryClient);
     void registerAppSw();
-    return stop;
+    // iOS Safari ignora user-scalable=no: bloquear el gesto de pinza nativo
+    const blockGesture = (e: Event) => e.preventDefault();
+    document.addEventListener("gesturestart", blockGesture, { passive: false });
+    document.addEventListener("gesturechange", blockGesture, { passive: false });
+    document.addEventListener("gestureend", blockGesture, { passive: false });
+    return () => {
+      stop();
+      document.removeEventListener("gesturestart", blockGesture);
+      document.removeEventListener("gesturechange", blockGesture);
+      document.removeEventListener("gestureend", blockGesture);
+    };
   }, [queryClient]);
   return (
     <QueryClientProvider client={queryClient}>

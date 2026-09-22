@@ -377,7 +377,7 @@ function BlockCard({
         <LinkedText text={content} className="opacity-90" />
 
         {pcts.length > 0 && settings && (
-          <PercentAssistant percentages={pcts} settings={settings} />
+          <PercentAssistant percentages={pcts} settings={settings} record={detected} />
         )}
 
         {wod && (

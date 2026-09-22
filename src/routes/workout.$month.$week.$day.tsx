@@ -291,6 +291,14 @@ function BlockCard({
     () => (pcts.length > 0 ? detectExercise(content, records) : null),
     [content, records, pcts.length],
   );
+  const targetLoads = useMemo(
+    () => (detected ? loadsForPercentages(detected.weight, pcts) : []),
+    [detected, pcts],
+  );
+  const targetHint =
+    targetLoads.length > 0
+      ? `Objetivo: ${targetLoads.map((l) => `${l.suggested} kg`).join(" · ")}`
+      : undefined;
 
   function payload(): BlockPayload {
     return {
@@ -429,7 +437,7 @@ function BlockCard({
         )}
 
         <div className="mt-5 grid grid-cols-2 gap-3">
-          <Field label="Peso (kg)" value={weight} onChange={setWeight} type="number" />
+          <Field label="Carga realizada (kg)" value={weight} onChange={setWeight} type="number" placeholder={targetHint} />
           <Field label="Series" value={sets} onChange={setSets} type="number" />
           <Field label="Reps" value={reps} onChange={setReps} type="number" />
           <Field label="Tiempo (mm:ss)" value={time} onChange={setTime} placeholder="3:45" />

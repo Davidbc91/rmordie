@@ -6,6 +6,8 @@ import {
   useUpdatePersonalRecord,
   useDeletePersonalRecord,
   usePersonalRecordHistory,
+  usePlanning,
+  useAllResults,
   type PersonalRecord,
 } from "@/lib/store";
 import {
@@ -21,7 +23,7 @@ import {
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
-import { normalizeExerciseName, sameExercise } from "@/lib/rm-matcher";
+import { normalizeExerciseName, sameExercise, mentionsExercise, formatKg } from "@/lib/rm-matcher";
 import { WodRecords } from "@/components/WodRecords";
 import {
   LineChart,

@@ -117,8 +117,7 @@ function parseExerciseLine(line: string): ManualExercise | null {
     } else if (/(\d+:\d{2}|\d+\s*'|min|seg|s$)/i.test(token)) {
       ex.time = token;
     } else {
-      ex.header = ex.header; // no-op para mantener el tipo simple
-      ex.name = ex.name; // token no reconocido: se conserva en el nombre
+      // token no reconocido: se conserva junto al nombre para no perder información
       ex.name = `${ex.name}${SEP}${token}`;
     }
   }

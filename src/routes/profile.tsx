@@ -462,16 +462,47 @@ function num(v: any): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+async function decodeImage(file: File): Promise<{ width: number; height: number; source: CanvasImageSource }> {
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" } as any);
+      return { width: bitmap.width, height: bitmap.height, source: bitmap };
+    } catch {
+      /* algunos formatos (HEIC, progresivos) fallan aquí: usamos <img> */
+    }
+  }
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("decode_failed"));
+      el.src = url;
+    });
+    return { width: img.naturalWidth, height: img.naturalHeight, source: img };
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+}
+
 async function resizeImage(file: File, max: number): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
-  const w = Math.round(bitmap.width * scale);
-  const h = Math.round(bitmap.height * scale);
+  const { width, height, source } = await decodeImage(file);
+  if (!width || !height) throw new Error("decode_failed");
+  const scale = Math.min(1, max / Math.max(width, height));
+  const w = Math.max(1, Math.round(width * scale));
+  const h = Math.max(1, Math.round(height * scale));
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
-  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, w, h);
-  return canvas.toDataURL("image/jpeg", 0.82);
+  canvas.getContext("2d")!.drawImage(source, 0, 0, w, h);
+  let quality = 0.82;
+  let out = canvas.toDataURL("image/jpeg", quality);
+  while (out.length > 300_000 && quality > 0.4) {
+    quality -= 0.12;
+    out = canvas.toDataURL("image/jpeg", quality);
+  }
+  if (!out.startsWith("data:image/")) throw new Error("encode_failed");
+  return out;
 }
 
 /* ---------------- 2. Body data ---------------- */

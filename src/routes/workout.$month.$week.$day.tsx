@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { LinkedText } from "@/components/LinkedText";
 import { usePlanning, useDayResults, useSaveResult, useSettings, usePersonalRecords, findDay } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
-import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
+import { detectExercise, loadsForPercentages, formatKg, compareLoads, LOAD_STATUS_LABEL } from "@/lib/rm-matcher";
 import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -300,6 +300,21 @@ function BlockCard({
       ? `Objetivo: ${targetLoads.map((l) => `${l.suggested} kg`).join(" · ")}`
       : undefined;
 
+  // Carga realizada vs carga objetivo: indicador calculado, sin escribir nada.
+  const actualLoad = useMemo(() => {
+    const w = weight.replace(",", ".").trim();
+    const n = Number(w);
+    return w !== "" && Number.isFinite(n) && n > 0 ? n : null;
+  }, [weight]);
+  const loadCompare = useMemo(
+    () =>
+      actualLoad != null && targetLoads.length > 0
+        ? compareLoads(actualLoad, targetLoads[0].suggested)
+        : null,
+    [actualLoad, targetLoads],
+  );
+
+
   function payload(): BlockPayload {
     const w = weight.replace(",", ".").trim();
     return {
@@ -444,7 +459,40 @@ function BlockCard({
           <Field label="Tiempo (mm:ss)" value={time} onChange={setTime} placeholder="3:45" />
           <Field label="RPE" value={rpe} onChange={setRpe} type="number" placeholder="1-10" />
         </div>
+
+        {loadCompare && (
+          <div
+            className={`mt-3 flex items-center justify-between gap-3 rounded-[var(--r-md)] border px-3.5 py-2.5 ${
+              loadCompare.status === "met"
+                ? "border-[rgba(216,180,107,0.45)] bg-[rgba(216,180,107,0.1)]"
+                : loadCompare.status === "above"
+                  ? "border-[rgba(235,214,166,0.35)] bg-[rgba(235,214,166,0.06)]"
+                  : "border-[color:var(--glass-border)] bg-[color:var(--glass-bg)]"
+            }`}
+          >
+            <span className="text-[11px] text-muted-foreground tabular">
+              Objetivo {formatKg(targetLoads[0].suggested)} kg · Realizado {formatKg(actualLoad ?? 0)} kg
+            </span>
+            <span
+              className={`shrink-0 text-[11px] font-bold uppercase tracking-[0.14em] ${
+                loadCompare.status === "met"
+                  ? "text-gold"
+                  : loadCompare.status === "above"
+                    ? "text-gold-soft"
+                    : "text-muted-foreground"
+              }`}
+            >
+              {LOAD_STATUS_LABEL[loadCompare.status]}
+              <span className="ml-1.5 font-medium normal-case tracking-normal opacity-70">
+                {loadCompare.status === "met" ? "" : `${loadCompare.diff > 0 ? "+" : "−"}${formatKg(Math.abs(loadCompare.diff))} kg`}
+              </span>
+
+            </span>
+          </div>
+        )}
+
         <textarea
+
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Notas, escala, sensaciones…"

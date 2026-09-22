@@ -59,3 +59,23 @@ export function loadsForPercentages(rm: number, percentages: number[]): LoadSugg
 export function formatKg(n: number): string {
   return n % 1 === 0 ? String(n) : n.toFixed(1);
 }
+
+export type LoadStatus = "met" | "above" | "below";
+
+/**
+ * Compare the load the athlete actually used against the calculated target.
+ * Pure read-only: it never writes data and never recomputes the RM.
+ */
+export function compareLoads(actual: number, target: number): { status: LoadStatus; diff: number } | null {
+  if (!Number.isFinite(actual) || !Number.isFinite(target) || actual <= 0 || target <= 0) return null;
+  const diff = actual - target;
+  const status: LoadStatus = Math.abs(diff) < 0.01 ? "met" : diff > 0 ? "above" : "below";
+  return { status, diff };
+}
+
+export const LOAD_STATUS_LABEL: Record<LoadStatus, string> = {
+  met: "CUMPLIDO ✓",
+  above: "POR ENCIMA ↑",
+  below: "POR DEBAJO ↓",
+};
+

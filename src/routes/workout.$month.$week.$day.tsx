@@ -371,12 +371,13 @@ function BlockCard({
   }
 
   return (
-    <details
-      className="glass glass-sheen group"
-      open={open}
-      onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
-    >
-      <summary className="flex min-h-[56px] cursor-pointer items-center justify-between gap-3 p-5 [&::-webkit-details-marker]:hidden">
+    <div className="glass glass-sheen">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex min-h-[56px] w-full cursor-pointer items-center justify-between gap-3 p-5 text-left"
+      >
         <div className="flex items-center gap-3">
           <span className="grid h-9 min-w-9 place-items-center rounded-[12px] border border-[rgba(216,180,107,0.32)] bg-[rgba(216,180,107,0.12)] px-2 text-xs font-bold uppercase tracking-wide text-gold">
             {blockKey}

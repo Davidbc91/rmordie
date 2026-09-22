@@ -564,11 +564,11 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 pb-[calc(72px+env(safe-area-inset-bottom))] sm:items-center sm:pb-0"
       onClick={onClose}
     >
       <div
-        className="card-elevated animate-fade max-h-[88vh] w-full max-w-md overflow-auto rounded-b-none p-5 sm:rounded-b-3xl"
+        className="card-elevated animate-fade max-h-[calc(100dvh-72px-env(safe-area-inset-bottom)-16px)] w-full max-w-md overflow-x-hidden overflow-y-auto overscroll-contain rounded-b-none p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch] sm:max-h-[88dvh] sm:rounded-b-3xl sm:pb-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-start justify-between gap-3">

@@ -13,6 +13,7 @@ import { Route as TimersRouteImport } from './routes/timers'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PlanBuilderRouteImport } from './routes/plan-builder'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CalendarRouteImport } from './routes/calendar'
@@ -44,6 +45,11 @@ const RecordsRoute = RecordsRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanBuilderRoute = PlanBuilderRouteImport.update({
+  id: '/plan-builder',
+  path: '/plan-builder',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImportRoute = ImportRouteImport.update({
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/import': typeof ImportRoute
+  '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/import': typeof ImportRoute
+  '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/import': typeof ImportRoute
+  '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/chat'
     | '/import'
+    | '/plan-builder'
     | '/profile'
     | '/records'
     | '/settings'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/chat'
     | '/import'
+    | '/plan-builder'
     | '/profile'
     | '/records'
     | '/settings'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/chat'
     | '/import'
+    | '/plan-builder'
     | '/profile'
     | '/records'
     | '/settings'
@@ -224,6 +236,7 @@ export interface RootRouteChildren {
   CalendarRoute: typeof CalendarRoute
   ChatRoute: typeof ChatRoute
   ImportRoute: typeof ImportRoute
+  PlanBuilderRoute: typeof PlanBuilderRoute
   ProfileRoute: typeof ProfileRoute
   RecordsRoute: typeof RecordsRoute
   SettingsRoute: typeof SettingsRoute
@@ -266,6 +279,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plan-builder': {
+      id: '/plan-builder'
+      path: '/plan-builder'
+      fullPath: '/plan-builder'
+      preLoaderRoute: typeof PlanBuilderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/import': {
@@ -360,6 +380,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarRoute: CalendarRoute,
   ChatRoute: ChatRoute,
   ImportRoute: ImportRoute,
+  PlanBuilderRoute: PlanBuilderRoute,
   ProfileRoute: ProfileRoute,
   RecordsRoute: RecordsRoute,
   SettingsRoute: SettingsRoute,

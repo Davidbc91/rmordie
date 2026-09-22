@@ -484,8 +484,9 @@ function BlockCard({
             >
               {LOAD_STATUS_LABEL[loadCompare.status]}
               <span className="ml-1.5 font-medium normal-case tracking-normal opacity-70">
-                {loadCompare.status === "met" ? "" : `${loadCompare.diff > 0 ? "+" : ""}${formatKg(Math.abs(loadCompare.diff) === Math.abs(loadCompare.diff) ? loadCompare.diff : 0)} kg`}
+                {loadCompare.status === "met" ? "" : `${loadCompare.diff > 0 ? "+" : "−"}${formatKg(Math.abs(loadCompare.diff))} kg`}
               </span>
+
             </span>
           </div>
         )}

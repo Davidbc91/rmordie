@@ -21,6 +21,7 @@ import {
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
+import { normalizeExerciseName, sameExercise } from "@/lib/rm-matcher";
 import { WodRecords } from "@/components/WodRecords";
 import {
   LineChart,
@@ -170,13 +171,13 @@ function StrengthRecords() {
   }, [records, tab]);
 
   const existingNames = new Set(
-    records.filter((r) => (r.rep_max ?? 1) === newRepMax).map((r) => r.exercise.toLowerCase()),
+    records.filter((r) => (r.rep_max ?? 1) === newRepMax).map((r) => normalizeExerciseName(r.exercise)),
   );
-  const query = newExercise.trim().toLowerCase();
+  const query = normalizeExerciseName(newExercise);
   const filteredSuggestions = SUGGESTED.filter((s) => {
-    if (existingNames.has(s.toLowerCase())) return false;
+    if (existingNames.has(normalizeExerciseName(s))) return false;
     if (!query) return true;
-    return s.toLowerCase().includes(query);
+    return normalizeExerciseName(s).includes(query);
   }).slice(0, 8);
 
   async function handleAdd(e: React.FormEvent) {
@@ -188,7 +189,7 @@ function StrengthRecords() {
     if (ex.length > 60) return toast.error("Nombre demasiado largo");
     try {
       const prevRec = records.find(
-        (r) => r.exercise.toLowerCase() === ex.toLowerCase() && (r.rep_max ?? 1) === newRepMax,
+        (r) => sameExercise(r.exercise, ex) && (r.rep_max ?? 1) === newRepMax,
       );
       await upsert.mutateAsync({ exercise: ex, weight: w, rep_max: newRepMax });
       if (!prevRec || w > Number(prevRec.weight)) {

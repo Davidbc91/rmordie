@@ -70,6 +70,7 @@ import {
 } from "@/lib/analytics";
 
 import { planningCompletion } from "@/lib/session-progress";
+import { sameExercise } from "@/lib/rm-matcher";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [

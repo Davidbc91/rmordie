@@ -5,6 +5,7 @@ import type { Planning, Month, Day } from "./excel-parser";
 import { cacheGet, cacheSet, isOnline, offlineRead } from "./offline/cache";
 import { enqueueOp } from "./offline/queue";
 import { processQueue } from "./offline/sync";
+import { sameExercise } from "./rm-matcher";
 
 // -------- Profiles --------
 export type Profile = {

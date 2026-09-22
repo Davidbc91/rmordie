@@ -110,6 +110,8 @@
   html {
     background-color: var(--level-0);
     -webkit-tap-highlight-color: transparent;
+    /* Desplazamiento normal, sin pinch-zoom ni doble-toque para ampliar */
+    touch-action: pan-x pan-y;
   }
   body {
     color: var(--color-foreground);

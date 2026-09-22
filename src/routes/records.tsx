@@ -6,6 +6,8 @@ import {
   useUpdatePersonalRecord,
   useDeletePersonalRecord,
   usePersonalRecordHistory,
+  usePlanning,
+  useAllResults,
   type PersonalRecord,
 } from "@/lib/store";
 import {
@@ -21,7 +23,7 @@ import {
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
-import { normalizeExerciseName, sameExercise } from "@/lib/rm-matcher";
+import { normalizeExerciseName, sameExercise, mentionsExercise, formatKg } from "@/lib/rm-matcher";
 import { WodRecords } from "@/components/WodRecords";
 import {
   LineChart,
@@ -528,6 +530,37 @@ function Sparkline({ exercise, repMax }: { exercise: string; repMax: number }) {
 function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: () => void }) {
   const repMax = record.rep_max ?? 1;
   const { data: history = [], isLoading } = usePersonalRecordHistory(record.exercise, repMax);
+  const { data: planning } = usePlanning();
+  const { data: results = [] } = useAllResults();
+
+  // Loads actually performed for this exercise: workout results whose planning
+  // block mentions the exercise (normalized comparison, casing/spacing safe).
+  const performed = useMemo(() => {
+    if (!planning) return [] as typeof results;
+    const keys = new Set<string>();
+    for (const m of planning.data.months)
+      for (const w of m.weeks)
+        for (const d of w.days)
+          for (const b of d.blocks)
+            if (mentionsExercise(b.content, record.exercise))
+              keys.add(`${m.key}|${w.index}|${d.key}|${b.key}`);
+    return results.filter((r) =>
+      keys.has(`${r.month_key}|${r.week}|${r.day_key}|${r.block_key}`),
+    );
+  }, [planning, results, record.exercise]);
+
+  const lastLoad = useMemo(() => {
+    const withWeight = performed.filter((r) => r.weight != null && Number(r.weight) > 0);
+    withWeight.sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+    );
+    return withWeight[0] ?? null;
+  }, [performed]);
+
+  const bestEver = useMemo(() => {
+    const weights = [Number(record.weight), ...history.map((h) => Number(h.new_weight))];
+    return Math.max(...weights);
+  }, [record.weight, history]);
 
   return (
     <div
@@ -556,13 +589,36 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
           </button>
         </div>
 
+        <div className="mb-5 grid grid-cols-2 gap-2.5">
+          <div className="rounded-2xl border border-border p-3.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">RM actual</p>
+            <p className="mt-1.5 text-lg font-semibold tabular text-[var(--gold)]">
+              {formatKg(Number(record.weight))} kg
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border p-3.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Mejor marca</p>
+            <p className="mt-1.5 text-lg font-semibold tabular">{formatKg(bestEver)} kg</p>
+          </div>
+          <div className="rounded-2xl border border-border p-3.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Última carga</p>
+            <p className="mt-1.5 text-lg font-semibold tabular">
+              {lastLoad ? `${formatKg(Number(lastLoad.weight))} kg` : "—"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border p-3.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Veces realizado</p>
+            <p className="mt-1.5 text-lg font-semibold tabular">{performed.length}</p>
+          </div>
+        </div>
+
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Cargando…</p>
         ) : history.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin cambios registrados todavía.</p>
         ) : (
           <>
-            <EvolutionChart history={history} />
+            {history.length >= 2 && <EvolutionChart history={history} />}
             <ul className="space-y-2">
               {history.map((h) => {
                 const date = new Date(h.changed_at);
@@ -636,16 +692,7 @@ function EvolutionChart({
       }));
   }, [history]);
 
-  if (data.length < 2) {
-    return (
-      <div className="mb-5 rounded-2xl border border-border p-5 text-center">
-        <p className="text-xs text-muted-foreground">
-          Necesitas al menos 2 registros para ver la evolución.
-        </p>
-        <p className="mt-2 text-2xl font-semibold tabular">{data[0]?.weight ?? 0} kg</p>
-      </div>
-    );
-  }
+  if (data.length < 2) return null;
 
   const weights = data.map((d) => d.weight);
   const min = Math.min(...weights);

@@ -48,6 +48,19 @@ export function detectExercise(content: string, records: PersonalRecord[]): Pers
   return null;
 }
 
+/**
+ * Does a planning block's text refer to the given exercise?
+ * Uses the same normalized comparison as detectExercise (single exercise).
+ */
+export function mentionsExercise(content: string, exercise: string): boolean {
+  const name = normalizeExerciseName(exercise);
+  if (!name) return false;
+  const norm = normalizeExerciseName(content);
+  const text = ` ${norm} `;
+  const compact = norm.replace(/\s+/g, "");
+  return text.includes(` ${name} `) || compact.includes(name.replace(/\s+/g, ""));
+}
+
 // Round to a sensible loadable increment: 2.5 kg steps, half rounds up.
 export function roundToIncrement(target: number, step = 2.5): number {
   if (!Number.isFinite(target) || target <= 0) return 0;

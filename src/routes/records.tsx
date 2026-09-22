@@ -589,13 +589,36 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
           </button>
         </div>
 
+        <div className="mb-5 grid grid-cols-2 gap-2.5">
+          <div className="rounded-2xl border border-border p-3.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">RM actual</p>
+            <p className="mt-1.5 text-lg font-semibold tabular text-[var(--gold)]">
+              {formatKg(Number(record.weight))} kg
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border p-3.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Mejor marca</p>
+            <p className="mt-1.5 text-lg font-semibold tabular">{formatKg(bestEver)} kg</p>
+          </div>
+          <div className="rounded-2xl border border-border p-3.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Última carga</p>
+            <p className="mt-1.5 text-lg font-semibold tabular">
+              {lastLoad ? `${formatKg(Number(lastLoad.weight))} kg` : "—"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border p-3.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Veces realizado</p>
+            <p className="mt-1.5 text-lg font-semibold tabular">{performed.length}</p>
+          </div>
+        </div>
+
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Cargando…</p>
         ) : history.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin cambios registrados todavía.</p>
         ) : (
           <>
-            <EvolutionChart history={history} />
+            {history.length >= 2 && <EvolutionChart history={history} />}
             <ul className="space-y-2">
               {history.map((h) => {
                 const date = new Date(h.changed_at);
@@ -669,16 +692,7 @@ function EvolutionChart({
       }));
   }, [history]);
 
-  if (data.length < 2) {
-    return (
-      <div className="mb-5 rounded-2xl border border-border p-5 text-center">
-        <p className="text-xs text-muted-foreground">
-          Necesitas al menos 2 registros para ver la evolución.
-        </p>
-        <p className="mt-2 text-2xl font-semibold tabular">{data[0]?.weight ?? 0} kg</p>
-      </div>
-    );
-  }
+  if (data.length < 2) return null;
 
   const weights = data.map((d) => d.weight);
   const min = Math.min(...weights);

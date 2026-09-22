@@ -250,7 +250,7 @@ export async function parseGenericFile(file: File): Promise<ParsedImport> {
 
     const dateRaw = cellText(row, columns.date);
     const date = columns.date !== undefined ? parseDate(row[columns.date]) : null;
-    const dayCell = normalizeDay(row[columns.day]);
+    const dayCell = columns.day !== undefined ? normalizeDay(row[columns.day]) : null;
     const day = dayCell ?? (date ? dayFromDate(date) : "") ?? "";
     if (day) lastDay = day;
 

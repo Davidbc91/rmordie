@@ -236,6 +236,7 @@ function BlockCard({
   contextIds: { month_key: string; week: number; day_key: string };
 }) {
   const save = useSaveResult();
+  const { data: records = [] } = usePersonalRecords();
   const [weight, setWeight] = useState<string>(existing?.weight?.toString() ?? "");
   const [sets, setSets] = useState<string>(existing?.sets?.toString() ?? "");
   const [reps, setReps] = useState<string>(existing?.reps?.toString() ?? "");

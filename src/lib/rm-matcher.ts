@@ -17,6 +17,17 @@ export function normalizeExerciseName(s: string): string {
 }
 
 /**
+ * Internal identity for exercises: two names are the same exercise when their
+ * normalized forms match ("Back Squat" == "BACK SQUAT" == " back squat ").
+ * Use ONLY for comparing/identifying exercises — never for display.
+ */
+export function sameExercise(a: string, b: string): boolean {
+  const na = normalizeExerciseName(a);
+  const nb = normalizeExerciseName(b);
+  return na !== "" && na === nb;
+}
+
+/**
  * Detect which recorded exercise a planning block refers to.
  * Matches the block text against the exercise names that exist in
  * personal_records; the longest matching name wins ("Squat Clean" beats "Clean").

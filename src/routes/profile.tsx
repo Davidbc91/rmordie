@@ -70,6 +70,7 @@ import {
 } from "@/lib/analytics";
 
 import { planningCompletion } from "@/lib/session-progress";
+import { sameExercise } from "@/lib/rm-matcher";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
@@ -1003,7 +1004,7 @@ function GoalsSection({ records, results, metrics }: any) {
 
   const currentFor = (g: AthleteGoal): number | null => {
     if (g.goal_type === "pr" && g.exercise) {
-      const recs = records.filter((r: any) => r.exercise.toLowerCase() === g.exercise!.toLowerCase());
+      const recs = records.filter((r: any) => sameExercise(r.exercise, g.exercise!));
       return recs.length ? Math.max(...recs.map((r: any) => Number(r.weight))) : g.current_value ?? null;
     }
     if (g.goal_type === "weight") return bodyChange(metrics).current ?? g.current_value ?? null;

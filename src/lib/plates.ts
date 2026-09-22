@@ -50,9 +50,10 @@ export function roundToPlates(target: number, cfg: PlateConfig = DEFAULT): numbe
 }
 
 // Extract percentages from a workout content string, e.g. "5x5 @ 75%" -> [75]
+// Supports decimals like "82.5%".
 export function extractPercentages(content: string): number[] {
   const out: number[] = [];
-  const re = /(\d{2,3})\s*%/g;
+  const re = /(\d{2,3}(?:\.\d+)?)\s*%/g;
   let m;
   while ((m = re.exec(content))) {
     const p = Number(m[1]);

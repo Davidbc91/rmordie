@@ -318,10 +318,17 @@ export function useUpsertPersonalRecord() {
       notes?: string | null;
     }) => {
       if (!uid) throw new Error("No hay perfil activo");
+      // Internal identity is the normalized name: if the exercise already
+      // exists with different casing/spacing, reuse the stored (visible) name
+      // so we never create a duplicate row for the same exercise.
+      const repMax = r.rep_max ?? 1;
+      const existing = (qc.getQueryData<PersonalRecord[]>(["personal_records", uid]) ?? []).find(
+        (x) => (x.rep_max ?? 1) === repMax && sameExercise(x.exercise, r.exercise),
+      );
       const row = {
-        exercise: r.exercise.trim(),
+        exercise: existing ? existing.exercise : r.exercise.trim(),
         weight: r.weight,
-        rep_max: r.rep_max ?? 1,
+        rep_max: repMax,
         notes: r.notes ?? null,
       };
       if (!isOnline()) {

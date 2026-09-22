@@ -530,6 +530,37 @@ function Sparkline({ exercise, repMax }: { exercise: string; repMax: number }) {
 function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: () => void }) {
   const repMax = record.rep_max ?? 1;
   const { data: history = [], isLoading } = usePersonalRecordHistory(record.exercise, repMax);
+  const { data: planning } = usePlanning();
+  const { data: results = [] } = useAllResults();
+
+  // Loads actually performed for this exercise: workout results whose planning
+  // block mentions the exercise (normalized comparison, casing/spacing safe).
+  const performed = useMemo(() => {
+    if (!planning) return [] as typeof results;
+    const keys = new Set<string>();
+    for (const m of planning.data.months)
+      for (const w of m.weeks)
+        for (const d of w.days)
+          for (const b of d.blocks)
+            if (mentionsExercise(b.content, record.exercise))
+              keys.add(`${m.key}|${w.index}|${d.key}|${b.key}`);
+    return results.filter((r) =>
+      keys.has(`${r.month_key}|${r.week}|${r.day_key}|${r.block_key}`),
+    );
+  }, [planning, results, record.exercise]);
+
+  const lastLoad = useMemo(() => {
+    const withWeight = performed.filter((r) => r.weight != null && Number(r.weight) > 0);
+    withWeight.sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+    );
+    return withWeight[0] ?? null;
+  }, [performed]);
+
+  const bestEver = useMemo(() => {
+    const weights = [Number(record.weight), ...history.map((h) => Number(h.new_weight))];
+    return Math.max(...weights);
+  }, [record.weight, history]);
 
   return (
     <div

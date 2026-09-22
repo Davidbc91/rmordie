@@ -301,10 +301,11 @@ function BlockCard({
       : undefined;
 
   function payload(): BlockPayload {
+    const w = weight.replace(",", ".").trim();
     return {
       block_key: blockKey,
       status: "completed",
-      weight: weight ? Number(weight) : null,
+      weight: w && Number.isFinite(Number(w)) ? Number(w) : null,
       sets: sets ? Number(sets) : null,
       reps: reps ? Number(reps) : null,
       time_seconds: time ? parseTime(time) : null,

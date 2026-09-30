@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults, usePersonalRecords, type WorkoutResult } from "@/lib/store";
 import { useMilestones, useGoals } from "@/lib/profile-store";
-import { streaks, sessionDays } from "@/lib/analytics";
+import { streaks, sessionDays, volumeOf, fmtKg } from "@/lib/analytics";
 import { GlassCard, GlassSection, GlassBadge } from "@/components/glass";
 import {
   Calendar, Upload, Flame, Trophy, ChevronRight, Timer, Dumbbell, User, Play, ArrowUpRight, Users,
@@ -89,6 +89,24 @@ function Home() {
     return { done, total: train.length };
   }, [planning, next, blockMap]);
 
+
+  const smartState = useMemo(() => {
+    const cutoff = Date.now() - 7 * 864e5;
+    const recent = results.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
+    const rpes = recent.map((r) => r.rpe).filter((x): x is number => x != null);
+    const avgRpe = rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null;
+    const volume = recent.reduce((sum, r) => sum + volumeOf(r), 0);
+    const sessions = new Set(recent.map((r) => `${r.month_key}|${r.week}|${r.day_key}`)).size;
+    let tone = "neutral";
+    let title = "Empieza a registrar tu rendimiento";
+    let detail = "Cuando acumules sesiones, RMORDIE podrá interpretar tu carga y recuperación de forma más precisa.";
+    if (sessions >= 3 && avgRpe != null) {
+      if (avgRpe >= 9) { tone = "attention"; title = "Semana exigente"; detail = `Tu RPE medio está en ${avgRpe.toFixed(1)}. Vigila la recuperación antes de añadir carga.`; }
+      else if (avgRpe <= 7) { tone = "positive"; title = "Buen margen esta semana"; detail = `RPE medio ${avgRpe.toFixed(1)}. Hay margen para progresar si la técnica y la recuperación acompañan.`; }
+      else { title = "Carga bien controlada"; detail = `RPE medio ${avgRpe.toFixed(1)} con ${sessions} sesiones completadas esta semana.`; }
+    }
+    return { tone, title, detail, sessions, volume, avgRpe };
+  }, [results]);
 
   const topRecords = useMemo(
     () =>

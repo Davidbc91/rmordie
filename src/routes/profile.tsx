@@ -146,8 +146,8 @@ function ProfilePage() {
         </h1>
       </header>
 
-      <div className="rise rise-2 -mx-5 mb-6 overflow-x-auto px-5 no-scrollbar">
-        <div className="flex gap-2">
+      <div className="rise rise-2 mb-6 w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain no-scrollbar">
+        <div className="flex w-max gap-2">
           {SECTIONS.map((s) => {
             const active = section === s.key;
             return (

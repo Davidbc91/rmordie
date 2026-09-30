@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Check, ExternalLink, Film, KeyRound, Link2, Loader2, Search, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, Check, ExternalLink, KeyRound, Link2, Loader2, Search, Trash2, Upload, X } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { movements } from "@/lib/dictionary/catalog";
 import { supabase } from "@/integrations/supabase/client";

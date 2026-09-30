@@ -146,8 +146,8 @@ function ProfilePage() {
         </h1>
       </header>
 
-      <div className="rise rise-2 mb-6 w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain no-scrollbar">
-        <div className="flex w-max gap-2">
+      <div className="rise rise-2 mb-6 block w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain no-scrollbar [contain:inline-size] [-webkit-overflow-scrolling:touch]">
+        <div className="inline-flex min-w-full gap-2">
           {SECTIONS.map((s) => {
             const active = section === s.key;
             return (
@@ -215,7 +215,7 @@ function ProfilePage() {
 /* ---------------- shared UI ---------------- */
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <section className={`card-elevated p-5 ${className}`}>{children}</section>;
+  return <section className={`card-elevated min-w-0 max-w-full p-5 ${className}`}>{children}</section>;
 }
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -251,15 +251,15 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block">
+    <label className="block min-w-0 max-w-full">
       <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{label}</span>
-      <div className="mt-1.5">{children}</div>
+      <div className="mt-1.5 min-w-0 max-w-full">{children}</div>
     </label>
   );
 }
 
 const inputCls =
-  "w-full rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-foreground/40";
+  "w-full min-w-0 max-w-full rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-foreground/40";
 
 function RangePicker({ range, setRange }: { range: RangeKey; setRange: (r: RangeKey) => void }) {
   return (
@@ -356,7 +356,7 @@ function ProfileForm() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 max-w-full space-y-4">
       <Card>
         <div className="flex items-center gap-4">
           <button
@@ -384,7 +384,7 @@ function ProfileForm() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid min-w-0 grid-cols-2 gap-3">
           <Field label="Nacimiento">
             <input type="date" className={inputCls} value={form.birth_date ?? ""} onChange={(e) => set("birth_date", e.target.value)} />
           </Field>

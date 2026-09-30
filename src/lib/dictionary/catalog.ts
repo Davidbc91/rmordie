@@ -618,6 +618,9 @@ const verifiedVideoUrls: Record<string, string> = {
   "Box Jump": "https://www.youtube.com/watch?v=NBY9-kTuHEk",
   "Strict Handstand Push-Up": "https://www.youtube.com/watch?v=0wDEO6shVjc",
   "Med Ball Clean": "https://www.youtube.com/watch?v=TlneBvU4XFY"
+  "Front Squat": "https://www.youtube.com/watch?v=m4ytaCJZpl0",
+  "Power Clean": "https://www.youtube.com/watch?v=GVt4uQ0sDJE",
+  "Snatch": "https://www.youtube.com/watch?v=GhxhiehJcQY"
 };
 
 // RM is reserved for stable, loadable strength/Olympic lifts, not every movement

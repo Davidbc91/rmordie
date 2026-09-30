@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { LinkedText } from "@/components/LinkedText";
-import { usePlanning, useDayResults, useSaveResult, useSettings, usePersonalRecords, findDay } from "@/lib/store";
+import { usePlanning, useDayResults, useSaveResult, useSettings, usePersonalRecords, useAllResults, findDay } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { detectExercise, loadsForPercentages, formatKg, compareLoads, LOAD_STATUS_LABEL } from "@/lib/rm-matcher";
 import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
@@ -287,10 +287,7 @@ function BlockCard({
   }, [weight, sets, reps, time, rpe, notes, open, wodScale, wodCap, wodTime, wodRounds, wodReps, blockKey]);
 
   const pcts = extractPercentages(content);
-  const detected = useMemo(
-    () => (pcts.length > 0 ? detectExercise(content, records) : null),
-    [content, records, pcts.length],
-  );
+  const detected = useMemo(() => detectExercise(content, records), [content, records]);
   const targetLoads = useMemo(
     () => (detected ? loadsForPercentages(detected.weight, pcts) : []),
     [detected, pcts],
@@ -298,7 +295,9 @@ function BlockCard({
   const targetHint =
     targetLoads.length > 0
       ? `Objetivo: ${targetLoads.map((l) => `${l.suggested} kg`).join(" · ")}`
-      : undefined;
+      : detected
+        ? `RM: ${formatKg(detected.weight)} kg`
+        : undefined;
 
   // Carga realizada vs carga objetivo: indicador calculado, sin escribir nada.
   const actualLoad = useMemo(() => {
@@ -401,6 +400,31 @@ function BlockCard({
       {open && (
       <div className="border-t border-border/60 px-5 pb-5 pt-4">
         <LinkedText text={content} className="opacity-90" />
+
+        {detected && (
+          <div className="glass-quiet mt-4 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">RM detectado</p>
+                <p className="mt-1 text-lg font-semibold">{detected.exercise}</p>
+              </div>
+              <div className="text-right">
+                <p className="metric gold-text">{formatKg(detected.weight)}</p>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">kg · {detected.rep_max}RM</p>
+              </div>
+            </div>
+            {targetLoads.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setWeight(String(targetLoads[0].suggested))}
+                className="pressable mt-3 flex w-full items-center justify-between rounded-xl border border-[rgba(216,180,107,0.28)] bg-[rgba(216,180,107,0.08)] px-3.5 py-2.5 text-left"
+              >
+                <span className="text-xs text-muted-foreground">Objetivo {targetLoads[0].pct}%</span>
+                <span className="text-sm font-bold text-gold">Usar {formatKg(targetLoads[0].suggested)} kg</span>
+              </button>
+            )}
+          </div>
+        )}
 
         {pcts.length > 0 && settings && (
           <PercentAssistant percentages={pcts} settings={settings} record={detected} />

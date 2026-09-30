@@ -168,7 +168,7 @@ function ProfilePage() {
                 onClick={() => setSection(s.key)}
                 className={`whitespace-nowrap rounded-2xl border px-4 py-2 text-xs font-semibold transition ${
                   active
-                    ? "border-transparent gold-gradient shadow-[0_8px_24px_-12px_rgba(184,255,61,.5)]"
+                    ? "border-transparent gold-gradient shadow-[0_8px_24px_-12px_rgba(200,179,138,.42)]"
                     : "border-border bg-white/[.025] text-muted-foreground"
                 }`}
               >

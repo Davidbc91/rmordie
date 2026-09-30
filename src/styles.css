@@ -44,12 +44,12 @@
   --radius: 1.25rem;
 
   /* ————— Depth levels ————— */
-  --level-0: #050506;   /* canvas */
-  --level-1: #0a0b0d;   /* graphite */
-  --level-2: #111318;   /* smoke */
+  --level-0: #080807;   /* canvas */
+  --level-1: #10100F;   /* graphite */
+  --level-2: #171715;   /* smoke */
 
-  --background: #030405;
-  --foreground: #F4F4F5;
+  --background: #080807;
+  --foreground: #F2F0EA;
 
   --surface: rgba(255, 255, 255, 0.045);
   --surface-2: rgba(255, 255, 255, 0.075);
@@ -60,19 +60,19 @@
   --popover: #101114;
   --popover-foreground: #F4F4F5;
 
-  /* RM OR DIE: Carbon + Acid Lime */
-  --gold: #B8FF3D;
-  --gold-soft: #D9FF8A;
-  --gold-foreground: #071006;
+  /* RM OR DIE: Luxury Performance */
+  --gold: #C8B38A;
+  --gold-soft: #E8DDC8;
+  --gold-foreground: #0B0A08;
 
-  --primary: #F4F4F5;
+  --primary: #F2F0EA;
   --primary-foreground: #08080A;
 
   --secondary: rgba(255, 255, 255, 0.07);
   --secondary-foreground: #F4F4F5;
 
   --muted: rgba(255, 255, 255, 0.06);
-  --muted-foreground: #96979C;
+  --muted-foreground: #99968E;
 
   --accent: rgba(255, 255, 255, 0.09);
   --accent-foreground: #FFFFFF;
@@ -84,7 +84,7 @@
 
   --border: rgba(255, 255, 255, 0.09);
   --input: rgba(255, 255, 255, 0.05);
-  --ring: rgba(184, 255, 61, 0.62);
+  --ring: rgba(200, 179, 138, 0.55);
 
   /* ————— Liquid Glass ————— */
   --glass-bg: rgba(255, 255, 255, 0.035);
@@ -122,7 +122,7 @@
     text-rendering: optimizeLegibility;
     background-color: var(--level-0);
     background-image:
-      radial-gradient(80% 42% at 50% -8%, rgba(184, 255, 61, 0.10) 0%, rgba(184, 255, 61, 0) 66%),
+      radial-gradient(80% 42% at 50% -8%, rgba(200, 179, 138, 0.075) 0%, rgba(200, 179, 138, 0) 66%),
       radial-gradient(55% 38% at 8% 22%, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0) 72%),
       radial-gradient(65% 45% at 92% 72%, rgba(95, 105, 125, 0.055) 0%, rgba(95, 105, 125, 0) 72%),
       linear-gradient(180deg, #090a0d 0%, #030405 48%, #07080a 100%);
@@ -205,8 +205,8 @@
 
 /* Contorno dorado para lo destacado (PRs, acción principal) */
 @utility glass-gold {
-  border-color: rgba(184, 255, 61, 0.34);
-  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(217, 255, 138, 0.18), 0 0 0 1px rgba(184, 255, 61, 0.06);
+  border-color: rgba(200, 179, 138, 0.28);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(232, 221, 200, 0.16), 0 0 0 1px rgba(184, 255, 61, 0.06);
 }
 
 /* Legado: todas las pantallas usan card-elevated → ahora es vidrio nivel 2 */
@@ -241,13 +241,13 @@
 }
 
 @utility gold-gradient {
-  background-image: linear-gradient(140deg, var(--gold-soft) 0%, var(--gold) 52%, #BE9751 100%);
+  background-image: linear-gradient(140deg, var(--gold-soft) 0%, var(--gold) 52%, #9F8B68 100%);
   color: var(--gold-foreground);
 }
 
 @utility gold-hairline {
   height: 1px;
-  background: linear-gradient(90deg, rgba(184, 255, 61, 0.65), rgba(184, 255, 61, 0));
+  background: linear-gradient(90deg, rgba(200, 179, 138, 0.60), rgba(200, 179, 138, 0));
 }
 
 /* ————— Tipografía editorial ————— */
@@ -366,7 +366,7 @@
 }
 
 @utility aura {
-  background-image: radial-gradient(120% 70% at 50% -10%, rgba(184, 255, 61, 0.08) 0%, rgba(184, 255, 61, 0) 60%);
+  background-image: radial-gradient(120% 70% at 50% -10%, rgba(200, 179, 138, 0.06) 0%, rgba(200, 179, 138, 0) 60%);
 }
 
 @utility dotgrid {
@@ -393,28 +393,52 @@
 @utility cinematic-card-strong {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,.11);
+  border: 1px solid rgba(255,255,255,.085);
   background:
-    linear-gradient(135deg, rgba(255,255,255,.085) 0%, rgba(255,255,255,.035) 42%, rgba(0,0,0,.20) 100%);
+    linear-gradient(145deg, rgba(255,255,255,.055) 0%, rgba(255,255,255,.022) 45%, rgba(0,0,0,.30) 100%),
+    #10100F;
   box-shadow:
-    0 24px 60px -34px rgba(0,0,0,.95),
-    inset 0 1px 0 rgba(255,255,255,.10);
+    0 28px 70px -42px rgba(0,0,0,.98),
+    inset 0 1px 0 rgba(255,255,255,.075);
 }
 @utility cinematic-card-strong {
   &::before {
     content: "";
     position: absolute;
     top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent 0%, var(--gold) 22%, rgba(184,255,61,.15) 68%, transparent 100%);
-    opacity: .75;
+    left: 9%;
+    right: 9%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(232,221,200,.34), transparent);
+    opacity: .8;
     pointer-events: none;
   }
 }
 @utility cinematic-card-dark {
-  background:
-    linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.012) 55%, rgba(0,0,0,.26));
-  border-color: rgba(255,255,255,.08);
+  background: #0C0C0B;
+  border-color: rgba(255,255,255,.065);
+}
+@utility cinematic-outline {
+  border-color: rgba(200,179,138,.24);
+  box-shadow: 0 18px 45px -30px rgba(0,0,0,.95), inset 0 1px 0 rgba(232,221,200,.08);
+}
+
+
+/* Luxury Performance typography */
+.cinematic-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+.cinematic-label {
+  color: #AAA69C;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+}
+.cinematic-number {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: -.055em;
 }

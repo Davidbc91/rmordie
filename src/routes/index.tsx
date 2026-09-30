@@ -8,7 +8,7 @@ import {
   Calendar, Upload, Flame, Trophy, ChevronRight, Timer, Dumbbell, User, Play, ArrowUpRight, Users,
   Award, Target, CalendarCheck, Activity, Layers,
 } from "lucide-react";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 import {
   completedBlockMap,
@@ -36,6 +36,8 @@ export const Route = createFileRoute("/")({
 const MONTH_ABBR = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
 
 function Home() {
+  const navigate = Route.useNavigate();
+  const [selectedTrendWeek, setSelectedTrendWeek] = useState<string | null>(null);
   const { data: planning, isLoading } = usePlanning();
   const { data: results = [] } = useAllResults();
   const { data: records = [] } = usePersonalRecords();
@@ -230,21 +232,24 @@ function Home() {
 
           {/* 2 · Estado actual */}
           <div className="rise rise-3 mt-3 grid grid-cols-3 gap-2">
-            <DashboardStat value={String(streak.current)} label="Racha" icon={<Flame className="h-3.5 w-3.5" />} />
-            <DashboardStat value={String(weekStats.sessions)} label="Esta semana" icon={<Activity className="h-3.5 w-3.5" />} />
-            <DashboardStat value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR · 30 días" icon={<Trophy className="h-3.5 w-3.5" />} />
+            <DashboardStat value={String(streak.current)} label="Racha" icon={<Flame className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/profile" })} />
+            <DashboardStat value={String(weekStats.sessions)} label="Esta semana" icon={<Activity className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/calendar" })} />
+            <DashboardStat value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR · 30 días" icon={<Trophy className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/records" })} />
           </div>
 
           {activeGoal && (
-            <GlassCard level={2} className="rise rise-3 mt-3 p-5">
+            <button type="button" onClick={() => navigate({ to: "/profile" })} className="w-full text-left">
+            <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable">
               <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Objetivo activo</p><p className="mt-2 text-sm font-semibold">{activeGoal.title}</p></div><Target className="h-5 w-5 shrink-0 text-gold" /></div>
               <div className="mt-4 flex items-end justify-between gap-3"><div className="text-2xl font-semibold tabular">{activeGoal.current_value ?? activeGoal.start_value ?? "—"} <span className="text-xs text-muted-foreground">{activeGoal.unit ?? ""}</span></div><div className="text-right text-xs text-muted-foreground">Objetivo <span className="font-semibold text-foreground">{activeGoal.target_value} {activeGoal.unit ?? ""}</span></div></div>
               {activeGoal.current_value != null && activeGoal.target_value > 0 && <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[linear-gradient(90deg,#EBD6A6,#D8B46B)]" style={{ width: Math.min(100, Math.max(0, (activeGoal.current_value / activeGoal.target_value) * 100)) + "%" }} /></div>}
             </GlassCard>
+          </button>
           )}
 
           {/* 3 · Estado de entrenamiento */}
-          <GlassCard level={2} className="rise rise-3 mt-3 p-5">
+          <button type="button" onClick={() => navigate({ to: "/profile" })} className="w-full text-left">
+          <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable">
             <div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="eyebrow">Estado de entrenamiento</p><h2 className="mt-2 text-lg font-semibold">{smartState.title}</h2><p className="mt-2 text-xs leading-relaxed text-muted-foreground">{smartState.detail}</p></div><Activity className={`h-5 w-5 shrink-0 ${smartState.tone === "positive" ? "text-gold" : "text-muted-foreground"}`} /></div>
             <div className="mt-4 grid grid-cols-3 gap-2">
               <DashboardStat value={String(smartState.sessions)} label="Sesiones" icon={<CalendarCheck className="h-3.5 w-3.5" />} />
@@ -252,18 +257,33 @@ function Home() {
               <DashboardStat value={smartState.volume > 0 ? fmtKg(smartState.volume, 0) : "—"} label="Volumen" icon={<Dumbbell className="h-3.5 w-3.5" />} />
             </div>
           </GlassCard>
+          </button>
 
           {/* 4 · Evolución */}
           <GlassCard level={2} className="rise rise-4 mt-3 p-5">
             <div className="flex items-start justify-between gap-3"><div><p className="eyebrow">Evolución</p><h2 className="mt-2 text-lg font-semibold">Carga de las últimas 8 semanas</h2></div>{dashboardTrend.volumeChange != null && <span className="text-xs font-semibold text-gold">{dashboardTrend.volumeChange >= 0 ? "+" : ""}{dashboardTrend.volumeChange.toFixed(0)}%</span>}</div>
             <div className="mt-4 h-[150px] w-full">
-              <ResponsiveContainer width="100%" height="100%"><LineChart data={dashboardTrend.weeks} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}><XAxis dataKey="label" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} /><YAxis hide /><Tooltip formatter={(value: number) => [fmtKg(value, 0), "Volumen"]} contentStyle={{ background: "rgba(20,20,20,.94)", border: "1px solid rgba(216,180,107,.25)", borderRadius: 12, fontSize: 11 }} /><Line type="monotone" dataKey="volume" stroke="var(--gold)" strokeWidth={2.5} dot={false} connectNulls /></LineChart></ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%"><LineChart data={dashboardTrend.weeks} margin={{ top: 8, right: 4, left: -24, bottom: 0 }} onClick={(state) => {
+                const label = state?.activeLabel;
+                if (typeof label === "string") setSelectedTrendWeek(label);
+              }}><XAxis dataKey="label" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} /><YAxis hide /><Tooltip formatter={(value: number) => [fmtKg(value, 0), "Volumen"]} contentStyle={{ background: "rgba(20,20,20,.94)", border: "1px solid rgba(216,180,107,.25)", borderRadius: 12, fontSize: 11 }} /><Line type="monotone" dataKey="volume" stroke="var(--gold)" strokeWidth={2.5} dot={{ r: 3, fill: "var(--gold)", stroke: "var(--gold)" }} activeDot={{ r: 5 }} connectNulls /></LineChart></ResponsiveContainer>
             </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">Volumen calculado a partir de carga × series × repeticiones.</p>
+            {selectedTrendWeek && (() => {
+              const point = dashboardTrend.weeks.find((w) => w.label === selectedTrendWeek);
+              return point ? (
+                <button type="button" onClick={() => setSelectedTrendWeek(null)} className="mt-2 w-full rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3 py-2 text-left pressable">
+                  <span className="eyebrow">{point.label}</span>
+                  <span className="ml-2 text-xs font-semibold">{fmtKg(point.volume, 0)} de volumen</span>
+                  {point.rpe != null && <span className="ml-2 text-xs text-muted-foreground">· RPE {point.rpe.toFixed(1)}</span>}
+                </button>
+              ) : null;
+            })()}
+            <p className="mt-2 text-[11px] text-muted-foreground">Toca un punto para ver el detalle de esa semana.</p>
           </GlassCard>
 
           {dashboardTrend.recoveryAvg != null && (
-            <GlassCard level={2} className="rise rise-4 mt-3 p-5">
+            <button type="button" onClick={() => navigate({ to: "/profile" })} className="w-full text-left">
+            <GlassCard level={2} className="rise rise-4 mt-3 p-5 pressable">
               <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Último registro de recuperación</p><h2 className="mt-2 text-lg font-semibold">Estado reciente</h2></div><Activity className="h-5 w-5 text-gold" /></div>
               <div className="mt-4 grid grid-cols-3 gap-2">
                 <DashboardStat value={dashboardTrend.latestWellness?.sleep_hours != null ? `${dashboardTrend.latestWellness.sleep_hours}h` : "—"} label="Sueño" icon={<Activity className="h-3.5 w-3.5" />} />
@@ -271,10 +291,12 @@ function Home() {
                 <DashboardStat value={dashboardTrend.latestWellness?.mood != null ? String(dashboardTrend.latestWellness.mood) : "—"} label="Ánimo" icon={<User className="h-3.5 w-3.5" />} />
               </div>
             </GlassCard>
+          </button>
           )}
 
           {/* 5 · Progreso */}
-          <GlassCard level={2} className="rise rise-3 mt-3 p-5">
+          <button type="button" onClick={() => navigate({ to: "/profile" })} className="w-full text-left">
+          <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="eyebrow">Sesiones completadas</p>
@@ -400,9 +422,18 @@ function EmptyState() {
   );
 }
 
-function DashboardStat({ value, label, icon }: { value: string; label: string; icon: ReactNode }) {
-  return (
-    <div className="glass glass-sheen pressable min-w-0 p-3">
+function DashboardStat({ value, label, icon, onClick }: { value: string; label: string; icon: ReactNode; onClick?: () => void }) {
+  const inner = (
+    <>
+      <div className="flex items-center gap-1.5 eyebrow">{icon}<span className="truncate">{label}</span></div>
+      <div className="metric mt-2 truncate">{value}</div>
+    </>
+  );
+  if (onClick) return <button type="button" onClick={onClick} className="glass glass-sheen pressable min-w-0 w-full p-3 text-left">{inner}</button>;
+  return <div className="glass glass-sheen min-w-0 p-3">{inner}</div>;
+}
+
+function UNUSED_DashboardStat_old
       <div className="flex items-center gap-1.5 eyebrow">
         {icon}
         <span className="truncate">{label}</span>

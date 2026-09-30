@@ -696,6 +696,17 @@ function ProgressSection({ results, history, records, metrics, plannedDays, comp
     [records, history, days],
   );
 
+  const movementTrends = useMemo(() => {
+    const stats = exerciseStats(records, history, days).filter((item) => item.changePct != null);
+    const classify = (pct: number) => pct >= 2.5 ? "up" as const : pct <= -2.5 ? "down" as const : "stable" as const;
+    return {
+      up: stats.filter((item) => classify(item.changePct ?? 0) === "up").sort((a, b) => (b.changePct ?? 0) - (a.changePct ?? 0)).slice(0, 3),
+      stable: stats.filter((item) => classify(item.changePct ?? 0) === "stable").slice(0, 3),
+      down: stats.filter((item) => classify(item.changePct ?? 0) === "down").sort((a, b) => (a.changePct ?? 0) - (b.changePct ?? 0)).slice(0, 3),
+      total: stats.length,
+    };
+  }, [records, history, days]);
+
   const volumeChange = prev.volume > 0 ? ((cur.volume - prev.volume) / prev.volume) * 100 : null;
   const rpeChange =
     prev.avgRpe != null && cur.avgRpe != null ? cur.avgRpe - prev.avgRpe : null;
@@ -809,6 +820,49 @@ function ProgressSection({ results, history, records, metrics, plannedDays, comp
                   </p>
                   <p className="text-[10px] text-muted-foreground">evolución</p>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
+              Tendencias por movimiento
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Evolución reciente de tus RM y 1RM estimados.
+            </p>
+          </div>
+          <span className="text-[11px] text-muted-foreground">{movementTrends.total} con historial</span>
+        </div>
+        {movementTrends.total === 0 ? (
+          <p className="mt-4 text-sm text-muted-foreground">Necesitas más registros para detectar tendencias.</p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {[
+              { label: "Progresando", items: movementTrends.up },
+              { label: "Estables", items: movementTrends.stable },
+              { label: "A vigilar", items: movementTrends.down },
+            ].map((group) => (
+              <div key={group.label} className="rounded-2xl border border-border bg-surface p-3.5">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{group.label}</p>
+                {group.items.length === 0 ? (
+                  <p className="mt-2 text-xs text-muted-foreground">Sin movimientos en esta categoría.</p>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    {group.items.map((item) => (
+                      <div key={item.exercise} className="flex items-center justify-between gap-3">
+                        <span className="min-w-0 truncate text-sm font-medium">{item.exercise}</span>
+                        <span className="shrink-0 text-xs font-semibold">
+                          {item.changePct! >= 0 ? "+" : ""}{item.changePct!.toFixed(1)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>

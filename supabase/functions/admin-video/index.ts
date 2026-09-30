@@ -51,7 +51,21 @@ async function isAdmin(profileId: string, pinHash?: string) {
     .eq("profile_id", profileId)
     .maybeSingle();
 
-  if (!admin) return false;
+  let authorizedProfile = !!admin;
+
+  // BC is the sole administrator. Keep the backend authorization tied
+  // to the profile identity even if the admin seed migration ran before
+  // the BC profile existed.
+  if (!authorizedProfile) {
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id, name")
+      .eq("id", profileId)
+      .maybeSingle();
+    authorizedProfile = profile?.name?.trim().toLowerCase() === "bc";
+  }
+
+  if (!authorizedProfile) return false;
 
   const { data: valid, error } = await supabaseAdmin.rpc("verify_profile_pin", {
     _profile_id: profileId,
@@ -92,11 +106,11 @@ Deno.serve(async (req) => {
     if (body.action === "check") {
       if (!body.profile_id) return json({ isAdmin: false });
       const { data } = await supabaseAdmin
-        .from("video_admins")
-        .select("profile_id")
-        .eq("profile_id", body.profile_id)
+        .from("profiles")
+        .select("id, name")
+        .eq("id", body.profile_id)
         .maybeSingle();
-      return json({ isAdmin: !!data });
+      return json({ isAdmin: data?.name?.trim().toLowerCase() === "bc" });
     }
 
     if (body.action === "verify") {

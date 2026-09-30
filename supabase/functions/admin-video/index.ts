@@ -99,6 +99,11 @@ Deno.serve(async (req) => {
       return json({ isAdmin: !!data });
     }
 
+    if (body.action === "verify") {
+      const authorized = await isAdmin(body.profile_id ?? "", body.pin_hash);
+      return authorized ? json({ ok: true }) : json({ error: "PIN incorrecto" }, 403);
+    }
+
     if (!(await isAdmin(body.profile_id ?? "", body.pin_hash))) {
       return json({ error: "No autorizado" }, 403);
     }

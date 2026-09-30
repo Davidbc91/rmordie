@@ -564,6 +564,19 @@ function BlockCard({
           <Field label="Tiempo (mm:ss)" value={time} onChange={setTime} placeholder="3:45" />
           <Field label="RPE" value={rpe} onChange={setRpe} type="number" placeholder="1-10" />
         </div>
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">RPE rápido</span>
+          {[6, 7, 8, 9, 10].map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setRpe(String(value))}
+              className={`pressable rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold ${Number(rpe) === value ? "gold-gradient border-transparent" : "border-border text-muted-foreground"}`}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
 
         {nextLoad && detected && (
           <div className="glass-quiet mt-3 flex items-center justify-between gap-3 rounded-[var(--r-md)] border border-[color:var(--glass-border)] px-3.5 py-3">

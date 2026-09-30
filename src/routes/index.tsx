@@ -250,7 +250,7 @@ function Home() {
         <>
           {/* 1 · Entreno de hoy */}
           {next ? (
-            <GlassCard level={3} gold className="rise rise-2 sheen p-5">
+            <GlassCard level={3} gold className="rise rise-2 sheen cinematic-card-strong p-5">
               <div className="flex items-center justify-between gap-3">
                 <GlassBadge tone="gold">
                   {next.progress.state === "in_progress" ? "Sesión en curso" : next.isToday ? "Hoy" : "Siguiente sesión"}
@@ -264,7 +264,7 @@ function Home() {
 
               <div className="mt-5 flex items-end justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="display-lg gold-text truncate">{next.dayKey}</div>
+                  <div className="display-xl gold-text truncate">{next.dayKey}</div>
                   <p className="eyebrow mt-2.5">{next.monthLabel}</p>
                 </div>
                 <div className="shrink-0 text-right">
@@ -276,14 +276,14 @@ function Home() {
               </div>
 
               <div
-                className="mt-4 h-[3px] w-full overflow-hidden rounded-full"
+                className="mt-5 h-1.5 w-full overflow-hidden rounded-full"
                 style={{ background: "rgba(255,255,255,0.09)" }}
               >
                 <div
                   className="h-full rounded-full transition-[width] duration-700"
                   style={{
                     width: `${Math.max(next.progress.pct, 2)}%`,
-                    background: "linear-gradient(90deg,#EBD6A6,#D8B46B)",
+                    background: "linear-gradient(90deg,#D9FF8A,#B8FF3D)",
                   }}
                 />
               </div>
@@ -294,7 +294,7 @@ function Home() {
               <p className="mt-4 line-clamp-2 text-sm text-muted-foreground">{next.headline}</p>
 
               {sessionCoach && (
-                <div className="mt-4 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] p-3.5">
+                <div className="mt-4 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-black/20 p-3.5">
                   <p className="eyebrow">Recomendación para hoy</p>
                   <div className="mt-3 space-y-3">
                     {sessionCoach.map((item) => (
@@ -312,7 +312,7 @@ function Home() {
               )}
 
               {next.focus.length > 0 && (
-                <div className="mt-4 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] p-3.5">
+                <div className="mt-4 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-black/20 p-3.5">
                   <p className="eyebrow">Claves de la sesión</p>
                   <div className="mt-3 space-y-2">
                     {next.focus.map((item) => (
@@ -336,7 +336,7 @@ function Home() {
               <Link
                 to="/workout/$month/$week/$day"
                 params={{ month: next.monthKey, week: String(next.week), day: next.dayKey }}
-                className="pressable gold-gradient mt-5 flex min-h-[54px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] text-[15px] font-semibold"
+                className="pressable gold-gradient mt-5 flex min-h-[58px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] text-[15px] font-semibold"
               >
                 <Play className="h-4 w-4" fill="currentColor" />{" "}
                 {next.progress.state === "in_progress" ? "Continuar entreno" : "Empezar entreno"}

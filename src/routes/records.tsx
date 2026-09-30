@@ -618,6 +618,21 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
     return withWeight[0] ?? null;
   }, [performed]);
 
+  const estimatedHistory = useMemo(() => performed
+    .filter((r) => r.weight != null && r.reps != null && Number(r.weight) > 0 && Number(r.reps) >= 2 && Number(r.reps) <= 10)
+    .map((r) => ({
+      changed_at: r.updated_at,
+      weight: Math.round((Number(r.weight) * (1 + Number(r.reps) / 30)) * 2) / 2,
+      reps: Number(r.reps),
+      sourceWeight: Number(r.weight),
+    }))
+    .sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime()),
+  [performed]);
+
+  const bestEstimated = useMemo(() =>
+    estimatedHistory.length ? Math.max(...estimatedHistory.map((p) => p.weight)) : null,
+  [estimatedHistory]);
+
   const bestEver = useMemo(() => {
     const weights = [Number(record.weight), ...history.map((h) => Number(h.new_weight))];
     return Math.max(...weights);
@@ -664,6 +679,10 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
             <p className="mt-1.5 text-lg font-semibold tabular">{formatKg(bestEver)} kg</p>
           </div>
           <div className="rounded-2xl border border-border p-3.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">1RM estimado máx.</p>
+            <p className="mt-1.5 text-lg font-semibold tabular">{bestEstimated != null ? `${formatKg(bestEstimated)} kg` : "—"}</p>
+          </div>
+          <div className="rounded-2xl border border-border p-3.5">
             <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Última carga</p>
             <p className="mt-1.5 text-lg font-semibold tabular">
               {lastLoad ? `${formatKg(Number(lastLoad.weight))} kg` : "—"}
@@ -681,7 +700,9 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
           <p className="text-sm text-muted-foreground">Sin cambios registrados todavía.</p>
         ) : (
           <>
-            {history.length >= 2 && <EvolutionChart history={history} />}
+            {history.length >= 2 || estimatedHistory.length >= 2 ? (
+              <EvolutionChart history={history} estimated={estimatedHistory} />
+            ) : null}
             <ul className="space-y-2">
               {history.map((h) => {
                 const date = new Date(h.changed_at);
@@ -738,26 +759,27 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
 
 function EvolutionChart({
   history,
+  estimated,
 }: {
   history: { changed_at: string; new_weight: number }[];
+  estimated: { changed_at: string; weight: number; reps: number; sourceWeight: number }[];
 }) {
   const data = useMemo(() => {
-    return [...history]
-      .sort(
-        (a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime(),
-      )
-      .map((h) => ({
-        date: new Date(h.changed_at).toLocaleDateString(undefined, {
-          day: "2-digit",
-          month: "short",
-        }),
-        weight: Number(h.new_weight),
-      }));
-  }, [history]);
+    const points = [
+      ...history.map((h) => ({ changed_at: h.changed_at, real: Number(h.new_weight), estimated: null as number | null, reps: null as number | null })),
+      ...estimated.map((p) => ({ changed_at: p.changed_at, real: null as number | null, estimated: p.weight, reps: p.reps })),
+    ];
+    return points.sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime()).map((p) => ({
+      date: new Date(p.changed_at).toLocaleDateString(undefined, { day: "2-digit", month: "short" }),
+      real: p.real,
+      estimated: p.estimated,
+      reps: p.reps,
+    }));
+  }, [history, estimated]);
 
   if (data.length < 2) return null;
 
-  const weights = data.map((d) => d.weight);
+  const weights = data.flatMap((d) => [d.real, d.estimated].filter((v): v is number => v != null));
   const min = Math.min(...weights);
   const max = Math.max(...weights);
   const pad = Math.max(2, (max - min) * 0.15);

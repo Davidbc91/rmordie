@@ -3,6 +3,8 @@ import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults, usePersonalRecords, type WorkoutResult } from "@/lib/store";
 import { useAthleteProfile, useMilestones, useGoals, useAllPrHistory, useWellnessLogs } from "@/lib/profile-store";
 import { streaks, sessionDays, volumeOf, fmtKg } from "@/lib/analytics";
+import { extractPercentages } from "@/lib/plates";
+import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
 import { GlassCard, GlassSection, GlassBadge } from "@/components/glass";
 import {
   Calendar, Upload, Flame, Trophy, ChevronRight, Timer, Dumbbell, User, Play, ArrowUpRight, Users,
@@ -59,31 +61,65 @@ function Home() {
   const next = useMemo(() => {
     if (!planning) return null;
     const months = planning.data.months;
-    const cur = MONTH_ABBR[new Date().getMonth()];
-    const startIdx = Math.max(0, months.findIndex((m) => m.key.toUpperCase().includes(cur)));
-    const order = [...months.slice(startIdx), ...months.slice(0, startIdx)];
-    for (const m of order)
-      for (const w of m.weeks)
-        for (const d of w.days) {
-          if (d.isRest) continue;
-          const prog = sessionProgress(d, m.key, w.index, blockMap);
-          if (prog.state === "completed") continue;
-          const headline =
-            d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ??
-            d.blocks[0]?.content.split("\n")[0] ??
-            "Sesión";
-          return {
-            monthKey: m.key,
-            monthLabel: m.label,
-            week: w.index,
-            dayKey: d.key,
-            headline,
-            blocks: d.blocks.length,
-            progress: prog,
-          };
-        }
-    return null;
-  }, [planning, blockMap]);
+    const now = new Date();
+    const cur = MONTH_ABBR[now.getMonth()];
+    const todayKey = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"][now.getDay()];
+    const currentMonth = months.find((m) => m.key.toUpperCase().includes(cur));
+
+    const todayCandidate = currentMonth
+      ? currentMonth.weeks
+          .flatMap((w) => w.days.map((d) => ({ d, w })))
+          .find(({ d, w }) => !d.isRest && d.key === todayKey && sessionProgress(d, currentMonth.key, w.index, blockMap).state !== "completed")
+      : null;
+
+    const pick = todayCandidate
+      ? { m: currentMonth!, w: todayCandidate.w, d: todayCandidate.d, isToday: true }
+      : (() => {
+          const startIdx = Math.max(0, months.findIndex((m) => m.key.toUpperCase().includes(cur)));
+          const order = [...months.slice(startIdx), ...months.slice(0, startIdx)];
+          for (const m of order)
+            for (const w of m.weeks)
+              for (const d of w.days) {
+                if (d.isRest) continue;
+                const prog = sessionProgress(d, m.key, w.index, blockMap);
+                if (prog.state === "completed") continue;
+                return { m, w, d, isToday: false };
+              }
+          return null;
+        })();
+
+    if (!pick) return null;
+    const { m, w, d, isToday } = pick;
+    const prog = sessionProgress(d, m.key, w.index, blockMap);
+    const headline =
+      d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ??
+      d.blocks[0]?.content.split("\n")[0] ??
+      "Sesión";
+
+    const focus = d.blocks
+      .filter((b) => /^[A-D]$/.test(b.key))
+      .flatMap((b) => {
+        const record = detectExercise(b.content, records);
+        if (!record) return [];
+        const percentages = extractPercentages(b.content);
+        const loads = percentages.length ? loadsForPercentages(record.weight, percentages) : [];
+        return [{ exercise: record.exercise, rm: record.weight, percentages, loads, block: b.key }];
+      })
+      .filter((item, index, arr) => arr.findIndex((x) => x.exercise === item.exercise) === index)
+      .slice(0, 3);
+
+    return {
+      monthKey: m.key,
+      monthLabel: m.label,
+      week: w.index,
+      dayKey: d.key,
+      headline,
+      blocks: d.blocks.length,
+      progress: prog,
+      isToday,
+      focus,
+    };
+  }, [planning, blockMap, records]);
 
   const weekProgress = useMemo(() => {
     if (!planning || !next) return null;
@@ -174,7 +210,7 @@ function Home() {
             <GlassCard level={3} gold className="rise rise-2 sheen p-5">
               <div className="flex items-center justify-between gap-3">
                 <GlassBadge tone="gold">
-                  {next.progress.state === "in_progress" ? "Sesión en curso" : "Siguiente sesión"}
+                  {next.progress.state === "in_progress" ? "Sesión en curso" : next.isToday ? "Hoy" : "Siguiente sesión"}
                 </GlassBadge>
                 {weekProgress && (
                   <span className="text-[11px] tabular text-muted-foreground">
@@ -213,6 +249,28 @@ function Home() {
               </p>
 
               <p className="mt-4 line-clamp-2 text-sm text-muted-foreground">{next.headline}</p>
+
+              {next.focus.length > 0 && (
+                <div className="mt-4 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] p-3.5">
+                  <p className="eyebrow">Claves de la sesión</p>
+                  <div className="mt-3 space-y-2">
+                    {next.focus.map((item) => (
+                      <div key={item.exercise} className="flex items-center justify-between gap-3">
+                        <span className="min-w-0 truncate text-xs font-medium">{item.exercise}</span>
+                        {item.loads.length > 0 ? (
+                          <span className="shrink-0 text-xs font-semibold text-gold">
+                            {item.loads.map((load) => `${load.pct}% · ${formatKg(load.suggested)} kg`).join(" · ")}
+                          </span>
+                        ) : (
+                          <span className="shrink-0 text-[11px] text-muted-foreground">
+                            RM {formatKg(item.rm)} kg
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <Link
                 to="/workout/$month/$week/$day"

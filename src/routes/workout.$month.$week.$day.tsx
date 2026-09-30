@@ -1,8 +1,4 @@
-import<div className="mt-3 flex flex-wrap gap-1.5">
-          {[6, 7, 8, 9, 10].map((value) => (
-            <button key={value} type="button" onClick={() => setRpe(String(value))} className={`pressable rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold ${Number(rpe) === value ? "gold-gradient border-transparent" : "border-border text-muted-foreground"}`}>RPE {value}</button>
-          ))}
-        </div> { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { LinkedText } from "@/components/LinkedText";
 import { usePlanning, useDayResults, useSaveResult, useSettings, usePersonalRecords, findDay, useUpsertPersonalRecord } from "@/lib/store";
@@ -445,16 +441,6 @@ function BlockCard({
       {open && (
       <div className="border-t border-border/60 px-5 pb-5 pt-4">
         <LinkedText text={content} className="opacity-90" />
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" onClick={() => setWeight(String(Math.max(0, (Number(weight.replace(",", ".")) || 0) - 2.5)))} className="pressable inline-flex items-center gap-1 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-muted-foreground" disabled={!actualLoad}>
-            <Minus className="h-3 w-3" /> 2.5 kg
-          </button>
-          <button type="button" onClick={() => setWeight(String((Math.round(((Number(weight.replace(",", ".")) || 0) + 2.5) * 2) / 2)))} className="pressable inline-flex items-center gap-1 rounded-xl border border-[rgba(216,180,107,0.28)] bg-[rgba(216,180,107,0.08)] px-3 py-2 text-xs font-semibold text-gold">
-            <Plus className="h-3 w-3" /> 2.5 kg
-          </button>
-          {actualLoad != null && <span className="inline-flex items-center rounded-xl bg-surface-2 px-3 py-2 text-xs font-semibold">{formatKg(actualLoad)} kg</span>}
-        </div>
 
         {detected && (
           <div className="glass-quiet mt-4 p-4">

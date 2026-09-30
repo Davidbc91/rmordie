@@ -384,9 +384,9 @@ function ProfileForm() {
           </div>
         </div>
 
-        <div className="mt-4 grid min-w-0 grid-cols-2 gap-3">
+        <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
           <Field label="Nacimiento">
-            <input type="date" className={inputCls} value={form.birth_date ?? ""} onChange={(e) => set("birth_date", e.target.value)} />
+            <input type="date" className={`${inputCls} block appearance-none [-webkit-appearance:none] text-left`} value={form.birth_date ?? ""} onChange={(e) => set("birth_date", e.target.value)} />
           </Field>
           <Field label="Sexo">
             <select className={inputCls} value={form.sex ?? ""} onChange={(e) => set("sex", e.target.value)}>
@@ -406,7 +406,7 @@ function ProfileForm() {
             <input inputMode="decimal" className={inputCls} value={form.target_weight_kg ?? ""} onChange={(e) => set("target_weight_kg", e.target.value)} />
           </Field>
           <Field label="Inicio en CrossFit">
-            <input type="date" className={inputCls} value={form.crossfit_start_date ?? ""} onChange={(e) => set("crossfit_start_date", e.target.value)} />
+            <input type="date" className={`${inputCls} block appearance-none [-webkit-appearance:none] text-left`} value={form.crossfit_start_date ?? ""} onChange={(e) => set("crossfit_start_date", e.target.value)} />
           </Field>
           <Field label="Box">
             <input className={inputCls} value={form.box_name ?? ""} onChange={(e) => set("box_name", e.target.value)} maxLength={60} />

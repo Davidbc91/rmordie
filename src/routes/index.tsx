@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults, usePersonalRecords, type WorkoutResult } from "@/lib/store";
-import { useAthleteProfile, useMilestones, useGoals, useAllPrHistory } from "@/lib/profile-store";
+import { useAthleteProfile, useMilestones, useGoals, useAllPrHistory, useWellnessLogs } from "@/lib/profile-store";
 import { streaks, sessionDays, volumeOf, fmtKg } from "@/lib/analytics";
 import { GlassCard, GlassSection, GlassBadge } from "@/components/glass";
 import {
@@ -9,6 +9,7 @@ import {
   Award, Target, CalendarCheck, Activity, Layers,
 } from "lucide-react";
 import { useMemo } from "react";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 import {
   completedBlockMap,
   isSessionCompleted,
@@ -42,6 +43,7 @@ function Home() {
   const { data: profile } = useAthleteProfile();
   const { data: prHistory = [] } = useAllPrHistory();
   const { data: goals = [] } = useGoals();
+  const { data: wellnessLogs = [] } = useWellnessLogs();
 
 
   const blockMap = useMemo(() => completedBlockMap(results), [results]);
@@ -121,6 +123,25 @@ function Home() {
     }
     return { tone, title, detail, sessions, volume, avgRpe };
   }, [results]);
+
+  const dashboardTrend = useMemo(() => {
+    const weeks = Array.from({ length: 8 }, (_, i) => {
+      const end = new Date(); end.setHours(23,59,59,999); end.setDate(end.getDate() - (7 - i) * 7);
+      const start = new Date(end); start.setDate(end.getDate() - 6); start.setHours(0,0,0,0);
+      const rows = results.filter((r) => r.status === "completed" && new Date(r.updated_at) >= start && new Date(r.updated_at) <= end);
+      const volume = rows.reduce((sum, r) => sum + volumeOf(r), 0);
+      const rpes = rows.map((r) => r.rpe).filter((x): x is number => x != null);
+      return { label: `S${i + 1}`, volume, rpe: rpes.length ? rpes.reduce((a,b) => a+b,0)/rpes.length : null };
+    });
+    const withVolume = weeks.filter((w) => w.volume > 0);
+    const first = withVolume[0]?.volume ?? null;
+    const last = withVolume.at(-1)?.volume ?? null;
+    const volumeChange = first && last && first > 0 ? ((last-first)/first)*100 : null;
+    const latestWellness = [...wellnessLogs].sort((a,b) => b.logged_on.localeCompare(a.logged_on))[0];
+    const recovery = latestWellness ? [latestWellness.sleep_hours, latestWellness.energy, latestWellness.mood].filter((x): x is number => x != null) : [];
+    const recoveryAvg = recovery.length ? recovery.reduce((a,b)=>a+b,0)/recovery.length : null;
+    return { weeks, volumeChange, recoveryAvg, latestWellness };
+  }, [results, wellnessLogs]);
 
   const topRecords = useMemo(
     () =>
@@ -232,7 +253,27 @@ function Home() {
             </div>
           </GlassCard>
 
-          {/* 4 · Progreso */}
+          {/* 4 · Evolución */}
+          <GlassCard level={2} className="rise rise-4 mt-3 p-5">
+            <div className="flex items-start justify-between gap-3"><div><p className="eyebrow">Evolución</p><h2 className="mt-2 text-lg font-semibold">Carga de las últimas 8 semanas</h2></div>{dashboardTrend.volumeChange != null && <span className="text-xs font-semibold text-gold">{dashboardTrend.volumeChange >= 0 ? "+" : ""}{dashboardTrend.volumeChange.toFixed(0)}%</span>}</div>
+            <div className="mt-4 h-[150px] w-full">
+              <ResponsiveContainer width="100%" height="100%"><LineChart data={dashboardTrend.weeks} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}><XAxis dataKey="label" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} /><YAxis hide /><Tooltip formatter={(value: number) => [fmtKg(value, 0), "Volumen"]} contentStyle={{ background: "rgba(20,20,20,.94)", border: "1px solid rgba(216,180,107,.25)", borderRadius: 12, fontSize: 11 }} /><Line type="monotone" dataKey="volume" stroke="var(--gold)" strokeWidth={2.5} dot={false} connectNulls /></LineChart></ResponsiveContainer>
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">Volumen calculado a partir de carga × series × repeticiones.</p>
+          </GlassCard>
+
+          {dashboardTrend.recoveryAvg != null && (
+            <GlassCard level={2} className="rise rise-4 mt-3 p-5">
+              <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Último registro de recuperación</p><h2 className="mt-2 text-lg font-semibold">Estado reciente</h2></div><Activity className="h-5 w-5 text-gold" /></div>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <DashboardStat value={dashboardTrend.latestWellness?.sleep_hours != null ? `${dashboardTrend.latestWellness.sleep_hours}h` : "—"} label="Sueño" icon={<Activity className="h-3.5 w-3.5" />} />
+                <DashboardStat value={dashboardTrend.latestWellness?.energy != null ? String(dashboardTrend.latestWellness.energy) : "—"} label="Energía" icon={<Flame className="h-3.5 w-3.5" />} />
+                <DashboardStat value={dashboardTrend.latestWellness?.mood != null ? String(dashboardTrend.latestWellness.mood) : "—"} label="Ánimo" icon={<User className="h-3.5 w-3.5" />} />
+              </div>
+            </GlassCard>
+          )}
+
+          {/* 5 · Progreso */}
           <GlassCard level={2} className="rise rise-3 mt-3 p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
@@ -252,13 +293,13 @@ function Home() {
             </div>
           </GlassCard>
 
-          {/* 4 · Estadísticas rápidas */}
+          {/* 6 · Estadísticas rápidas */}
           <div className="rise rise-3 mt-3 grid grid-cols-2 gap-3">
             <MiniStat label="Bloques" value={String(stats.blocks)} icon={<Dumbbell className="h-3.5 w-3.5" />} />
             <MiniStat label="Constancia" value={`${stats.pct}%`} icon={<Flame className="h-3.5 w-3.5" />} />
           </div>
 
-          {/* 5 · PRs */}
+          {/* 7 · PRs */}
           {topRecords.length > 0 && (
             <GlassSection
               title="Récords recientes"
@@ -291,7 +332,7 @@ function Home() {
             </GlassSection>
           )}
 
-          {/* 6 · Accesos */}
+          {/* 8 · Accesos */}
           <GlassSection title="Accesos" className="rise rise-5">
             <div className="space-y-2">
               <QuickAction to="/calendar" icon={<Calendar className="h-[18px] w-[18px]" />} title="Calendario" subtitle="Tu planificación mes a mes" />

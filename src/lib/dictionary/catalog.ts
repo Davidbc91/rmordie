@@ -626,6 +626,10 @@ const verifiedVideoUrls: Record<string, string> = {
   "Front Squat": "https://www.youtube.com/watch?v=m4ytaCJZpl0",
   "Power Clean": "https://www.youtube.com/watch?v=GVt4uQ0sDJE",
   "Snatch": "https://www.youtube.com/watch?v=GhxhiehJcQY"
+  "Hang Clean": "https://www.youtube.com/watch?v=DaKC_BEN5bk",
+  "Split Jerk": "https://www.youtube.com/watch?v=PsiO8lZTU2I",
+  "Power Snatch": "https://www.youtube.com/watch?v=tuOiNeTvLJs",
+  "Thruster": "https://www.youtube.com/watch?v=L219ltL15zk"
 };
 
 // RM is reserved for stable, loadable strength/Olympic lifts, not every movement

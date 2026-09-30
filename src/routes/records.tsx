@@ -733,6 +733,20 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
     return Math.max(...weights);
   }, [record.weight, history]);
 
+  const trend = useMemo(() => {
+    const points = estimatedHistory.length
+      ? estimatedHistory.map((p) => ({ date: p.changed_at, value: p.weight }))
+      : history.map((h) => ({ date: h.changed_at, value: Number(h.new_weight) }));
+    if (points.length < 2) return { kind: "unknown" as const, text: "Aún faltan datos para detectar una tendencia." };
+    const recent = points.slice(-4);
+    const first = recent[0].value;
+    const last = recent[recent.length - 1].value;
+    const pct = first > 0 ? ((last - first) / first) * 100 : 0;
+    if (pct >= 2.5) return { kind: "up" as const, text: "Progresión reciente sostenida." };
+    if (pct <= -2.5) return { kind: "down" as const, text: "Descenso reciente del rendimiento." };
+    return { kind: "stable" as const, text: "Rendimiento estable en las últimas sesiones." };
+  }, [estimatedHistory, history]);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 pb-[calc(72px+env(safe-area-inset-bottom))] sm:items-center sm:pb-0"
@@ -760,6 +774,11 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
+        </div>
+
+        <div className="mb-4 rounded-2xl border border-border p-3.5">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Tendencia</p>
+          <p className="mt-1.5 text-sm font-semibold">{trend.text}</p>
         </div>
 
         <div className="mb-5 grid grid-cols-2 gap-2.5">

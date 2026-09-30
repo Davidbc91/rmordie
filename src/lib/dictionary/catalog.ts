@@ -1680,7 +1680,10 @@ export const movements: Movement[] = seeds.map(
       progressions: guidance.progressions,
       regressions: guidance.regressions,
       muscles: guidance.muscles,
-      videoUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} CrossFit movement demo`)}`,
+      videoUrl:
+        name === "Squat"
+          ? "https://www.youtube.com/watch?v=rMvwVtlqjTE"
+          : `https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} CrossFit movement demo`)}`,
     };
   },
 );

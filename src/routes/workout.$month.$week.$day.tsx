@@ -224,6 +224,12 @@ function WorkoutPage() {
 }
 
 
+function suggestNextLoad(weight: number, rpe: number): { weight: number; reason: string } | null {
+  if (!Number.isFinite(weight) || weight <= 0 || !Number.isFinite(rpe) || rpe < 1 || rpe > 10) return null;
+  const step = rpe <= 7 ? 2.5 : rpe === 8 ? 1.25 : rpe === 9 ? 0 : -2.5;
+  return { weight: Math.max(0, Math.round((weight + step) * 2) / 2), reason: rpe <= 7 ? "RPE bajo" : rpe === 8 ? "RPE controlado" : rpe === 9 ? "RPE alto" : "RPE máximo" };
+}
+
 function estimateOneRm(weight: number, reps: number): number | null {
   if (!Number.isFinite(weight) || weight <= 0 || !Number.isInteger(reps) || reps < 2 || reps > 10) return null;
   // Epley: useful as an estimate, never treated as a confirmed 1RM.
@@ -319,6 +325,11 @@ function BlockCard({
     const r = Number(reps);
     return estimateOneRm(w, r);
   }, [weight, reps]);
+
+  const nextLoad = useMemo(() => {
+    const r = Number(rpe);
+    return actualLoad != null ? suggestNextLoad(actualLoad, r) : null;
+  }, [actualLoad, rpe]);
 
   const loadCompare = useMemo(
     () =>
@@ -535,6 +546,23 @@ function BlockCard({
           <Field label="Tiempo (mm:ss)" value={time} onChange={setTime} placeholder="3:45" />
           <Field label="RPE" value={rpe} onChange={setRpe} type="number" placeholder="1-10" />
         </div>
+
+        {nextLoad && detected && (
+          <div className="glass-quiet mt-3 flex items-center justify-between gap-3 rounded-[var(--r-md)] border border-[color:var(--glass-border)] px-3.5 py-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Próxima carga sugerida</p>
+              <p className="mt-1 text-sm font-semibold">{formatKg(nextLoad.weight)} kg</p>
+              <p className="text-[10px] text-muted-foreground">{nextLoad.reason} · basada en RPE</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setWeight(String(nextLoad.weight))}
+              className="pressable rounded-xl border border-[rgba(216,180,107,0.3)] bg-[rgba(216,180,107,0.08)] px-3 py-2 text-xs font-semibold text-gold"
+            >
+              Usar próxima
+            </button>
+          </div>
+        )}
 
         {loadCompare && (
           <div

@@ -525,7 +525,7 @@ function StrengthRecords({
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando…</p>
       ) : visible.length === 0 ? (
-        <div className="card-elevated p-10 text-center">
+        <div className="cinematic-card-strong rounded-[24px] p-10 text-center">
           <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-border">
             <Trophy className="h-5 w-5" strokeWidth={1.5} />
           </div>
@@ -537,7 +537,7 @@ function StrengthRecords({
           </p>
         </div>
       ) : (
-        <ul className="rise rise-3 card-elevated divide-y divide-border overflow-hidden p-0">
+        <ul className="rise rise-3 cinematic-card-strong divide-y divide-white/[.07] overflow-hidden rounded-[24px] p-0">
           {visible.map((r) => {
             const isEditing = editingId === r.id;
             const hasDictionaryMovement = !!resolveMovement(r.exercise);
@@ -783,27 +783,27 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
         <div className="mb-5 grid grid-cols-2 gap-2.5">
           <div className="cinematic-card-dark rounded-2xl border border-white/[.07] p-3.5">
             <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">RM actual</p>
-            <p className="mt-1.5 text-lg font-semibold tabular text-[var(--gold)]">
+            <p className="mt-1.5 text-3xl font-semibold tracking-tight tabular text-[var(--gold)]">
               {formatKg(Number(record.weight))} kg
             </p>
           </div>
           <div className="rounded-2xl border border-border p-3.5">
             <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Mejor marca</p>
-            <p className="mt-1.5 text-lg font-semibold tabular">{formatKg(bestEver)} kg</p>
+            <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular">{formatKg(bestEver)} kg</p>
           </div>
           <div className="rounded-2xl border border-border p-3.5">
             <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">1RM estimado máx.</p>
-            <p className="mt-1.5 text-lg font-semibold tabular">{bestEstimated != null ? `${formatKg(bestEstimated)} kg` : "—"}</p>
+            <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular">{bestEstimated != null ? `${formatKg(bestEstimated)} kg` : "—"}</p>
           </div>
           <div className="rounded-2xl border border-border p-3.5">
             <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Última carga</p>
-            <p className="mt-1.5 text-lg font-semibold tabular">
+            <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular">
               {lastLoad ? `${formatKg(Number(lastLoad.weight))} kg` : "—"}
             </p>
           </div>
           <div className="rounded-2xl border border-border p-3.5">
             <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Veces realizado</p>
-            <p className="mt-1.5 text-lg font-semibold tabular">{performed.length}</p>
+            <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular">{performed.length}</p>
           </div>
         </div>
 

@@ -71,7 +71,13 @@ import {
 
 import { planningCompletion } from "@/lib/session-progress";
 import { sameExercise } from "@/lib/rm-matcher";
+type ProfileSearch = { section?: SectionKey; range?: RangeKey };
+
 export const Route = createFileRoute("/profile")({
+  validateSearch: (search: Record<string, unknown>): ProfileSearch => ({
+    section: typeof search.section === "string" && SECTIONS.some((s) => s.key === search.section) ? (search.section as SectionKey) : "profile",
+    range: RANGES.some((r) => r.key === search.range) ? (search.range as RangeKey) : "12w",
+  }),
   head: () => ({
     meta: [
       { title: "Mi perfil de atleta — RM OR DIE" },
@@ -123,8 +129,13 @@ const GOAL_OPTIONS = [
 const LEVELS = ["Principiante", "Intermedio", "Avanzado", "Competidor"];
 
 function ProfilePage() {
-  const [section, setSection] = useState<SectionKey>("profile");
-  const [range, setRange] = useState<RangeKey>("12w");
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const section = search.section ?? "profile";
+  const range = search.range ?? "12w";
+
+  const setSection = (next: SectionKey) => navigate({ search: (prev) => ({ ...prev, section: next }), replace: true });
+  const setRange = (next: RangeKey) => navigate({ search: (prev) => ({ ...prev, range: next }), replace: true });
 
   const { data: planning } = usePlanning();
   const { data: results = [] } = useAllResults();

@@ -605,6 +605,21 @@ const seeds: Seed[] = [
   ["Bear Crawl", "Gateo de oso", "bear crawl", "Suelo", "Acondicionamiento"],
 ];
 
+const verifiedVideoUrls: Record<string, string> = {
+  "Squat": "https://www.youtube.com/watch?v=rMvwVtlqjTE",
+  "Deadlift": "https://www.youtube.com/watch?v=op9kVnSso6Q",
+  "Clean": "https://www.youtube.com/watch?v=Ty14ogq_Vok",
+  "Push Press": "https://www.youtube.com/watch?v=E7XUUMI74a4",
+  "Push Jerk": "https://www.youtube.com/watch?v=1u0SQznd_pk",
+  "Toes-to-Bar": "https://www.youtube.com/watch?v=nD0K8GvZP9E",
+  "Kettlebell Swing": "https://www.youtube.com/watch?v=mKDIuUbH94Q",
+  "Burpee": "https://www.youtube.com/watch?v=auBLPXO8Fww",
+  "Wall Ball": "https://www.youtube.com/watch?v=EqjGKsiIMCE",
+  "Box Jump": "https://www.youtube.com/watch?v=NBY9-kTuHEk",
+  "Strict Handstand Push-Up": "https://www.youtube.com/watch?v=0wDEO6shVjc",
+  "Med Ball Clean": "https://www.youtube.com/watch?v=TlneBvU4XFY"
+};
+
 // RM is reserved for stable, loadable strength/Olympic lifts, not every movement
 // that happens to use a barbell or dumbbell.
 const rmMovements = new Set([
@@ -1681,9 +1696,8 @@ export const movements: Movement[] = seeds.map(
       regressions: guidance.regressions,
       muscles: guidance.muscles,
       videoUrl:
-        name === "Squat"
-          ? "https://www.youtube.com/watch?v=rMvwVtlqjTE"
-          : `https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} CrossFit movement demo`)}`,
+        verifiedVideoUrls[name] ??
+        `https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} CrossFit movement demo`)}`,
     };
   },
 );

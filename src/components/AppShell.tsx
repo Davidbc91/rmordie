@@ -107,7 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     key={l.to}
                     to={l.to}
                     className="pressable flex items-center gap-3.5 rounded-[var(--r-md)] px-3 py-3"
-                    style={{ background: isActive ? "rgba(184,255,61,0.10)" : "rgba(255,255,255,0.035)" }}
+                    style={{ background: isActive ? "rgba(200,179,138,0.09)" : "rgba(255,255,255,0.035)" }}
                   >
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)]">
                       <Icon className="h-[18px] w-[18px]" strokeWidth={1.7} />
@@ -159,7 +159,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <span
                     aria-hidden
                     className="absolute inset-x-1 inset-y-0 rounded-[16px] transition-opacity duration-200"
-                    style={{ background: "rgba(184,255,61,0.11)", opacity: isActive ? 1 : 0, boxShadow: isActive ? "inset 0 0 0 1px rgba(184,255,61,0.12)" : "none" }}
+                    style={{ background: "rgba(200,179,138,0.10)", opacity: isActive ? 1 : 0, boxShadow: isActive ? "inset 0 0 0 1px rgba(200,179,138,0.14)" : "none" }}
                   />
                   <Icon className="relative h-[21px] w-[21px]" strokeWidth={isActive ? 2.1 : 1.6} />
                   <span

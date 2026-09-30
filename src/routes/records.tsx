@@ -84,16 +84,17 @@ function RecordsPage() {
 
   return (
     <AppShell>
-      <header className="rise rise-1 mb-5">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-          Personal Records
-        </p>
-        <h1 className="mt-2 text-[32px] font-semibold leading-none tracking-tight">
+      <header className="rise rise-1 mb-6">
+        <div className="flex items-center gap-2">
+          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-gold" />
+          <p className="cinematic-label">PERSONAL RECORDS</p>
+        </div>
+        <h1 className="cinematic-title mt-5">
           {category === "wods" ? "WOD PRs" : "Mis RM"}
         </h1>
       </header>
 
-      <div className="rise rise-2 glass glass-sheen mb-5 flex gap-1 p-1">
+      <div className="rise rise-2 cinematic-card-dark mb-5 flex gap-1 rounded-2xl border border-white/[.08] p-1">
         {([
           { label: "Fuerza", value: "strength" as const },
           { label: "WODs", value: "wods" as const },
@@ -103,7 +104,7 @@ function RecordsPage() {
             onClick={() => navigate({ search: { tab: c.value }, replace: true })}
             className={`flex-1 rounded-xl px-3 py-2 text-xs font-semibold tracking-wide transition ${
               category === c.value
-                ? "gold-gradient shadow-[0_10px_22px_-16px_rgba(216,180,107,0.8)]"
+                ? "gold-gradient shadow-[0_10px_22px_-16px_rgba(184,255,61,0.42)]"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -234,9 +235,9 @@ function ProgressionRecommendations({
   if (!recommendations.length) return null;
 
   return (
-    <section className="rise rise-2 glass glass-sheen mb-5 p-5">
-      <p className="eyebrow">Progresión</p>
-      <h2 className="mt-2 text-lg font-semibold">Sugerencias según tu historial</h2>
+    <section className="rise rise-2 cinematic-card-strong mb-5 rounded-[24px] p-5">
+      <p className="cinematic-label">LOAD STRATEGY</p>
+      <h2 className="mt-2 text-xl font-semibold tracking-tight">Sugerencias según tu historial</h2>
       <p className="mt-1 text-xs text-muted-foreground">
         Basadas en las últimas sesiones registradas, RPE y RM confirmado.
       </p>
@@ -396,13 +397,13 @@ function StrengthRecords({
       {celebrate && <PrCelebration data={celebrate} onClose={() => setCelebrate(null)} />}
       <button
         onClick={() => setShowAdd((v) => !v)}
-        className="pressable gold-gradient mb-4 flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[var(--r-md)] px-4 text-sm font-semibold"
+        className="pressable gold-gradient mb-4 flex min-h-[56px] w-full items-center justify-center gap-2 rounded-[var(--r-md)] px-4 text-sm font-bold tracking-wide"
       >
         <Plus className="h-4 w-4" /> Añadir RM
       </button>
 
       {/* Segmented rep-max control */}
-      <div className="rise rise-2 glass glass-sheen no-scrollbar mb-5 flex gap-1 overflow-x-auto p-1">
+      <div className="rise rise-2 cinematic-card-dark no-scrollbar mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-white/[.08] p-1">
         {TABS.map((t) => {
           const active = tab === t.value;
           return (
@@ -422,7 +423,7 @@ function StrengthRecords({
       </div>
 
       {showAdd && (
-        <form onSubmit={handleAdd} className="card-elevated animate-fade mb-6 space-y-4 p-5">
+        <form onSubmit={handleAdd} className="cinematic-card-strong animate-fade mb-6 space-y-4 rounded-[24px] p-5">
           <div>
             <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               Tipo de RM
@@ -541,7 +542,7 @@ function StrengthRecords({
             const isEditing = editingId === r.id;
             const hasDictionaryMovement = !!resolveMovement(r.exercise);
             return (
-              <li key={r.id} className="px-5 py-4">
+              <li key={r.id} className="px-5 py-4 transition-colors hover:bg-white/[.025]">
                 {isEditing ? (
                   <div className="space-y-2">
                     <input
@@ -596,11 +597,11 @@ function StrengthRecords({
                       </div>
                       <button
                         onClick={() => setDetailFor(r)}
-                        className="mt-1 flex w-full min-w-0 items-center gap-3 text-left"
+                        className="mt-1 flex w-full min-w-0 items-center gap-3 rounded-2xl p-1 text-left transition-colors hover:bg-white/[.02]"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline gap-1.5">
-                            <span className="metric gold-text">{r.weight}</span>
+                            <span className="display-lg gold-text">{r.weight}</span>
                             <span className="text-xs text-muted-foreground">kg</span>
                             <span className="ml-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold tracking-wide">
                               {r.rep_max ?? 1}RM
@@ -749,19 +750,17 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 pb-[calc(72px+env(safe-area-inset-bottom))] sm:items-center sm:pb-0"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/85 pb-[calc(72px+env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:pb-0"
       onClick={onClose}
     >
       <div
-        className="card-elevated animate-fade max-h-[calc(100dvh-72px-env(safe-area-inset-bottom)-16px)] w-full max-w-md overflow-x-hidden overflow-y-auto overscroll-contain rounded-b-none p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch] sm:max-h-[88dvh] sm:rounded-b-3xl sm:pb-5"
+        className="cinematic-card-strong animate-fade max-h-[calc(100dvh-72px-env(safe-area-inset-bottom)-16px)] w-full max-w-md overflow-x-hidden overflow-y-auto overscroll-contain rounded-b-none p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch] sm:max-h-[88dvh] sm:rounded-b-3xl sm:pb-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-              {repMax}RM · Evolución
-            </p>
-            <h2 className="mt-1.5 truncate text-xl font-semibold tracking-tight">
+            <p className="cinematic-label">{repMax}RM · EVOLUTION</p>
+            <h2 className="cinematic-title mt-3 truncate text-[2.25rem]">
               <MovementDictionaryLink exerciseName={record.exercise}>
                 {record.exercise}
               </MovementDictionaryLink>
@@ -776,13 +775,13 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
           </button>
         </div>
 
-        <div className="mb-4 rounded-2xl border border-border p-3.5">
+        <div className="cinematic-card-dark mb-4 rounded-2xl border border-white/[.08] p-4">
           <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Tendencia</p>
           <p className="mt-1.5 text-sm font-semibold">{trend.text}</p>
         </div>
 
         <div className="mb-5 grid grid-cols-2 gap-2.5">
-          <div className="rounded-2xl border border-border p-3.5">
+          <div className="cinematic-card-dark rounded-2xl border border-white/[.07] p-3.5">
             <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">RM actual</p>
             <p className="mt-1.5 text-lg font-semibold tabular text-[var(--gold)]">
               {formatKg(Number(record.weight))} kg
@@ -899,7 +898,7 @@ function EvolutionChart({
   const pad = Math.max(2, (max - min) * 0.15);
 
   return (
-    <div className="mb-5 rounded-2xl border border-border p-4">
+    <div className="cinematic-card-dark mb-5 rounded-2xl border border-white/[.08] p-4">
       <div className="mb-3 flex items-baseline justify-between">
         <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
           Evolución
@@ -940,11 +939,24 @@ function EvolutionChart({
             />
             <Line
               type="monotone"
-              dataKey="weight"
+              dataKey="real"
+              name="RM confirmado"
               stroke="var(--gold)"
-              strokeWidth={2}
-              dot={{ r: 2.5, fill: "var(--gold)", strokeWidth: 0 }}
-              activeDot={{ r: 4.5 }}
+              strokeWidth={2.5}
+              dot={{ r: 3, fill: "var(--gold)", strokeWidth: 0 }}
+              activeDot={{ r: 5 }}
+              connectNulls
+            />
+            <Line
+              type="monotone"
+              dataKey="estimated"
+              name="1RM estimado"
+              stroke="var(--foreground)"
+              strokeWidth={1.5}
+              strokeDasharray="5 4"
+              dot={{ r: 2, fill: "var(--foreground)", strokeWidth: 0 }}
+              activeDot={{ r: 4 }}
+              connectNulls
             />
           </LineChart>
         </ResponsiveContainer>

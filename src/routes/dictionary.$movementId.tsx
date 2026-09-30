@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Dumbbell } from "lucide-react";
 import { GlassCard } from "@/components/glass";
-import { YouTubeEmbed } from "@/components/YouTubeEmbed";
+import { MovementVideoEmbed } from "@/components/MovementVideoEmbed";
 import { movements } from "@/lib/dictionary/catalog";
 import { resolveMovementId } from "@/lib/dictionary/resolve";
 import { usePersonalRecordHistory, usePersonalRecords } from "@/lib/store";
@@ -71,7 +71,7 @@ function MovementPage() {
       </GlassCard>
 
       <MovementSection title="Demostración">
-        <YouTubeEmbed videoUrl={movement.videoUrl} />
+        <MovementVideoEmbed movementId={movement.id} fallbackUrl={movement.videoUrl} />
       </MovementSection>
 
       <MovementSection title="Descripción">

@@ -45,34 +45,18 @@ const supabaseAdmin = createClient(
 async function isAdmin(profileId: string, pinHash?: string) {
   if (!profileId || !pinHash) return false;
 
-  const { data: admin } = await supabaseAdmin
-    .from("video_admins")
-    .select("profile_id")
-    .eq("profile_id", profileId)
+  // The app uses profile + PIN rather than Supabase Auth.
+  // Verify the stored SHA-256 hash directly with the service role.
+  const { data: profile, error } = await supabaseAdmin
+    .from("profiles")
+    .select("id, name, pin_hash")
+    .eq("id", profileId)
     .maybeSingle();
 
-  let authorizedProfile = !!admin;
+  if (error || !profile) return false;
+  if (profile.name?.trim().toLowerCase() !== "bc") return false;
 
-  // BC is the sole administrator. Keep the backend authorization tied
-  // to the profile identity even if the admin seed migration ran before
-  // the BC profile existed.
-  if (!authorizedProfile) {
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("id, name")
-      .eq("id", profileId)
-      .maybeSingle();
-    authorizedProfile = profile?.name?.trim().toLowerCase() === "bc";
-  }
-
-  if (!authorizedProfile) return false;
-
-  const { data: valid, error } = await supabaseAdmin.rpc("verify_profile_pin", {
-    _profile_id: profileId,
-    _pin_hash: pinHash,
-  });
-
-  return !error && valid === true;
+  return profile.pin_hash === pinHash;
 }
 
 function validMovementId(id?: string) {

@@ -281,7 +281,7 @@ function Home() {
                   className="h-full rounded-full transition-[width] duration-700"
                   style={{
                     width: `${Math.max(next.progress.pct, 2)}%`,
-                    background: "linear-gradient(90deg,#D9FF8A,#B8FF3D)",
+                    background: "linear-gradient(90deg,var(--gold-soft),var(--gold))",
                   }}
                 />
               </div>

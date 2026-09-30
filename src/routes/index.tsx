@@ -314,11 +314,12 @@ function Home() {
               />
             </div>
           </GlassCard>
+          </button>
 
           {/* 6 · Estadísticas rápidas */}
           <div className="rise rise-3 mt-3 grid grid-cols-2 gap-3">
-            <MiniStat label="Bloques" value={String(stats.blocks)} icon={<Dumbbell className="h-3.5 w-3.5" />} />
-            <MiniStat label="Constancia" value={`${stats.pct}%`} icon={<Flame className="h-3.5 w-3.5" />} />
+            <button type="button" onClick={() => navigate({ to: "/profile" })} className="text-left"><MiniStat label="Bloques" value={String(stats.blocks)} icon={<Dumbbell className="h-3.5 w-3.5" />} /></button>
+            <button type="button" onClick={() => navigate({ to: "/profile" })} className="text-left"><MiniStat label="Constancia" value={String(stats.pct) + "%"} icon={<Flame className="h-3.5 w-3.5" />} /></button>
           </div>
 
           {/* 7 · PRs */}

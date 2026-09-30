@@ -47,11 +47,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const moreActive = moreLinks.some((l) => pathname.startsWith(l.to));
 
   return (
-    <div className="grain relative min-h-[100dvh] pb-[104px]">
-      <div aria-hidden className="aura pointer-events-none absolute inset-x-0 top-0 h-[300px]" />
+    <div className="grain relative min-h-[100dvh] overflow-x-hidden pb-[104px]">
+      <div aria-hidden className="aura pointer-events-none absolute inset-x-0 top-0 h-[420px]" />
       <div
         aria-hidden
-        className="dotgrid pointer-events-none absolute inset-x-0 top-0 h-[360px] opacity-40"
+        className="dotgrid pointer-events-none absolute inset-x-0 top-0 h-[420px] opacity-25"
         style={{ maskImage: "linear-gradient(#000, transparent)", WebkitMaskImage: "linear-gradient(#000, transparent)" }}
       />
 
@@ -96,7 +96,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {moreOpen && (
         <div className="fixed inset-0 flex items-end" style={{ zIndex: 2147483001 }}>
           <button aria-label="Cerrar menú" onClick={() => setMoreOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-[6px]" />
-          <div className="glass-elevated glass-sheen animate-fade relative mx-4 mb-[96px] max-w-2xl flex-1 p-3 sm:mx-auto">
+          <div className="glass-elevated glass-sheen animate-fade relative mx-3 mb-[96px] max-w-2xl flex-1 rounded-[28px] p-3 sm:mx-auto">
             <p className="eyebrow px-2 pb-2 pt-1">Más</p>
             <div className="space-y-1.5">
               {moreLinks.map((l) => {
@@ -139,13 +139,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div
           className="safe-x border-t"
           style={{
-            background: "rgba(8,9,11,0.72)",
+            background: "rgba(5,6,8,0.82)",
             borderColor: "rgba(255,255,255,0.08)",
-            backdropFilter: "blur(24px) saturate(170%)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07)",
+            backdropFilter: "blur(30px) saturate(155%)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 -18px 50px -35px rgba(0,0,0,.95)",
           }}
         >
-          <div className="safe-bottom mx-auto flex max-w-2xl items-stretch gap-0.5 px-2 pt-1.5">
+          <div className="safe-bottom mx-auto flex max-w-2xl items-stretch gap-1 px-2 pt-2">
             {tabs.map((t) => {
               const isActive = pathname === t.to || (t.to !== "/" && pathname.startsWith(t.to));
               const Icon = t.icon;

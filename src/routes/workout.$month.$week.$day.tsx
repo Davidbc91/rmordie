@@ -224,6 +224,12 @@ function WorkoutPage() {
 }
 
 
+function estimateOneRm(weight: number, reps: number): number | null {
+  if (!Number.isFinite(weight) || weight <= 0 || !Number.isInteger(reps) || reps < 2 || reps > 10) return null;
+  // Epley: useful as an estimate, never treated as a confirmed 1RM.
+  return Math.round((weight * (1 + reps / 30)) * 2) / 2;
+}
+
 function BlockCard({
   blockKey, content, existing, existingWod, settings, contextIds, register, registerWod, persistWod, onWodSaved,
 }: {
@@ -308,6 +314,12 @@ function BlockCard({
     const n = Number(w);
     return w !== "" && Number.isFinite(n) && n > 0 ? n : null;
   }, [weight]);
+  const estimatedOneRm = useMemo(() => {
+    const w = Number(weight.replace(",", ".").trim());
+    const r = Number(reps);
+    return estimateOneRm(w, r);
+  }, [weight, reps]);
+
   const loadCompare = useMemo(
     () =>
       actualLoad != null && targetLoads.length > 0
@@ -441,6 +453,26 @@ function BlockCard({
                 <span className="text-sm font-bold text-gold">Usar {formatKg(targetLoads[0].suggested)} kg</span>
               </button>
             )}
+          </div>
+        )}
+
+        {estimatedOneRm != null && detected && (
+          <div className="glass-quiet mt-4 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">1RM estimado</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {formatKg(Number(weight.replace(",", ".")))} kg × {reps} reps · fórmula Epley
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="metric gold-text">{formatKg(estimatedOneRm)}</p>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">kg · estimado</p>
+              </div>
+            </div>
+            <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+              Es una referencia calculada, no un 1RM confirmado. Puedes usarla como referencia para futuras cargas.
+            </p>
           </div>
         )}
 

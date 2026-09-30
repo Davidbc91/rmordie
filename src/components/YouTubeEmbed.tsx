@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Play, WifiOff } from "lucide-react";
-import { getYouTubeVideoId } from "@/lib/dictionary/youtube";
+import { getDictionaryVideoId } from "@/lib/dictionary/videoOverrides";
 
 export function YouTubeEmbed({ videoUrl }: { videoUrl?: string | null }) {
-  const videoId = getYouTubeVideoId(videoUrl);
+  const videoId = getDictionaryVideoId(videoUrl);
   const [online, setOnline] = useState(false);
 
   useEffect(() => {

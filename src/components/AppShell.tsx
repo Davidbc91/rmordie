@@ -9,6 +9,7 @@ import { useChatUnread } from "@/lib/chat-unread";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { isVideoAdmin } from "@/lib/admin-videos";
+import { useProfiles } from "@/lib/store";
 
 const tabs = [
   { to: "/", label: "Inicio", icon: Home },
@@ -32,6 +33,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const chatUnread = useChatUnread();
   const currentProfileId = getCurrentUserId();
+  const { data: profiles = [] } = useProfiles();
+  const currentProfile = profiles.find((profile) => profile.id === currentProfileId);
+  const isBcProfile = currentProfile?.name.trim().toLowerCase() === "bc";
   const { data: isAdmin } = useQuery({
     queryKey: ["video-admin", currentProfileId],
     queryFn: isVideoAdmin,
@@ -39,8 +43,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     staleTime: 5 * 60 * 1000,
   });
   const visibleMoreLinks = useMemo(
-    () => isAdmin ? [...moreLinks, { to: "/admin/videos", label: "Administración", hint: "Gestionar vídeos", icon: Film }] : moreLinks,
-    [isAdmin],
+    () => isBcProfile || isAdmin ? [...moreLinks, { to: "/admin/videos", label: "Administración", hint: "Gestionar vídeos", icon: Film }] : moreLinks,
+    [isAdmin, isBcProfile],
   );
 
   useEffect(() => {

@@ -20,13 +20,13 @@ import {
   ChevronRight,
   ArrowRight,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
 import { normalizeExerciseName, sameExercise, mentionsExercise, formatKg } from "@/lib/rm-matcher";
 import { WodRecords } from "@/components/WodRecords";
 import { MovementDictionaryLink } from "@/components/MovementDictionaryLink";
-import { resolveMovement } from "@/lib/dictionary/resolve";
+import { resolveMovement, resolveMovementId } from "@/lib/dictionary/resolve";
 import {
   LineChart,
   Line,
@@ -37,12 +37,19 @@ import {
   CartesianGrid,
 } from "recharts";
 
-type RecordsSearch = { tab?: "strength" | "wods"; wod?: string };
+type RecordsSearch = {
+  tab?: "strength" | "wods";
+  wod?: string;
+  exercise?: string;
+  repMax?: number;
+};
 
 export const Route = createFileRoute("/records")({
   validateSearch: (search: Record<string, unknown>): RecordsSearch => ({
     tab: search.tab === "wods" ? "wods" : "strength",
     wod: typeof search.wod === "string" ? search.wod : undefined,
+    exercise: typeof search.exercise === "string" ? search.exercise : undefined,
+    repMax: [1, 3, 5, 10].includes(Number(search.repMax)) ? Number(search.repMax) : undefined,
   }),
   head: () => ({
     meta: [
@@ -62,6 +69,18 @@ function RecordsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const category = search.tab === "wods" ? "wods" : "strength";
+  const clearFocus = useCallback(
+    () =>
+      navigate({
+        search: (previous) => ({
+          ...previous,
+          exercise: undefined,
+          repMax: undefined,
+        }),
+        replace: true,
+      }),
+    [navigate],
+  );
 
   return (
     <AppShell>
@@ -96,7 +115,11 @@ function RecordsPage() {
       {category === "wods" ? (
         <WodRecords focusSlug={search.wod} />
       ) : (
-        <StrengthRecords />
+        <StrengthRecords
+          focusExercise={search.exercise}
+          focusRepMax={search.repMax}
+          clearFocus={clearFocus}
+        />
       )}
     </AppShell>
   );
@@ -148,7 +171,15 @@ const SUGGESTED = [
   "Turkish Get-up",
 ];
 
-function StrengthRecords() {
+function StrengthRecords({
+  focusExercise,
+  focusRepMax,
+  clearFocus,
+}: {
+  focusExercise?: string;
+  focusRepMax?: number;
+  clearFocus: () => void;
+}) {
   const { data: records = [], isLoading } = usePersonalRecords();
   const upsert = useUpsertPersonalRecord();
   const update = useUpdatePersonalRecord();
@@ -165,6 +196,22 @@ function StrengthRecords() {
   const [editWeight, setEditWeight] = useState("");
   const [detailFor, setDetailFor] = useState<PersonalRecord | null>(null);
   const [celebrate, setCelebrate] = useState<PrCelebrationData | null>(null);
+
+  useEffect(() => {
+    if (!focusExercise || isLoading) return;
+    const targetMovementId = resolveMovementId(focusExercise);
+    const record = records.find((item) => {
+      const matchesMovement = targetMovementId
+        ? resolveMovementId(item.exercise) === targetMovementId
+        : sameExercise(item.exercise, focusExercise);
+      return matchesMovement && (item.rep_max ?? 1) === (focusRepMax ?? 1);
+    });
+    if (record) {
+      setTab(focusRepMax ?? 1);
+      setDetailFor(record);
+    }
+    clearFocus();
+  }, [clearFocus, focusExercise, focusRepMax, isLoading, records]);
 
   const visible = useMemo(() => {
     const list = tab === "all" ? records : records.filter((r) => (r.rep_max ?? 1) === tab);

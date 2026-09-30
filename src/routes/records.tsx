@@ -104,7 +104,7 @@ function RecordsPage() {
             onClick={() => navigate({ search: { tab: c.value }, replace: true })}
             className={`flex-1 rounded-xl px-3 py-2 text-xs font-semibold tracking-wide transition ${
               category === c.value
-                ? "gold-gradient shadow-[0_10px_22px_-16px_rgba(184,255,61,0.42)]"
+                ? "gold-gradient shadow-[0_10px_22px_-16px_rgba(200,179,138,0.36)]"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >

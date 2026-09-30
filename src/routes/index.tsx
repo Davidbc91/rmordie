@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults, usePersonalRecords, type WorkoutResult } from "@/lib/store";
-import { useMilestones, useGoals } from "@/lib/profile-store";
+import { useAthleteProfile, useMilestones, useGoals, useAllPrHistory } from "@/lib/profile-store";
 import { streaks, sessionDays } from "@/lib/analytics";
 import { GlassCard, GlassSection, GlassBadge } from "@/components/glass";
 import {
@@ -39,6 +39,8 @@ function Home() {
   const { data: results = [] } = useAllResults();
   const { data: records = [] } = usePersonalRecords();
   const { data: milestones = [] } = useMilestones();
+  const { data: profile } = useAthleteProfile();
+  const { data: prHistory = [] } = useAllPrHistory();
   const { data: goals = [] } = useGoals();
 
 
@@ -89,6 +91,18 @@ function Home() {
     return { done, total: train.length };
   }, [planning, next, blockMap]);
 
+
+  const streak = useMemo(() => streaks(results), [results]);
+  const weekStats = useMemo(() => {
+    const cutoff = Date.now() - 7 * 864e5;
+    const recent = results.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
+    const sessions = new Set(recent.map((r) => `${r.month_key}|${r.week}|${r.day_key}`)).size;
+    const volume = recent.reduce((sum, r) => sum + (r.weight ?? 0) * (r.sets ?? 1) * (r.reps ?? 0), 0);
+    const rpes = recent.map((r) => r.rpe).filter((x): x is number => x != null);
+    return { sessions, volume, avgRpe: rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null };
+  }, [results]);
+  const recentPrCount = useMemo(() => prHistory.filter((h) => Date.now() - new Date(h.changed_at).getTime() <= 30 * 864e5).length, [prHistory]);
+  const activeGoal = useMemo(() => goals.find((g) => g.status !== "completed"), [goals]);
 
   const topRecords = useMemo(
     () =>
@@ -175,7 +189,22 @@ function Home() {
             </GlassCard>
           )}
 
-          {/* 2 · Progreso */}
+          {/* 2 · Estado actual */}
+          <div className="rise rise-3 mt-3 grid grid-cols-3 gap-2">
+            <DashboardStat value={String(streak.current)} label="Racha" icon={<Flame className="h-3.5 w-3.5" />} />
+            <DashboardStat value={String(weekStats.sessions)} label="Esta semana" icon={<Activity className="h-3.5 w-3.5" />} />
+            <DashboardStat value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR · 30 días" icon={<Trophy className="h-3.5 w-3.5" />} />
+          </div>
+
+          {activeGoal && (
+            <GlassCard level={2} className="rise rise-3 mt-3 p-5">
+              <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Objetivo activo</p><p className="mt-2 text-sm font-semibold">{activeGoal.title}</p></div><Target className="h-5 w-5 shrink-0 text-gold" /></div>
+              <div className="mt-4 flex items-end justify-between gap-3"><div className="text-2xl font-semibold tabular">{activeGoal.current_value ?? activeGoal.start_value ?? "—"} <span className="text-xs text-muted-foreground">{activeGoal.unit ?? ""}</span></div><div className="text-right text-xs text-muted-foreground">Objetivo <span className="font-semibold text-foreground">{activeGoal.target_value} {activeGoal.unit ?? ""}</span></div></div>
+              {activeGoal.current_value != null && activeGoal.target_value > 0 && <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[linear-gradient(90deg,#EBD6A6,#D8B46B)]" style={{ width: Math.min(100, Math.max(0, (activeGoal.current_value / activeGoal.target_value) * 100)) + "%" }} /></div>}
+            </GlassCard>
+          )}
+
+          {/* 3 · Progreso */}
           <GlassCard level={2} className="rise rise-3 mt-3 p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
@@ -195,13 +224,13 @@ function Home() {
             </div>
           </GlassCard>
 
-          {/* 3 · Estadísticas rápidas */}
+          {/* 4 · Estadísticas rápidas */}
           <div className="rise rise-3 mt-3 grid grid-cols-2 gap-3">
             <MiniStat label="Bloques" value={String(stats.blocks)} icon={<Dumbbell className="h-3.5 w-3.5" />} />
             <MiniStat label="Constancia" value={`${stats.pct}%`} icon={<Flame className="h-3.5 w-3.5" />} />
           </div>
 
-          {/* 4 · PRs */}
+          {/* 5 · PRs */}
           {topRecords.length > 0 && (
             <GlassSection
               title="Récords recientes"
@@ -234,7 +263,7 @@ function Home() {
             </GlassSection>
           )}
 
-          {/* 5 · Accesos */}
+          {/* 6 · Accesos */}
           <GlassSection title="Accesos" className="rise rise-5">
             <div className="space-y-2">
               <QuickAction to="/calendar" icon={<Calendar className="h-[18px] w-[18px]" />} title="Calendario" subtitle="Tu planificación mes a mes" />

@@ -41,7 +41,7 @@ function AdminVideosPage() {
       if (error) throw error;
       return (data ?? []) as MovementVideo[];
     },
-    enabled: admin === true || !!pinHash,
+    enabled: !!pinHash,
   });
 
   const [pin, setPin] = useState("");

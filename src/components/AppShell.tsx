@@ -2,10 +2,13 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User, Play, X, Users, MoreHorizontal, ChevronRight, BookOpen,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getActiveWorkout, clearActiveWorkout, type ActiveWorkout } from "@/lib/active-workout";
 import { useChatUnread } from "@/lib/chat-unread";
 import { SyncIndicator } from "@/components/SyncIndicator";
+import { getCurrentUserId } from "@/lib/pin-gate";
+import { isVideoAdmin } from "@/lib/admin-videos";
 
 const tabs = [
   { to: "/", label: "Inicio", icon: Home },
@@ -28,6 +31,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState<ActiveWorkout | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const chatUnread = useChatUnread();
+  const currentProfileId = getCurrentUserId();
+  const { data: isAdmin } = useQuery({
+    queryKey: ["video-admin", currentProfileId],
+    queryFn: isVideoAdmin,
+    enabled: !!currentProfileId,
+    staleTime: 5 * 60 * 1000,
+  });
+  const visibleMoreLinks = useMemo(
+    () => isAdmin ? [...moreLinks, { to: "/admin/videos", label: "Administración", hint: "Gestionar vídeos", icon: Film }] : moreLinks,
+    [isAdmin],
+  );
 
   useEffect(() => {
     const read = () => setActive(getActiveWorkout());
@@ -44,7 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const activePath = active ? `/workout/${active.month}/${active.week}/${active.day}` : null;
   const showResume = !!active && pathname !== activePath;
-  const moreActive = moreLinks.some((l) => pathname.startsWith(l.to));
+  const moreActive = visibleMoreLinks.some((l) => pathname.startsWith(l.to));
 
   return (
     <div className="grain relative min-h-[100dvh] overflow-x-hidden pb-[104px]">
@@ -99,7 +113,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="glass-elevated glass-sheen animate-fade relative mx-3 mb-[96px] max-w-2xl flex-1 rounded-[28px] p-3 sm:mx-auto">
             <p className="eyebrow px-2 pb-2 pt-1">Más</p>
             <div className="space-y-1.5">
-              {moreLinks.map((l) => {
+              {visibleMoreLinks.map((l) => {
                 const Icon = l.icon;
                 const isActive = pathname.startsWith(l.to);
                 return (

@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { LinkedText } from "@/components/LinkedText";
-import { usePlanning, useDayResults, useSaveResult, useSettings, usePersonalRecords, useAllResults, findDay } from "@/lib/store";
+import { usePlanning, useDayResults, useSaveResult, useSettings, usePersonalRecords, findDay, useUpsertPersonalRecord } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { detectExercise, loadsForPercentages, formatKg, compareLoads, LOAD_STATUS_LABEL } from "@/lib/rm-matcher";
+import { resolveMovementId } from "@/lib/dictionary/resolve";
+import { movements } from "@/lib/dictionary/catalog";
 import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -236,6 +238,7 @@ function BlockCard({
   contextIds: { month_key: string; week: number; day_key: string };
 }) {
   const save = useSaveResult();
+  const upsertRecord = useUpsertPersonalRecord();
   const { data: records = [] } = usePersonalRecords();
   const [weight, setWeight] = useState<string>(existing?.weight?.toString() ?? "");
   const [sets, setSets] = useState<string>(existing?.sets?.toString() ?? "");
@@ -355,8 +358,23 @@ function BlockCard({
     registerWod(wodPayload);
   });
 
+  async function maybeSaveStrengthPr(): Promise<boolean> {
+    const w = Number(weight.replace(",", ".").trim());
+    const r = Number(reps);
+    if (!detected || !Number.isFinite(w) || w <= 0 || r !== 1) return false;
+    const movementId = resolveMovementId(detected.exercise);
+    const movement = movementId ? movements.find((item) => item.id === movementId) : null;
+    if (!movement?.rm) return false;
+    const current = records.find((record) => (record.rep_max ?? 1) === 1 && resolveMovementId(record.exercise) === movement.id);
+    if (current && w <= Number(current.weight)) return false;
+    await upsertRecord.mutateAsync({ exercise: movement.name, weight: w, rep_max: 1 });
+    return true;
+  }
+
   async function onSaveClick() {
     await save.mutateAsync({ ...contextIds, ...payload() });
+    const strengthPr = await maybeSaveStrengthPr();
+    if (strengthPr) toast.success(`Nuevo 1RM: ${formatKg(Number(weight.replace(",", ".")))} kg`);
     if (wod) {
       setSavingWod(true);
       try {

@@ -1,4 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import<div className="mt-3 flex flex-wrap gap-1.5">
+          {[6, 7, 8, 9, 10].map((value) => (
+            <button key={value} type="button" onClick={() => setRpe(String(value))} className={`pressable rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold ${Number(rpe) === value ? "gold-gradient border-transparent" : "border-border text-muted-foreground"}`}>RPE {value}</button>
+          ))}
+        </div> { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { LinkedText } from "@/components/LinkedText";
 import { usePlanning, useDayResults, useSaveResult, useSettings, usePersonalRecords, findDay, useUpsertPersonalRecord } from "@/lib/store";
@@ -6,7 +10,7 @@ import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { detectExercise, loadsForPercentages, formatKg, compareLoads, LOAD_STATUS_LABEL } from "@/lib/rm-matcher";
 import { resolveMovementId } from "@/lib/dictionary/resolve";
 import { movements } from "@/lib/dictionary/catalog";
-import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
+import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { setActiveWorkout, clearActiveWorkout, loadDraft, saveDraft, clearDraft } from "@/lib/active-workout";
@@ -268,6 +272,7 @@ function BlockCard({
   const [wodRounds, setWodRounds] = useState<string>(existingWod?.rounds?.toString() ?? "");
   const [wodReps, setWodReps] = useState<string>(existingWod?.reps?.toString() ?? "");
   const [savingWod, setSavingWod] = useState(false);
+  const [savedPulse, setSavedPulse] = useState(false);
 
   // Restaurar borrador (valores escritos y no guardados) al volver a la pantalla
   useEffect(() => {
@@ -407,6 +412,8 @@ function BlockCard({
         setSavingWod(false);
       }
     }
+    setSavedPulse(true);
+    window.setTimeout(() => setSavedPulse(false), 900);
     toast.success(`${blockKey} guardado`);
   }
 
@@ -423,6 +430,7 @@ function BlockCard({
             {blockKey}
           </span>
           {existing && <Check className="h-4 w-4 text-gold" />}
+          {savedPulse && <span className="text-[10px] font-semibold text-gold">Guardado</span>}
           {wod && (
             <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
               <Timer className="h-3 w-3" /> {WOD_TYPE_LABEL[wod.type]}
@@ -441,6 +449,16 @@ function BlockCard({
       {open && (
       <div className="border-t border-border/60 px-5 pb-5 pt-4">
         <LinkedText text={content} className="opacity-90" />
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" onClick={() => setWeight(String(Math.max(0, (Number(weight.replace(",", ".")) || 0) - 2.5)))} className="pressable inline-flex items-center gap-1 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-muted-foreground" disabled={!actualLoad}>
+            <Minus className="h-3 w-3" /> 2.5 kg
+          </button>
+          <button type="button" onClick={() => setWeight(String((Math.round(((Number(weight.replace(",", ".")) || 0) + 2.5) * 2) / 2)))} className="pressable inline-flex items-center gap-1 rounded-xl border border-[rgba(216,180,107,0.28)] bg-[rgba(216,180,107,0.08)] px-3 py-2 text-xs font-semibold text-gold">
+            <Plus className="h-3 w-3" /> 2.5 kg
+          </button>
+          {actualLoad != null && <span className="inline-flex items-center rounded-xl bg-surface-2 px-3 py-2 text-xs font-semibold">{formatKg(actualLoad)} kg</span>}
+        </div>
 
         {detected && (
           <div className="glass-quiet mt-4 p-4">

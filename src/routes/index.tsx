@@ -8,7 +8,7 @@ import {
   Calendar, Upload, Flame, Trophy, ChevronRight, Timer, Dumbbell, User, Play, ArrowUpRight, Users,
   Award, Target, CalendarCheck, Activity, Layers,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 import {
   completedBlockMap,
@@ -400,7 +400,19 @@ function EmptyState() {
   );
 }
 
-function MiniStat({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+function DashboardStat({ value, label, icon }: { value: string; label: string; icon: ReactNode }) {
+  return (
+    <div className="glass glass-sheen pressable min-w-0 p-3">
+      <div className="flex items-center gap-1.5 eyebrow">
+        {icon}
+        <span className="truncate">{label}</span>
+      </div>
+      <div className="metric mt-2 truncate">{value}</div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
   return (
     <div className="glass glass-sheen pressable p-4">
       <div className="flex items-center gap-1.5 eyebrow">

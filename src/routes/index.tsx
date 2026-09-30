@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults, usePersonalRecords, type WorkoutResult } from "@/lib/store";
 import { useAthleteProfile, useMilestones, useGoals, useAllPrHistory } from "@/lib/profile-store";
-import { streaks, sessionDays } from "@/lib/analytics";
+import { streaks, sessionDays, volumeOf, fmtKg } from "@/lib/analytics";
 import { GlassCard, GlassSection, GlassBadge } from "@/components/glass";
 import {
   Calendar, Upload, Flame, Trophy, ChevronRight, Timer, Dumbbell, User, Play, ArrowUpRight, Users,
@@ -104,6 +104,24 @@ function Home() {
   const recentPrCount = useMemo(() => prHistory.filter((h) => Date.now() - new Date(h.changed_at).getTime() <= 30 * 864e5).length, [prHistory]);
   const activeGoal = useMemo(() => goals.find((g) => g.status !== "completed"), [goals]);
 
+  const smartState = useMemo(() => {
+    const cutoff = Date.now() - 7 * 864e5;
+    const recent = results.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
+    const rpes = recent.map((r) => r.rpe).filter((x): x is number => x != null);
+    const avgRpe = rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null;
+    const volume = recent.reduce((sum, r) => sum + volumeOf(r), 0);
+    const sessions = new Set(recent.map((r) => `${r.month_key}|${r.week}|${r.day_key}`)).size;
+    let tone = "neutral";
+    let title = "Empieza a registrar tu rendimiento";
+    let detail = "Cuando acumules sesiones, RMORDIE podrá interpretar tu carga y recuperación de forma más precisa.";
+    if (sessions >= 3 && avgRpe != null) {
+      if (avgRpe >= 9) { tone = "attention"; title = "Semana exigente"; detail = `Tu RPE medio está en ${avgRpe.toFixed(1)}. Vigila la recuperación antes de añadir carga.`; }
+      else if (avgRpe <= 7) { tone = "positive"; title = "Buen margen esta semana"; detail = `RPE medio ${avgRpe.toFixed(1)}. Hay margen para progresar si la técnica y la recuperación acompañan.`; }
+      else { title = "Carga bien controlada"; detail = `RPE medio ${avgRpe.toFixed(1)} con ${sessions} sesiones completadas esta semana.`; }
+    }
+    return { tone, title, detail, sessions, volume, avgRpe };
+  }, [results]);
+
   const topRecords = useMemo(
     () =>
       [...records]
@@ -204,7 +222,17 @@ function Home() {
             </GlassCard>
           )}
 
-          {/* 3 · Progreso */}
+          {/* 3 · Estado de entrenamiento */}
+          <GlassCard level={2} className="rise rise-3 mt-3 p-5">
+            <div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="eyebrow">Estado de entrenamiento</p><h2 className="mt-2 text-lg font-semibold">{smartState.title}</h2><p className="mt-2 text-xs leading-relaxed text-muted-foreground">{smartState.detail}</p></div><Activity className={`h-5 w-5 shrink-0 ${smartState.tone === "positive" ? "text-gold" : "text-muted-foreground"}`} /></div>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <DashboardStat value={String(smartState.sessions)} label="Sesiones" icon={<CalendarCheck className="h-3.5 w-3.5" />} />
+              <DashboardStat value={smartState.avgRpe != null ? smartState.avgRpe.toFixed(1) : "—"} label="RPE medio" icon={<Activity className="h-3.5 w-3.5" />} />
+              <DashboardStat value={smartState.volume > 0 ? fmtKg(smartState.volume, 0) : "—"} label="Volumen" icon={<Dumbbell className="h-3.5 w-3.5" />} />
+            </div>
+          </GlassCard>
+
+          {/* 4 · Progreso */}
           <GlassCard level={2} className="rise rise-3 mt-3 p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">

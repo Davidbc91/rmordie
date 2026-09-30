@@ -10,7 +10,7 @@ import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { detectExercise, loadsForPercentages, formatKg, compareLoads, LOAD_STATUS_LABEL } from "@/lib/rm-matcher";
 import { resolveMovementId } from "@/lib/dictionary/resolve";
 import { movements } from "@/lib/dictionary/catalog";
-import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy, Minus, Plus } from "lucide-react";
+import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { setActiveWorkout, clearActiveWorkout, loadDraft, saveDraft, clearDraft } from "@/lib/active-workout";
@@ -272,7 +272,6 @@ function BlockCard({
   const [wodRounds, setWodRounds] = useState<string>(existingWod?.rounds?.toString() ?? "");
   const [wodReps, setWodReps] = useState<string>(existingWod?.reps?.toString() ?? "");
   const [savingWod, setSavingWod] = useState(false);
-  const [savedPulse, setSavedPulse] = useState(false);
 
   // Restaurar borrador (valores escritos y no guardados) al volver a la pantalla
   useEffect(() => {
@@ -412,8 +411,6 @@ function BlockCard({
         setSavingWod(false);
       }
     }
-    setSavedPulse(true);
-    window.setTimeout(() => setSavedPulse(false), 900);
     toast.success(`${blockKey} guardado`);
   }
 
@@ -430,7 +427,6 @@ function BlockCard({
             {blockKey}
           </span>
           {existing && <Check className="h-4 w-4 text-gold" />}
-          {savedPulse && <span className="text-[10px] font-semibold text-gold">Guardado</span>}
           {wod && (
             <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
               <Timer className="h-3 w-3" /> {WOD_TYPE_LABEL[wod.type]}
@@ -563,19 +559,6 @@ function BlockCard({
           <Field label="Reps" value={reps} onChange={setReps} type="number" />
           <Field label="Tiempo (mm:ss)" value={time} onChange={setTime} placeholder="3:45" />
           <Field label="RPE" value={rpe} onChange={setRpe} type="number" placeholder="1-10" />
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">RPE rápido</span>
-          {[6, 7, 8, 9, 10].map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setRpe(String(value))}
-              className={`pressable rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold ${Number(rpe) === value ? "gold-gradient border-transparent" : "border-border text-muted-foreground"}`}
-            >
-              {value}
-            </button>
-          ))}
         </div>
 
         {nextLoad && detected && (

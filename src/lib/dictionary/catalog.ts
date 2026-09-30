@@ -629,7 +629,15 @@ const verifiedVideoUrls: Record<string, string> = {
   "Hang Clean": "https://www.youtube.com/watch?v=DaKC_BEN5bk",
   "Split Jerk": "https://www.youtube.com/watch?v=PsiO8lZTU2I",
   "Power Snatch": "https://www.youtube.com/watch?v=tuOiNeTvLJs",
-  "Thruster": "https://www.youtube.com/watch?v=L219ltL15zk"
+  "Thruster": "https://www.youtube.com/watch?v=L219ltL15zk",
+  "Pull-up": "https://www.youtube.com/watch?v=lzRo-4pq_AY",
+  "Ring Muscle-Up": "https://www.youtube.com/watch?v=vJTJFc2wmk4",
+  "Handstand Walk": "https://www.youtube.com/watch?v=PWDN313DwsE",
+  "Hang Snatch": "https://www.youtube.com/watch?v=IucshEToDyM",
+  "Strict Pull-Up": "https://www.youtube.com/watch?v=HRV5YKKaeVw",
+  "Handstand Hold": "https://www.youtube.com/watch?v=BqS0EYoQIdU",
+  "Pistol Squat": "https://www.youtube.com/watch?v=FW5JT6KIaq4",
+  "Rope Climb": "https://www.youtube.com/watch?v=Pa4QUC9AvuA"
 };
 
 // RM is reserved for stable, loadable strength/Olympic lifts, not every movement

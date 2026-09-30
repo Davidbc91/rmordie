@@ -433,16 +433,6 @@ function DashboardStat({ value, label, icon, onClick }: { value: string; label: 
   return <div className="glass glass-sheen min-w-0 p-3">{inner}</div>;
 }
 
-function UNUSED_DashboardStat_old
-      <div className="flex items-center gap-1.5 eyebrow">
-        {icon}
-        <span className="truncate">{label}</span>
-      </div>
-      <div className="metric mt-2 truncate">{value}</div>
-    </div>
-  );
-}
-
 function MiniStat({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
   return (
     <div className="glass glass-sheen pressable p-4">

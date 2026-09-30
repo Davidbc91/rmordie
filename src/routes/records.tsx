@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
 import { normalizeExerciseName, sameExercise, mentionsExercise, formatKg } from "@/lib/rm-matcher";
 import { WodRecords } from "@/components/WodRecords";
+import { MovementDictionaryLink } from "@/components/MovementDictionaryLink";
+import { resolveMovement } from "@/lib/dictionary/resolve";
 import {
   LineChart,
   Line,
@@ -395,6 +397,7 @@ function StrengthRecords() {
         <ul className="rise rise-3 card-elevated divide-y divide-border overflow-hidden p-0">
           {visible.map((r) => {
             const isEditing = editingId === r.id;
+            const hasDictionaryMovement = !!resolveMovement(r.exercise);
             return (
               <li key={r.id} className="px-5 py-4">
                 {isEditing ? (
@@ -434,37 +437,48 @@ function StrengthRecords() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setDetailFor(r)}
-                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                          {r.exercise}
-                        </div>
-                        <div className="mt-1 flex items-baseline gap-1.5">
-                          <span className="metric gold-text">
-                            {r.weight}
-                          </span>
-                          <span className="text-xs text-muted-foreground">kg</span>
-                          <span className="ml-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold tracking-wide">
-                            {r.rep_max ?? 1}RM
-                          </span>
-                        </div>
-                        <div className="mt-1 text-[11px] text-muted-foreground">
-                          {new Date(r.updated_at).toLocaleDateString(undefined, {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                        {hasDictionaryMovement ? (
+                          <MovementDictionaryLink exerciseName={r.exercise}>
+                            {r.exercise}
+                          </MovementDictionaryLink>
+                        ) : (
+                          <button
+                            onClick={() => setDetailFor(r)}
+                            className="min-h-9 max-w-full truncate text-left"
+                          >
+                            {r.exercise}
+                          </button>
+                        )}
                       </div>
-                      <Sparkline exercise={r.exercise} repMax={r.rep_max ?? 1} />
-                      <ChevronRight
-                        className="h-4 w-4 shrink-0 text-muted-foreground"
-                        strokeWidth={1.5}
-                      />
-                    </button>
+                      <button
+                        onClick={() => setDetailFor(r)}
+                        className="mt-1 flex w-full min-w-0 items-center gap-3 text-left"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="metric gold-text">{r.weight}</span>
+                            <span className="text-xs text-muted-foreground">kg</span>
+                            <span className="ml-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                              {r.rep_max ?? 1}RM
+                            </span>
+                          </div>
+                          <div className="mt-1 text-[11px] text-muted-foreground">
+                            {new Date(r.updated_at).toLocaleDateString(undefined, {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </div>
+                        </div>
+                        <Sparkline exercise={r.exercise} repMax={r.rep_max ?? 1} />
+                        <ChevronRight
+                          className="h-4 w-4 shrink-0 text-muted-foreground"
+                          strokeWidth={1.5}
+                        />
+                      </button>
+                    </div>
                     <div className="flex shrink-0 gap-1">
                       <button
                         onClick={() => startEdit(r)}
@@ -577,7 +591,9 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
               {repMax}RM · Evolución
             </p>
             <h2 className="mt-1.5 truncate text-xl font-semibold tracking-tight">
-              {record.exercise}
+              <MovementDictionaryLink exerciseName={record.exercise}>
+                {record.exercise}
+              </MovementDictionaryLink>
             </h2>
           </div>
           <button

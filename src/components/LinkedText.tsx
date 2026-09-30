@@ -1,4 +1,5 @@
 import { ExternalLink, Play } from "lucide-react";
+import { MovementDictionarySegments } from "@/components/MovementDictionaryLink";
 
 const URL_RE = /((?:https?:\/\/|www\.)[^\s<>()"']+[^\s<>()"'.,;:!?])/gi;
 
@@ -40,7 +41,11 @@ export function LinkedText({ text, className }: { text: string; className?: stri
             </a>
           );
         }
-        return <span key={i}>{part}</span>;
+        return (
+          <span key={i}>
+            <MovementDictionarySegments text={part} />
+          </span>
+        );
       })}
     </p>
   );

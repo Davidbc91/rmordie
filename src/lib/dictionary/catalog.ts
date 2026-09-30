@@ -48,12 +48,19 @@ const seeds: Seed[] = [
   [
     "Bar Muscle-Up",
     "Muscle-up en barra",
-    "bar muscleup",
+    "bar muscleup|bmu",
     "Barra de dominadas",
     "Gimnásticos",
     "Advanced",
   ],
-  ["Ring Muscle-Up", "Muscle-up en anillas", "ring muscleup", "Anillas", "Gimnásticos", "Advanced"],
+  [
+    "Ring Muscle-Up",
+    "Muscle-up en anillas",
+    "ring muscleup|rmu",
+    "Anillas",
+    "Gimnásticos",
+    "Advanced",
+  ],
   ["Ring Row", "Remo en anillas", "ring row", "Anillas", "Gimnásticos"],
   ["Handstand Push-Up", "Flexión de pino", "hspu", "Pared", "Gimnásticos", "Advanced"],
   [

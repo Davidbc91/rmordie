@@ -1,4 +1,5 @@
 import type { PersonalRecord } from "./store";
+import { resolveMovement, resolveMovements } from "./dictionary/resolve";
 
 /**
  * Automatic load calculation from existing personal records.
@@ -36,10 +37,18 @@ export function detectExercise(content: string, records: PersonalRecord[]): Pers
   const norm = normalizeExerciseName(content);
   const text = ` ${norm} `;
   const compact = norm.replace(/\s+/g, "");
+  const dictionaryIds = new Set(resolveMovements(content).map((match) => match.movementId));
   const sorted = [...records].sort(
     (a, b) => normalizeExerciseName(b.exercise).length - normalizeExerciseName(a.exercise).length,
   );
   for (const r of sorted) {
+    const movement = resolveMovement(r.exercise);
+    if (movement) {
+      if (dictionaryIds.has(movement.movementId)) return r;
+      // A shorter dictionary match (e.g. Clean inside Power Clean) must not
+      // fall through to the legacy substring matcher.
+      continue;
+    }
     const name = normalizeExerciseName(r.exercise);
     if (!name) continue;
     // Word-boundary match, and a space-insensitive match ("Dead Lift" == "Deadlift").
@@ -53,6 +62,10 @@ export function detectExercise(content: string, records: PersonalRecord[]): Pers
  * Uses the same normalized comparison as detectExercise (single exercise).
  */
 export function mentionsExercise(content: string, exercise: string): boolean {
+  const movement = resolveMovement(exercise);
+  if (movement) {
+    return resolveMovements(content).some((match) => match.movementId === movement.movementId);
+  }
   const name = normalizeExerciseName(exercise);
   if (!name) return false;
   const norm = normalizeExerciseName(content);

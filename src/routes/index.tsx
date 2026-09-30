@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults, usePersonalRecords, type WorkoutResult } from "@/lib/store";
 import { useAthleteProfile, useMilestones, useGoals, useAllPrHistory, useWellnessLogs } from "@/lib/profile-store";
-import { streaks, sessionDays, volumeOf, fmtKg } from "@/lib/analytics";
+import { streaks, sessionDays, volumeOf, fmtKg, estimate1rm } from "@/lib/analytics";
 import { extractPercentages } from "@/lib/plates";
 import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
 import { GlassCard, GlassSection, GlassBadge } from "@/components/glass";
@@ -120,6 +120,49 @@ function Home() {
       focus,
     };
   }, [planning, blockMap, records]);
+
+  const sessionCoach = useMemo(() => {
+    if (!planning || !next || next.focus.length === 0) return null;
+    const byExercise = new Map<string, { result: WorkoutResult; date: number }[]>();
+    for (const month of planning.data.months) {
+      for (const week of month.weeks) {
+        for (const day of week.days) {
+          for (const block of day.blocks) {
+            const detected = detectExercise(block.content, records);
+            if (!detected) continue;
+            const matches = results.filter((r) => r.status === "completed" && r.month_key === month.key && r.week === week.index && r.day_key === day.key && r.block_key === block.key && r.weight != null && r.reps != null && r.weight > 0 && r.reps > 0);
+            if (!matches.length) continue;
+            const list = byExercise.get(detected.exercise) ?? [];
+            for (const result of matches) list.push({ result, date: new Date(result.updated_at).getTime() });
+            byExercise.set(detected.exercise, list);
+          }
+        }
+      }
+    }
+    const candidates = next.focus.map((focus) => {
+      const recent = [...(byExercise.get(focus.exercise) ?? [])].sort((a, b) => b.date - a.date).filter((item, index, arr) => arr.findIndex((x) => x.result.id === item.result.id) === index).slice(0, 4);
+      if (!recent.length) return null;
+      const rpes = recent.map((x) => x.result.rpe).filter((x): x is number => x != null);
+      const avgRpe = rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null;
+      const latest = recent[0].result;
+      const estimated = estimate1rm(Number(latest.weight), Number(latest.reps));
+      const gap = ((estimated - Number(focus.rm)) / Number(focus.rm)) * 100;
+      let title = "Consolida la carga";
+      let detail = "Última referencia: " + formatKg(Number(latest.weight)) + " kg × " + latest.reps + ".";
+      if (avgRpe != null && avgRpe <= 7.5) {
+        title = "Hay margen para progresar";
+        detail = "RPE medio " + avgRpe.toFixed(1) + " en las últimas sesiones. Si la técnica es sólida, valora una subida de 2,5 kg.";
+      } else if (avgRpe != null && avgRpe >= 9) {
+        title = "Mantén antes de subir";
+        detail = "RPE medio " + avgRpe.toFixed(1) + ". Repite la carga y busca una ejecución consistente.";
+      } else if (gap >= 2.5) {
+        title = "Tu estimado apunta por encima";
+        detail = "El 1RM estimado reciente está aproximadamente un " + gap.toFixed(0) + "% por encima de tu RM registrada.";
+      }
+      return { exercise: focus.exercise, title, detail, avgRpe };
+    }).filter((x): x is NonNullable<typeof x> => x !== null).slice(0, 2);
+    return candidates.length ? candidates : null;
+  }, [planning, next, records, results]);
 
   const weekProgress = useMemo(() => {
     if (!planning || !next) return null;
@@ -249,6 +292,24 @@ function Home() {
               </p>
 
               <p className="mt-4 line-clamp-2 text-sm text-muted-foreground">{next.headline}</p>
+
+              {sessionCoach && (
+                <div className="mt-4 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] p-3.5">
+                  <p className="eyebrow">Recomendación para hoy</p>
+                  <div className="mt-3 space-y-3">
+                    {sessionCoach.map((item) => (
+                      <div key={item.exercise}>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="min-w-0 truncate text-xs font-semibold">{item.exercise}</span>
+                          {item.avgRpe != null && <span className="shrink-0 text-[11px] font-semibold text-gold">RPE {item.avgRpe.toFixed(1)}</span>}
+                        </div>
+                        <p className="mt-1 text-xs font-medium">{item.title}</p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{item.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {next.focus.length > 0 && (
                 <div className="mt-4 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] p-3.5">

@@ -16,6 +16,7 @@ import {
   verifyVideoAdminPin,
   type MovementVideo,
 } from "@/lib/admin-videos";
+import { getDictionaryVideoId } from "@/lib/dictionary/videoOverrides";
 
 export const Route = createFileRoute("/admin/videos")({
   component: AdminVideosPage,
@@ -68,13 +69,20 @@ function AdminVideosPage() {
   }, [search]);
 
   const stats = useMemo(() => {
-    const configured = movements.filter((m) => videoByMovement.has(m.id)).length;
+    let configured = 0;
+    let catalogYoutube = 0;
+    for (const movement of movements) {
+      const managed = videoByMovement.get(movement.id);
+      const hasCatalogVideo = !!getDictionaryVideoId(movement.videoUrl);
+      if (managed || hasCatalogVideo) configured++;
+      if (!managed && hasCatalogVideo) catalogYoutube++;
+    }
     return {
       total: movements.length,
       configured,
       missing: movements.length - configured,
       uploads: videos.filter((v) => v.source_type === "upload").length,
-      youtube: videos.filter((v) => v.source_type === "youtube").length,
+      youtube: videos.filter((v) => v.source_type === "youtube").length + catalogYoutube,
     };
   }, [videoByMovement, videos]);
 
@@ -245,9 +253,12 @@ function AdminVideosPage() {
         {loadingVideos ? <Loading /> : filtered.map((movement) => {
           const video = videoByMovement.get(movement.id);
           const isBusy = busy === movement.id;
+          const catalogVideoId = getDictionaryVideoId(movement.videoUrl);
+          const catalogVideoUrl = catalogVideoId ? `https://www.youtube.com/watch?v=${catalogVideoId}` : null;
+          const hasCatalogVideo = !video && !!catalogVideoUrl;
           const previewUrl = video?.storage_path
             ? supabase.storage.from(MOVEMENT_VIDEO_BUCKET).getPublicUrl(video.storage_path).data.publicUrl
-            : video?.youtube_url ?? null;
+            : video?.youtube_url ?? catalogVideoUrl;
 
           return (
             <div key={movement.id} className="cinematic-card-strong rounded-[24px] p-4 sm:p-5">
@@ -258,7 +269,7 @@ function AdminVideosPage() {
                   <p className="text-xs text-muted-foreground">{movement.nameEs}</p>
                 </div>
                 <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.14em] ${video ? "border-[rgba(200,169,107,.28)] text-[var(--gold)]" : "border-white/10 text-muted-foreground"}`}>
-                  {video ? video.source_type : "sin vídeo"}
+                  {video ? video.source_type : hasCatalogVideo ? "catálogo" : "sin vídeo"}
                 </span>
               </div>
 
@@ -269,7 +280,7 @@ function AdminVideosPage() {
                   rel="noreferrer"
                   className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[var(--gold)]"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" /> Abrir vídeo actual
+                  <ExternalLink className="h-3.5 w-3.5" /> Abrir vídeo actual{hasCatalogVideo ? " · vídeo del catálogo" : ""}
                 </a>
               )}
 

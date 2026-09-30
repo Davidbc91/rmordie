@@ -232,13 +232,13 @@ function Home() {
 
           {/* 2 · Estado actual */}
           <div className="rise rise-3 mt-3 grid grid-cols-3 gap-2">
-            <DashboardStat value={String(streak.current)} label="Racha" icon={<Flame className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/profile" })} />
+            <DashboardStat value={String(streak.current)} label="Racha" icon={<Flame className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/profile", search: { section: "consistency" } })} />
             <DashboardStat value={String(weekStats.sessions)} label="Esta semana" icon={<Activity className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/calendar" })} />
             <DashboardStat value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR · 30 días" icon={<Trophy className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/records" })} />
           </div>
 
           {activeGoal && (
-            <button type="button" onClick={() => navigate({ to: "/profile" })} className="w-full text-left">
+            <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "goals" } })} className="w-full text-left">
             <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable">
               <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Objetivo activo</p><p className="mt-2 text-sm font-semibold">{activeGoal.title}</p></div><Target className="h-5 w-5 shrink-0 text-gold" /></div>
               <div className="mt-4 flex items-end justify-between gap-3"><div className="text-2xl font-semibold tabular">{activeGoal.current_value ?? activeGoal.start_value ?? "—"} <span className="text-xs text-muted-foreground">{activeGoal.unit ?? ""}</span></div><div className="text-right text-xs text-muted-foreground">Objetivo <span className="font-semibold text-foreground">{activeGoal.target_value} {activeGoal.unit ?? ""}</span></div></div>
@@ -248,7 +248,7 @@ function Home() {
           )}
 
           {/* 3 · Estado de entrenamiento */}
-          <button type="button" onClick={() => navigate({ to: "/profile" })} className="w-full text-left">
+          <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "performance" } })} className="w-full text-left">
           <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable">
             <div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="eyebrow">Estado de entrenamiento</p><h2 className="mt-2 text-lg font-semibold">{smartState.title}</h2><p className="mt-2 text-xs leading-relaxed text-muted-foreground">{smartState.detail}</p></div><Activity className={`h-5 w-5 shrink-0 ${smartState.tone === "positive" ? "text-gold" : "text-muted-foreground"}`} /></div>
             <div className="mt-4 grid grid-cols-3 gap-2">
@@ -282,7 +282,7 @@ function Home() {
           </GlassCard>
 
           {dashboardTrend.recoveryAvg != null && (
-            <button type="button" onClick={() => navigate({ to: "/profile" })} className="w-full text-left">
+            <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "recovery" } })} className="w-full text-left">
             <GlassCard level={2} className="rise rise-4 mt-3 p-5 pressable">
               <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Último registro de recuperación</p><h2 className="mt-2 text-lg font-semibold">Estado reciente</h2></div><Activity className="h-5 w-5 text-gold" /></div>
               <div className="mt-4 grid grid-cols-3 gap-2">
@@ -295,7 +295,7 @@ function Home() {
           )}
 
           {/* 5 · Progreso */}
-          <button type="button" onClick={() => navigate({ to: "/profile" })} className="w-full text-left">
+          <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "progress" } })} className="w-full text-left">
           <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
@@ -318,8 +318,8 @@ function Home() {
 
           {/* 6 · Estadísticas rápidas */}
           <div className="rise rise-3 mt-3 grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => navigate({ to: "/profile" })} className="text-left"><MiniStat label="Bloques" value={String(stats.blocks)} icon={<Dumbbell className="h-3.5 w-3.5" />} /></button>
-            <button type="button" onClick={() => navigate({ to: "/profile" })} className="text-left"><MiniStat label="Constancia" value={String(stats.pct) + "%"} icon={<Flame className="h-3.5 w-3.5" />} /></button>
+            <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "progress" } })} className="text-left"><MiniStat label="Bloques" value={String(stats.blocks)} icon={<Dumbbell className="h-3.5 w-3.5" />} /></button>
+            <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "progress" } })} className="text-left"><MiniStat label="Constancia" value={String(stats.pct) + "%"} icon={<Flame className="h-3.5 w-3.5" />} /></button>
           </div>
 
           {/* 7 · PRs */}

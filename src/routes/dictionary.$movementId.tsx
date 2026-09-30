@@ -1,7 +1,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ExternalLink, Dumbbell, Play, WifiOff } from "lucide-react";
+import { ArrowLeft, Dumbbell } from "lucide-react";
 import { GlassCard } from "@/components/glass";
+import { YouTubeEmbed } from "@/components/YouTubeEmbed";
 import { movements } from "@/lib/dictionary/catalog";
 import { resolveMovementId } from "@/lib/dictionary/resolve";
 import { usePersonalRecordHistory, usePersonalRecords } from "@/lib/store";
@@ -70,7 +71,7 @@ function MovementPage() {
       </GlassCard>
 
       <MovementSection title="Demostración">
-        <VideoDemonstration videoUrl={movement.videoUrl} online={online} />
+        <YouTubeEmbed videoUrl={movement.videoUrl} />
       </MovementSection>
 
       <MovementSection title="Descripción">
@@ -192,48 +193,6 @@ function MovementList({
         );
       })}
     </ul>
-  );
-}
-
-function VideoDemonstration({ videoUrl, online }: { videoUrl?: string; online: boolean }) {
-  const verifiedVideoUrl = useMemo(() => {
-    if (!videoUrl) return null;
-    try {
-      const url = new URL(videoUrl);
-      if (!/^https?:$/.test(url.protocol)) return null;
-      // The catalog currently contains generated YouTube search links, not reviewed demos.
-      if (url.hostname === "www.youtube.com" && url.pathname === "/results") return null;
-      return url.toString();
-    } catch {
-      return null;
-    }
-  }, [videoUrl]);
-
-  return (
-    <div className="flex min-h-36 flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-black/20 p-5 text-center">
-      {!verifiedVideoUrl ? (
-        <>
-          <Play className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-          <p className="text-sm text-muted-foreground">Vídeo próximamente</p>
-        </>
-      ) : !online ? (
-        <>
-          <WifiOff className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-          <p className="text-sm text-muted-foreground">
-            La demostración externa no está disponible sin conexión.
-          </p>
-        </>
-      ) : (
-        <a
-          href={verifiedVideoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm transition hover:border-[rgba(216,180,107,0.45)] hover:text-[var(--gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
-        >
-          Abrir demostración <ExternalLink className="h-4 w-4" aria-hidden="true" />
-        </a>
-      )}
-    </div>
   );
 }
 

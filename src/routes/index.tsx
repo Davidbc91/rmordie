@@ -358,7 +358,7 @@ function Home() {
 
           {activeGoal && (
             <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "goals" } })} className="w-full text-left">
-            <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable cinematic-card">
+            <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable cinematic-card-strong">
               <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Objetivo activo</p><p className="mt-2 text-sm font-semibold">{activeGoal.title}</p></div><Target className="h-5 w-5 shrink-0 text-gold" /></div>
               <div className="mt-4 flex items-end justify-between gap-3"><div className="text-2xl font-semibold tabular">{activeGoal.current_value ?? activeGoal.start_value ?? "—"} <span className="text-xs text-muted-foreground">{activeGoal.unit ?? ""}</span></div><div className="text-right text-xs text-muted-foreground">Objetivo <span className="font-semibold text-foreground">{activeGoal.target_value} {activeGoal.unit ?? ""}</span></div></div>
               {activeGoal.current_value != null && activeGoal.target_value > 0 && <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[linear-gradient(90deg,#EBD6A6,#D8B46B)]" style={{ width: Math.min(100, Math.max(0, (activeGoal.current_value / activeGoal.target_value) * 100)) + "%" }} /></div>}
@@ -549,13 +549,13 @@ function DashboardStat({ value, label, icon, onClick }: { value: string; label: 
       <div className="metric mt-2 truncate">{value}</div>
     </>
   );
-  if (onClick) return <button type="button" onClick={onClick} className="glass glass-sheen pressable min-w-0 w-full p-3 text-left cinematic-card">{inner}</button>;
-  return <div className="glass glass-sheen min-w-0 p-3 cinematic-card">{inner}</div>;
+  if (onClick) return <button type="button" onClick={onClick} className="glass glass-sheen pressable min-w-0 w-full p-3 text-left cinematic-card-dark">{inner}</button>;
+  return <div className="glass glass-sheen min-w-0 p-3 cinematic-card-dark">{inner}</div>;
 }
 
 function MiniStat({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
   return (
-    <div className="glass glass-sheen pressable p-4 cinematic-card">
+    <div className="glass glass-sheen pressable p-4 cinematic-card-dark">
       <div className="flex items-center gap-1.5 eyebrow">
         {icon}
         {label}

@@ -9,63 +9,30 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TimersRouteImport } from './routes/timers'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as RecordsRouteImport } from './routes/records'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as PlanBuilderRouteImport } from './routes/plan-builder'
-import { Route as ImportGenericRouteImport } from './routes/import-generic'
-import { Route as ImportRouteImport } from './routes/import'
-import { Route as ChatRouteImport } from './routes/chat'
-import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as ChatRouteImport } from './routes/chat'
+import { Route as DictionaryRouteImport } from './routes/dictionary'
+import { Route as ImportRouteImport } from './routes/import'
+import { Route as ImportGenericRouteImport } from './routes/import-generic'
+import { Route as PlanBuilderRouteImport } from './routes/plan-builder'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as RecordsRouteImport } from './routes/records'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TimersRouteImport } from './routes/timers'
+import { Route as DictionaryMovementIdRouteImport } from './routes/dictionary.$movementId'
 import { Route as SocialIndexRouteImport } from './routes/social.index'
-import { Route as SocialSettingsRouteImport } from './routes/social.settings'
-import { Route as SocialNotificationsRouteImport } from './routes/social.notifications'
-import { Route as SocialDiscoverRouteImport } from './routes/social.discover'
 import { Route as SocialBoardRouteImport } from './routes/social.board'
-import { Route as SocialUUsernameRouteImport } from './routes/social.u.$username'
+import { Route as SocialDiscoverRouteImport } from './routes/social.discover'
+import { Route as SocialNotificationsRouteImport } from './routes/social.notifications'
+import { Route as SocialSettingsRouteImport } from './routes/social.settings'
 import { Route as SocialHashtagTagRouteImport } from './routes/social.hashtag.$tag'
+import { Route as SocialUUsernameRouteImport } from './routes/social.u.$username'
 import { Route as WorkoutMonthWeekDayRouteImport } from './routes/workout.$month.$week.$day'
 
-const TimersRoute = TimersRouteImport.update({
-  id: '/timers',
-  path: '/timers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecordsRoute = RecordsRouteImport.update({
-  id: '/records',
-  path: '/records',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlanBuilderRoute = PlanBuilderRouteImport.update({
-  id: '/plan-builder',
-  path: '/plan-builder',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImportGenericRoute = ImportGenericRouteImport.update({
-  id: '/import-generic',
-  path: '/import-generic',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImportRoute = ImportRouteImport.update({
-  id: '/import',
-  path: '/import',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChatRoute = ChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarRoute = CalendarRouteImport.update({
@@ -73,29 +40,59 @@ const CalendarRoute = CalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DictionaryRoute = DictionaryRouteImport.update({
+  id: '/dictionary',
+  path: '/dictionary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportRoute = ImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportGenericRoute = ImportGenericRouteImport.update({
+  id: '/import-generic',
+  path: '/import-generic',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanBuilderRoute = PlanBuilderRouteImport.update({
+  id: '/plan-builder',
+  path: '/plan-builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecordsRoute = RecordsRouteImport.update({
+  id: '/records',
+  path: '/records',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TimersRoute = TimersRouteImport.update({
+  id: '/timers',
+  path: '/timers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DictionaryMovementIdRoute = DictionaryMovementIdRouteImport.update({
+  id: '/$movementId',
+  path: '/$movementId',
+  getParentRoute: () => DictionaryRoute,
 } as any)
 const SocialIndexRoute = SocialIndexRouteImport.update({
   id: '/social/',
   path: '/social/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SocialSettingsRoute = SocialSettingsRouteImport.update({
-  id: '/social/settings',
-  path: '/social/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SocialNotificationsRoute = SocialNotificationsRouteImport.update({
-  id: '/social/notifications',
-  path: '/social/notifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SocialDiscoverRoute = SocialDiscoverRouteImport.update({
-  id: '/social/discover',
-  path: '/social/discover',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SocialBoardRoute = SocialBoardRouteImport.update({
@@ -103,14 +100,29 @@ const SocialBoardRoute = SocialBoardRouteImport.update({
   path: '/social/board',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SocialUUsernameRoute = SocialUUsernameRouteImport.update({
-  id: '/social/u/$username',
-  path: '/social/u/$username',
+const SocialDiscoverRoute = SocialDiscoverRouteImport.update({
+  id: '/social/discover',
+  path: '/social/discover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialNotificationsRoute = SocialNotificationsRouteImport.update({
+  id: '/social/notifications',
+  path: '/social/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialSettingsRoute = SocialSettingsRouteImport.update({
+  id: '/social/settings',
+  path: '/social/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SocialHashtagTagRoute = SocialHashtagTagRouteImport.update({
   id: '/social/hashtag/$tag',
   path: '/social/hashtag/$tag',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialUUsernameRoute = SocialUUsernameRouteImport.update({
+  id: '/social/u/$username',
+  path: '/social/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WorkoutMonthWeekDayRoute = WorkoutMonthWeekDayRouteImport.update({
@@ -123,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
+  '/dictionary': typeof DictionaryRouteWithChildren
   '/import': typeof ImportRoute
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
@@ -130,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
   '/social/notifications': typeof SocialNotificationsRoute
@@ -143,6 +157,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
+  '/dictionary': typeof DictionaryRouteWithChildren
   '/import': typeof ImportRoute
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
@@ -150,6 +165,7 @@ export interface FileRoutesByTo {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
   '/social/notifications': typeof SocialNotificationsRoute
@@ -164,6 +180,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
+  '/dictionary': typeof DictionaryRouteWithChildren
   '/import': typeof ImportRoute
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
@@ -171,6 +188,7 @@ export interface FileRoutesById {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
   '/social/notifications': typeof SocialNotificationsRoute
@@ -186,6 +204,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/chat'
+    | '/dictionary'
     | '/import'
     | '/import-generic'
     | '/plan-builder'
@@ -193,6 +212,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
     | '/social/notifications'
@@ -206,6 +226,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/chat'
+    | '/dictionary'
     | '/import'
     | '/import-generic'
     | '/plan-builder'
@@ -213,6 +234,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
     | '/social/notifications'
@@ -226,6 +248,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/chat'
+    | '/dictionary'
     | '/import'
     | '/import-generic'
     | '/plan-builder'
@@ -233,6 +256,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
     | '/social/notifications'
@@ -247,6 +271,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CalendarRoute: typeof CalendarRoute
   ChatRoute: typeof ChatRoute
+  DictionaryRoute: typeof DictionaryRouteWithChildren
   ImportRoute: typeof ImportRoute
   ImportGenericRoute: typeof ImportGenericRoute
   PlanBuilderRoute: typeof PlanBuilderRoute
@@ -266,60 +291,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/timers': {
-      id: '/timers'
-      path: '/timers'
-      fullPath: '/timers'
-      preLoaderRoute: typeof TimersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/records': {
-      id: '/records'
-      path: '/records'
-      fullPath: '/records'
-      preLoaderRoute: typeof RecordsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/plan-builder': {
-      id: '/plan-builder'
-      path: '/plan-builder'
-      fullPath: '/plan-builder'
-      preLoaderRoute: typeof PlanBuilderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/import-generic': {
-      id: '/import-generic'
-      path: '/import-generic'
-      fullPath: '/import-generic'
-      preLoaderRoute: typeof ImportGenericRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/import': {
-      id: '/import'
-      path: '/import'
-      fullPath: '/import'
-      preLoaderRoute: typeof ImportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chat': {
-      id: '/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof ChatRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar': {
@@ -329,39 +305,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/dictionary': {
+      id: '/dictionary'
+      path: '/dictionary'
+      fullPath: '/dictionary'
+      preLoaderRoute: typeof DictionaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import': {
+      id: '/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import-generic': {
+      id: '/import-generic'
+      path: '/import-generic'
+      fullPath: '/import-generic'
+      preLoaderRoute: typeof ImportGenericRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plan-builder': {
+      id: '/plan-builder'
+      path: '/plan-builder'
+      fullPath: '/plan-builder'
+      preLoaderRoute: typeof PlanBuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/records': {
+      id: '/records'
+      path: '/records'
+      fullPath: '/records'
+      preLoaderRoute: typeof RecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/timers': {
+      id: '/timers'
+      path: '/timers'
+      fullPath: '/timers'
+      preLoaderRoute: typeof TimersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dictionary/$movementId': {
+      id: '/dictionary/$movementId'
+      path: '/$movementId'
+      fullPath: '/dictionary/$movementId'
+      preLoaderRoute: typeof DictionaryMovementIdRouteImport
+      parentRoute: typeof DictionaryRoute
     }
     '/social/': {
       id: '/social/'
       path: '/social'
       fullPath: '/social/'
       preLoaderRoute: typeof SocialIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/social/settings': {
-      id: '/social/settings'
-      path: '/social/settings'
-      fullPath: '/social/settings'
-      preLoaderRoute: typeof SocialSettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/social/notifications': {
-      id: '/social/notifications'
-      path: '/social/notifications'
-      fullPath: '/social/notifications'
-      preLoaderRoute: typeof SocialNotificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/social/discover': {
-      id: '/social/discover'
-      path: '/social/discover'
-      fullPath: '/social/discover'
-      preLoaderRoute: typeof SocialDiscoverRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/social/board': {
@@ -371,11 +389,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SocialBoardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/social/u/$username': {
-      id: '/social/u/$username'
-      path: '/social/u/$username'
-      fullPath: '/social/u/$username'
-      preLoaderRoute: typeof SocialUUsernameRouteImport
+    '/social/discover': {
+      id: '/social/discover'
+      path: '/social/discover'
+      fullPath: '/social/discover'
+      preLoaderRoute: typeof SocialDiscoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social/notifications': {
+      id: '/social/notifications'
+      path: '/social/notifications'
+      fullPath: '/social/notifications'
+      preLoaderRoute: typeof SocialNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social/settings': {
+      id: '/social/settings'
+      path: '/social/settings'
+      fullPath: '/social/settings'
+      preLoaderRoute: typeof SocialSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/social/hashtag/$tag': {
@@ -383,6 +415,13 @@ declare module '@tanstack/react-router' {
       path: '/social/hashtag/$tag'
       fullPath: '/social/hashtag/$tag'
       preLoaderRoute: typeof SocialHashtagTagRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social/u/$username': {
+      id: '/social/u/$username'
+      path: '/social/u/$username'
+      fullPath: '/social/u/$username'
+      preLoaderRoute: typeof SocialUUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/workout/$month/$week/$day': {
@@ -395,10 +434,23 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DictionaryRouteChildren {
+  DictionaryMovementIdRoute: typeof DictionaryMovementIdRoute
+}
+
+const DictionaryRouteChildren: DictionaryRouteChildren = {
+  DictionaryMovementIdRoute: DictionaryMovementIdRoute,
+}
+
+const DictionaryRouteWithChildren = DictionaryRoute._addFileChildren(
+  DictionaryRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CalendarRoute: CalendarRoute,
   ChatRoute: ChatRoute,
+  DictionaryRoute: DictionaryRouteWithChildren,
   ImportRoute: ImportRoute,
   ImportGenericRoute: ImportGenericRoute,
   PlanBuilderRoute: PlanBuilderRoute,

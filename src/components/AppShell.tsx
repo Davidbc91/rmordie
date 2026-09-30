@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User, Play, X, Users, MoreHorizontal, ChevronRight,
+  Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User, Play, X, Users, MoreHorizontal, ChevronRight, BookOpen,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getActiveWorkout, clearActiveWorkout, type ActiveWorkout } from "@/lib/active-workout";
@@ -16,6 +16,7 @@ const tabs = [
 ];
 
 const moreLinks = [
+  { to: "/dictionary", label: "Diccionario", hint: "Movimientos CrossFit", icon: BookOpen },
   { to: "/timers", label: "Temporizadores", hint: "AMRAP · EMOM · Tabata", icon: Timer },
   { to: "/chat", label: "Chat", hint: "Conversación del box", icon: MessageCircle },
   { to: "/import", label: "Importar planificación", hint: "Excel anual", icon: Upload },

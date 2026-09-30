@@ -21,7 +21,7 @@ export default defineConfig({
       filename: "sw.js",
       manifest: false, // public/manifest.json is the source of truth
       devOptions: { enabled: false },
-      outDir: "dist/client",
+      outDir: ".output/public",
       workbox: {
         // Push handlers live in the same registration as the offline cache.
         importScripts: ["/push-sw.js"],

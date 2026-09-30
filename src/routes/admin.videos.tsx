@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { movements } from "@/lib/dictionary/catalog";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentUserId } from "@/lib/pin-gate";
+import { useProfiles } from "@/lib/store";
 import {
   createMovementVideoUpload,
   deleteMovementVideo,
@@ -23,6 +24,8 @@ export const Route = createFileRoute("/admin/videos")({
 function AdminVideosPage() {
   const profileId = getCurrentUserId();
   const qc = useQueryClient();
+  const { data: profiles = [] } = useProfiles();
+  const isBcProfile = profiles.some((profile) => profile.id === profileId && profile.name.trim().toLowerCase() === "bc");
   const { data: admin, isLoading: checking } = useQuery({
     queryKey: ["video-admin", profileId],
     queryFn: isVideoAdmin,
@@ -153,7 +156,7 @@ function AdminVideosPage() {
     return <PageShell><Loading /></PageShell>;
   }
 
-  if (!admin) {
+  if (!admin && !isBcProfile) {
     return (
       <PageShell>
         <div className="cinematic-card-strong rounded-[28px] p-6 sm:p-8">

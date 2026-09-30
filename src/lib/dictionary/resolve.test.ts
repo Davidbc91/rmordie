@@ -80,3 +80,178 @@ test("returns structured match data and null for unknown text", () => {
   assert.ok(match.confidence > 0 && match.confidence <= 1);
   assert.equal(resolveMovementId("ejercicio inventado xyz"), null);
 });
+
+test("catalog additions preserve stable IDs and all required typed fields", () => {
+  assert.equal(movements.length, 180);
+  assert.deepEqual(
+    movements.slice(0, 72).map((movement) => movement.id),
+    Array.from({ length: 72 }, (_, index) => `move-${String(index + 1).padStart(3, "0")}`),
+  );
+  assert.deepEqual(
+    movements.slice(72).map((movement) => movement.id),
+    Array.from({ length: 108 }, (_, index) => `move-${String(index + 73).padStart(3, "0")}`),
+  );
+  assert.equal(new Set(movements.map((movement) => movement.id)).size, movements.length);
+  for (const movement of movements) {
+    assert.ok(movement.name && movement.nameEs && movement.category);
+    assert.ok(movement.aliases.length > 0 && movement.equipment.length > 0);
+    assert.ok(["Beginner", "Intermediate", "Advanced"].includes(movement.level));
+    assert.equal(typeof movement.rm, "boolean");
+    assert.ok(movement.description && movement.videoUrl);
+    for (const field of [
+      movement.technique,
+      movement.commonMistakes,
+      movement.progressions,
+      movement.regressions,
+      movement.muscles,
+    ]) {
+      assert.ok(field.length > 0, `${movement.name} must have non-empty movement guidance`);
+    }
+  }
+  const normalizedNames = movements.map((movement) => normalizeMovementName(movement.name));
+  assert.equal(
+    new Set(normalizedNames).size,
+    movements.length,
+    "canonical movement names are unique",
+  );
+});
+
+test("resolves new English, Spanish and abbreviation labels", () => {
+  const cases: Array<[string, string]> = [
+    ["Air Squat", "Air Squat"],
+    ["Sentadilla a cajón", "Box Squat"],
+    ["Peso muerto con piernas rígidas", "Stiff-Leg Deadlift"],
+    ["Single Leg RDL", "Single-Leg Romanian Deadlift"],
+    ["HPC", "Hang Power Clean"],
+    ["Hang Power Snatch", "Hang Power Snatch"],
+    ["Clean High Pull", "Clean High Pull"],
+    ["Press inclinado", "Incline Bench Press"],
+    ["HRPU", "Hand-Release Push-Up"],
+    ["Strict Pull Up", "Strict Pull-Up"],
+    ["Butterfly Pullup", "Butterfly Pull-Up"],
+    ["Hanging Knee Raise", "Hanging Knee Raise"],
+    ["Pino libre", "Freestanding Handstand"],
+    ["Plancha lateral", "Side Plank"],
+    ["American Swing", "American Kettlebell Swing"],
+    ["KB Push Jerk", "Kettlebell Push Jerk"],
+    ["DB Hang Clean", "Dumbbell Hang Clean"],
+    ["Zancada con barra", "Barbell Lunge"],
+    ["Bar-facing burpee", "Bar-Facing Burpee"],
+    ["Wall Ball Shot", "Wall Ball"],
+    ["medicine ball clean", "Med Ball Clean"],
+    ["Sandbag to Shoulder", "Sandbag Shouldering"],
+  ];
+  for (const [query, expected] of cases) {
+    assert.equal(resolveMovement(query)?.matchedName, expected, query);
+  }
+});
+
+test("specific Olympic variants beat their general movement names in workout text", () => {
+  const cases: Array<[string, string]> = [
+    ["Power Clean", "Power Clean"],
+    ["Squat Clean", "Squat Clean"],
+    ["Hang Clean", "Hang Clean"],
+    ["Clean", "Clean"],
+    ["Power Snatch", "Power Snatch"],
+    ["Squat Snatch", "Squat Snatch"],
+    ["Hang Snatch", "Hang Snatch"],
+    ["Snatch", "Snatch"],
+  ];
+  for (const [query, expected] of cases) {
+    assert.equal(resolveMovement(query)?.matchedName, expected, query);
+    assert.equal(resolveMovement(`${query} 5x3 @ 80%`)?.matchedName, expected, query);
+  }
+});
+
+test("finds multiple specific movements among workout prescription numbers", () => {
+  assert.deepEqual(
+    resolveMovements("5 rounds: 3 Power Clean @ 80% + 6 Box Squat + 10 Burpees").map(
+      (match) => match.matchedName,
+    ),
+    ["Power Clean", "Box Squat", "Burpee"],
+  );
+});
+
+test("RM flags are limited to movements with a meaningful loaded max", () => {
+  const expectedRmMovements = new Set([
+    "Back Squat",
+    "Front Squat",
+    "Overhead Squat",
+    "Deadlift",
+    "Sumo Deadlift",
+    "Clean",
+    "Power Clean",
+    "Squat Clean",
+    "Snatch",
+    "Power Snatch",
+    "Squat Snatch",
+    "Clean & Jerk",
+    "Split Jerk",
+    "Push Jerk",
+    "Strict Press",
+    "Push Press",
+    "Bench Press",
+  ]);
+  assert.deepEqual(
+    movements
+      .filter((movement) => movement.rm)
+      .map((movement) => movement.name)
+      .sort(),
+    [...expectedRmMovements].sort(),
+  );
+});
+
+test("all 108 new entries use movement-pattern guidance instead of category boilerplate", () => {
+  const additions = movements.slice(72);
+  assert.equal(additions.length, 108);
+  for (const movement of additions) {
+    assert.ok(movement.description.length > 40, movement.name);
+    assert.ok(movement.technique.length >= 3, movement.name);
+    assert.ok(movement.commonMistakes.length >= 3, movement.name);
+    assert.ok(movement.progressions.length >= 2, movement.name);
+    assert.ok(movement.regressions.length >= 2, movement.name);
+    assert.ok(movement.muscles.length >= 3, movement.name);
+    assert.ok(!movement.description.includes("Equipamiento habitual"), movement.name);
+  }
+  assert.ok(new Set(additions.map((movement) => movement.description)).size > 20);
+  for (const movement of movements) {
+    assert.ok(!movement.description.startsWith(`${movement.name}:`), movement.name);
+  }
+});
+
+test("specific clean and snatch names never collapse to a more general variant", () => {
+  const cleanCases = [
+    ["Clean", "Clean"],
+    ["Power Clean", "Power Clean"],
+    ["Squat Clean", "Squat Clean"],
+    ["Hang Clean", "Hang Clean"],
+    ["Hang Power Clean", "Hang Power Clean"],
+  ];
+  const snatchCases = [
+    ["Snatch", "Snatch"],
+    ["Power Snatch", "Power Snatch"],
+    ["Squat Snatch", "Squat Snatch"],
+    ["Hang Snatch", "Hang Snatch"],
+    ["Hang Power Snatch", "Hang Power Snatch"],
+  ];
+  for (const [query, expected] of [...cleanCases, ...snatchCases]) {
+    assert.equal(resolveMovement(query)?.matchedName, expected, query);
+    assert.equal(resolveMovement(`${query} 5x2 @ 80%`)?.matchedName, expected, query);
+  }
+  assert.equal(resolveMovementId("MU"), null);
+});
+
+test("catalog labels do not assign the same normalized alias to different movements", () => {
+  const owners = new Map<string, string>();
+  for (const movement of movements) {
+    for (const label of [movement.name, movement.nameEs, ...movement.aliases]) {
+      const key = normalizeMovementName(label);
+      const owner = owners.get(key);
+      assert.ok(
+        !owner || owner === movement.id,
+        `${label} is shared by ${owner} and ${movement.id}`,
+      );
+      owners.set(key, movement.id);
+    }
+  }
+});

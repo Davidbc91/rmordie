@@ -234,14 +234,18 @@ function Home() {
 
   return (
     <AppShell>
-      <header className="rise rise-1 mb-6">
-        <div className="flex items-center gap-2">
-          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-gold" />
-          <p className="eyebrow">RMORDIE</p>
+      <div className="cinematic-page -mx-5 min-h-[calc(100dvh-2rem)] px-5">
+      <header className="rise rise-1 mb-7 pt-1">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-gold" />
+            <p className="cinematic-label">RM / OR DIE</p>
+          </div>
+          <span className="cinematic-label">TRAINING LOG</span>
         </div>
-        <h1 className="mt-3.5 text-[2rem] font-semibold leading-[1.02] tracking-tight">
-          ¿Qué toca hoy?
-        </h1>
+        <div className="mt-5 max-w-[330px]">
+          <h1 className="cinematic-title">¿Qué toca<br/><span className="gold-text">hoy?</span></h1>
+        </div>
       </header>
 
       {!planning && !isLoading && <EmptyState />}
@@ -250,7 +254,7 @@ function Home() {
         <>
           {/* 1 · Entreno de hoy */}
           {next ? (
-            <GlassCard level={3} gold className="rise rise-2 sheen p-5">
+            <GlassCard level={3} gold className="rise rise-2 sheen p-6">
               <div className="flex items-center justify-between gap-3">
                 <GlassBadge tone="gold">
                   {next.progress.state === "in_progress" ? "Sesión en curso" : next.isToday ? "Hoy" : "Siguiente sesión"}
@@ -264,13 +268,11 @@ function Home() {
 
               <div className="mt-5 flex items-end justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="display-lg gold-text truncate">{next.dayKey}</div>
-                  <p className="eyebrow mt-2.5">{next.monthLabel}</p>
+                  <div className="cinematic-title gold-text truncate">{next.dayKey}</div>
+                  <p className="cinematic-label mt-3">{next.monthLabel} · SEMANA {next.week}</p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="metric tabular">
-                    {next.progress.done} / {next.progress.total}
-                  </div>
+                  <div className="cinematic-number tabular">{next.progress.done}<span className="text-xl text-muted-foreground">/{next.progress.total}</span></div>
                   <p className="eyebrow mt-1.5">Bloques</p>
                 </div>
               </div>
@@ -350,7 +352,7 @@ function Home() {
           )}
 
           {/* 2 · Estado actual */}
-          <div className="rise rise-3 mt-3 grid grid-cols-3 gap-2">
+          <div className="rise rise-3 mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-[22px] border border-white/[.07] bg-white/[.035]">
             <DashboardStat value={String(streak.current)} label="Racha" icon={<Flame className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/profile", search: { section: "consistency" } })} />
             <DashboardStat value={String(weekStats.sessions)} label="Esta semana" icon={<Activity className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/calendar" })} />
             <DashboardStat value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR · 30 días" icon={<Trophy className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/records" })} />
@@ -358,7 +360,7 @@ function Home() {
 
           {activeGoal && (
             <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "goals" } })} className="w-full text-left">
-            <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable">
+            <GlassCard level={2} className="rise rise-3 mt-4 p-5 pressable">
               <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Objetivo activo</p><p className="mt-2 text-sm font-semibold">{activeGoal.title}</p></div><Target className="h-5 w-5 shrink-0 text-gold" /></div>
               <div className="mt-4 flex items-end justify-between gap-3"><div className="text-2xl font-semibold tabular">{activeGoal.current_value ?? activeGoal.start_value ?? "—"} <span className="text-xs text-muted-foreground">{activeGoal.unit ?? ""}</span></div><div className="text-right text-xs text-muted-foreground">Objetivo <span className="font-semibold text-foreground">{activeGoal.target_value} {activeGoal.unit ?? ""}</span></div></div>
               {activeGoal.current_value != null && activeGoal.target_value > 0 && <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[linear-gradient(90deg,#EBD6A6,#D8B46B)]" style={{ width: Math.min(100, Math.max(0, (activeGoal.current_value / activeGoal.target_value) * 100)) + "%" }} /></div>}
@@ -368,7 +370,7 @@ function Home() {
 
           {/* 3 · Estado de entrenamiento */}
           <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "performance" } })} className="w-full text-left">
-          <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable">
+          <GlassCard level={2} className="rise rise-3 mt-4 p-5 pressable">
             <div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="eyebrow">Estado de entrenamiento</p><h2 className="mt-2 text-lg font-semibold">{smartState.title}</h2><p className="mt-2 text-xs leading-relaxed text-muted-foreground">{smartState.detail}</p></div><Activity className={`h-5 w-5 shrink-0 ${smartState.tone === "positive" ? "text-gold" : "text-muted-foreground"}`} /></div>
             <div className="mt-4 grid grid-cols-3 gap-2">
               <DashboardStat value={String(smartState.sessions)} label="Sesiones" icon={<CalendarCheck className="h-3.5 w-3.5" />} />

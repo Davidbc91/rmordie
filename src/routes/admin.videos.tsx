@@ -26,6 +26,14 @@ function AdminVideosPage() {
   const qc = useQueryClient();
   const { data: profiles = [] } = useProfiles();
   const isBcProfile = profiles.some((profile) => profile.id === profileId && profile.name.trim().toLowerCase() === "bc");
+  const [pin, setPin] = useState("");
+  const [pinHash, setPinHash] = useState<string | null>(null);
+  const [pinError, setPinError] = useState("");
+  const [search, setSearch] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [youtubeDrafts, setYoutubeDrafts] = useState<Record<string, string>>({});
+  const [notice, setNotice] = useState("");
+
   const { data: admin, isLoading: checking } = useQuery({
     queryKey: ["video-admin", profileId],
     queryFn: isVideoAdmin,
@@ -43,14 +51,6 @@ function AdminVideosPage() {
     },
     enabled: !!pinHash,
   });
-
-  const [pin, setPin] = useState("");
-  const [pinHash, setPinHash] = useState<string | null>(null);
-  const [pinError, setPinError] = useState("");
-  const [search, setSearch] = useState("");
-  const [busy, setBusy] = useState<string | null>(null);
-  const [youtubeDrafts, setYoutubeDrafts] = useState<Record<string, string>>({});
-  const [notice, setNotice] = useState("");
 
   const videoByMovement = useMemo(
     () => new Map(videos.map((video) => [video.movement_id, video])),

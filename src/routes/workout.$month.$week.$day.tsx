@@ -4,7 +4,6 @@ import { LinkedText } from "@/components/LinkedText";
 import { usePlanning, useDayResults, useSaveResult, useSettings, usePersonalRecords, useAllResults, findDay } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { detectExercise, loadsForPercentages, formatKg, compareLoads, LOAD_STATUS_LABEL } from "@/lib/rm-matcher";
-import { resolveMovementId } from "@/lib/dictionary/resolve";
 import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -238,7 +237,6 @@ function BlockCard({
 }) {
   const save = useSaveResult();
   const { data: records = [] } = usePersonalRecords();
-  const { data: allResults = [] } = useAllResults();
   const [weight, setWeight] = useState<string>(existing?.weight?.toString() ?? "");
   const [sets, setSets] = useState<string>(existing?.sets?.toString() ?? "");
   const [reps, setReps] = useState<string>(existing?.reps?.toString() ?? "");
@@ -290,19 +288,6 @@ function BlockCard({
 
   const pcts = extractPercentages(content);
   const detected = useMemo(() => detectExercise(content, records), [content, records]);
-  const detectedMovementId = useMemo(
-    () => (detected ? resolveMovementId(detected.exercise) : null),
-    [detected],
-  );
-  const lastResult = useMemo(
-    () => {
-      if (!detectedMovementId) return null;
-      return allResults
-        .filter((result) => result.weight != null && result.weight > 0)
-        .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0] ?? null;
-    },
-    [allResults, detectedMovementId],
-  );
   const targetLoads = useMemo(
     () => (detected ? loadsForPercentages(detected.weight, pcts) : []),
     [detected, pcts],
@@ -428,17 +413,15 @@ function BlockCard({
                 <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">kg · {detected.rep_max}RM</p>
               </div>
             </div>
-            {lastResult && (
-              <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/50 pt-3">
-                <span className="text-xs text-muted-foreground">Última carga registrada</span>
-                <button
-                  type="button"
-                  onClick={() => setWeight(String(lastResult.weight))}
-                  className="pressable rounded-full border border-[color:var(--glass-border)] px-3 py-1.5 text-xs font-semibold text-foreground"
-                >
-                  Usar {formatKg(Number(lastResult.weight))} kg
-                </button>
-              </div>
+            {targetLoads.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setWeight(String(targetLoads[0].suggested))}
+                className="pressable mt-3 flex w-full items-center justify-between rounded-xl border border-[rgba(216,180,107,0.28)] bg-[rgba(216,180,107,0.08)] px-3.5 py-2.5 text-left"
+              >
+                <span className="text-xs text-muted-foreground">Objetivo {targetLoads[0].pct}%</span>
+                <span className="text-sm font-bold text-gold">Usar {formatKg(targetLoads[0].suggested)} kg</span>
+              </button>
             )}
           </div>
         )}

@@ -180,18 +180,21 @@ function ProfilePage() {
 
       {section === "profile" && <ProfileForm />}
       {section === "body" && <BodySection />}
+      {(section === "progress" || section === "performance" || section === "strength" || section === "recovery") && (
+        <RangePicker range={range} setRange={setRange} />
+      )}
       {section === "progress" && (
         <ProgressSection
           results={results}
           history={history}
+          records={records}
           metrics={metrics}
           plannedDays={plannedTrainingDays(planning?.data)}
           completedSessions={planningCompletion(planning?.data, results).completed}
-
+          days={days}
+          rangeLabel={rangeLabel}
+          goStrength={() => setSection("strength")}
         />
-      )}
-      {(section === "performance" || section === "strength" || section === "recovery") && (
-        <RangePicker range={range} setRange={setRange} />
       )}
       {section === "performance" && (
         <PerformanceSection
@@ -650,50 +653,187 @@ function BodySection() {
 
 /* ---------------- 3. Progress dashboard ---------------- */
 
-function ProgressSection({ results, history, metrics, plannedDays, completedSessions }: any) {
-  const all = windowStats(results, history, null);
-  const last4 = windowStats(results, history, 28);
+function ProgressSection({ results, history, records, metrics, plannedDays, completedSessions, days, rangeLabel, goStrength }: any) {
+  const cur = windowStats(results, history, days);
+  const prev = windowStats(results, history, days, true);
   const s = streaks(results);
   const body = bodyChange(metrics);
   const completion = plannedDays ? Math.min(100, Math.round((completedSessions / plannedDays) * 100)) : null;
 
-  if (all.sessions === 0 && metrics.length === 0) {
-    return <Empty text="Registra entrenamientos y datos corporales para activar tu dashboard." />;
+  const volumeSeries = useMemo(() => {
+    const bucketDays = days == null ? 28 : days <= 28 ? 7 : 14;
+    const count = days == null ? 8 : Math.min(8, Math.max(4, Math.ceil(days / bucketDays)));
+    const now = Date.now();
+
+    return Array.from({ length: count }, (_, index) => {
+      const end = now - (count - 1 - index) * bucketDays * 864e5;
+      const start = end - bucketDays * 864e5;
+      const volume = results
+        .filter((r: any) => r.status === "completed")
+        .filter((r: any) => {
+          const t = new Date(r.updated_at).getTime();
+          return t >= start && t < end;
+        })
+        .reduce(
+          (sum: number, r: any) =>
+            sum + Number(r.weight ?? 0) * Number(r.sets ?? 1) * Number(r.reps ?? 0),
+          0,
+        );
+
+      return {
+        label: new Date(end).toLocaleDateString("es-ES", { day: "2-digit", month: "short" }),
+        value: Math.round(volume),
+      };
+    });
+  }, [results, days]);
+
+  const strengthProgress = useMemo(
+    () =>
+      exerciseStats(records, history, days)
+        .filter((item) => item.changePct != null)
+        .sort((a, b) => Math.abs(b.changePct ?? 0) - Math.abs(a.changePct ?? 0))
+        .slice(0, 3),
+    [records, history, days],
+  );
+
+  const volumeChange = prev.volume > 0 ? ((cur.volume - prev.volume) / prev.volume) * 100 : null;
+  const rpeChange =
+    prev.avgRpe != null && cur.avgRpe != null ? cur.avgRpe - prev.avgRpe : null;
+
+  const summary = (() => {
+    const parts: string[] = [];
+
+    if (volumeChange != null) {
+      parts.push(
+        `Has acumulado ${Math.round(cur.volume).toLocaleString("es-ES")} kg, un ${Math.abs(Math.round(volumeChange))}% ${volumeChange >= 0 ? "más" : "menos"} que en el periodo anterior.`,
+      );
+    } else if (cur.volume > 0) {
+      parts.push(
+        `Has acumulado ${Math.round(cur.volume).toLocaleString("es-ES")} kg en ${rangeLabel.toLowerCase()}.`,
+      );
+    }
+
+    if (cur.avgRpe != null) {
+      parts.push(`Tu RPE medio es ${fmtNum(cur.avgRpe)}.`);
+    }
+
+    const improving = strengthProgress.find((item) => (item.changePct ?? 0) > 0);
+    if (improving) {
+      parts.push(
+        `${improving.exercise} ha mejorado un ${Math.abs(improving.changePct ?? 0).toFixed(1)}%.`,
+      );
+    }
+
+    return parts.slice(0, 3).join(" ");
+  })();
+
+  if (cur.sessions === 0 && metrics.length === 0) {
+    return <Empty text="Registra entrenamientos y datos corporales para activar tu análisis de progreso." />;
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <Card>
         <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
-          Peso actual
+          Resumen del periodo
         </p>
-        <div className="mt-2 text-[54px] font-semibold leading-none tabular tracking-tight">
-          {body.current != null ? fmtNum(body.current) : "—"}
-          <span className="text-lg"> kg</span>
+        <p className="mt-3 text-base leading-relaxed">
+          {summary || "Todavía no hay suficientes datos para generar un resumen automático."}
+        </p>
+      </Card>
+
+      <Card>
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
+              Volumen de entrenamiento
+            </p>
+            <p className="mt-1 text-2xl font-semibold tabular">
+              {cur.volume ? `${Math.round(cur.volume).toLocaleString("es-ES")} kg` : "—"}
+            </p>
+          </div>
+          {volumeChange != null && (
+            <div className="text-right text-xs font-semibold">
+              {volumeChange >= 0 ? "+" : ""}{Math.round(volumeChange)}%
+              <div className="font-normal text-muted-foreground">vs periodo anterior</div>
+            </div>
+          )}
         </div>
-        <p className="mt-2 text-xs" style={{ color: "#6F6F6F" }}>
-          {body.change != null
-            ? `${body.change >= 0 ? "+" : ""}${fmtNum(body.change)} kg desde tu primer registro`
-            : "Sin cambios registrados todavía"}
+        <div className="mt-4">
+          <MonoChart data={volumeSeries} />
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Evolución del volumen registrado en {rangeLabel.toLowerCase()}.
         </p>
       </Card>
 
       <div className="grid grid-cols-2 gap-3">
-        <Stat label="Sesiones completas" value={String(completedSessions)} sub={`${all.blocks} bloques`} />
-        <Stat label="Cumplimiento" value={completion != null ? `${completion}%` : "—"} sub={plannedDays ? `de ${plannedDays} días` : undefined} />
+        <Stat label="Sesiones" value={String(cur.sessions)} sub={`antes: ${prev.sessions}`} />
+        <Stat label="Frecuencia" value={cur.weeklyFreq != null ? fmtNum(cur.weeklyFreq) : "—"} sub="sesiones/sem" />
+        <Stat label="RPE medio" value={cur.avgRpe != null ? fmtNum(cur.avgRpe) : "—"} sub={rpeChange != null ? `Δ ${rpeChange >= 0 ? "+" : ""}${fmtNum(rpeChange)}` : undefined} />
+        <Stat label="Horas" value={cur.hours ? fmtNum(cur.hours) : "—"} />
+        <Stat label="PRs" value={String(cur.prs)} sub={prev.prs ? `antes: ${prev.prs}` : undefined} />
+        <Stat label="Cumplimiento" value={completion != null ? `${completion}%` : "—"} sub={plannedDays ? `de ${plannedDays} días planificados` : undefined} />
+      </div>
+
+      <Card>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
+              Fuerza
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Movimientos con evolución registrada</p>
+          </div>
+          <button type="button" onClick={goStrength} className="text-xs font-semibold text-gold">
+            Ver fuerza
+          </button>
+        </div>
+
+        {strengthProgress.length === 0 ? (
+          <p className="mt-4 text-sm text-muted-foreground">
+            Necesitas más registros de RM para ver progresión.
+          </p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {strengthProgress.map((item) => (
+              <div key={item.exercise} className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{item.exercise}</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    {item.currentPr != null ? `${fmtNum(item.currentPr)} kg actual` : "Sin 1RM confirmado"}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-semibold">
+                    {item.changePct != null ? `${item.changePct >= 0 ? "+" : ""}${item.changePct.toFixed(1)}%` : "—"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">evolución</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <div className="grid grid-cols-2 gap-3">
         <Stat label="Racha actual" value={`${s.current} d`} />
         <Stat label="Racha máxima" value={`${s.best} d`} />
-        <Stat label="PRs" value={String(history.length)} />
-        <Stat label="Volumen total" value={all.volume ? `${Math.round(all.volume).toLocaleString("es-ES")} kg` : "—"} />
-        <Stat label="Vol. 4 sem" value={last4.volume ? `${Math.round(last4.volume).toLocaleString("es-ES")} kg` : "—"} />
-        <Stat label="Horas" value={all.hours ? fmtNum(all.hours) : "—"} />
-        <Stat label="RPE medio" value={all.avgRpe != null ? fmtNum(all.avgRpe) : "—"} />
-        <Stat label="Frec. semanal" value={all.weeklyFreq != null ? fmtNum(all.weeklyFreq) : "—"} sub="sesiones/sem" />
+        <Stat label="Volumen" value={cur.volume ? `${Math.round(cur.volume).toLocaleString("es-ES")} kg` : "—"} />
+        <Stat label="Bloques" value={String(cur.blocks)} />
       </div>
+
+      <Card>
+        <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
+          Cambios corporales
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <Stat label="Peso actual" value={body.current != null ? fmtKg(body.current) : "—"} />
+          <Stat label="Cambio total" value={body.change != null ? `${body.change >= 0 ? "+" : ""}${fmtNum(body.change)} kg` : "—"} sub="desde primer registro" />
+        </div>
+      </Card>
     </div>
   );
 }
-
 /* ---------------- 4. Performance + Athlete status + Progression ---------------- */
 
 function PerformanceSection({ results, history, records, bodyWeight, days, rangeLabel }: any) {

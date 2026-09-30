@@ -41,7 +41,7 @@ function AdminVideosPage() {
       if (error) throw error;
       return (data ?? []) as MovementVideo[];
     },
-    enabled: admin === true,
+    enabled: admin === true || !!pinHash,
   });
 
   const [pin, setPin] = useState("");
@@ -154,20 +154,6 @@ function AdminVideosPage() {
 
   if (checking) {
     return <PageShell><Loading /></PageShell>;
-  }
-
-  if (!admin && !isBcProfile) {
-    return (
-      <PageShell>
-        <div className="cinematic-card-strong rounded-[28px] p-6 sm:p-8">
-          <span className="cinematic-label">ADMINISTRATION</span>
-          <h1 className="cinematic-title mt-3">Vídeos</h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Esta sección está reservada al administrador de RM OR DIE.
-          </p>
-        </div>
-      </PageShell>
-    );
   }
 
   if (!pinHash) {

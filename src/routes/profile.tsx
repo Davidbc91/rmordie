@@ -151,10 +151,11 @@ function ProfilePage() {
   return (
     <AppShell>
       <header className="rise rise-1 mb-5">
-        <p className="eyebrow">Mi perfil</p>
-        <h1 className="mt-2 text-[32px] font-semibold leading-none tracking-tight">
-          {profile?.display_name || "Atleta"}
-        </h1>
+        <div className="flex items-center gap-2">
+          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-gold" />
+          <p className="cinematic-label">ATHLETE PROFILE</p>
+        </div>
+        <h1 className="cinematic-title mt-5">{profile?.display_name || "Atleta"}</h1>
       </header>
 
       <div className="rise rise-2 mb-6 block w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain no-scrollbar [contain:inline-size] [-webkit-overflow-scrolling:touch]">
@@ -167,8 +168,8 @@ function ProfilePage() {
                 onClick={() => setSection(s.key)}
                 className={`whitespace-nowrap rounded-2xl border px-4 py-2 text-xs font-semibold transition ${
                   active
-                    ? "border-transparent gold-gradient"
-                    : "border-border text-muted-foreground"
+                    ? "border-transparent gold-gradient shadow-[0_8px_24px_-12px_rgba(184,255,61,.5)]"
+                    : "border-border bg-white/[.025] text-muted-foreground"
                 }`}
               >
                 {s.label}
@@ -229,12 +230,12 @@ function ProfilePage() {
 /* ---------------- shared UI ---------------- */
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <section className={`card-elevated min-w-0 max-w-full p-5 ${className}`}>{children}</section>;
+  return <section className={`cinematic-card-strong min-w-0 max-w-full rounded-[24px] p-5 ${className}`}>{children}</section>;
 }
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-[22px] border border-border bg-surface p-4">
+    <div className="cinematic-card-dark rounded-[20px] border border-white/[.07] p-4">
       <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
       <div className="mt-2 text-2xl font-semibold tabular tracking-tight">{value}</div>
       {sub && <div className="mt-1 text-[11px] text-muted-foreground">{sub}</div>}
@@ -277,7 +278,7 @@ const inputCls =
 
 function RangePicker({ range, setRange }: { range: RangeKey; setRange: (r: RangeKey) => void }) {
   return (
-    <div className="mb-4 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-1">
+    <div className="mb-4 flex gap-1 overflow-x-auto rounded-2xl border border-white/[.08] bg-black/20 p-1">
       {RANGES.map((r) => (
         <button
           key={r.key}

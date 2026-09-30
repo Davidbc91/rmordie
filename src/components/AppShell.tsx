@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
 
       <main
-        className="relative mx-auto max-w-2xl overflow-x-clip"
+        className="relative mx-auto w-full min-w-0 max-w-2xl overflow-x-hidden supports-[overflow:clip]:overflow-x-clip"
         style={{
           paddingLeft: "max(env(safe-area-inset-left), 1.25rem)",
           paddingRight: "max(env(safe-area-inset-right), 1.25rem)",

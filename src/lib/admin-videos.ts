@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentUserId, sha256 } from "@/lib/pin-gate";
+import { verifyProfilePin } from "@/lib/store";
 
 export const MOVEMENT_VIDEO_BUCKET = "movement-videos";
 
@@ -34,7 +35,8 @@ export async function verifyVideoAdminPin(pin: string): Promise<string> {
   const profileId = getCurrentUserId();
   if (!profileId) throw new Error("No hay perfil activo");
   const pinHash = await sha256(pin);
-  await invoke({ action: "verify", profile_id: profileId, pin_hash: pinHash });
+  const valid = await verifyProfilePin(profileId, pin);
+  if (!valid) throw new Error("PIN incorrecto");
   return pinHash;
 }
 

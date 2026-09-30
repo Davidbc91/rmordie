@@ -237,11 +237,9 @@ function Home() {
       <header className="rise rise-1 mb-6">
         <div className="flex items-center gap-2">
           <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-gold" />
-          <p className="eyebrow">RMORDIE</p>
+          <p className="cinematic-label">RM / OR DIE</p>
         </div>
-        <h1 className="mt-3.5 text-[2rem] font-semibold leading-[1.02] tracking-tight">
-          ¿Qué toca hoy?
-        </h1>
+        <h1 className="cinematic-title mt-5">¿Qué toca<br /><span className="gold-text">hoy?</span></h1>
       </header>
 
       {!planning && !isLoading && <EmptyState />}
@@ -265,11 +263,11 @@ function Home() {
               <div className="mt-5 flex items-end justify-between gap-4">
                 <div className="min-w-0">
                   <div className="display-xl gold-text truncate">{next.dayKey}</div>
-                  <p className="eyebrow mt-2.5">{next.monthLabel}</p>
+                  <p className="cinematic-label mt-3">{next.monthLabel} · SEMANA {next.week}</p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="metric tabular">
-                    {next.progress.done} / {next.progress.total}
+                  <div className="cinematic-number tabular">
+                    {next.progress.done}<span className="text-xl text-muted-foreground">/{next.progress.total}</span>
                   </div>
                   <p className="eyebrow mt-1.5">Bloques</p>
                 </div>
@@ -369,7 +367,7 @@ function Home() {
           {/* 3 · Estado de entrenamiento */}
           <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "performance" } })} className="w-full text-left">
           <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable">
-            <div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="eyebrow">Estado de entrenamiento</p><h2 className="mt-2 text-lg font-semibold">{smartState.title}</h2><p className="mt-2 text-xs leading-relaxed text-muted-foreground">{smartState.detail}</p></div><Activity className={`h-5 w-5 shrink-0 ${smartState.tone === "positive" ? "text-gold" : "text-muted-foreground"}`} /></div>
+            <div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="eyebrow">Estado de entrenamiento</p><h2 className="mt-2 text-xl font-semibold tracking-tight">{smartState.title}</h2><p className="mt-2 text-xs leading-relaxed text-muted-foreground">{smartState.detail}</p></div><Activity className={`h-5 w-5 shrink-0 ${smartState.tone === "positive" ? "text-gold" : "text-muted-foreground"}`} /></div>
             <div className="mt-4 grid grid-cols-3 gap-2">
               <DashboardStat value={String(smartState.sessions)} label="Sesiones" icon={<CalendarCheck className="h-3.5 w-3.5" />} />
               <DashboardStat value={smartState.avgRpe != null ? smartState.avgRpe.toFixed(1) : "—"} label="RPE medio" icon={<Activity className="h-3.5 w-3.5" />} />
@@ -380,7 +378,7 @@ function Home() {
 
           {/* 4 · Evolución */}
           <GlassCard level={2} className="rise rise-4 mt-3 p-5">
-            <div className="flex items-start justify-between gap-3"><div><p className="eyebrow">Evolución</p><h2 className="mt-2 text-lg font-semibold">Carga de las últimas 8 semanas</h2></div>{dashboardTrend.volumeChange != null && <span className="text-xs font-semibold text-gold">{dashboardTrend.volumeChange >= 0 ? "+" : ""}{dashboardTrend.volumeChange.toFixed(0)}%</span>}</div>
+            <div className="flex items-start justify-between gap-3"><div><p className="eyebrow">Evolución</p><h2 className="mt-2 text-xl font-semibold tracking-tight">Carga de las últimas 8 semanas</h2></div>{dashboardTrend.volumeChange != null && <span className="text-xs font-semibold text-gold">{dashboardTrend.volumeChange >= 0 ? "+" : ""}{dashboardTrend.volumeChange.toFixed(0)}%</span>}</div>
             <div className="mt-4 h-[150px] w-full">
               <ResponsiveContainer width="100%" height="100%"><LineChart data={dashboardTrend.weeks} margin={{ top: 8, right: 4, left: -24, bottom: 0 }} onClick={(state) => {
                 const label = state?.activeLabel;

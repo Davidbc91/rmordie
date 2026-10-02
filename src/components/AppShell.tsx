@@ -123,7 +123,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 return (
                   <Link
                     key={l.to}
-                    to={l.to}
+                    to={l.to as any}
                     className="pressable flex items-center gap-3.5 rounded-[var(--r-md)] px-3 py-3"
                     style={{ background: isActive ? "rgba(200,179,138,0.09)" : "rgba(255,255,255,0.035)" }}
                   >

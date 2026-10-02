@@ -4,7 +4,6 @@ import { useSettings, useSaveSettings, useProfiles, useUpdateProfilePin, useDele
 import { signOut, getCurrentUserId } from "@/lib/pin-gate";
 import { useState } from "react";
 import { toast } from "sonner";
-import { HeartPulse } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Ajustes — RM OR DIE" }] }),
@@ -62,20 +61,6 @@ function SettingsPage() {
           Perfil activo: <span className="text-foreground font-medium">{me.name}</span>
         </p>
       )}
-
-      <button
-        onClick={() => window.location.href = "/health"}
-        className="mt-6 flex w-full items-center gap-3 rounded-[22px] border border-white/[.08] bg-black/20 p-4 text-left transition hover:border-white/[.14]"
-      >
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gold/10 text-gold">
-          <HeartPulse className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold">Salud e integraciones</div>
-          <div className="mt-1 text-xs text-muted-foreground">Conecta Huawei Health y futuras fuentes de datos.</div>
-        </div>
-        <span className="text-xs text-muted-foreground">›</span>
-      </button>
 
       <section className="mt-6 card-elevated p-5">
         <h2 className="text-sm font-semibold">Material disponible</h2>

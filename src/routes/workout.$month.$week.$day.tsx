@@ -134,7 +134,7 @@ function WorkoutPage() {
         return sum + b.weight * b.reps * sets;
       }, 0);
       const latestRecovery = [...wellnessLogs]
-        .sort((a, b) => String(b.logged_at ?? b.created_at ?? "").localeCompare(String(a.logged_at ?? a.created_at ?? "")))[0];
+        .sort((a, b) => String(b.logged_on ?? "").localeCompare(String(a.logged_on ?? "")))[0];
       const recovery = latestRecovery
         ? { sleep: latestRecovery.sleep_hours, energy: latestRecovery.energy, mood: latestRecovery.mood }
         : null;

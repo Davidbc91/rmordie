@@ -23,11 +23,22 @@ import { useWodResults, useSaveWodResult, type WodResult, type WodSaveInput, typ
 import { WodScoreFields } from "@/components/WodRecords";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
 import { useCreatePost } from "@/lib/social";
+import { useWellnessLogs } from "@/lib/profile-store";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
   head: () => ({ meta: [{ title: "Entrenamiento — RMORDIE" }] }),
   component: WorkoutPage,
 });
+
+type WorkoutReview = {
+  volume: number;
+  avgRpe: number | null;
+  blocks: number;
+  prs: number;
+  estimatedBest: number | null;
+  recovery: { sleep: number | null; energy: number | null; mood: number | null } | null;
+  recommendation: string;
+};
 
 type BlockPayload = {
   block_key: string;
@@ -53,10 +64,12 @@ function WorkoutPage() {
   const save = useSaveResult();
   const saveWod = useSaveWodResult();
   const createPost = useCreatePost();
+  const { data: wellnessLogs = [] } = useWellnessLogs();
   const formsRef = useRef<Record<string, () => BlockPayload>>({});
   const wodRef = useRef<Record<string, () => WodSaveInput | null>>({});
   const [savingAll, setSavingAll] = useState(false);
   const [celebrate, setCelebrate] = useState<{ data: PrCelebrationData; outcome: PrOutcome } | null>(null);
+  const [review, setReview] = useState<WorkoutReview | null>(null);
 
   useEffect(() => {
     setActiveWorkout({ month, week: weekN, day, label: `${month} · S${weekN} · ${day}` });
@@ -103,11 +116,44 @@ function WorkoutPage() {
     setSavingAll(true);
     try {
       const prs: PrOutcome[] = [];
+      const payloads: BlockPayload[] = [];
       for (const [blockKey, get] of entries) {
-        await save.mutateAsync({ month_key: month, week: weekN, day_key: day, ...get() });
+        const block = get();
+        payloads.push(block);
+        await save.mutateAsync({ month_key: month, week: weekN, day_key: day, ...block });
         const out = await persistWod(blockKey);
         if (out && (out.kind === "pr" || out.kind === "matched")) prs.push(out);
       }
+      const weightedRpes = payloads.filter((b) => b.rpe != null);
+      const avgRpe = weightedRpes.length
+        ? weightedRpes.reduce((sum, b) => sum + Number(b.rpe), 0) / weightedRpes.length
+        : null;
+      const volume = payloads.reduce((sum, b) => {
+        if (b.weight == null || b.reps == null) return sum;
+        const sets = b.sets && b.sets > 0 ? b.sets : 1;
+        return sum + b.weight * b.reps * sets;
+      }, 0);
+      const latestRecovery = [...wellnessLogs]
+        .sort((a, b) => String(b.logged_at ?? b.created_at ?? "").localeCompare(String(a.logged_at ?? a.created_at ?? "")))[0];
+      const recovery = latestRecovery
+        ? { sleep: latestRecovery.sleep_hours, energy: latestRecovery.energy, mood: latestRecovery.mood }
+        : null;
+      const recommendation = avgRpe == null
+        ? "Sigue registrando RPE para afinar las recomendaciones."
+        : avgRpe >= 9
+          ? "La sesión ha sido exigente. Prioriza recuperación y consolida la carga antes de subir."
+          : avgRpe <= 7
+            ? "Has dejado margen. Si la técnica y la recuperación acompañan, puedes valorar progresar."
+            : "Carga bien controlada. Mantén la progresión y observa cómo responde el siguiente entrenamiento.";
+      setReview({
+        volume,
+        avgRpe,
+        blocks: payloads.length,
+        prs: prs.filter((p) => p.kind === "pr").length,
+        estimatedBest: null,
+        recovery,
+        recommendation,
+      });
       d!.blocks.forEach((b) => clearDraft(month, weekN, day, b.key));
       clearActiveWorkout();
       toast.success("Entreno completo guardado");
@@ -147,6 +193,10 @@ function WorkoutPage() {
 
   return (
     <AppShell>
+      {review && (
+        <WorkoutReviewCard review={review} onClose={() => setReview(null)} />
+      )}
+
       {celebrate && (
         <PrCelebration
           data={celebrate.data}
@@ -223,6 +273,55 @@ function WorkoutPage() {
   );
 }
 
+
+function WorkoutReviewCard({ review, onClose }: { review: WorkoutReview; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center">
+      <div className="cinematic-card-strong w-full max-w-lg rounded-[28px] p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <span className="cinematic-label">POST-WORKOUT REVIEW</span>
+            <h2 className="cinematic-title mt-2">Sesión completada</h2>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-muted-foreground">Cerrar</button>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <ReviewStat label="Volumen" value={review.volume > 0 ? `${Math.round(review.volume).toLocaleString("es-ES")} kg` : "—"} />
+          <ReviewStat label="RPE medio" value={review.avgRpe != null ? review.avgRpe.toFixed(1) : "—"} />
+          <ReviewStat label="Bloques" value={String(review.blocks)} />
+          <ReviewStat label="PRs" value={String(review.prs)} />
+        </div>
+
+        <div className="cinematic-card-dark mt-4 rounded-2xl p-4">
+          <p className="cinematic-label">LECTURA DE LA SESIÓN</p>
+          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{review.recommendation}</p>
+        </div>
+
+        {review.recovery && (
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <ReviewStat label="Sueño" value={review.recovery.sleep != null ? `${review.recovery.sleep} h` : "—"} />
+            <ReviewStat label="Energía" value={review.recovery.energy != null ? String(review.recovery.energy) : "—"} />
+            <ReviewStat label="Ánimo" value={review.recovery.mood != null ? String(review.recovery.mood) : "—"} />
+          </div>
+        )}
+
+        <button type="button" onClick={onClose} className="mt-5 h-12 w-full rounded-2xl gold-gradient font-semibold" style={{ color: "var(--gold-foreground)" }}>
+          Continuar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ReviewStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="cinematic-card-dark rounded-2xl p-3">
+      <p className="cinematic-label">{label}</p>
+      <p className="mt-1 text-lg font-semibold tabular">{value}</p>
+    </div>
+  );
+}
 
 function suggestNextLoad(weight: number, rpe: number): { weight: number; reason: string } | null {
   if (!Number.isFinite(weight) || weight <= 0 || !Number.isFinite(rpe) || rpe < 1 || rpe > 10) return null;

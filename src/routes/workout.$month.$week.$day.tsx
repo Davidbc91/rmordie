@@ -8,6 +8,7 @@ import { resolveMovementId } from "@/lib/dictionary/resolve";
 import { movements } from "@/lib/dictionary/catalog";
 import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { setActiveWorkout, clearActiveWorkout, loadDraft, saveDraft, clearDraft } from "@/lib/active-workout";
 import {
@@ -24,6 +25,7 @@ import { WodScoreFields } from "@/components/WodRecords";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
 import { useCreatePost } from "@/lib/social";
 import { useWellnessLogs } from "@/lib/profile-store";
+import { getCurrentUserId } from "@/lib/pin-gate";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
   head: () => ({ meta: [{ title: "Entrenamiento — RMORDIE" }] }),
@@ -57,6 +59,7 @@ function WorkoutPage() {
   const { month, week, day } = Route.useParams();
   const weekN = Number(week);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: planning } = usePlanning();
   const { data: results = [] } = useDayResults(month, weekN, day);
   const { data: wodResults = [] } = useWodResults();
@@ -145,6 +148,21 @@ function WorkoutPage() {
           : avgRpe <= 7
             ? "Has dejado margen. Si la técnica y la recuperación acompañan, puedes valorar progresar."
             : "Carga bien controlada. Mantén la progresión y observa cómo responde el siguiente entrenamiento.";
+      // Force the completed results into the active query cache before
+      // returning to the dashboard. This prevents the dashboard from briefly
+      // showing the session we have just completed.
+      const uid = getCurrentUserId();
+      if (uid) {
+        await queryClient.refetchQueries({
+          queryKey: ["results", uid, "all"],
+          type: "all",
+        });
+        await queryClient.refetchQueries({
+          queryKey: ["results", uid, month, weekN, day],
+          type: "all",
+        });
+      }
+
       setReview({
         volume,
         avgRpe,
@@ -194,7 +212,7 @@ function WorkoutPage() {
   return (
     <AppShell>
       {review && (
-        <WorkoutReviewCard review={review} onClose={() => setReview(null)} />
+        <WorkoutReviewCard review={review} onClose={() => { setReview(null); navigate({ to: "/" }); }} />
       )}
 
       {celebrate && (

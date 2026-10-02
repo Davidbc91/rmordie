@@ -162,9 +162,6 @@ export interface FileRoutesByFullPath {
   '/admin/videos': typeof AdminVideosRoute
   '/health': typeof HealthRoute
   '/health/huawei-callback': typeof HealthHuaweiCallbackRoute
-  '/admin/videos': typeof AdminVideosRoute
-  '/health': typeof HealthRoute
-  '/health/huawei-callback': typeof HealthHuaweiCallbackRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
   '/dictionary/$movementId': typeof DictionaryMovementIdRoute
@@ -178,6 +175,9 @@ export interface FileRoutesByFullPath {
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesByTo {
+  '/admin/videos': typeof AdminVideosRoute
+  '/health': typeof HealthRoute
+  '/health/huawei-callback': typeof HealthHuaweiCallbackRoute
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
@@ -200,6 +200,9 @@ export interface FileRoutesByTo {
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesById {
+  '/admin/videos': typeof AdminVideosRoute
+  '/health': typeof HealthRoute
+  '/health/huawei-callback': typeof HealthHuaweiCallbackRoute
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
@@ -321,6 +324,27 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/admin/videos': {
+      id: '/admin/videos'
+      path: '/admin/videos'
+      fullPath: '/admin/videos'
+      preLoaderRoute: typeof AdminVideosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/health': {
+      id: '/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/health/huawei-callback': {
+      id: '/health/huawei-callback'
+      path: '/health/huawei-callback'
+      fullPath: '/health/huawei-callback'
+      preLoaderRoute: typeof HealthHuaweiCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/timers': {
       id: '/timers'
       path: '/timers'

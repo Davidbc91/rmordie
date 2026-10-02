@@ -11,9 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TimersRouteImport } from './routes/timers'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as AdminVideosRouteImport } from './routes/admin.videos'
-import { Route as HealthRouteImport } from './routes/health'
-import { Route as HealthHuaweiCallbackRouteImport } from './routes/health.huawei-callback'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlanBuilderRouteImport } from './routes/plan-builder'
@@ -41,21 +38,6 @@ const TimersRoute = TimersRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminVideosRoute = AdminVideosRouteImport.update({
-  id: '/admin/videos',
-  path: '/admin/videos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HealthRoute = HealthRouteImport.update({
-  id: '/health',
-  path: '/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HealthHuaweiCallbackRoute = HealthHuaweiCallbackRouteImport.update({
-  id: '/health/huawei-callback',
-  path: '/health/huawei-callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecordsRoute = RecordsRouteImport.update({
@@ -159,9 +141,6 @@ export interface FileRoutesByFullPath {
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
-  '/admin/videos': typeof AdminVideosRoute
-  '/health': typeof HealthRoute
-  '/health/huawei-callback': typeof HealthHuaweiCallbackRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
   '/dictionary/$movementId': typeof DictionaryMovementIdRoute
@@ -175,9 +154,6 @@ export interface FileRoutesByFullPath {
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesByTo {
-  '/admin/videos': typeof AdminVideosRoute
-  '/health': typeof HealthRoute
-  '/health/huawei-callback': typeof HealthHuaweiCallbackRoute
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
@@ -200,9 +176,6 @@ export interface FileRoutesByTo {
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
 }
 export interface FileRoutesById {
-  '/admin/videos': typeof AdminVideosRoute
-  '/health': typeof HealthRoute
-  '/health/huawei-callback': typeof HealthHuaweiCallbackRoute
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
@@ -237,9 +210,6 @@ export interface FileRouteTypes {
     | '/plan-builder'
     | '/profile'
     | '/records'
-    | '/admin/videos'
-    | '/health'
-    | '/health/huawei-callback'
     | '/settings'
     | '/timers'
     | '/dictionary/$movementId'
@@ -307,9 +277,6 @@ export interface RootRouteChildren {
   PlanBuilderRoute: typeof PlanBuilderRoute
   ProfileRoute: typeof ProfileRoute
   RecordsRoute: typeof RecordsRoute
-  AdminVideosRoute: typeof AdminVideosRoute
-  HealthRoute: typeof HealthRoute
-  HealthHuaweiCallbackRoute: typeof HealthHuaweiCallbackRoute
   SettingsRoute: typeof SettingsRoute
   TimersRoute: typeof TimersRoute
   SocialBoardRoute: typeof SocialBoardRoute
@@ -324,27 +291,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/admin/videos': {
-      id: '/admin/videos'
-      path: '/admin/videos'
-      fullPath: '/admin/videos'
-      preLoaderRoute: typeof AdminVideosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/health': {
-      id: '/health'
-      path: '/health'
-      fullPath: '/health'
-      preLoaderRoute: typeof HealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/health/huawei-callback': {
-      id: '/health/huawei-callback'
-      path: '/health/huawei-callback'
-      fullPath: '/health/huawei-callback'
-      preLoaderRoute: typeof HealthHuaweiCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/timers': {
       id: '/timers'
       path: '/timers'
@@ -510,9 +456,6 @@ const rootRouteChildren: RootRouteChildren = {
   PlanBuilderRoute: PlanBuilderRoute,
   ProfileRoute: ProfileRoute,
   RecordsRoute: RecordsRoute,
-  AdminVideosRoute: AdminVideosRoute,
-  HealthRoute: HealthRoute,
-  HealthHuaweiCallbackRoute: HealthHuaweiCallbackRoute,
   SettingsRoute: SettingsRoute,
   TimersRoute: TimersRoute,
   SocialBoardRoute: SocialBoardRoute,

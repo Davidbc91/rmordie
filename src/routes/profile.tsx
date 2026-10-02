@@ -708,6 +708,63 @@ function ProgressSection({ results, history, records, metrics, plannedDays, comp
     };
   }, [records, history, days]);
 
+  const intelligence = useMemo(() => {
+    const recent = windowStats(results, history, 28);
+    const prior = windowStats(results, history, 28, true);
+    const recentWellness = wellnessAverages(wellness, 28);
+    const trainingLoadHigh = recent.avgRpe != null && recent.avgRpe >= 8.5 && recent.sessions >= 3;
+    const volumeRising = prior.volume > 0 && recent.volume > prior.volume * 1.1;
+    const recoveryLimited = recentWellness && (
+      (recentWellness.sleep != null && recentWellness.sleep < 6.5) ||
+      (recentWellness.energy != null && recentWellness.energy <= 4)
+    );
+    const topUp = movementTrends.up[0];
+    const topDown = movementTrends.down[0];
+    const signals: { label: string; text: string; tone: "positive" | "attention" | "neutral" }[] = [];
+
+    if (topUp) {
+      signals.push({
+        label: "Progresión",
+        text: `${topUp.exercise} muestra una mejora reciente del ${Math.abs(topUp.changePct ?? 0).toFixed(1)}%.`,
+        tone: "positive",
+      });
+    }
+    if (trainingLoadHigh || (volumeRising && recent.avgRpe != null && recent.avgRpe >= 8)) {
+      signals.push({
+        label: "Carga",
+        text: `Has acumulado una carga reciente elevada: ${recent.sessions} sesiones en 28 días y RPE medio ${fmtNum(recent.avgRpe ?? 0)}.`,
+        tone: "attention",
+      });
+    }
+    if (recoveryLimited) {
+      signals.push({
+        label: "Recuperación",
+        text: "Tus últimos registros de recuperación muestran margen de mejora en sueño o energía.",
+        tone: "attention",
+      });
+    }
+    if (topDown) {
+      signals.push({
+        label: "Movimiento a vigilar",
+        text: `${topDown.exercise} está un ${Math.abs(topDown.changePct ?? 0).toFixed(1)}% por debajo de su referencia reciente.`,
+        tone: "attention",
+      });
+    }
+    if (signals.length === 0) {
+      signals.push({
+        label: "Estado",
+        text: "No aparece un patrón dominante con los datos disponibles. Sigue registrando sesiones para aumentar la precisión.",
+        tone: "neutral",
+      });
+    }
+
+    return {
+      recent,
+      recentWellness,
+      signals: signals.slice(0, 3),
+    };
+  }, [results, history, wellness, movementTrends]);
+
   const volumeChange = prev.volume > 0 ? ((cur.volume - prev.volume) / prev.volume) * 100 : null;
   const rpeChange =
     prev.avgRpe != null && cur.avgRpe != null ? cur.avgRpe - prev.avgRpe : null;
@@ -745,6 +802,31 @@ function ProgressSection({ results, history, records, metrics, plannedDays, comp
 
   return (
     <div className="space-y-4">
+      <Card>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="cinematic-label">TRAINING INTELLIGENCE</p>
+            <h2 className="mt-2 text-xl font-semibold">Lectura de tu entrenamiento</h2>
+          </div>
+          <Activity className="h-5 w-5 text-gold" />
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Stat label="Sesiones · 28d" value={String(intelligence.recent.sessions)} />
+          <Stat label="RPE medio" value={intelligence.recent.avgRpe != null ? fmtNum(intelligence.recent.avgRpe) : "—"} />
+        </div>
+        <div className="mt-4 space-y-2">
+          {intelligence.signals.map((signal) => (
+            <div key={signal.label} className="rounded-2xl border border-white/[.07] bg-black/20 p-4">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{signal.label}</div>
+              <p className="mt-1.5 text-sm leading-relaxed">{signal.text}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 text-[10px] leading-relaxed text-muted-foreground">
+          Análisis descriptivo basado en tus entrenamientos y registros de recuperación. No modifica tu planificación.
+        </p>
+      </Card>
+
       <Card>
         <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
           Resumen del periodo

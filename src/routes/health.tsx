@@ -108,7 +108,7 @@ function HealthPage() {
                     <h2 className="font-semibold">{provider.name}</h2>
                     {provider.primary && (
                       <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-gold">
-                        Próximo
+                        Beta
                       </span>
                     )}
                   </div>

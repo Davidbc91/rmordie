@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Check, ExternalLink, KeyRound, Link2, Loader2, Search, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Check, CheckCircle2, ExternalLink, KeyRound, Link2, Loader2, Search, Trash2, Upload, X } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { movements } from "@/lib/dictionary/catalog";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { getCurrentUserId } from "@/lib/pin-gate";
 import { useProfiles } from "@/lib/store";
 import {
   createMovementVideoUpload,
+  reviewMovementVideo,
   deleteMovementVideo,
   isVideoAdmin,
   MOVEMENT_VIDEO_BUCKET,
@@ -15,6 +16,7 @@ import {
   saveMovementYoutube,
   verifyVideoAdminPin,
   type MovementVideo,
+  type VideoReviewStatus,
 } from "@/lib/admin-videos";
 import { getDictionaryVideoId } from "@/lib/dictionary/videoOverrides";
 
@@ -31,6 +33,7 @@ function AdminVideosPage() {
   const [pinHash, setPinHash] = useState<string | null>(null);
   const [pinError, setPinError] = useState("");
   const [search, setSearch] = useState("");
+  const [reviewFilter, setReviewFilter] = useState<"all" | VideoReviewStatus | "missing">("all");
   const [busy, setBusy] = useState<string | null>(null);
   const [youtubeDrafts, setYoutubeDrafts] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
@@ -52,6 +55,28 @@ function AdminVideosPage() {
     },
     enabled: !!pinHash,
   });
+  const { data: reviews = [], isLoading: loadingReviews } = useQuery({
+    queryKey: ["movement-video-reviews"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("movement_video_reviews")
+        .select("*");
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        movement_id: string;
+        status: VideoReviewStatus;
+        reviewed_at: string | null;
+        notes: string | null;
+      }>;
+    },
+    enabled: !!pinHash,
+  });
+
+
+  const reviewByMovement = useMemo(
+    () => new Map(reviews.map((review) => [review.movement_id, review])),
+    [reviews],
+  );
 
   const videoByMovement = useMemo(
     () => new Map(videos.map((video) => [video.movement_id, video])),
@@ -60,22 +85,34 @@ function AdminVideosPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return movements;
-    return movements.filter((movement) =>
-      [movement.id, movement.name, movement.nameEs].some((value) =>
+    return movements.filter((movement) => {
+      const matchesSearch = !q || [movement.id, movement.name, movement.nameEs].some((value) =>
         value.toLowerCase().includes(q),
-      ),
-    );
-  }, [search]);
+      );
+      if (!matchesSearch) return false;
+      const hasVideo = !!videoByMovement.get(movement.id) || !!getDictionaryVideoId(movement.videoUrl);
+      const status = reviewByMovement.get(movement.id)?.status ?? (hasVideo ? "pending" : null);
+      if (reviewFilter === "missing") return !hasVideo;
+      if (reviewFilter === "all") return true;
+      return status === reviewFilter;
+    });
+  }, [search, reviewFilter, videoByMovement, reviewByMovement]);
 
   const stats = useMemo(() => {
     let configured = 0;
     let catalogYoutube = 0;
+    let verified = 0;
+    let needsReview = 0;
+    let pending = 0;
     for (const movement of movements) {
       const managed = videoByMovement.get(movement.id);
       const hasCatalogVideo = !!getDictionaryVideoId(movement.videoUrl);
       if (managed || hasCatalogVideo) configured++;
       if (!managed && hasCatalogVideo) catalogYoutube++;
+      const status = reviewByMovement.get(movement.id)?.status ?? ((managed || hasCatalogVideo) ? "pending" : null);
+      if (status === "verified") verified++;
+      else if (status === "needs_review") needsReview++;
+      else if (status === "pending") pending++;
     }
     return {
       total: movements.length,
@@ -83,8 +120,11 @@ function AdminVideosPage() {
       missing: movements.length - configured,
       uploads: videos.filter((v) => v.source_type === "upload").length,
       youtube: videos.filter((v) => v.source_type === "youtube").length + catalogYoutube,
+      verified,
+      needsReview,
+      pending,
     };
-  }, [videoByMovement, videos]);
+  }, [videoByMovement, videos, reviewByMovement]);
 
   async function unlock() {
     setPinError("");
@@ -139,6 +179,22 @@ function AdminVideosPage() {
       setNotice(`Vídeo subido: ${title}`);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "No se pudo subir el vídeo.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function setReview(movementId: string, status: VideoReviewStatus) {
+    if (!pinHash) return;
+    setBusy(movementId);
+    setNotice("");
+    try {
+      await reviewMovementVideo(pinHash, movementId, status);
+      await qc.invalidateQueries({ queryKey: ["movement-video-reviews"] });
+      const label = status === "verified" ? "verificado" : status === "needs_review" ? "marcado para revisar" : "pendiente";
+      setNotice(`Vídeo ${label}: ${movementId}`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "No se pudo actualizar la revisión.");
     } finally {
       setBusy(null);
     }
@@ -225,6 +281,8 @@ function AdminVideosPage() {
         <AdminStat label="Con vídeo" value={stats.configured} />
         <AdminStat label="YouTube" value={stats.youtube} />
         <AdminStat label="Subidos" value={stats.uploads} />
+        <AdminStat label="Verificados" value={stats.verified} />
+        <AdminStat label="A revisar" value={stats.needsReview} />
       </div>
 
       {notice && (
@@ -249,6 +307,25 @@ function AdminVideosPage() {
         )}
       </div>
 
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        {[
+          ["all", "Todos"],
+          ["pending", "Pendientes"],
+          ["needs_review", "A revisar"],
+          ["verified", "Verificados"],
+          ["missing", "Sin vídeo"],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setReviewFilter(value as typeof reviewFilter)}
+            className={`shrink-0 rounded-full border px-3 py-2 text-xs font-semibold ${reviewFilter === value ? "border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)]" : "border-white/10 text-muted-foreground"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="mt-4 space-y-3">
         {loadingVideos ? <Loading /> : filtered.map((movement) => {
           const video = videoByMovement.get(movement.id);
@@ -256,6 +333,8 @@ function AdminVideosPage() {
           const catalogVideoId = getDictionaryVideoId(movement.videoUrl);
           const catalogVideoUrl = catalogVideoId ? `https://www.youtube.com/watch?v=${catalogVideoId}` : null;
           const hasCatalogVideo = !video && !!catalogVideoUrl;
+          const review = reviewByMovement.get(movement.id);
+          const reviewStatus = review?.status ?? (video || hasCatalogVideo ? "pending" : null);
           const previewUrl = video?.storage_path
             ? supabase.storage.from(MOVEMENT_VIDEO_BUCKET).getPublicUrl(video.storage_path).data.publicUrl
             : video?.youtube_url ?? catalogVideoUrl;
@@ -272,6 +351,25 @@ function AdminVideosPage() {
                   {video ? video.source_type : hasCatalogVideo ? "catálogo" : "sin vídeo"}
                 </span>
               </div>
+
+              {reviewStatus && (
+                <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-white/8 bg-black/15 px-3 py-2">
+                  <span className="inline-flex items-center gap-2 text-xs">
+                    {reviewStatus === "verified" ? <CheckCircle2 className="h-4 w-4 text-[var(--gold)]" /> : <AlertTriangle className="h-4 w-4 text-amber-300" />}
+                    <span className={reviewStatus === "verified" ? "text-[var(--gold)]" : "text-muted-foreground"}>
+                      {reviewStatus === "verified" ? "Verificado" : reviewStatus === "needs_review" ? "Revisar" : "Pendiente de revisión"}
+                    </span>
+                  </span>
+                  <div className="flex gap-1.5">
+                    {reviewStatus !== "verified" && (
+                      <button type="button" onClick={() => void setReview(movement.id, "verified")} disabled={isBusy} className="rounded-xl border border-white/10 px-2.5 py-1.5 text-[11px] font-semibold">✓ Verificado</button>
+                    )}
+                    {reviewStatus !== "needs_review" && (
+                      <button type="button" onClick={() => void setReview(movement.id, "needs_review")} disabled={isBusy} className="rounded-xl border border-white/10 px-2.5 py-1.5 text-[11px] font-semibold">Revisar</button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {previewUrl && (
                 <a

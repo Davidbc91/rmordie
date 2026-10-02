@@ -64,7 +64,7 @@ function SettingsPage() {
       )}
 
       <button
-        onClick={() => navigate({ to: "/health" })}
+        onClick={() => window.location.href = "/health"}
         className="mt-6 flex w-full items-center gap-3 rounded-[22px] border border-white/[.08] bg-black/20 p-4 text-left transition hover:border-white/[.14]"
       >
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gold/10 text-gold">

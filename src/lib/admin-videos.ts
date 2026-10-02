@@ -4,6 +4,8 @@ import { verifyProfilePin } from "@/lib/store";
 
 export const MOVEMENT_VIDEO_BUCKET = "movement-videos";
 
+export type VideoReviewStatus = "pending" | "verified" | "needs_review";
+
 export type MovementVideo = {
   id: string;
   movement_id: string;
@@ -100,5 +102,24 @@ export async function deleteMovementVideo(pinHash: string, movementId: string) {
     profile_id: profileId,
     pin_hash: pinHash,
     movement_id: movementId,
+  });
+}
+
+
+export async function reviewMovementVideo(
+  pinHash: string,
+  movementId: string,
+  status: VideoReviewStatus,
+  notes?: string,
+) {
+  const profileId = getCurrentUserId();
+  if (!profileId) throw new Error("No hay perfil activo");
+  return invoke({
+    action: "review",
+    profile_id: profileId,
+    pin_hash: pinHash,
+    movement_id: movementId,
+    status,
+    notes: notes ?? null,
   });
 }

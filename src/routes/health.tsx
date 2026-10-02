@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { Activity, CheckCircle2, ChevronRight, HeartPulse, LockKeyhole, Watch } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { startHuaweiHealthAuthorization, getHuaweiHealthStatus } from "@/lib/health-integrations";
 
 export const Route = createFileRoute("/health")({
   head: () => ({
@@ -37,6 +40,32 @@ const providers = [
 ];
 
 function HealthPage() {
+  const [pin, setPin] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [status, setStatus] = useState<"unknown" | "connected" | "disconnected">("unknown");
+
+  async function connectHuawei() {
+    try {
+      if (pin.length < 4) return toast.error("Introduce tu PIN para autorizar la conexión.");
+      const result = await startHuaweiHealthAuthorization(pin);
+      window.location.href = result.authorizationUrl;
+    } catch (error: any) {
+      toast.error(error?.message ?? "No se ha podido iniciar la conexión.");
+    }
+  }
+
+  async function checkHuawei() {
+    try {
+      if (pin.length < 4) return toast.error("Introduce tu PIN.");
+      setChecking(true);
+      const result = await getHuaweiHealthStatus(pin);
+      setStatus(result.integration?.status === "connected" ? "connected" : "disconnected");
+    } catch (error: any) {
+      toast.error(error?.message ?? "No se ha podido comprobar la conexión.");
+    } finally {
+      setChecking(false);
+    }
+  }
   return (
     <AppShell>
       <header className="rise rise-1">
@@ -87,8 +116,9 @@ function HealthPage() {
                 </div>
                 {provider.primary ? (
                   <button
-                    disabled
-                    className="flex shrink-0 items-center gap-1 rounded-xl border border-white/[.08] px-3 py-2 text-xs font-semibold text-muted-foreground opacity-70"
+                    onClick={connectHuawei}
+                    className="flex shrink-0 items-center gap-1 rounded-xl gold-gradient px-3 py-2 text-xs font-semibold"
+                    style={{ color: "var(--gold-foreground)" }}
                   >
                     Conectar
                     <ChevronRight className="h-3.5 w-3.5" />
@@ -98,9 +128,16 @@ function HealthPage() {
                 )}
               </div>
               {provider.primary && (
-                <div className="mt-3 flex items-center gap-2 rounded-xl bg-black/20 px-3 py-2 text-[11px] text-muted-foreground">
+                <div className="mt-3 space-y-3">
+                  <label className="block">
+                    <span className="mb-1 block text-[10px] uppercase tracking-[0.2em] text-muted-foreground">PIN del perfil</span>
+                    <input type="password" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value.replace(/\\D/g, "").slice(0, 12))} className="w-full rounded-xl border border-white/[.08] bg-black/20 px-3 py-2.5 text-sm tracking-[0.3em] outline-none focus:border-gold" placeholder="••••" />
+                  </label>
+                  <div className="flex items-center gap-2 rounded-xl bg-black/20 px-3 py-2 text-[11px] text-muted-foreground">
                   <CheckCircle2 className="h-3.5 w-3.5 text-gold" />
-                  Base de datos preparada para sincronización.
+                  {status === "connected" ? "Huawei Health conectado." : "Base de datos preparada para sincronización."}
+                  </div>
+                  <button onClick={checkHuawei} disabled={checking} className="text-left text-[11px] font-semibold text-gold">{checking ? "Comprobando…" : "Comprobar conexión"}</button>
                 </div>
               )}
             </section>

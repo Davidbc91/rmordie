@@ -195,6 +195,7 @@ function ProfilePage() {
           days={days}
           rangeLabel={rangeLabel}
           goStrength={() => setSection("strength")}
+          wellness={wellness}
         />
       )}
       {section === "performance" && (
@@ -654,7 +655,7 @@ function BodySection() {
 
 /* ---------------- 3. Progress dashboard ---------------- */
 
-function ProgressSection({ results, history, records, metrics, plannedDays, completedSessions, days, rangeLabel, goStrength }: any) {
+function ProgressSection({ results, history, records, metrics, plannedDays, completedSessions, days, rangeLabel, goStrength, wellness }: any) {
   const cur = windowStats(results, history, days);
   const prev = windowStats(results, history, days, true);
   const s = streaks(results);

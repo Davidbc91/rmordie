@@ -2,3 +2,6 @@ project_id = "pqajorfjgtprseavvimn"
 
 [functions.admin-video]
 verify_jwt = false
+
+[functions.huawei-health]
+verify_jwt = false

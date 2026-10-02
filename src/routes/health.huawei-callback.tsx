@@ -70,7 +70,7 @@ function HuaweiCallbackPage() {
           <h1 className="mt-2 text-xl font-semibold">{state === "success" ? "Conexión completada" : state === "error" ? "No se pudo conectar" : "Conectando"}</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{message}</p>
           {state !== "loading" && (
-            <Link to="/health" className="mt-6 inline-flex rounded-xl gold-gradient px-5 py-2.5 text-sm font-semibold" style={{ color: "var(--gold-foreground)" }}>
+            <Link to={"/health" as any} className="mt-6 inline-flex rounded-xl gold-gradient px-5 py-2.5 text-sm font-semibold" style={{ color: "var(--gold-foreground)" }}>
               Volver a Salud
             </Link>
           )}

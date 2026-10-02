@@ -131,7 +131,7 @@ function HealthPage() {
                 <div className="mt-3 space-y-3">
                   <label className="block">
                     <span className="mb-1 block text-[10px] uppercase tracking-[0.2em] text-muted-foreground">PIN del perfil</span>
-                    <input type="password" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value.replace(/\\D/g, "").slice(0, 12))} className="w-full rounded-xl border border-white/[.08] bg-black/20 px-3 py-2.5 text-sm tracking-[0.3em] outline-none focus:border-gold" placeholder="••••" />
+                    <input type="password" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 12))} className="w-full rounded-xl border border-white/[.08] bg-black/20 px-3 py-2.5 text-sm tracking-[0.3em] outline-none focus:border-gold" placeholder="••••" />
                   </label>
                   <div className="flex items-center gap-2 rounded-xl bg-black/20 px-3 py-2 text-[11px] text-muted-foreground">
                   <CheckCircle2 className="h-3.5 w-3.5 text-gold" />

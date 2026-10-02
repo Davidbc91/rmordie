@@ -181,6 +181,29 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    if (body.action === "review") {
+      if (!body.profile_id || !body.pin_hash) return json({ error: "No autorizado" }, 401);
+      if (!(await isAdmin(body.profile_id, body.pin_hash))) return json({ error: "No autorizado" }, 403);
+      const movementId = String(body.movement_id ?? "");
+      const status = String(body.status ?? "");
+      if (!/^move-\d{3}$/.test(movementId)) return json({ error: "Movimiento inválido" }, 400);
+      if (!["pending", "verified", "needs_review"].includes(status)) {
+        return json({ error: "Estado de revisión inválido" }, 400);
+      }
+      const { error } = await supabaseAdmin
+        .from("movement_video_reviews")
+        .upsert({
+          movement_id: movementId,
+          status,
+          reviewed_by: body.profile_id,
+          reviewed_at: new Date().toISOString(),
+          notes: body.notes ? String(body.notes).slice(0, 500) : null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "movement_id" });
+      if (error) throw error;
+      return json({ ok: true });
+    }
+
     if (body.action === "delete") {
       const { data: previous } = await supabaseAdmin
         .from("movement_videos")

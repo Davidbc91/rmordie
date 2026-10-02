@@ -1,6 +1,11 @@
 import { supabase } from "@/lib/supabase";
 import { getCurrentUserId } from "@/lib/pin-gate";
-import { hashPin, verifyProfilePin } from "@/lib/store";
+import { verifyProfilePin } from "@/lib/store";
+
+async function hashPin(pin: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pin));
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 const FUNCTION = "huawei-health";
 

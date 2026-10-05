@@ -518,12 +518,9 @@
     display: none;
   }
 
-  .page-enter {
-    animation-duration: 120ms;
-  }
-
+  .page-enter,
   .rise {
-    animation-duration: 120ms;
+    animation-duration: 80ms;
   }
 
   .pressable {

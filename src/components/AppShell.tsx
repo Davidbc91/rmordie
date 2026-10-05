@@ -1,13 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User, Play, X, Users, MoreHorizontal, ChevronRight, BookOpen, Film,
+  Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User, Play, X, Users, MoreHorizontal, ChevronRight, BookOpen, Film, FileText, HeartPulse, LogOut, ChevronDown,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getActiveWorkout, clearActiveWorkout, type ActiveWorkout } from "@/lib/active-workout";
 import { useChatUnread } from "@/lib/chat-unread";
 import { SyncIndicator } from "@/components/SyncIndicator";
-import { getCurrentUserId } from "@/lib/pin-gate";
+import { getCurrentUserId, signOut } from "@/lib/pin-gate";
 import { isVideoAdmin } from "@/lib/admin-videos";
 import { useProfiles } from "@/lib/store";
 
@@ -16,7 +16,6 @@ const tabs = [
   { to: "/calendar", label: "Plan", icon: Calendar },
   { to: "/records", label: "RM", icon: Trophy },
   { to: "/social", label: "Social", icon: Users },
-  { to: "/profile", label: "Perfil", icon: User },
 ];
 
 const moreLinks = [
@@ -31,6 +30,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [active, setActive] = useState<ActiveWorkout | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const chatUnread = useChatUnread();
   const currentProfileId = getCurrentUserId();
   const { data: profiles = [] } = useProfiles();
@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, [pathname]);
 
-  useEffect(() => { setMoreOpen(false); }, [pathname]);
+  useEffect(() => { setMoreOpen(false); setProfileOpen(false); }, [pathname]);
 
   const activePath = active ? `/workout/${active.month}/${active.week}/${active.day}` : null;
   const showResume = !!active && pathname !== activePath;
@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           paddingTop: "calc(env(safe-area-inset-top) + 2rem)",
         }}
       >
-        {children}
+        {header}{children}
       </main>
 
       {showResume && active && (
@@ -111,6 +111,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
+      {profileOpen && (
+        <div className="fixed inset-0" style={{ zIndex: 2147482999 }}>
+          <button aria-label="Cerrar perfil" onClick={() => setProfileOpen(false)} className="absolute inset-0 bg-black/55 backdrop-blur-[5px]" />
+          <div className="glass-elevated glass-sheen animate-fade absolute left-4 right-4 top-[calc(env(safe-area-inset-top)+4.75rem)] mx-auto max-w-sm rounded-[26px] p-3">
+            <div className="mb-2 rounded-[18px] border border-white/8 bg-white/[0.025] px-3 py-3">
+              <p className="eyebrow">Perfil activo</p>
+              <p className="mt-1 text-base font-semibold">{currentProfile?.name ?? "Atleta"}</p>
+            </div>
+            <div className="space-y-1.5">
+              {[
+                { to: "/profile", label: "Mi perfil", hint: "Progreso y datos del atleta", icon: User },
+                { to: "/athlete-report", label: "Informe para entrenador", hint: "Generar informe completo", icon: FileText },
+                { to: "/health", label: "Salud", hint: "Datos de recuperación", icon: HeartPulse },
+                { to: "/settings", label: "Ajustes", hint: "Discos, barras y configuración", icon: Settings },
+              ].map((item) => {
+                const Icon = item.icon;
+                return <Link key={item.to} to={item.to as any} className="pressable flex items-center gap-3 rounded-[16px] bg-white/[0.035] px-3 py-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)]"><Icon className="h-4 w-4" strokeWidth={1.7} /></span>
+                  <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{item.label}</span><span className="block truncate text-xs text-muted-foreground">{item.hint}</span></span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </Link>;
+              })}
+              <button type="button" onClick={() => { setProfileOpen(false); signOut(); window.location.assign("/"); }} className="pressable mt-1 flex w-full items-center gap-3 rounded-[16px] bg-white/[0.025] px-3 py-3 text-left">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] border border-red-400/15 bg-red-400/5"><LogOut className="h-4 w-4 text-red-300" /></span>
+                <span className="text-sm font-semibold text-red-200">Cerrar sesión</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {moreOpen && (
         <div className="fixed inset-0 flex items-end" style={{ zIndex: 2147483001 }}>
           <button aria-label="Cerrar menú" onClick={() => setMoreOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-[6px]" />

@@ -66,7 +66,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="grain relative min-h-[100dvh] overflow-x-hidden pb-[104px]">
-      <div aria-hidden className="aura pointer-events-none absolute inset-x-0 top-0 h-[420px]" />
+      <div aria-hidden className="aura pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
+      <div aria-hidden className="pointer-events-none absolute -left-32 top-28 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(200,179,138,.09),transparent_68%)] blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute -right-36 top-[34rem] h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(150,160,180,.07),transparent_68%)] blur-3xl" />
       <div
         aria-hidden
         className="dotgrid pointer-events-none absolute inset-x-0 top-0 h-[420px] opacity-25"
@@ -197,10 +199,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div
           className="safe-x border-t"
           style={{
-            background: "rgba(5,6,8,0.82)",
-            borderColor: "rgba(255,255,255,0.12)",
-            backdropFilter: "blur(34px) saturate(175%)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.13), 0 -24px 70px -36px rgba(0,0,0,.98)",
+            background: "linear-gradient(135deg, rgba(255,255,255,.115), rgba(255,255,255,.035) 48%, rgba(200,179,138,.035)), rgba(7,8,10,.68)",
+            borderColor: "rgba(255,255,255,0.18)",
+            backdropFilter: "blur(42px) saturate(185%)",
+            WebkitBackdropFilter: "blur(42px) saturate(185%)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 0 35px rgba(255,255,255,.018), 0 -28px 80px -36px rgba(0,0,0,.98)",
           }}
         >
           <div className="safe-bottom mx-auto flex max-w-2xl items-stretch gap-1 px-2 pt-2">

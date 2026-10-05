@@ -9,7 +9,7 @@ const corsHeaders = {
 const BUCKET = "movement-videos";
 
 type Body = {
-  action: "check" | "verify" | "create_upload" | "save_upload" | "save_youtube" | "review" | "delete";
+  action: "check" | "verify" | "create_custom_movement" | "create_upload" | "save_upload" | "save_youtube" | "review" | "delete";
   profile_id?: string;
   pin_hash?: string;
   movement_id?: string;

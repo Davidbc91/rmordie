@@ -67,7 +67,8 @@ function Home() {
   const { data: profile } = useAthleteProfile();
   const { data: prHistory = [] } = useAllPrHistory();
   const { data: goals = [] } = useGoals();
-  const { data: wellnessLogs = [] } = useWellnessLogs();\n  const deferredResults = useDeferredValue(results);\n  const deferredRecords = useDeferredValue(records);\n  const deferredPlanning = useDeferredValue(planning);\n  const deferredPrHistory = useDeferredValue(prHistory);\n  const deferredWellnessLogs = useDeferredValue(wellnessLogs);
+  const { data: wellnessLogs = [] } = useWellnessLogs();
+  const deferredResults = useDeferredValue(results);\n  const deferredRecords = useDeferredValue(records);\n  const deferredPlanning = useDeferredValue(planning);\n  const deferredPrHistory = useDeferredValue(prHistory);\n  const deferredWellnessLogs = useDeferredValue(wellnessLogs);
 
 
   const blockMap = useMemo(() => completedBlockMap(results), [results]);
@@ -163,9 +164,9 @@ function Home() {
   }, [results]);
 
   const sessionCoach = useMemo(() => {
-    if (!planning || !next || next.focus.length === 0) return null;
+    if (!analyticsReady || !deferredPlanning || !next || next.focus.length === 0) return null;
     const byExercise = new Map<string, { result: WorkoutResult; date: number }[]>();
-    for (const month of planning.data.months) {
+    for (const month of deferredPlanning.data.months) {
       for (const week of month.weeks) {
         for (const day of week.days) {
           for (const block of day.blocks) {
@@ -203,7 +204,7 @@ function Home() {
       return { exercise: focus.exercise, title, detail, avgRpe };
     }).filter((x): x is NonNullable<typeof x> => x !== null).slice(0, 2);
     return candidates.length ? candidates : null;
-  }, [planning, next, records, results]);
+  }, [analyticsReady, deferredPlanning, next, deferredRecords, resultsByBlock]);
 
   const weekProgress = useMemo(() => {
     if (!analyticsReady || !deferredPlanning || !next) return null;
@@ -213,22 +214,24 @@ function Home() {
     const train = w.days.filter((d) => !d.isRest);
     const done = train.filter((d) => isSessionCompleted(d, m.key, w.index, blockMap)).length;
     return { done, total: train.length };
-  }, [planning, next, blockMap]);
+  }, [analyticsReady, deferredPlanning, next, blockMap]);
 
 
   const streak = useMemo(() => analyticsReady ? streaks(deferredResults) : null, [analyticsReady, deferredResults]);
   const weekStats = useMemo(() => {
+    if (!analyticsReady) return { sessions: 0, volume: 0, avgRpe: null as number | null };
     const cutoff = Date.now() - 7 * 864e5;
-    const recent = results.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
+    const recent = deferredResults.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
     const sessions = new Set(recent.map((r) => `${r.month_key}|${r.week}|${r.day_key}`)).size;
     const volume = recent.reduce((sum, r) => sum + (r.weight ?? 0) * (r.sets ?? 1) * (r.reps ?? 0), 0);
     const rpes = recent.map((r) => r.rpe).filter((x): x is number => x != null);
     return { sessions, volume, avgRpe: rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null };
-  }, [results]);
+  }, [analyticsReady, deferredResults]);
   const recentPrCount = useMemo(() => analyticsReady ? deferredPrHistory.filter((h) => Date.now() - new Date(h.changed_at).getTime() <= 30 * 864e5).length : 0, [analyticsReady, deferredPrHistory]);
   const activeGoal = useMemo(() => goals.find((g) => g.status !== "completed"), [goals]);
 
   const smartState = useMemo(() => {
+    if (!analyticsReady) return null;
     const cutoff = Date.now() - 7 * 864e5;
     const recent = results.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
     const rpes = recent.map((r) => r.rpe).filter((x): x is number => x != null);
@@ -244,9 +247,10 @@ function Home() {
       else { title = "Carga bien controlada"; detail = `RPE medio ${avgRpe.toFixed(1)} con ${sessions} sesiones completadas esta semana.`; }
     }
     return { tone, title, detail, sessions, volume, avgRpe };
-  }, [results]);
+  }, [analyticsReady, deferredResults]);
 
   const dashboardTrend = useMemo(() => {
+    if (!analyticsReady) return null;
     const weeks = Array.from({ length: 8 }, (_, i) => {
       const end = new Date(); end.setHours(23,59,59,999); end.setDate(end.getDate() - (7 - i) * 7);
       const start = new Date(end); start.setDate(end.getDate() - 6); start.setHours(0,0,0,0);
@@ -263,11 +267,12 @@ function Home() {
     const recovery = latestWellness ? [latestWellness.sleep_hours, latestWellness.energy, latestWellness.mood].filter((x): x is number => x != null) : [];
     const recoveryAvg = recovery.length ? recovery.reduce((a,b)=>a+b,0)/recovery.length : null;
     return { weeks, volumeChange, recoveryAvg, latestWellness };
-  }, [results, wellnessLogs]);
+  }, [analyticsReady, deferredResults, deferredWellnessLogs]);
 
   const recentPrs = useMemo(
     () => {
-      if (prHistory.length) {
+      if (!analyticsReady) return [];
+      if (deferredPrHistory.length) {
         return [...deferredPrHistory]
           .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
           .slice(0, 3);
@@ -277,7 +282,7 @@ function Home() {
         .slice(0, 3)
         .map((record) => ({ ...record, changed_at: record.updated_at, new_weight: record.weight }));
     },
-    [prHistory, records],
+    [analyticsReady, deferredPrHistory, deferredRecords],
   );
 
   return (

@@ -56,7 +56,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       window.removeEventListener("rmordie:active-workout", read);
       window.removeEventListener("focus", read);
     };
-  }, [pathname]);
+  }, []);
 
   useEffect(() => { setMoreOpen(false); setProfileOpen(false); }, [pathname]);
 

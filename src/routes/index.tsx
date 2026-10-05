@@ -325,7 +325,7 @@ function Home() {
 
               <div className="mt-5 flex items-end justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="display-xl gold-text truncate">{next.dayKey}</div>
+                  <div className="day-display gold-text">{next.dayKey}</div>
                   <p className="cinematic-label mt-3">{next.monthLabel} · SEMANA {next.week}</p>
                 </div>
                 <div className="shrink-0 text-right">

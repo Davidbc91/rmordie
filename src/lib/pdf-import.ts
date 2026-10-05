@@ -1,4 +1,7 @@
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { GlobalWorkerOptions, getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import pdfWorker from "pdfjs-dist/legacy/build/pdf.worker.mjs?url";
+
+GlobalWorkerOptions.workerSrc = pdfWorker;
 import type { Planning } from "./excel-parser";
 import type { ParsedImport, ReviewRow } from "./generic-import";
 import { IMPORT_DAYS, normalizeDay } from "./generic-import";
@@ -124,7 +127,7 @@ function addRow(rows: ReviewRow[], args: {
 
 async function extractPdfLines(file: File): Promise<string[]> {
   const data = new Uint8Array(await file.arrayBuffer());
-  const pdf = await getDocument({ data, disableWorker: true }).promise;
+  const pdf = await getDocument({ data }).promise;
   const lines: string[] = [];
 
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {

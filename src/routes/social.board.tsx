@@ -32,7 +32,7 @@ function BoardPage() {
             <button
               key={v}
               onClick={() => setView(v)}
-              className="rounded-full px-3.5 py-2 text-xs"
+              className="min-h-11 rounded-full px-3.5 py-2 text-xs"
               style={view === v ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
             >
               {v === "pr" ? "Récords" : "WODs"}
@@ -63,7 +63,7 @@ function PrBoard() {
           <button
             key={r}
             onClick={() => setRepMax(r)}
-            className="shrink-0 rounded-full px-3.5 py-2 text-xs"
+            className="shrink-0 min-h-11 rounded-full px-3.5 py-2 text-xs"
             style={repMax === r ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
           >
             {r}RM
@@ -75,7 +75,7 @@ function PrBoard() {
           <button
             key={e}
             onClick={() => setExercise(e)}
-            className="shrink-0 rounded-full border px-3.5 py-2 text-xs"
+            className="shrink-0 min-h-11 rounded-full border px-3.5 py-2 text-xs"
             style={{ borderColor: active === e ? "rgba(216,180,107,0.5)" : "rgba(255,255,255,0.09)", color: active === e ? "var(--gold)" : "var(--muted-foreground)" }}
           >
             {e}
@@ -127,7 +127,7 @@ function WodBoard() {
           <button
             key={n}
             onClick={() => setName(n)}
-            className="shrink-0 rounded-full border px-3.5 py-2 text-xs"
+            className="shrink-0 min-h-11 rounded-full border px-3.5 py-2 text-xs"
             style={{ borderColor: active === n ? "rgba(216,180,107,0.5)" : "rgba(255,255,255,0.09)", color: active === n ? "var(--gold)" : "var(--muted-foreground)" }}
           >
             {n}

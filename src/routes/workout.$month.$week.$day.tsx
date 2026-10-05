@@ -128,7 +128,10 @@ function WorkoutPage() {
         payloads.push(block);
         await save.mutateAsync({ month_key: month, week: weekN, day_key: day, ...block });
         const out = await persistWod(blockKey);
-        if (out) {\n          wodOutcomes.push(out);\n          if (out.kind === "pr" || out.kind === "matched") prs.push(out);\n        }
+        if (out) {
+          wodOutcomes.push(out);
+          if (out.kind === "pr" || out.kind === "matched") prs.push(out);
+        }
       }
       const weightedRpes = payloads.filter((b) => b.rpe != null);
       const avgRpe = weightedRpes.length

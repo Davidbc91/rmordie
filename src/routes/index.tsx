@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults, usePersonalRecords, type WorkoutResult } from "@/lib/store";
 import { useAthleteProfile, useMilestones, useGoals, useAllPrHistory, useWellnessLogs } from "@/lib/profile-store";
 import { streaks, sessionDays, volumeOf, fmtKg, estimate1rm } from "@/lib/analytics";
@@ -255,8 +254,7 @@ function Home() {
   );
 
   return (
-    <AppShell>
-      <div className="page-enter">
+          <div className="page-enter">
       <header className="rise rise-1 glass-panel glass-refraction glass-breathe mb-5 rounded-[30px] p-6">
         <div className="flex items-center gap-2">
           <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-gold" />
@@ -531,7 +529,6 @@ function Home() {
         </>
       )}
     </div>
-    </AppShell>
   );
 }
 

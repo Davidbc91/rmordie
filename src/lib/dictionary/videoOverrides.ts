@@ -28,7 +28,7 @@ const videos: Record<string, string> = {
   "Running":"https://www.youtube.com/watch?v=9cG-grUiJyI",
 };
 
-const fallback = [
+const fallback: Array<[RegExp, string]> = [
   [/overhead squat|overhead carry/i, "Overhead Squat"],
   [/back squat|box squat|zercher squat/i, "Back Squat"],
   [/goblet squat|air squat|split squat|cossack squat|lunge|step-up/i, "Box Step-Up"],

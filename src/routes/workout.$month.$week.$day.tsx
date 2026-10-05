@@ -122,6 +122,7 @@ function WorkoutPage() {
     setSavingAll(true);
     try {
       const prs: PrOutcome[] = [];
+      const wodOutcomes: PrOutcome[] = [];
       const payloads: BlockPayload[] = [];
       for (const [blockKey, get] of entries) {
         const block = get();

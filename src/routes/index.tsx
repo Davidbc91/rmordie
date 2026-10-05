@@ -51,12 +51,17 @@ function Home() {
 
 
   const blockMap = useMemo(() => completedBlockMap(results), [results]);
+  const completedResults = useMemo(() => results.filter((r) => r.status === "completed"), [results]);
+  const completedWithTime = useMemo(
+    () => completedResults.map((r) => ({ result: r, time: new Date(r.updated_at).getTime() })),
+    [completedResults],
+  );
 
   const stats = useMemo(() => {
-    const done = results.filter((r) => r.status === "completed");
+    const done = completedResults;
     const comp = planningCompletion(planning?.data, results);
     return { blocks: done.length, sessions: comp.completed, totalDays: comp.total, pct: comp.pct };
-  }, [results, planning]);
+  }, [completedResults, planning, results]);
 
   const next = useMemo(() => {
     if (!planning) return null;
@@ -128,7 +133,7 @@ function Home() {
     // entire results array for every planning block, multiplying the work by
     // planningBlocks × results. A keyed lookup keeps this roughly linear.
     const resultsByBlock = new Map<string, WorkoutResult[]>();
-    for (const result of results) {
+    for (const result of completedResults) {
       if (
         result.status !== "completed" ||
         result.weight == null ||
@@ -187,7 +192,7 @@ function Home() {
       return { exercise: focus.exercise, title, detail, avgRpe };
     }).filter((x): x is NonNullable<typeof x> => x !== null).slice(0, 2);
     return candidates.length ? candidates : null;
-  }, [planning, next, records, results]);
+  }, [planning, next, records, completedResults]);
 
   const weekProgress = useMemo(() => {
     if (!planning || !next) return null;
@@ -203,18 +208,18 @@ function Home() {
   const streak = useMemo(() => streaks(results), [results]);
   const weekStats = useMemo(() => {
     const cutoff = Date.now() - 7 * 864e5;
-    const recent = results.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
+    const recent = completedWithTime.filter(({ time }) => time >= cutoff).map(({ result }) => result);
     const sessions = new Set(recent.map((r) => `${r.month_key}|${r.week}|${r.day_key}`)).size;
     const volume = recent.reduce((sum, r) => sum + (r.weight ?? 0) * (r.sets ?? 1) * (r.reps ?? 0), 0);
     const rpes = recent.map((r) => r.rpe).filter((x): x is number => x != null);
     return { sessions, volume, avgRpe: rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null };
-  }, [results]);
+  }, [completedWithTime]);
   const recentPrCount = useMemo(() => prHistory.filter((h) => Date.now() - new Date(h.changed_at).getTime() <= 30 * 864e5).length, [prHistory]);
   const activeGoal = useMemo(() => goals.find((g) => g.status !== "completed"), [goals]);
 
   const smartState = useMemo(() => {
     const cutoff = Date.now() - 7 * 864e5;
-    const recent = results.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
+    const recent = completedWithTime.filter(({ time }) => time >= cutoff).map(({ result }) => result);
     const rpes = recent.map((r) => r.rpe).filter((x): x is number => x != null);
     const avgRpe = rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null;
     const volume = recent.reduce((sum, r) => sum + volumeOf(r), 0);
@@ -228,13 +233,13 @@ function Home() {
       else { title = "Carga bien controlada"; detail = `RPE medio ${avgRpe.toFixed(1)} con ${sessions} sesiones completadas esta semana.`; }
     }
     return { tone, title, detail, sessions, volume, avgRpe };
-  }, [results]);
+  }, [completedWithTime]);
 
   const dashboardTrend = useMemo(() => {
     const weeks = Array.from({ length: 8 }, (_, i) => {
       const end = new Date(); end.setHours(23,59,59,999); end.setDate(end.getDate() - (7 - i) * 7);
       const start = new Date(end); start.setDate(end.getDate() - 6); start.setHours(0,0,0,0);
-      const rows = results.filter((r) => r.status === "completed" && new Date(r.updated_at) >= start && new Date(r.updated_at) <= end);
+      const rows = completedWithTime.filter(({ time }) => time >= start.getTime() && time <= end.getTime()).map(({ result }) => result);
       const volume = rows.reduce((sum, r) => sum + volumeOf(r), 0);
       const rpes = rows.map((r) => r.rpe).filter((x): x is number => x != null);
       return { label: `S${i + 1}`, volume, rpe: rpes.length ? rpes.reduce((a,b) => a+b,0)/rpes.length : null };
@@ -247,7 +252,7 @@ function Home() {
     const recovery = latestWellness ? [latestWellness.sleep_hours, latestWellness.energy, latestWellness.mood].filter((x): x is number => x != null) : [];
     const recoveryAvg = recovery.length ? recovery.reduce((a,b)=>a+b,0)/recovery.length : null;
     return { weeks, volumeChange, recoveryAvg, latestWellness };
-  }, [results, wellnessLogs]);
+  }, [completedWithTime, wellnessLogs]);
 
   const topRecords = useMemo(
     () =>

@@ -158,7 +158,10 @@ function DictionaryPage() {
                     <span className="rounded-full border border-border px-2 py-1 text-[10px]">
                       {m.level}
                     </span>
-                    {m.id.startsWith("custom-") && (\n                      <span className="rounded-full border border-[rgba(216,180,107,0.35)] px-2 py-1 text-[10px] text-[var(--gold)]">Personalizado</span>\n                    )}\n                    {m.rm && (
+                    {m.id.startsWith("custom-") && (
+                      <span className="rounded-full border border-[rgba(216,180,107,0.35)] px-2 py-1 text-[10px] text-[var(--gold)]">Personalizado</span>
+                    )}
+                    {m.rm && (
                       <span
                         className="rounded-full border border-[rgba(216,180,107,0.35)] px-2 py-1 text-[10px]"
                         style={{ color: "var(--gold)" }}

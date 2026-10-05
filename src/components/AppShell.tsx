@@ -39,8 +39,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { data: isAdmin } = useQuery({
     queryKey: ["video-admin", currentProfileId],
     queryFn: isVideoAdmin,
-    enabled: !!currentProfileId,
-    staleTime: 5 * 60 * 1000,
+    enabled: false,
+    staleTime: Infinity,
   });
   const visibleMoreLinks = useMemo(
     () => isBcProfile || isAdmin ? [...moreLinks, { to: "/admin/videos", label: "Administración", hint: "Gestionar vídeos", icon: Film }] : moreLinks,

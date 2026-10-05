@@ -50,10 +50,10 @@ export function Composer({
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }} onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex items-end justify-center" style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-[24px] border-t p-5 pb-10"
+        className="max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[24px] border-t p-5 pb-[max(env(safe-area-inset-bottom),2.5rem)]"
         style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.09)" }}
       >
         <div className="flex items-center justify-between">
@@ -68,7 +68,7 @@ export function Composer({
             <button
               key={k.k}
               onClick={() => setKind(k.k)}
-              className="shrink-0 rounded-full px-3.5 py-2 text-xs"
+              className="shrink-0 min-h-11 rounded-full px-3.5 py-2 text-xs"
               style={kind === k.k ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
             >
               {k.label}
@@ -109,12 +109,12 @@ export function Composer({
           onChange={(e) => setCaption(e.target.value)}
           rows={3}
           placeholder="Cuenta cómo fue… usa #hashtags"
-          className="mt-3 w-full rounded-[16px] border bg-transparent px-3.5 py-3 text-sm outline-none focus:border-foreground/40"
+          className="mt-3 min-h-11 w-full rounded-[16px] border bg-transparent px-3.5 py-3 text-sm outline-none focus:border-foreground/40"
           style={{ borderColor: "rgba(255,255,255,0.09)" }}
         />
 
         <div className="mt-3 flex items-center gap-2">
-          <label className="pressable flex cursor-pointer items-center gap-2 rounded-[14px] border px-3.5 py-2.5 text-xs" style={{ borderColor: "rgba(255,255,255,0.09)" }}>
+          <label className="pressable flex min-h-11 cursor-pointer items-center gap-2 rounded-[14px] border px-3.5 py-2.5 text-xs" style={{ borderColor: "rgba(255,255,255,0.09)" }}>
             <ImagePlus className="h-4 w-4" />
             {files.length ? `${files.length} archivo(s)` : "Añadir media"}
             <input
@@ -127,7 +127,7 @@ export function Composer({
           </label>
           <button
             onClick={() => setVisibility((v) => (v === "public" ? "private" : "public"))}
-            className="rounded-[14px] border px-3.5 py-2.5 text-xs"
+            className="min-h-11 rounded-[14px] border px-3.5 py-2.5 text-xs"
             style={{ borderColor: "rgba(255,255,255,0.09)" }}
           >
             {visibility === "public" ? "Público" : "Solo yo"}
@@ -172,7 +172,7 @@ function Field({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-[14px] border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
+        className="mt-1 min-h-11 w-full rounded-[14px] border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
         style={{ borderColor: "rgba(255,255,255,0.09)" }}
       />
     </label>

@@ -27,15 +27,6 @@ import { normalizeExerciseName, sameExercise, mentionsExercise, formatKg } from 
 import { WodRecords } from "@/components/WodRecords";
 import { MovementDictionaryLink } from "@/components/MovementDictionaryLink";
 import { resolveMovement, resolveMovementId } from "@/lib/dictionary/resolve";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
 
 type RecordsSearch = {
   tab?: "strength" | "wods";
@@ -892,88 +883,46 @@ function EvolutionChart({
 }) {
   const data = useMemo(() => {
     const points = [
-      ...history.map((h) => ({ changed_at: h.changed_at, real: Number(h.new_weight), estimated: null as number | null, reps: null as number | null })),
-      ...estimated.map((p) => ({ changed_at: p.changed_at, real: null as number | null, estimated: p.weight, reps: p.reps })),
-    ];
-    return points.sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime()).map((p) => ({
-      date: new Date(p.changed_at).toLocaleDateString(undefined, { day: "2-digit", month: "short" }),
-      real: p.real,
-      estimated: p.estimated,
-      reps: p.reps,
-    }));
+      ...history.map((h) => ({ changed_at: h.changed_at, value: Number(h.new_weight) })),
+      ...estimated.map((p) => ({ changed_at: p.changed_at, value: p.weight })),
+    ].sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
+
+    return points;
   }, [history, estimated]);
 
   if (data.length < 2) return null;
 
-  const weights = data.flatMap((d) => [d.real, d.estimated].filter((v): v is number => v != null));
+  const weights = data.map((d) => d.value);
   const min = Math.min(...weights);
   const max = Math.max(...weights);
-  const pad = Math.max(2, (max - min) * 0.15);
+  const span = max - min || 1;
+  const width = 320;
+  const height = 120;
+  const padX = 8;
+  const padY = 10;
+
+  const points = data.map((p, i) => {
+    const x = padX + (i / (data.length - 1)) * (width - padX * 2);
+    const y = height - padY - ((p.value - min) / span) * (height - padY * 2);
+    return { ...p, x, y };
+  });
+
+  const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
 
   return (
     <div className="glass-quiet mb-5 rounded-[20px] border-white/[.11] bg-white/[.045] p-4">
       <div className="mb-3 flex items-baseline justify-between">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-          Evolución
-        </p>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Evolución</p>
         <p className="text-[11px] text-muted-foreground tabular">
-          <span className="font-semibold text-foreground">{max} kg</span> máx · {min} kg mín
+          <span className="font-semibold text-foreground">{formatKg(max)} kg</span> máx · {formatKg(min)} kg mín
         </p>
       </div>
-      <div className="h-40 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
-            <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="date"
-              stroke="var(--muted-foreground)"
-              tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              domain={[Math.floor(min - pad), Math.ceil(max + pad)]}
-              stroke="var(--muted-foreground)"
-              tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-              tickLine={false}
-              axisLine={false}
-              width={40}
-            />
-            <Tooltip
-              contentStyle={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                fontSize: 12,
-                color: "var(--foreground)",
-              }}
-              labelStyle={{ color: "var(--muted-foreground)" }}
-              formatter={(v: number) => [`${v} kg`, "Peso"]}
-            />
-            <Line
-              type="monotone"
-              dataKey="real"
-              name="RM confirmado"
-              stroke="var(--gold)"
-              strokeWidth={2.5}
-              dot={{ r: 3, fill: "var(--gold)", strokeWidth: 0 }}
-              activeDot={{ r: 5 }}
-              connectNulls
-            />
-            <Line
-              type="monotone"
-              dataKey="estimated"
-              name="1RM estimado"
-              stroke="var(--foreground)"
-              strokeWidth={1.5}
-              strokeDasharray="5 4"
-              dot={{ r: 2, fill: "var(--foreground)", strokeWidth: 0 }}
-              activeDot={{ r: 4 }}
-              connectNulls
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-40 w-full" role="img" aria-label="Evolución del peso">
+        <path d={path} fill="none" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        {points.map((p, i) => (
+          <circle key={`${p.changed_at}-${i}`} cx={p.x} cy={p.y} r="2.5" fill="var(--gold)" />
+        ))}
+      </svg>
     </div>
   );
 }

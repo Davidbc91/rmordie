@@ -38,12 +38,12 @@ function AthleteReport() {
   );
 
   const recentHistory = useMemo(
-    () => [...history].sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime()).slice(0, 30),
+    () => [...history].sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime()),
     [history],
   );
 
   const recentResults = useMemo(
-    () => [...results].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 40),
+    () => [...results].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
     [results],
   );
 
@@ -55,6 +55,176 @@ function AthleteReport() {
       : null;
 
   const printReport = () => window.print();
+
+  const downloadPdf = async () => {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const margin = 14;
+    const pageWidth = 210;
+    const contentWidth = pageWidth - margin * 2;
+    let y = 18;
+
+    const addPageIfNeeded = (height = 8) => {
+      if (y + height > 282) {
+        doc.addPage();
+        y = 18;
+      }
+    };
+
+    const title = (text: string) => {
+      addPageIfNeeded(14);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text(text.toUpperCase(), margin, y);
+      y += 7;
+      doc.setDrawColor(220, 220, 220);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 5;
+    };
+
+    const paragraph = (text: string, size = 9) => {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(size);
+      const lines = doc.splitTextToSize(text, contentWidth);
+      for (const line of lines) {
+        addPageIfNeeded(5);
+        doc.text(line, margin, y);
+        y += 4.5;
+      }
+      y += 1;
+    };
+
+    const table = (headers: string[], rows: string[][], widths?: number[]) => {
+      const defaultWidth = contentWidth / headers.length;
+      const cols = widths ?? headers.map(() => defaultWidth);
+      const rowHeight = 6;
+      const drawRow = (cells: string[], header = false) => {
+        addPageIfNeeded(rowHeight + 2);
+        let x = margin;
+        doc.setFont("helvetica", header ? "bold" : "normal");
+        doc.setFontSize(header ? 7 : 7);
+        cells.forEach((cell, i) => {
+          const maxChars = Math.max(8, Math.floor(cols[i] / 1.8));
+          const value = String(cell ?? "—").slice(0, maxChars);
+          doc.text(value, x + 1.5, y + 4);
+          x += cols[i];
+        });
+        doc.setDrawColor(225, 225, 225);
+        doc.line(margin, y + rowHeight, pageWidth - margin, y + rowHeight);
+        y += rowHeight;
+      };
+      drawRow(headers, true);
+      rows.forEach((row) => drawRow(row));
+      y += 3;
+    };
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text("RM OR DIE", margin, y);
+    y += 9;
+    doc.setFontSize(15);
+    doc.text("INFORME DE ATLETA", margin, y);
+    y += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(profile?.display_name || "Atleta", margin, y);
+    y += 5;
+    doc.text(new Date().toLocaleDateString("es-ES"), margin, y);
+    y += 9;
+
+    if (profile?.level || profile?.box_name || profile?.crossfit_start_date) {
+      paragraph(
+        [
+          profile?.level ? `Nivel: ${profile.level}` : "",
+          profile?.box_name ? `Box: ${profile.box_name}` : "",
+          profile?.crossfit_start_date ? `CrossFit desde: ${formatDate(profile.crossfit_start_date)}` : "",
+        ].filter(Boolean).join(" · "),
+      );
+    }
+
+    title("Resumen");
+    table(["Métrica", "Valor"], [
+      ["Peso actual", profile?.current_weight_kg != null ? `${profile.current_weight_kg} kg` : "—"],
+      ["Altura", profile?.height_cm != null ? `${profile.height_cm} cm` : "—"],
+      ["Entrenamientos", String(stats.sessions ?? 0)],
+      ["Bloques registrados", String(stats.blocks ?? 0)],
+      ["Volumen total", stats.volume != null ? `${Math.round(stats.volume)} kg` : "—"],
+      ["RPE medio", stats.avgRpe != null ? fmtNum(stats.avgRpe) : "—"],
+      ["Frecuencia semanal", stats.weeklyFreq != null ? `${fmtNum(stats.weeklyFreq)} / sem` : "—"],
+      ["PRs registrados", String(history.length)],
+    ], [80, 102]);
+
+    title("1RM actuales");
+    table(["Movimiento", "1RM", "Actualizado"], prRows.map((r) => [
+      r.exercise, `${r.weight} kg`, formatDate(r.updated_at),
+    ]), [100, 35, 47]);
+
+    title("Evolución de fuerza");
+    table(["Fecha", "Movimiento", "Anterior", "Nuevo"], recentHistory.map((r) => [
+      formatDate(r.changed_at), r.exercise,
+      r.previous_weight != null ? `${r.previous_weight} kg` : "—",
+      `${r.new_weight} kg`,
+    ]), [27, 88, 35, 32]);
+
+    title("Composición corporal");
+    if (metrics.length) {
+      table(["Fecha", "Peso", "% grasa", "Músculo", "Cintura"], metrics.map((m) => [
+        formatDate(m.measured_on),
+        m.weight_kg != null ? `${m.weight_kg} kg` : "—",
+        m.body_fat_pct != null ? `${m.body_fat_pct}%` : "—",
+        m.muscle_mass_kg != null ? `${m.muscle_mass_kg} kg` : "—",
+        m.waist_cm != null ? `${m.waist_cm} cm` : "—",
+      ]), [30, 36, 35, 40, 41]);
+    } else {
+      paragraph("Sin registros de composición corporal.");
+    }
+
+    title("Recovery y bienestar");
+    table(["Métrica", "Media"], [
+      ["Sueño", recovery.sleep != null ? `${fmtNum(recovery.sleep)} h` : "—"],
+      ["Energía", recovery.energy != null ? fmtNum(recovery.energy) : "—"],
+      ["Fatiga", recovery.fatigue != null ? fmtNum(recovery.fatigue) : "—"],
+      ["Dolor", recovery.soreness != null ? fmtNum(recovery.soreness) : "—"],
+      ["Ánimo", recovery.mood != null ? fmtNum(recovery.mood) : "—"],
+    ], [80, 102]);
+
+    if (wellness.length) {
+      table(["Fecha", "Sueño", "Energía", "Fatiga", "Dolor", "Ánimo"], wellness.map((w) => [
+        formatDate(w.logged_on),
+        w.sleep_hours != null ? `${w.sleep_hours} h` : "—",
+        w.energy != null ? String(w.energy) : "—",
+        w.fatigue != null ? String(w.fatigue) : "—",
+        w.soreness != null ? String(w.soreness) : "—",
+        w.mood != null ? String(w.mood) : "—",
+      ]), [29, 32, 27, 27, 27, 27]);
+    }
+
+    title("Objetivos y hitos");
+    if (goals.length) {
+      table(["Objetivo", "Tipo", "Actual", "Meta", "Estado"], goals.map((g) => [
+        g.title, g.goal_type,
+        g.current_value != null ? `${g.current_value} ${g.unit ?? ""}` : "—",
+        `${g.target_value} ${g.unit ?? ""}`,
+        g.status,
+      ]), [58, 28, 36, 36, 24]);
+    }
+    if (milestones.length) {
+      table(["Hito", "Fecha"], milestones.map((m) => [m.label, formatDate(m.achieved_at)]), [145, 37]);
+    }
+
+    title("Entrenamientos registrados");
+    table(["Fecha", "Semana", "Día", "Bloque", "Carga", "Reps", "RPE", "Estado"], recentResults.map((r) => [
+      formatDate(r.updated_at), String(r.week), r.day_key, r.block_key,
+      r.weight != null ? `${r.weight} kg` : "—",
+      r.reps != null ? String(r.reps) : "—",
+      r.rpe != null ? fmtNum(r.rpe) : "—",
+      r.status,
+    ]), [25, 16, 24, 36, 24, 15, 15, 25]);
+
+    title("Notas para el entrenador");
+    paragraph("Este informe contiene los datos registrados en RM OR DIE y está pensado como resumen de transferencia para un entrenador. Los 1RM actuales corresponden a registros confirmados en la aplicación. Los entrenamientos reflejan las sesiones que el atleta ha registrado.");
+    doc.save(`rmordie-athlete-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
 
   return (
     <main className="min-h-screen bg-white text-[#111]">
@@ -74,12 +244,20 @@ function AthleteReport() {
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-500">RM OR DIE</p>
           <p className="text-sm font-semibold">Informe para entrenador</p>
         </div>
-        <button
-          onClick={printReport}
-          className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white"
-        >
-          Descargar / imprimir PDF
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={downloadPdf}
+            className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white"
+          >
+            Descargar PDF
+          </button>
+          <button
+            onClick={printReport}
+            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold"
+          >
+            Imprimir
+          </button>
+        </div>
       </div>
 
       <div className="report-page mx-auto max-w-[900px] px-5 py-8">

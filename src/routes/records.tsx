@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { AppShell } from "@/components/AppShell";
 
-const RecordsContent = lazy(() =>
-  import("@/components/RecordsContent").then((m) => ({ default: m.RecordsContent })),
-);
+import { loadRecordsContent } from "@/lib/records-loader";
+
+const RecordsContent = lazy(loadRecordsContent);
 
 export type RecordsSearch = {
   tab?: "strength" | "wods";

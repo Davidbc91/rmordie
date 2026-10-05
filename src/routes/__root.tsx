@@ -133,7 +133,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <SplashScreen>
         <PinGate>
-          <Outlet />
+          <MainRouteShell>
+            <Outlet />
+          </MainRouteShell>
         </PinGate>
         <Toaster theme="dark" position="top-center" />
       </SplashScreen>

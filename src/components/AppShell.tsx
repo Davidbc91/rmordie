@@ -188,9 +188,9 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
 
       {showResume && active && <ResumeWorkout active={active} onDismiss={dismissActiveWorkout} />}
 
-      {profileOpen && <ProfileOverlay name={currentProfile?.name ?? "Atleta"} onClose={() => setProfileOpen(false)} onSignOut={() => { setProfileOpen(false); signOut(); window.location.assign("/"); }} />}
+      {profileOpen && <ProfileOverlay name={currentProfile?.name ?? "Atleta"} onClose={closeProfile} onSignOut={signOutProfile} />}
 
-      {moreOpen && <MoreOverlay pathname={pathname} links={visibleMoreLinks as typeof moreLinks} chatUnread={chatUnread} onClose={() => setMoreOpen(false)} />}
+      {moreOpen && <MoreOverlay pathname={pathname} links={visibleMoreLinks as typeof moreLinks} chatUnread={chatUnread} onClose={closeMore} />}
 
       <BottomNavigation pathname={pathname} keyboardOpen={keyboardOpen} moreOpen={moreOpen} moreActive={moreActive} chatUnread={chatUnread} onToggleMore={toggleMore} />
     </div>

@@ -45,6 +45,21 @@ function normalizeDayKey(value: string) {
 function Home() {
   const navigate = Route.useNavigate();
   const [selectedTrendWeek, setSelectedTrendWeek] = useState<string | null>(null);
+  const [analyticsReady, setAnalyticsReady] = useState(false);
+
+  useEffect(() => {
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const ready = () => setAnalyticsReady(true);
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(ready, { timeout: 1200 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const id = window.setTimeout(ready, 120);
+    return () => window.clearTimeout(id);
+  }, []);
   const { data: planning, isLoading, isError, refetch } = usePlanning();
   const { data: results = [] } = useAllResults();
   const { data: records = [] } = usePersonalRecords();

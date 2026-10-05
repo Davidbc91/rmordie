@@ -66,7 +66,7 @@ export function AppShell({ children, hideBottomNav = false }: { children: React.
   const moreActive = visibleMoreLinks.some((l) => pathname.startsWith(l.to));
 
   return (
-    <div className={"grain relative min-h-[100dvh] overflow-x-hidden " + (keyboardOpen ? "pb-0" : "pb-[88px]")}>
+    <div className={"grain relative min-h-[100dvh] overflow-x-hidden " + (keyboardOpen ? "pb-0" : "pb-[calc(88px+env(safe-area-inset-bottom))]")}>
       <div aria-hidden className="aura pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
       <div aria-hidden className="pointer-events-none absolute -left-32 top-28 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(200,179,138,.09),transparent_68%)] blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -right-36 top-[34rem] h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(150,160,180,.07),transparent_68%)] blur-3xl" />

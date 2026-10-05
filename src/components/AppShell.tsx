@@ -199,8 +199,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <nav
+        aria-label="Navegación principal"
+        data-main-navigation
         className="pointer-events-none fixed inset-x-0 bottom-0 px-0"
-        style={{ zIndex: 2147483000, bottom: "max(env(safe-area-inset-bottom), 12px)" }}
+        style={{
+          zIndex: 2147483000,
+          bottom: "max(env(safe-area-inset-bottom), 12px)",
+          transform: "translateZ(0)",
+        }}
       >
         <div
           className="pointer-events-auto mx-auto w-[calc(100vw-32px)] max-w-[360px] overflow-hidden rounded-[26px] border"

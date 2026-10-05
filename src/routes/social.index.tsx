@@ -59,7 +59,7 @@ function SocialFeed() {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className="shrink-0 rounded-full px-3.5 py-2 text-xs"
+            className="shrink-0 min-h-11 rounded-full px-3.5 py-2 text-xs"
             style={tab === t.id ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
           >
             {t.id === "saved" ? <Bookmark className="mr-1 inline h-3 w-3" /> : null}

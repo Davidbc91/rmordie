@@ -281,7 +281,7 @@ function ChatPage() {
             onBlur={() => setComposerFocused(false)}
             disabled={!online}
             placeholder={online ? "Escribe un mensaje…" : "Sin conexión"}
-            className="flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-[var(--gold)] disabled:opacity-50"
+            className="min-h-12 flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-[var(--gold)] disabled:opacity-50"
             style={{ maxHeight: 120 }}
           />
           <button

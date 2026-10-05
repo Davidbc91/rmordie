@@ -76,7 +76,7 @@ function collectMatches(text: string): MovementMatch[] {
 
   const matches: MovementMatch[] = [];
   for (let startIndex = 0; startIndex < tokens.length; startIndex++) {
-    for (const candidate of candidates) {
+    for (const candidate of getCandidates()) {
       const endIndex = startIndex + candidate.words.length;
       if (endIndex > tokens.length) continue;
       const matchesWords = candidate.words.every((word, offset) =>

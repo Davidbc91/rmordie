@@ -311,7 +311,7 @@ function Home() {
 
           {/* Próxima sesión disponible; si hoy toca entrenar, esta tarjeta es el CTA principal. */}
           {next ? (
-            <GlassCard level={3} gold className="rise rise-2 sheen glass-panel glass-refraction p-6">
+            <GlassCard level={3} gold className="rise rise-2 cinematic-card-strong cinematic-outline p-5">
               <div className="flex items-center justify-between gap-3">
                 <GlassBadge tone="gold">
                   {next.progress.state === "in_progress" ? "Sesión en curso" : next.isToday ? "Entrenamiento de hoy" : "Próximo entrenamiento"}
@@ -411,7 +411,7 @@ function Home() {
           )}
 
           {/* Estado actual */}
-          <div className="rise rise-3 mt-3 grid grid-cols-3 gap-2">
+          <div className="rise rise-3 mt-4 grid grid-cols-3 gap-2">
             <DashboardStat value={String(streak.current)} label="Racha" icon={<Flame className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/profile", search: { section: "consistency" } })} />
             <DashboardStat value={String(weekStats.sessions)} label="Esta semana" icon={<Activity className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/calendar" })} />
             <DashboardStat value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR · 30 días" icon={<Trophy className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/records" })} />
@@ -438,7 +438,7 @@ function Home() {
 
           {activeGoal && (
             <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "goals" } })} className="w-full text-left">
-            <GlassCard level={2} className="rise rise-4 rise-stagger-1 mt-3 glass-panel glass-refraction p-5 pressable">
+            <GlassCard level={2} className="rise rise-4 rise-stagger-1 mt-4 cinematic-card-strong p-5 pressable">
               <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Objetivo activo</p><p className="mt-2 text-sm font-semibold">{activeGoal.title}</p></div><Target className="h-5 w-5 shrink-0 text-gold" /></div>
               <div className="mt-4 flex items-end justify-between gap-3"><div className="text-2xl font-semibold tabular">{activeGoal.current_value ?? activeGoal.start_value ?? "—"} <span className="text-xs text-muted-foreground">{activeGoal.unit ?? ""}</span></div><div className="text-right text-xs text-muted-foreground">Objetivo <span className="font-semibold text-foreground">{activeGoal.target_value} {activeGoal.unit ?? ""}</span></div></div>
               {activeGoal.current_value != null && activeGoal.target_value > 0 && <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[linear-gradient(90deg,#EBD6A6,#D8B46B)]" style={{ width: Math.min(100, Math.max(0, (activeGoal.current_value / activeGoal.target_value) * 100)) + "%" }} /></div>}

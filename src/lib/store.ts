@@ -202,6 +202,29 @@ export function useAllResults() {
   });
 }
 
+export function useDeleteWorkoutResults() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+  return useMutation({
+    mutationFn: async (input: { month_key: string; week: number; day_key: string }) => {
+      if (!uid) throw new Error("No hay perfil activo");
+      if (!isOnline()) throw new Error("Necesitas conexión para desmarcar el entreno.");
+      const { error } = await supabase
+        .from("workout_results")
+        .delete()
+        .eq("user_id", uid)
+        .eq("month_key", input.month_key)
+        .eq("week", input.week)
+        .eq("day_key", input.day_key);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["results", uid, vars.month_key, vars.week, vars.day_key] });
+      qc.invalidateQueries({ queryKey: ["results", uid, "all"] });
+    },
+  });
+}
+
 export function useSaveResult() {
   const qc = useQueryClient();
   const uid = getCurrentUserId();

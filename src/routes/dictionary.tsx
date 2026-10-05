@@ -76,7 +76,7 @@ function DictionaryPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar movimiento…"
-                className="w-full rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] py-3 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-[rgba(216,180,107,0.55)]"
+                className="min-h-11 w-full rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] py-3 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-[rgba(216,180,107,0.55)]"
               />
               {query && (
                 <button

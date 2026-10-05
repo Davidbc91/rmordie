@@ -135,7 +135,7 @@ export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
 
     ctx.font = "500 30px system-ui, sans-serif";
     const contentLines = wrapText(ctx, content, W - pad * 2 - 64).slice(0, 3);
-    const cardH = 64 + contentLines.length * 40 + (load?.weight ? 52 : 0) + 28;
+    const cardH = 64 + contentLines.length * 40 + (load?.weight ? 76 : 0) + 28;
 
     ctx.fillStyle = PANEL;
     roundRect(ctx, pad, y, W - pad * 2, cardH, 24);
@@ -158,7 +158,7 @@ export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
     contentLines.forEach((line, i) => ctx.fillText(line, pad + 36, y + 64 + (i + 1) * 40 - 8));
 
     if (load?.weight) {
-      const ly = y + 64 + contentLines.length * 40 + 20;
+      const ly = y + 64 + contentLines.length * 40 + 48;
       ctx.fillStyle = GOLD;
       ctx.font = "800 36px system-ui, sans-serif";
       const parts = [`${load.weight} kg`];

@@ -83,8 +83,8 @@ function SocialFeed() {
       <button
         aria-label="Crear publicación"
         onClick={() => setComposing(true)}
-        className="pressable fixed bottom-[92px] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full"
-        style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}
+        className="pressable fixed right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full"
+        style={{ bottom: "calc(max(env(safe-area-inset-bottom), 12px) + 92px)", background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}
       >
         <Plus className="h-6 w-6" />
       </button>

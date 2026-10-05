@@ -6,7 +6,7 @@ import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { detectExercise, loadsForPercentages, formatKg, compareLoads, LOAD_STATUS_LABEL } from "@/lib/rm-matcher";
 import { resolveMovementId } from "@/lib/dictionary/resolve";
 import { movements } from "@/lib/dictionary/catalog";
-import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
+import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy, Share2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -254,7 +254,7 @@ function WorkoutPage() {
   return (
     <AppShell>
       {review && (
-        <WorkoutReviewCard review={review} onClose={() => { setReview(null); navigate({ to: "/" }); }} onDownload={() => downloadSessionReport({ title: `${month} · Semana ${weekN} · ${day}`, date: new Date().toLocaleDateString("es-ES"), rpe: review.avgRpe, loads: review.loads, wods: review.wods })} />
+        <WorkoutReviewCard\n        review={review}\n        onClose={() => { setReview(null); navigate({ to: "/" }); }}\n        onDownload={() => downloadSessionReport({ title: `${month} · Semana ${weekN} · ${day}`, date: new Date().toLocaleDateString("es-ES"), rpe: review.avgRpe, loads: review.loads, wods: review.wods })}\n        onShare={async () => {\n          try {\n            await createPost.mutateAsync({\n              kind: "workout",\n              caption: `Entreno completado · ${month} · S${weekN} · ${day} #workout #rmordie`,\n              data: {\n                month,\n                week: weekN,\n                day,\n                volume: review.volume,\n                avg_rpe: review.avgRpe,\n                blocks: review.blocks,\n                prs: review.prs,\n                loads: review.loads,\n                wods: review.wods,\n              },\n            });\n            toast.success("Entreno compartido en tu feed");\n          } catch (e: any) {\n            toast.error(e?.message ?? "No se pudo compartir el entreno");\n          }\n        }}\n      />
       )}
 
       {celebrate && (
@@ -346,7 +346,7 @@ function WorkoutPage() {
 }
 
 
-function WorkoutReviewCard({ review, onClose, onDownload }: { review: WorkoutReview; onClose: () => void; onDownload: () => void }) {
+function WorkoutReviewCard({ review, onClose, onDownload, onShare }: { review: WorkoutReview; onClose: () => void; onDownload: () => void; onShare: () => void | Promise<void> }) {
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center">
       <div className="cinematic-card-strong max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-[28px] p-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] sm:max-h-[90vh] sm:p-6">

@@ -23,9 +23,8 @@ import {
 import { lazy, Suspense, useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
-import { normalizeExerciseName, sameExercise, mentionsExercise, formatKg } from "@/lib/rm-matcher";
+import { normalizeExerciseName, sameExercise, formatKg } from "@/lib/rm-matcher";
 const WodRecords = lazy(() => import("@/components/WodRecords").then((m) => ({ default: m.WodRecords })));
-import { MovementDictionaryLink } from "@/components/MovementDictionaryLink";
 
 type RecordsSearch = {
   tab?: "strength" | "wods";
@@ -438,7 +437,6 @@ function StrengthRecords({
         <ul className="rise rise-3 cinematic-card-strong divide-y divide-white/[.07] overflow-hidden rounded-[24px] p-0">
           {visible.map((r) => {
             const isEditing = editingId === r.id;
-            const hasDictionaryMovement = !!resolveMovement(r.exercise);
             return (
               <li key={r.id} className="px-5 py-4 transition-colors hover:bg-white/[.025]">
                 {isEditing ? (
@@ -480,18 +478,7 @@ function StrengthRecords({
                   <div className="flex items-center gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                        {hasDictionaryMovement ? (
-                          <MovementDictionaryLink exerciseName={r.exercise}>
-                            {r.exercise}
-                          </MovementDictionaryLink>
-                        ) : (
-                          <button
-                            onClick={() => setDetailFor(r)}
-                            className="min-h-9 max-w-full truncate text-left"
-                          >
-                            {r.exercise}
-                          </button>
-                        )}
+                        <button onClick={() => setDetailFor(r)} className="min-h-9 max-w-full truncate text-left">{r.exercise}</button>
                       </div>
                       <button
                         onClick={() => setDetailFor(r)}

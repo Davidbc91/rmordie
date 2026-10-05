@@ -555,6 +555,101 @@
 }
 
 
+
+/* RM OR DIE typography system */
+:root, .dark {
+  --font-display: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Arial Narrow", Arial, sans-serif;
+  --font-editorial: "Arial Narrow", "Helvetica Neue", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+}
+
+body {
+  font-size: 15px;
+  line-height: 1.48;
+}
+
+h1, h2, h3, h4 {
+  letter-spacing: -0.035em;
+}
+
+.day-display {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+  white-space: nowrap;
+  font-family: var(--font-editorial);
+  font-size: clamp(3.25rem, 16vw, 5.15rem);
+  font-stretch: condensed;
+  font-weight: 800;
+  line-height: .82;
+  letter-spacing: -0.065em;
+  text-transform: uppercase;
+  font-variant-numeric: lining-nums;
+}
+
+.display-xl {
+  font-family: var(--font-editorial);
+  font-size: clamp(2.75rem, 14vw, 4.5rem);
+  line-height: .88;
+  letter-spacing: -.06em;
+  font-weight: 750;
+}
+
+.display-lg {
+  font-family: var(--font-editorial);
+  font-size: clamp(2rem, 10vw, 3rem);
+  line-height: .9;
+  letter-spacing: -.05em;
+  font-weight: 750;
+}
+
+.metric {
+  font-family: var(--font-editorial);
+  font-size: 1.65rem;
+  letter-spacing: -.045em;
+  font-weight: 750;
+}
+
+.cinematic-number {
+  font-family: var(--font-editorial);
+  font-weight: 750;
+  letter-spacing: -.055em;
+}
+
+.eyebrow,
+.cinematic-label {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: .22em;
+  font-weight: 650;
+}
+
+button, a {
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (max-width: 767px) {
+  body {
+    font-size: 14.5px;
+  }
+
+  .day-display {
+    font-size: clamp(3rem, 15.5vw, 4.4rem);
+    letter-spacing: -.07em;
+  }
+
+  .display-xl {
+    font-size: clamp(2.65rem, 13vw, 4rem);
+  }
+
+  .display-lg {
+    font-size: clamp(1.9rem, 9.5vw, 2.7rem);
+  }
+
+  .metric {
+    font-size: 1.55rem;
+  }
+}
+
 /* RM OR DIE editorial performance system */
 :root, .dark {
   --radius: 0.95rem;

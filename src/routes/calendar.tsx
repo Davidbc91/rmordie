@@ -109,7 +109,7 @@ function CalendarPage() {
 
   return (
     <AppShell>
-      <div className="select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <div className="page-enter select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <div className="glass glass-sheen rise rise-1 flex items-center justify-between gap-2 p-2.5">
           <button
             onClick={goPrev}

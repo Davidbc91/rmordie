@@ -1,4 +1,5 @@
 import { movements } from "./catalog";
+import { getCustomMovements, getCustomMovementCacheVersion } from "./custom";
 import type { MovementMatch } from "./types";
 
 type Token = { value: string; start: number; end: number };
@@ -45,20 +46,29 @@ function wordMatches(expected: string, actual: string): boolean {
   return false;
 }
 
-const candidates: Candidate[] = movements.flatMap((movement) =>
-  [
-    { label: movement.name, matchType: "canonical" as const },
-    { label: movement.nameEs, matchType: "canonical" as const },
-    ...movement.aliases.map((label) => ({ label, matchType: "alias" as const })),
-  ]
-    .map(({ label, matchType }) => ({
-      movementId: movement.id,
-      matchedName: movement.name,
-      words: tokenize(normalizeMovementName(label)).map((token) => token.value),
-      matchType,
-    }))
-    .filter((candidate) => candidate.words.length > 0),
-);
+let candidatesCache: { version: number; candidates: Candidate[] } | null = null;
+
+function getCandidates(): Candidate[] {
+  const version = getCustomMovementCacheVersion();
+  if (candidatesCache?.version === version) return candidatesCache.candidates;
+  const allMovements = [...movements, ...getCustomMovements()];
+  const candidates = allMovements.flatMap((movement) =>
+    [
+      { label: movement.name, matchType: "canonical" as const },
+      { label: movement.nameEs, matchType: "canonical" as const },
+      ...movement.aliases.map((label) => ({ label, matchType: "alias" as const })),
+    ]
+      .map(({ label, matchType }) => ({
+        movementId: movement.id,
+        matchedName: movement.name,
+        words: tokenize(normalizeMovementName(label)).map((token) => token.value),
+        matchType,
+      }))
+      .filter((candidate) => candidate.words.length > 0),
+  );
+  candidatesCache = { version, candidates };
+  return candidates;
+}
 
 function collectMatches(text: string): MovementMatch[] {
   const tokens = tokenize(text);

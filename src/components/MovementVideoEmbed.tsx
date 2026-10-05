@@ -15,7 +15,8 @@ export function MovementVideoEmbed({
   const { data: managed } = useQuery({
     queryKey: ["movement-video", movementId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // movement_videos is managed by the admin-video function and is not in the generated types.
+      const { data, error } = await (supabase as any)
         .from("movement_videos")
         .select("*")
         .eq("movement_id", movementId)

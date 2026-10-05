@@ -46,7 +46,8 @@ function AdminVideosPage() {
   const { data: videos = [], isLoading: loadingVideos } = useQuery({
     queryKey: ["movement-videos"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // movement_videos is managed by the admin-video function and is not in the generated types.
+      const { data, error } = await (supabase as any)
         .from("movement_videos")
         .select("*")
         .order("movement_id");
@@ -58,7 +59,7 @@ function AdminVideosPage() {
   const { data: reviews = [], isLoading: loadingReviews } = useQuery({
     queryKey: ["movement-video-reviews"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("movement_video_reviews")
         .select("*");
       if (error) throw error;

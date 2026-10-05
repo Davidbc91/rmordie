@@ -198,9 +198,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className="safe-x border-t"
           style={{
             background: "rgba(5,6,8,0.82)",
-            borderColor: "rgba(255,255,255,0.08)",
-            backdropFilter: "blur(30px) saturate(155%)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.09), 0 -22px 60px -35px rgba(0,0,0,.98)",
+            borderColor: "rgba(255,255,255,0.12)",
+            backdropFilter: "blur(34px) saturate(175%)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.13), 0 -24px 70px -36px rgba(0,0,0,.98)",
           }}
         >
           <div className="safe-bottom mx-auto flex max-w-2xl items-stretch gap-1 px-2 pt-2">
@@ -217,7 +217,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <span
                     aria-hidden
                     className="absolute inset-x-1 inset-y-0 rounded-[16px] transition-opacity duration-200"
-                    style={{ background: "rgba(200,179,138,0.10)", opacity: isActive ? 1 : 0, boxShadow: isActive ? "inset 0 0 0 1px rgba(200,179,138,0.14)" : "none" }}
+                    style={{ background: "linear-gradient(145deg, rgba(255,255,255,.075), rgba(200,179,138,.075))", opacity: isActive ? 1 : 0, boxShadow: isActive ? "inset 0 0 0 1px rgba(200,179,138,0.14)" : "none" }}
                   />
                   <Icon className="relative h-[21px] w-[21px]" strokeWidth={isActive ? 2.1 : 1.6} />
                   <span

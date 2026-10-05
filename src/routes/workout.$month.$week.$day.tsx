@@ -27,6 +27,7 @@ import { useCreatePost } from "@/lib/social";
 import { useWellnessLogs } from "@/lib/profile-store";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { downloadSessionReport, type SessionReportLoad, type SessionReportWod } from "@/lib/session-report";
+import { renderWorkoutCard, shareOrDownloadCard } from "@/lib/share-card";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
   head: () => ({ meta: [{ title: "Entrenamiento — RMORDIE" }] }),
@@ -79,6 +80,7 @@ function WorkoutPage() {
   const [savingAll, setSavingAll] = useState(false);
   const [celebrate, setCelebrate] = useState<{ data: PrCelebrationData; outcome: PrOutcome } | null>(null);
   const [review, setReview] = useState<WorkoutReview | null>(null);
+  const [sharingCard, setSharingCard] = useState(false);
 
   useEffect(() => {
     setActiveWorkout({ month, week: weekN, day, label: `${month} · S${weekN} · ${day}` });
@@ -227,26 +229,30 @@ function WorkoutPage() {
   }
 
   async function shareToday() {
-    const loads = (results as any[]).map((r) => ({ block: r.block_key, weight: r.weight ?? null, sets: r.sets ?? null, reps: r.reps ?? null, rpe: r.rpe ?? null, notes: r.notes ?? null }));
-    const rpes = loads.map((l) => l.rpe).filter((x): x is number => typeof x === "number");
-    const volume = loads.reduce((a, l) => a + (Number(l.weight) || 0) * (Number(l.sets) || 0) * (Number(l.reps) || 0), 0);
+    if (!d || !mo) return;
+    setSharingCard(true);
     try {
-      await createPost.mutateAsync({
-        kind: "workout",
-        caption: `Entreno de hoy · ${month} · S${weekN} · ${day} #workout #rmordie`,
-        data: {
-          month, week: weekN, day,
-          volume,
-          avg_rpe: rpes.length ? Math.round((rpes.reduce((a, b) => a + b, 0) / rpes.length) * 10) / 10 : null,
-          blocks: d?.blocks.length ?? 0,
-          prs: 0,
-          loads,
-          wods: [],
-        },
+      const loads = (results as any[]).map((r) => ({
+        block: r.block_key,
+        weight: r.weight ?? null,
+        sets: r.sets ?? null,
+        reps: r.reps ?? null,
+      }));
+      const volume = loads.reduce((a, l) => a + (Number(l.weight) || 0) * (Number(l.sets) || 0) * (Number(l.reps) || 0), 0);
+      const blob = await renderWorkoutCard({
+        title: d.key,
+        subtitle: `${mo.label} · Semana ${weekN}`,
+        date: new Date().toLocaleDateString("es-ES"),
+        blocks: d.blocks.map((b) => ({ key: b.key, content: b.content })),
+        loads,
+        volume,
       });
-      toast.success("Entreno compartido con tus compañeros");
+      const outcome = await shareOrDownloadCard(blob, `entreno-${month}-s${weekN}-${day}.png`);
+      toast.success(outcome === "shared" ? "Imagen del entreno compartida" : "Imagen del entreno descargada");
     } catch (e: any) {
-      toast.error(e?.message ?? "No se pudo compartir el entreno");
+      if (e?.name !== "AbortError") toast.error(e?.message ?? "No se pudo generar la imagen del entreno");
+    } finally {
+      setSharingCard(false);
     }
   }
 
@@ -342,11 +348,11 @@ function WorkoutPage() {
         <button
           type="button"
           onClick={shareToday}
-          disabled={createPost.isPending}
+          disabled={sharingCard}
           className="pressable mb-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/8 text-sm font-semibold disabled:opacity-50"
         >
           <Share2 className="h-4 w-4" />
-          {createPost.isPending ? "Compartiendo…" : "Compartir entreno con mis compañeros"}
+          {sharingCard ? "Generando imagen…" : "Compartir imagen del entreno"}
         </button>
       )}
 

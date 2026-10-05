@@ -46,6 +46,7 @@ function ChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [pushOn, setPushOn] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
+  const [composerFocused, setComposerFocused] = useState(false);
   const notify = useServerFn(notifyChatMessage);
 
   useEffect(() => {
@@ -175,8 +176,8 @@ function ChatPage() {
   }
 
   return (
-    <AppShell>
-      <div className="flex min-h-0 flex-col" style={{ height: "min(700px, max(220px, calc(100dvh - 7.5rem)))" }}>
+    <AppShell hideBottomNav={composerFocused}>
+      <div className="flex min-h-0 flex-col" style={{ height: "min(700px, max(220px, calc(100dvh - 6.5rem)))" }}>
         <header className="mb-3 flex items-center gap-2">
           <MessageCircle className="h-5 w-5" style={{ color: "var(--gold)" }} />
           <div className="min-w-0 flex-1">
@@ -276,6 +277,8 @@ function ChatPage() {
             }}
             rows={1}
             maxLength={500}
+            onFocus={() => setComposerFocused(true)}
+            onBlur={() => setComposerFocused(false)}
             disabled={!online}
             placeholder={online ? "Escribe un mensaje…" : "Sin conexión"}
             className="flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-[var(--gold)] disabled:opacity-50"

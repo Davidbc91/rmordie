@@ -57,7 +57,8 @@ function AthleteReport() {
   const printReport = () => window.print();
 
   const downloadPdf = async () => {
-    const { jsPDF } = await import("jspdf");
+    // Deep import: jspdf's "." export has no worker/edge condition, which breaks the SSR build.
+    const { jsPDF } = (await import("jspdf/dist/jspdf.es.min.js")) as typeof import("jspdf");
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const margin = 14;
     const pageWidth = 210;

@@ -26,12 +26,12 @@ function mapRow(row: Record<string, unknown>): Movement {
 }
 
 export async function fetchCustomMovements(): Promise<Movement[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("custom_movements")
     .select("*")
     .order("name");
   if (error) throw error;
-  const movements = (data ?? []).map((row) => mapRow(row as Record<string, unknown>));
+  const movements = (data ?? []).map((row: any) => mapRow(row as Record<string, unknown>));
   setCustomMovements(movements);
   return movements;
 }

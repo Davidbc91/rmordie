@@ -234,6 +234,7 @@ function Home() {
 
   return (
     <AppShell>
+      <div className="page-enter">
       <header className="rise rise-1 glass-panel glass-refraction mb-5 rounded-[30px] p-6">
         <div className="flex items-center gap-2">
           <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-gold" />
@@ -491,6 +492,7 @@ function Home() {
           </GlassSection>
         </>
       )}
+    </div>
     </AppShell>
   );
 }

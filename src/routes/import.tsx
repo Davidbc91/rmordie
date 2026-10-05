@@ -97,7 +97,7 @@ function ImportPage() {
         onClick={() => navigate({ to: "/import-generic" })}
         className="tap mt-3 w-full rounded-[var(--r-md)] glass px-4 text-sm font-semibold"
       >
-        IMPORTAR PLANIFICACIÓN (.xlsx / .csv)
+        IMPORTAR PLANIFICACIÓN (.xlsx / .csv / .pdf)
       </button>
 
 

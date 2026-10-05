@@ -9,7 +9,7 @@ import {
   Calendar, Upload, Flame, Trophy, ChevronRight, Timer, Dumbbell, User, Play, ArrowUpRight, Users,
   Award, Target, CalendarCheck, Activity, Layers,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useDeferredValue, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 import {
   completedBlockMap,
@@ -67,7 +67,7 @@ function Home() {
   const { data: profile } = useAthleteProfile();
   const { data: prHistory = [] } = useAllPrHistory();
   const { data: goals = [] } = useGoals();
-  const { data: wellnessLogs = [] } = useWellnessLogs();
+  const { data: wellnessLogs = [] } = useWellnessLogs();\n  const deferredResults = useDeferredValue(results);\n  const deferredRecords = useDeferredValue(records);\n  const deferredPlanning = useDeferredValue(planning);\n  const deferredPrHistory = useDeferredValue(prHistory);\n  const deferredWellnessLogs = useDeferredValue(wellnessLogs);
 
 
   const blockMap = useMemo(() => completedBlockMap(results), [results]);
@@ -206,8 +206,8 @@ function Home() {
   }, [planning, next, records, results]);
 
   const weekProgress = useMemo(() => {
-    if (!planning || !next) return null;
-    const m = planning.data.months.find((x) => x.key === next.monthKey);
+    if (!analyticsReady || !deferredPlanning || !next) return null;
+    const m = deferredPlanning.data.months.find((x) => x.key === next.monthKey);
     const w = m?.weeks.find((x) => x.index === next.week);
     if (!m || !w) return null;
     const train = w.days.filter((d) => !d.isRest);
@@ -216,7 +216,7 @@ function Home() {
   }, [planning, next, blockMap]);
 
 
-  const streak = useMemo(() => streaks(results), [results]);
+  const streak = useMemo(() => analyticsReady ? streaks(deferredResults) : null, [analyticsReady, deferredResults]);
   const weekStats = useMemo(() => {
     const cutoff = Date.now() - 7 * 864e5;
     const recent = results.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
@@ -225,7 +225,7 @@ function Home() {
     const rpes = recent.map((r) => r.rpe).filter((x): x is number => x != null);
     return { sessions, volume, avgRpe: rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null };
   }, [results]);
-  const recentPrCount = useMemo(() => prHistory.filter((h) => Date.now() - new Date(h.changed_at).getTime() <= 30 * 864e5).length, [prHistory]);
+  const recentPrCount = useMemo(() => analyticsReady ? deferredPrHistory.filter((h) => Date.now() - new Date(h.changed_at).getTime() <= 30 * 864e5).length : 0, [analyticsReady, deferredPrHistory]);
   const activeGoal = useMemo(() => goals.find((g) => g.status !== "completed"), [goals]);
 
   const smartState = useMemo(() => {
@@ -250,7 +250,7 @@ function Home() {
     const weeks = Array.from({ length: 8 }, (_, i) => {
       const end = new Date(); end.setHours(23,59,59,999); end.setDate(end.getDate() - (7 - i) * 7);
       const start = new Date(end); start.setDate(end.getDate() - 6); start.setHours(0,0,0,0);
-      const rows = results.filter((r) => r.status === "completed" && new Date(r.updated_at) >= start && new Date(r.updated_at) <= end);
+      const rows = deferredResults.filter((r) => r.status === "completed" && new Date(r.updated_at) >= start && new Date(r.updated_at) <= end);
       const volume = rows.reduce((sum, r) => sum + volumeOf(r), 0);
       const rpes = rows.map((r) => r.rpe).filter((x): x is number => x != null);
       return { label: `S${i + 1}`, volume, rpe: rpes.length ? rpes.reduce((a,b) => a+b,0)/rpes.length : null };
@@ -259,7 +259,7 @@ function Home() {
     const first = withVolume[0]?.volume ?? null;
     const last = withVolume.at(-1)?.volume ?? null;
     const volumeChange = first && last && first > 0 ? ((last-first)/first)*100 : null;
-    const latestWellness = [...wellnessLogs].sort((a,b) => b.logged_on.localeCompare(a.logged_on))[0];
+    const latestWellness = [...deferredWellnessLogs].sort((a,b) => b.logged_on.localeCompare(a.logged_on))[0];
     const recovery = latestWellness ? [latestWellness.sleep_hours, latestWellness.energy, latestWellness.mood].filter((x): x is number => x != null) : [];
     const recoveryAvg = recovery.length ? recovery.reduce((a,b)=>a+b,0)/recovery.length : null;
     return { weeks, volumeChange, recoveryAvg, latestWellness };
@@ -268,11 +268,11 @@ function Home() {
   const recentPrs = useMemo(
     () => {
       if (prHistory.length) {
-        return [...prHistory]
+        return [...deferredPrHistory]
           .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
           .slice(0, 3);
       }
-      return [...records]
+      return [...deferredRecords]
         .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
         .slice(0, 3)
         .map((record) => ({ ...record, changed_at: record.updated_at, new_weight: record.weight }));

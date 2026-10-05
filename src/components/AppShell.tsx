@@ -26,12 +26,12 @@ const moreLinks = [
   { to: "/settings", label: "Ajustes", hint: "Discos, barras y perfil", icon: Settings },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, hideBottomNav = false }: { children: React.ReactNode; hideBottomNav?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [active, setActive] = useState<ActiveWorkout | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const keyboardOpen = hideBottomNav;
   const chatUnread = useChatUnread();
   const currentProfileId = getCurrentUserId();
   const { data: profiles = [] } = useProfiles();
@@ -60,37 +60,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => { setMoreOpen(false); setProfileOpen(false); }, [pathname]);
-
-  // iOS/Android: hide the floating navigation while the on-screen keyboard
-  // is open so the composer and conversation get the full available height.
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-
-    const updateKeyboardState = () => {
-      const activeElement = document.activeElement;
-      const editing =
-        activeElement instanceof HTMLInputElement ||
-        activeElement instanceof HTMLTextAreaElement ||
-        (activeElement instanceof HTMLElement && activeElement.isContentEditable);
-
-      const heightDelta = window.innerHeight - vv.height;
-      setKeyboardOpen(editing && heightDelta > 120);
-    };
-
-    updateKeyboardState();
-    vv.addEventListener("resize", updateKeyboardState);
-    vv.addEventListener("scroll", updateKeyboardState);
-    document.addEventListener("focusin", updateKeyboardState);
-    document.addEventListener("focusout", updateKeyboardState);
-
-    return () => {
-      vv.removeEventListener("resize", updateKeyboardState);
-      vv.removeEventListener("scroll", updateKeyboardState);
-      document.removeEventListener("focusin", updateKeyboardState);
-      document.removeEventListener("focusout", updateKeyboardState);
-    };
-  }, []);
 
   const activePath = active ? `/workout/${active.month}/${active.week}/${active.day}` : null;
   const showResume = !!active && pathname !== activePath;

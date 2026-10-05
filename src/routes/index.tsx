@@ -234,12 +234,13 @@ function Home() {
 
   return (
     <AppShell>
-      <header className="rise rise-1 mb-6">
+      <header className="rise rise-1 glass-panel glass-refraction mb-5 rounded-[30px] p-6">
         <div className="flex items-center gap-2">
           <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-gold" />
           <p className="cinematic-label">RM / OR DIE</p>
         </div>
-        <h1 className="cinematic-title mt-5">¿Qué toca<br /><span className="gold-text">hoy?</span></h1>
+        <h1 className="cinematic-title mt-5 text-[3.5rem] leading-[.84]">¿Qué toca<br /><span className="gold-text">hoy?</span></h1>
+        <p className="mt-4 max-w-xs text-xs leading-relaxed text-muted-foreground">Tu rendimiento, tu sesión y tu progreso. Todo lo importante, de un vistazo.</p>
       </header>
 
       {!planning && !isLoading && <EmptyState />}
@@ -248,7 +249,7 @@ function Home() {
         <>
           {/* 1 · Entreno de hoy */}
           {next ? (
-            <GlassCard level={3} gold className="rise rise-2 sheen cinematic-card-strong p-5">
+            <GlassCard level={3} gold className="rise rise-2 sheen glass-panel glass-refraction p-6">
               <div className="flex items-center justify-between gap-3">
                 <GlassBadge tone="gold">
                   {next.progress.state === "in_progress" ? "Sesión en curso" : next.isToday ? "Hoy" : "Siguiente sesión"}
@@ -356,7 +357,7 @@ function Home() {
 
           {activeGoal && (
             <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "goals" } })} className="w-full text-left">
-            <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable cinematic-card-strong">
+            <GlassCard level={2} className="rise rise-3 mt-3 glass-panel glass-refraction p-5 pressable">
               <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Objetivo activo</p><p className="mt-2 text-sm font-semibold">{activeGoal.title}</p></div><Target className="h-5 w-5 shrink-0 text-gold" /></div>
               <div className="mt-4 flex items-end justify-between gap-3"><div className="text-2xl font-semibold tabular">{activeGoal.current_value ?? activeGoal.start_value ?? "—"} <span className="text-xs text-muted-foreground">{activeGoal.unit ?? ""}</span></div><div className="text-right text-xs text-muted-foreground">Objetivo <span className="font-semibold text-foreground">{activeGoal.target_value} {activeGoal.unit ?? ""}</span></div></div>
               {activeGoal.current_value != null && activeGoal.target_value > 0 && <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[linear-gradient(90deg,#EBD6A6,#D8B46B)]" style={{ width: Math.min(100, Math.max(0, (activeGoal.current_value / activeGoal.target_value) * 100)) + "%" }} /></div>}
@@ -366,7 +367,7 @@ function Home() {
 
           {/* 3 · Estado de entrenamiento */}
           <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "performance" } })} className="w-full text-left">
-          <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable">
+          <GlassCard level={2} className="rise rise-3 mt-3 glass-panel p-5 pressable">
             <div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="eyebrow">Estado de entrenamiento</p><h2 className="mt-2 text-xl font-semibold tracking-tight">{smartState.title}</h2><p className="mt-2 text-xs leading-relaxed text-muted-foreground">{smartState.detail}</p></div><Activity className={`h-5 w-5 shrink-0 ${smartState.tone === "positive" ? "text-gold" : "text-muted-foreground"}`} /></div>
             <div className="mt-4 grid grid-cols-3 gap-2">
               <DashboardStat value={String(smartState.sessions)} label="Sesiones" icon={<CalendarCheck className="h-3.5 w-3.5" />} />
@@ -377,7 +378,7 @@ function Home() {
           </button>
 
           {/* 4 · Evolución */}
-          <GlassCard level={2} className="rise rise-4 mt-3 p-5">
+          <GlassCard level={2} className="rise rise-4 mt-3 glass-panel p-5">
             <div className="flex items-start justify-between gap-3"><div><p className="eyebrow">Evolución</p><h2 className="mt-2 text-xl font-semibold tracking-tight">Carga de las últimas 8 semanas</h2></div>{dashboardTrend.volumeChange != null && <span className="text-xs font-semibold text-gold">{dashboardTrend.volumeChange >= 0 ? "+" : ""}{dashboardTrend.volumeChange.toFixed(0)}%</span>}</div>
             <div className="mt-4 h-[150px] w-full">
               <ResponsiveContainer width="100%" height="100%"><LineChart data={dashboardTrend.weeks} margin={{ top: 8, right: 4, left: -24, bottom: 0 }} onClick={(state) => {
@@ -400,7 +401,7 @@ function Home() {
 
           {dashboardTrend.recoveryAvg != null && (
             <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "recovery" } })} className="w-full text-left">
-            <GlassCard level={2} className="rise rise-4 mt-3 p-5 pressable">
+            <GlassCard level={2} className="rise rise-4 mt-3 glass-panel p-5 pressable">
               <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Último registro de recuperación</p><h2 className="mt-2 text-lg font-semibold">Estado reciente</h2></div><Activity className="h-5 w-5 text-gold" /></div>
               <div className="mt-4 grid grid-cols-3 gap-2">
                 <DashboardStat value={dashboardTrend.latestWellness?.sleep_hours != null ? `${dashboardTrend.latestWellness.sleep_hours}h` : "—"} label="Sueño" icon={<Activity className="h-3.5 w-3.5" />} />
@@ -413,7 +414,7 @@ function Home() {
 
           {/* 5 · Progreso */}
           <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "progress" } })} className="w-full text-left">
-          <GlassCard level={2} className="rise rise-3 mt-3 p-5 pressable">
+          <GlassCard level={2} className="rise rise-3 mt-3 glass-panel p-5 pressable">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="eyebrow">Sesiones completadas</p>

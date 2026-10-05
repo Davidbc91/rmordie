@@ -123,6 +123,26 @@ function Home() {
 
   const sessionCoach = useMemo(() => {
     if (!planning || !next || next.focus.length === 0) return null;
+
+    // Index completed results once. The previous implementation filtered the
+    // entire results array for every planning block, multiplying the work by
+    // planningBlocks × results. A keyed lookup keeps this roughly linear.
+    const resultsByBlock = new Map<string, WorkoutResult[]>();
+    for (const result of results) {
+      if (
+        result.status !== "completed" ||
+        result.weight == null ||
+        result.reps == null ||
+        result.weight <= 0 ||
+        result.reps <= 0
+      ) continue;
+
+      const key = `${result.month_key}|${result.week}|${result.day_key}|${result.block_key}`;
+      const list = resultsByBlock.get(key);
+      if (list) list.push(result);
+      else resultsByBlock.set(key, [result]);
+    }
+
     const byExercise = new Map<string, { result: WorkoutResult; date: number }[]>();
     for (const month of planning.data.months) {
       for (const week of month.weeks) {
@@ -130,10 +150,15 @@ function Home() {
           for (const block of day.blocks) {
             const detected = detectExercise(block.content, records);
             if (!detected) continue;
-            const matches = results.filter((r) => r.status === "completed" && r.month_key === month.key && r.week === week.index && r.day_key === day.key && r.block_key === block.key && r.weight != null && r.reps != null && r.weight > 0 && r.reps > 0);
-            if (!matches.length) continue;
+
+            const key = `${month.key}|${week.index}|${day.key}|${block.key}`;
+            const matches = resultsByBlock.get(key);
+            if (!matches) continue;
+
             const list = byExercise.get(detected.exercise) ?? [];
-            for (const result of matches) list.push({ result, date: new Date(result.updated_at).getTime() });
+            for (const result of matches) {
+              list.push({ result, date: new Date(result.updated_at).getTime() });
+            }
             byExercise.set(detected.exercise, list);
           }
         }

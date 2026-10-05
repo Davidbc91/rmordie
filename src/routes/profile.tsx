@@ -1595,8 +1595,17 @@ function DataSection() {
         <p className="mt-3 text-sm" style={{ color: "#6F6F6F" }}>
           Tus datos son tuyos. Puedes exportarlos en cualquier momento o eliminarlos por completo. Nunca se borra nada de forma automática.
         </p>
-        <button onClick={doExport} disabled={busy} className="mt-5 w-full rounded-[18px] py-3 text-sm font-semibold" style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}>
-          Exportar todos mis datos (JSON)
+        <a
+          href="/athlete-report"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-5 flex w-full items-center justify-center rounded-[18px] py-3 text-sm font-semibold"
+          style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}
+        >
+          Generar informe para entrenador (PDF)
+        </a>
+        <button onClick={doExport} disabled={busy} className="mt-3 w-full rounded-[18px] border border-border py-3 text-sm font-semibold">
+          Exportar datos completos (JSON)
         </button>
       </Card>
       <button onClick={doWipe} disabled={busy} className="w-full rounded-[18px] border border-border py-3 text-sm font-semibold text-muted-foreground">

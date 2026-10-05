@@ -56,174 +56,134 @@ function AthleteReport() {
 
   const printReport = () => window.print();
 
-  const downloadPdf = async () => {
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const margin = 14;
-    const pageWidth = 210;
-    const contentWidth = pageWidth - margin * 2;
-    let y = 18;
-
-    const addPageIfNeeded = (height = 8) => {
-      if (y + height > 282) {
-        doc.addPage();
-        y = 18;
+  const downloadPdf = () => {
+    const lines: string[] = [];
+    const add = (text = "") => lines.push(text);
+    const section = (text: string) => {
+      if (lines.length) add("");
+      add(text.toUpperCase());
+      add("────────────────────────────────────────────────────────────────");
+    };
+    const row = (...cells: string[]) => add(cells.join(" | "));
+    const longText = (text: string) => {
+      const words = text.split(/\\s+/);
+      let current = "";
+      for (const word of words) {
+        if ((current + " " + word).trim().length > 92) {
+          if (current) add(current);
+          current = word;
+        } else {
+          current = (current + " " + word).trim();
+        }
       }
+      if (current) add(current);
     };
 
-    const title = (text: string) => {
-      addPageIfNeeded(14);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text(text.toUpperCase(), margin, y);
-      y += 7;
-      doc.setDrawColor(220, 220, 220);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 5;
-    };
+    add("RM OR DIE");
+    add("INFORME DE ATLETA");
+    add(profile?.display_name || "Atleta");
+    add(new Date().toLocaleDateString("es-ES"));
+    if (profile?.level) add(`Nivel: ${profile.level}`);
+    if (profile?.box_name) add(`Box: ${profile.box_name}`);
+    if (profile?.crossfit_start_date) add(`CrossFit desde: ${formatDate(profile.crossfit_start_date)}`);
 
-    const paragraph = (text: string, size = 9) => {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(size);
-      const lines = doc.splitTextToSize(text, contentWidth);
-      for (const line of lines) {
-        addPageIfNeeded(5);
-        doc.text(line, margin, y);
-        y += 4.5;
-      }
-      y += 1;
-    };
+    section("Resumen");
+    row("Peso actual", profile?.current_weight_kg != null ? `${profile.current_weight_kg} kg` : "—");
+    row("Altura", profile?.height_cm != null ? `${profile.height_cm} cm` : "—");
+    row("Entrenamientos", String(stats.sessions ?? 0));
+    row("Bloques registrados", String(stats.blocks ?? 0));
+    row("Volumen total", stats.volume != null ? `${Math.round(stats.volume)} kg` : "—");
+    row("RPE medio", stats.avgRpe != null ? fmtNum(stats.avgRpe) : "—");
+    row("Frecuencia semanal", stats.weeklyFreq != null ? `${fmtNum(stats.weeklyFreq)} / sem` : "—");
+    row("PRs registrados", String(history.length));
 
-    const table = (headers: string[], rows: string[][], widths?: number[]) => {
-      const defaultWidth = contentWidth / headers.length;
-      const cols = widths ?? headers.map(() => defaultWidth);
-      const rowHeight = 6;
-      const drawRow = (cells: string[], header = false) => {
-        addPageIfNeeded(rowHeight + 2);
-        let x = margin;
-        doc.setFont("helvetica", header ? "bold" : "normal");
-        doc.setFontSize(header ? 7 : 7);
-        cells.forEach((cell, i) => {
-          const maxChars = Math.max(8, Math.floor(cols[i] / 1.8));
-          const value = String(cell ?? "—").slice(0, maxChars);
-          doc.text(value, x + 1.5, y + 4);
-          x += cols[i];
-        });
-        doc.setDrawColor(225, 225, 225);
-        doc.line(margin, y + rowHeight, pageWidth - margin, y + rowHeight);
-        y += rowHeight;
-      };
-      drawRow(headers, true);
-      rows.forEach((row) => drawRow(row));
-      y += 3;
-    };
+    section("1RM actuales");
+    if (prRows.length) prRows.forEach((r) => row(r.exercise, `${r.weight} kg`, formatDate(r.updated_at)));
+    else add("Sin registros de 1RM.");
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.text("RM OR DIE", margin, y);
-    y += 9;
-    doc.setFontSize(15);
-    doc.text("INFORME DE ATLETA", margin, y);
-    y += 8;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text(profile?.display_name || "Atleta", margin, y);
-    y += 5;
-    doc.text(new Date().toLocaleDateString("es-ES"), margin, y);
-    y += 9;
+    section("Evolución de fuerza");
+    if (recentHistory.length) {
+      recentHistory.forEach((r) => row(
+        formatDate(r.changed_at),
+        r.exercise,
+        r.previous_weight != null ? `${r.previous_weight} kg` : "—",
+        `${r.new_weight} kg`,
+      ));
+    } else add("Sin historial de fuerza.");
 
-    if (profile?.level || profile?.box_name || profile?.crossfit_start_date) {
-      paragraph(
-        [
-          profile?.level ? `Nivel: ${profile.level}` : "",
-          profile?.box_name ? `Box: ${profile.box_name}` : "",
-          profile?.crossfit_start_date ? `CrossFit desde: ${formatDate(profile.crossfit_start_date)}` : "",
-        ].filter(Boolean).join(" · "),
-      );
-    }
-
-    title("Resumen");
-    table(["Métrica", "Valor"], [
-      ["Peso actual", profile?.current_weight_kg != null ? `${profile.current_weight_kg} kg` : "—"],
-      ["Altura", profile?.height_cm != null ? `${profile.height_cm} cm` : "—"],
-      ["Entrenamientos", String(stats.sessions ?? 0)],
-      ["Bloques registrados", String(stats.blocks ?? 0)],
-      ["Volumen total", stats.volume != null ? `${Math.round(stats.volume)} kg` : "—"],
-      ["RPE medio", stats.avgRpe != null ? fmtNum(stats.avgRpe) : "—"],
-      ["Frecuencia semanal", stats.weeklyFreq != null ? `${fmtNum(stats.weeklyFreq)} / sem` : "—"],
-      ["PRs registrados", String(history.length)],
-    ], [80, 102]);
-
-    title("1RM actuales");
-    table(["Movimiento", "1RM", "Actualizado"], prRows.map((r) => [
-      r.exercise, `${r.weight} kg`, formatDate(r.updated_at),
-    ]), [100, 35, 47]);
-
-    title("Evolución de fuerza");
-    table(["Fecha", "Movimiento", "Anterior", "Nuevo"], recentHistory.map((r) => [
-      formatDate(r.changed_at), r.exercise,
-      r.previous_weight != null ? `${r.previous_weight} kg` : "—",
-      `${r.new_weight} kg`,
-    ]), [27, 88, 35, 32]);
-
-    title("Composición corporal");
+    section("Composición corporal");
     if (metrics.length) {
-      table(["Fecha", "Peso", "% grasa", "Músculo", "Cintura"], metrics.map((m) => [
+      metrics.forEach((m) => row(
         formatDate(m.measured_on),
         m.weight_kg != null ? `${m.weight_kg} kg` : "—",
-        m.body_fat_pct != null ? `${m.body_fat_pct}%` : "—",
-        m.muscle_mass_kg != null ? `${m.muscle_mass_kg} kg` : "—",
-        m.waist_cm != null ? `${m.waist_cm} cm` : "—",
-      ]), [30, 36, 35, 40, 41]);
-    } else {
-      paragraph("Sin registros de composición corporal.");
-    }
+        m.body_fat_pct != null ? `${m.body_fat_pct}% grasa` : "—",
+        m.muscle_mass_kg != null ? `${m.muscle_mass_kg} kg músculo` : "—",
+        m.waist_cm != null ? `${m.waist_cm} cm cintura` : "—",
+      ));
+    } else add("Sin registros de composición corporal.");
 
-    title("Recovery y bienestar");
-    table(["Métrica", "Media"], [
-      ["Sueño", recovery.sleep != null ? `${fmtNum(recovery.sleep)} h` : "—"],
-      ["Energía", recovery.energy != null ? fmtNum(recovery.energy) : "—"],
-      ["Fatiga", recovery.fatigue != null ? fmtNum(recovery.fatigue) : "—"],
-      ["Dolor", recovery.soreness != null ? fmtNum(recovery.soreness) : "—"],
-      ["Ánimo", recovery.mood != null ? fmtNum(recovery.mood) : "—"],
-    ], [80, 102]);
-
+    section("Recovery y bienestar");
+    row("Sueño", recovery.sleep != null ? `${fmtNum(recovery.sleep)} h` : "—");
+    row("Energía", recovery.energy != null ? fmtNum(recovery.energy) : "—");
+    row("Fatiga", recovery.fatigue != null ? fmtNum(recovery.fatigue) : "—");
+    row("Dolor", recovery.soreness != null ? fmtNum(recovery.soreness) : "—");
+    row("Ánimo", recovery.mood != null ? fmtNum(recovery.mood) : "—");
     if (wellness.length) {
-      table(["Fecha", "Sueño", "Energía", "Fatiga", "Dolor", "Ánimo"], wellness.map((w) => [
+      wellness.forEach((w) => row(
         formatDate(w.logged_on),
-        w.sleep_hours != null ? `${w.sleep_hours} h` : "—",
-        w.energy != null ? String(w.energy) : "—",
-        w.fatigue != null ? String(w.fatigue) : "—",
-        w.soreness != null ? String(w.soreness) : "—",
-        w.mood != null ? String(w.mood) : "—",
-      ]), [29, 32, 27, 27, 27, 27]);
+        w.sleep_hours != null ? `${w.sleep_hours} h sueño` : "—",
+        w.energy != null ? `Energía ${w.energy}` : "—",
+        w.fatigue != null ? `Fatiga ${w.fatigue}` : "—",
+        w.soreness != null ? `Dolor ${w.soreness}` : "—",
+        w.mood != null ? `Ánimo ${w.mood}` : "—",
+      ));
     }
 
-    title("Objetivos y hitos");
+    section("Objetivos y hitos");
     if (goals.length) {
-      table(["Objetivo", "Tipo", "Actual", "Meta", "Estado"], goals.map((g) => [
-        g.title, g.goal_type,
-        g.current_value != null ? `${g.current_value} ${g.unit ?? ""}` : "—",
-        `${g.target_value} ${g.unit ?? ""}`,
+      goals.forEach((g) => row(
+        g.title,
+        g.goal_type,
+        g.current_value != null ? `${g.current_value} ${g.unit ?? ""}`.trim() : "—",
+        `${g.target_value} ${g.unit ?? ""}`.trim(),
         g.status,
-      ]), [58, 28, 36, 36, 24]);
-    }
+      ));
+    } else add("Sin objetivos registrados.");
     if (milestones.length) {
-      table(["Hito", "Fecha"], milestones.map((m) => [m.label, formatDate(m.achieved_at)]), [145, 37]);
+      add("Hitos alcanzados:");
+      milestones.forEach((m) => row(m.label, m.achieved_at ? formatDate(m.achieved_at) : "—"));
     }
 
-    title("Entrenamientos registrados");
-    table(["Fecha", "Semana", "Día", "Bloque", "Carga", "Reps", "RPE", "Estado"], recentResults.map((r) => [
-      formatDate(r.updated_at), String(r.week), r.day_key, r.block_key,
-      r.weight != null ? `${r.weight} kg` : "—",
-      r.reps != null ? String(r.reps) : "—",
-      r.rpe != null ? fmtNum(r.rpe) : "—",
-      r.status,
-    ]), [25, 16, 24, 36, 24, 15, 15, 25]);
+    section("Entrenamientos registrados");
+    if (recentResults.length) {
+      recentResults.forEach((r) => row(
+        formatDate(r.updated_at),
+        `Semana ${r.week}`,
+        r.day_key,
+        r.block_key,
+        r.weight != null ? `${r.weight} kg` : "—",
+        r.reps != null ? `${r.reps} reps` : "—",
+        r.rpe != null ? `RPE ${fmtNum(r.rpe)}` : "—",
+        r.status,
+      ));
+    } else add("Sin entrenamientos registrados.");
 
-    title("Notas para el entrenador");
-    paragraph("Este informe contiene los datos registrados en RM OR DIE y está pensado como resumen de transferencia para un entrenador. Los 1RM actuales corresponden a registros confirmados en la aplicación. Los entrenamientos reflejan las sesiones que el atleta ha registrado.");
-    doc.save(`rmordie-athlete-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+    section("Notas para el entrenador");
+    longText("Este informe contiene los datos registrados en RM OR DIE y está pensado como resumen de transferencia para un entrenador.");
+    longText("Los 1RM actuales corresponden a registros confirmados en la aplicación. Los entrenamientos reflejan las sesiones que el atleta ha registrado.");
+    if (planning?.source_filename) add(`Plan activo: ${planning.source_filename}`);
+
+    const pdf = buildSimplePdf(lines);
+    const blob = new Blob([pdf], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `rmordie-athlete-report-${new Date().toISOString().slice(0, 10)}.pdf`;
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 5000);
   };
 
   return (
@@ -419,6 +379,81 @@ function AthleteReport() {
       </div>
     </main>
   );
+}
+
+
+function buildSimplePdf(lines: string[]): Uint8Array {
+  const PAGE_WIDTH = 595;
+  const PAGE_HEIGHT = 842;
+  const LEFT = 42;
+  const TOP = 800;
+  const BOTTOM = 42;
+  const LINE_HEIGHT = 13;
+  const MAX_LINES = Math.floor((TOP - BOTTOM) / LINE_HEIGHT);
+
+  const pages: string[][] = [];
+  for (let i = 0; i < lines.length; i += MAX_LINES) {
+    pages.push(lines.slice(i, i + MAX_LINES));
+  }
+  if (!pages.length) pages.push(["RM OR DIE"]);
+
+  const encodeWinAnsi = (text: string) => {
+    const map: Record<string, number> = {
+      "á": 0xE1, "é": 0xE9, "í": 0xED, "ó": 0xF3, "ú": 0xFA,
+      "ü": 0xFC, "ñ": 0xF1, "Á": 0xC1, "É": 0xC9, "Í": 0xCD,
+      "Ó": 0xD3, "Ú": 0xDA, "Ü": 0xDC, "Ñ": 0xD1, "¿": 0xBF,
+      "¡": 0xA1, "€": 0x80, "·": 0xB7, "—": 0x97,
+    };
+    const bytes: number[] = [];
+    for (const char of text) {
+      const code = char.charCodeAt(0);
+      if (code <= 0x7F) bytes.push(code);
+      else if (map[char] != null) bytes.push(map[char]);
+      else bytes.push(0x3F);
+    }
+    return bytes.map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+  };
+
+  const objects: string[] = [];
+  objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+  objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+
+  const pageIds: number[] = [];
+  pages.forEach((pageLines, pageIndex) => {
+    const pageId = 4 + pageIndex * 2;
+    const contentId = pageId + 1;
+    pageIds.push(pageId);
+    const content = [
+      "BT",
+      "/F1 9 Tf",
+      `${LEFT} ${TOP} Td`,
+      ...pageLines.map((line, index) => {
+        const prefix = index === 0 ? "" : `0 -${LINE_HEIGHT} Td\\n`;
+        return `${prefix}<${encodeWinAnsi(line)}> Tj`;
+      }),
+      "ET",
+    ].join("\\n");
+    objects[contentId] = `<< /Length ${content.length} >>\\nstream\\n${content}\\nendstream`;
+    objects[pageId] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentId} 0 R >>`;
+  });
+
+  objects[2] = `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>`;
+
+  let pdf = "%PDF-1.4\\n%RMOR\n";
+  const offsets: number[] = [0];
+  for (let i = 1; i < objects.length; i++) {
+    if (!objects[i]) continue;
+    offsets[i] = pdf.length;
+    pdf += `${i} 0 obj\\n${objects[i]}\\nendobj\\n`;
+  }
+  const xrefOffset = pdf.length;
+  pdf += `xref\\n0 ${objects.length}\\n0000000000 65535 f \\n`;
+  for (let i = 1; i < objects.length; i++) {
+    pdf += `${String(offsets[i] ?? 0).padStart(10, "0")} 00000 n \\n`;
+  }
+  pdf += `trailer\\n<< /Size ${objects.length} /Root 1 0 R >>\\nstartxref\\n${xrefOffset}\\n%%EOF`;
+
+  return new TextEncoder().encode(pdf);
 }
 
 function Section({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {

@@ -11,7 +11,10 @@ import {
 import { Trophy, Plus, Pencil, Trash2, Check, X, ChevronRight, ArrowRight } from "lucide-react";
 import { lazy, Suspense, useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
+import type { PrCelebrationData } from "@/components/PrCelebration";
+const PrCelebration = lazy(() =>
+  import("@/components/PrCelebration").then((m) => ({ default: m.PrCelebration })),
+);
 import { normalizeExerciseName, sameExercise, mentionsExercise, formatKg } from "@/lib/rm-matcher";
 const WodRecords = lazy(() => import("@/components/WodRecords").then((m) => ({ default: m.WodRecords })));
 

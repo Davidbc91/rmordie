@@ -170,12 +170,40 @@ export async function parsePdfPlanning(file: File): Promise<ParsedImport & { det
 export function mergePlanningPreservingPrevious(current: Planning | null | undefined, incoming: Planning): Planning {
   if (!current) return incoming;
 
-  const incomingKeys = new Set(incoming.months.map((m) => m.key.toUpperCase()));
-  const preserved = current.months.filter((m) => !incomingKeys.has(m.key.toUpperCase()));
-  const mergedMonths = [...preserved, ...incoming.months].sort((a, b) => a.order - b.order);
+  const incomingByKey = new Map(incoming.months.map((m) => [m.key.toUpperCase(), m]));
+  const merged = current.months.map((existingMonth) => {
+    const incomingMonth = incomingByKey.get(existingMonth.key.toUpperCase());
+    if (!incomingMonth) return existingMonth;
 
+    const incomingWeeks = new Map(incomingMonth.weeks.map((w) => [w.index, w]));
+    const mergedWeeks = existingMonth.weeks.map((existingWeek) => {
+      const incomingWeek = incomingWeeks.get(existingWeek.index);
+      if (!incomingWeek) return existingWeek;
+
+      const incomingDays = new Map(incomingWeek.days.map((d) => [d.key, d]));
+      return {
+        ...existingWeek,
+        days: existingWeek.days.map((existingDay) => incomingDays.get(existingDay.key) ?? existingDay),
+      };
+    });
+
+    for (const incomingWeek of incomingMonth.weeks) {
+      if (!mergedWeeks.some((w) => w.index === incomingWeek.index)) mergedWeeks.push(incomingWeek);
+    }
+
+    mergedWeeks.sort((a, b) => a.index - b.index);
+    return { ...existingMonth, weeks: mergedWeeks };
+  });
+
+  for (const incomingMonth of incoming.months) {
+    if (!current.months.some((m) => m.key.toUpperCase() === incomingMonth.key.toUpperCase())) {
+      merged.push(incomingMonth);
+    }
+  }
+
+  merged.sort((a, b) => a.order - b.order);
   return {
-    months: mergedMonths.map((month, index) => ({ ...month, order: index + 1 })),
+    months: merged.map((month, index) => ({ ...month, order: index + 1 })),
     importedAt: new Date().toISOString(),
   };
 }

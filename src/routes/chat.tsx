@@ -93,7 +93,7 @@ function ChatPage() {
   // Realtime
   useEffect(() => {
     const channel = supabase
-      .channel("chat_messages_stream")
+      .channel(`chat_messages_stream_${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "chat_messages" },

@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User, Play, X, Users, MoreHorizontal, ChevronRight, BookOpen, Film, FileText, HeartPulse, LogOut, ChevronDown,
 } from "lucide-react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getActiveWorkout, clearActiveWorkout, type ActiveWorkout } from "@/lib/active-workout";
 import { useChatUnread } from "@/lib/chat-unread";
@@ -142,7 +142,7 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
         {children}
       </main>
 
-      {showResume && active && <ResumeWorkout active={active} onDismiss={() => { clearActiveWorkout(); setActive(null); }} />}
+      {showResume && active && <ResumeWorkout active={active} onDismiss={dismissActiveWorkout} />}
 
       {profileOpen && (
         <div className="fixed inset-0" style={{ zIndex: 2147482999 }}>
@@ -166,7 +166,7 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
         </div>
       )}
 
-      <BottomNavigation pathname={pathname} keyboardOpen={keyboardOpen} moreOpen={moreOpen} moreActive={moreActive} chatUnread={chatUnread} onToggleMore={() => setMoreOpen((v) => !v)} />
+      <BottomNavigation pathname={pathname} keyboardOpen={keyboardOpen} moreOpen={moreOpen} moreActive={moreActive} chatUnread={chatUnread} onToggleMore={toggleMore} />
     </div>
   );
 }

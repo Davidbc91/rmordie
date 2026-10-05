@@ -5,8 +5,6 @@ import { routeTree } from "./routeTree.gen";
 export const getRouter = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
-      // Offline-first: queries still run with no connection and are served from
-      // the local IndexedDB snapshot instead of staying paused forever.
       queries: { networkMode: "offlineFirst", retry: 1 },
       mutations: { networkMode: "offlineFirst" },
     },
@@ -16,7 +14,9 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
+    // Avoid repeatedly treating every preloaded route as stale. This cuts
+    // unnecessary loader/query work when moving between the main tabs.
+    defaultPreloadStaleTime: 30_000,
   });
 
   return router;

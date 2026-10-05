@@ -227,26 +227,30 @@ function WorkoutPage() {
   }
 
   async function shareToday() {
-    const loads = (results as any[]).map((r) => ({ block: r.block_key, weight: r.weight ?? null, sets: r.sets ?? null, reps: r.reps ?? null, rpe: r.rpe ?? null, notes: r.notes ?? null }));
-    const rpes = loads.map((l) => l.rpe).filter((x): x is number => typeof x === "number");
-    const volume = loads.reduce((a, l) => a + (Number(l.weight) || 0) * (Number(l.sets) || 0) * (Number(l.reps) || 0), 0);
+    if (!d || !mo) return;
+    setSharingCard(true);
     try {
-      await createPost.mutateAsync({
-        kind: "workout",
-        caption: `Entreno de hoy · ${month} · S${weekN} · ${day} #workout #rmordie`,
-        data: {
-          month, week: weekN, day,
-          volume,
-          avg_rpe: rpes.length ? Math.round((rpes.reduce((a, b) => a + b, 0) / rpes.length) * 10) / 10 : null,
-          blocks: d?.blocks.length ?? 0,
-          prs: 0,
-          loads,
-          wods: [],
-        },
+      const loads = (results as any[]).map((r) => ({
+        block: r.block_key,
+        weight: r.weight ?? null,
+        sets: r.sets ?? null,
+        reps: r.reps ?? null,
+      }));
+      const volume = loads.reduce((a, l) => a + (Number(l.weight) || 0) * (Number(l.sets) || 0) * (Number(l.reps) || 0), 0);
+      const blob = await renderWorkoutCard({
+        title: d.key,
+        subtitle: `${mo.label} · Semana ${weekN}`,
+        date: new Date().toLocaleDateString("es-ES"),
+        blocks: d.blocks.map((b) => ({ key: b.key, content: b.content })),
+        loads,
+        volume,
       });
-      toast.success("Entreno compartido con tus compañeros");
+      const outcome = await shareOrDownloadCard(blob, `entreno-${month}-s${weekN}-${day}.png`);
+      toast.success(outcome === "shared" ? "Imagen del entreno compartida" : "Imagen del entreno descargada");
     } catch (e: any) {
-      toast.error(e?.message ?? "No se pudo compartir el entreno");
+      if (e?.name !== "AbortError") toast.error(e?.message ?? "No se pudo generar la imagen del entreno");
+    } finally {
+      setSharingCard(false);
     }
   }
 

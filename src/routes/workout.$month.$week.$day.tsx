@@ -378,11 +378,15 @@ function WorkoutReviewCard({ review, onClose, onDownload, onShare, sharing }: { 
           </div>
         )}
 
-        <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <button type="button" onClick={onDownload} className="h-12 rounded-2xl border border-white/10 bg-white/5 font-semibold">
-            Generar informe de sesión
+        <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <button type="button" onClick={onShare} disabled={sharing} className="pressable flex h-12 items-center justify-center gap-2 rounded-2xl border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/8 font-semibold disabled:opacity-50">
+            <Share2 className="h-4 w-4" />
+            {sharing ? "Compartiendo…" : "Compartir entreno"}
           </button>
-          <button type="button" onClick={onClose} className="h-12 rounded-2xl gold-gradient font-semibold" style={{ color: "var(--gold-foreground)" }}>
+          <button type="button" onClick={onDownload} className="pressable h-12 rounded-2xl border border-white/10 bg-white/5 font-semibold">
+            Generar informe
+          </button>
+          <button type="button" onClick={onClose} className="pressable h-12 rounded-2xl gold-gradient font-semibold" style={{ color: "var(--gold-foreground)" }}>
             Continuar
           </button>
         </div>

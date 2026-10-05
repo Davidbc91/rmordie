@@ -148,6 +148,12 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
 
   useEffect(() => { setMoreOpen(false); setProfileOpen(false); }, [pathname]);
 
+  const dismissActiveWorkout = useCallback(() => { clearActiveWorkout(); setActive(null); }, []);
+  const closeProfile = useCallback(() => setProfileOpen(false), []);
+  const signOutProfile = useCallback(() => { setProfileOpen(false); signOut(); window.location.assign("/"); }, []);
+  const closeMore = useCallback(() => setMoreOpen(false), []);
+  const toggleMore = useCallback(() => setMoreOpen((v) => !v), []);
+
   const activePath = active ? `/workout/${active.month}/${active.week}/${active.day}` : null;
   const showResume = !!active && pathname !== activePath;
   const moreActive = visibleMoreLinks.some((l) => pathname.startsWith(l.to));

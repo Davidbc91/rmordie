@@ -68,7 +68,11 @@ function Home() {
   const { data: prHistory = [] } = useAllPrHistory();
   const { data: goals = [] } = useGoals();
   const { data: wellnessLogs = [] } = useWellnessLogs();
-  const deferredResults = useDeferredValue(results);\n  const deferredRecords = useDeferredValue(records);\n  const deferredPlanning = useDeferredValue(planning);\n  const deferredPrHistory = useDeferredValue(prHistory);\n  const deferredWellnessLogs = useDeferredValue(wellnessLogs);
+  const deferredResults = useDeferredValue(results);
+  const deferredRecords = useDeferredValue(records);
+  const deferredPlanning = useDeferredValue(planning);
+  const deferredPrHistory = useDeferredValue(prHistory);
+  const deferredWellnessLogs = useDeferredValue(wellnessLogs);
 
 
   const blockMap = useMemo(() => completedBlockMap(results), [results]);

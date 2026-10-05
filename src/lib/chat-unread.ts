@@ -22,7 +22,8 @@ export function useChatUnread(enabled = true): number {
 
   useEffect(() => {
     let cancelled = false;
-    if (!enabled) return;\n    const uid = getCurrentUserId();
+    if (!enabled) return;
+    const uid = getCurrentUserId();
 
     async function refresh() {
       if (!uid) return;

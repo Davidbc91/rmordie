@@ -195,18 +195,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <nav className="fixed inset-x-0 bottom-0" style={{ zIndex: 2147483000 }}>
+      <nav
+        className="pointer-events-none fixed inset-x-0 bottom-0 px-3"
+        style={{ zIndex: 2147483000 }}
+      >
         <div
-          className="safe-x border-t"
+          className="pointer-events-auto safe-bottom mx-auto mb-3 max-w-2xl overflow-hidden rounded-[30px] border"
           style={{
-            background: "linear-gradient(135deg, rgba(255,255,255,.115), rgba(255,255,255,.035) 48%, rgba(200,179,138,.035)), rgba(7,8,10,.68)",
-            borderColor: "rgba(255,255,255,0.18)",
-            backdropFilter: "blur(42px) saturate(185%)",
-            WebkitBackdropFilter: "blur(42px) saturate(185%)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 0 35px rgba(255,255,255,.018), 0 -28px 80px -36px rgba(0,0,0,.98)",
+            background: "linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.045) 45%, rgba(200,179,138,.055)), rgba(10,10,12,.58)",
+            borderColor: "rgba(255,255,255,0.22)",
+            backdropFilter: "blur(42px) saturate(190%)",
+            WebkitBackdropFilter: "blur(42px) saturate(190%)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(0,0,0,.28), inset 0 0 42px rgba(255,255,255,.025), 0 18px 55px -22px rgba(0,0,0,.98), 0 8px 28px -16px rgba(200,179,138,.18)",
           }}
         >
-          <div className="safe-bottom mx-auto flex max-w-2xl items-stretch gap-1 px-2 pt-2">
+          <div className="relative flex items-stretch gap-1.5 px-2.5 pt-2.5">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-10 top-0 h-px"
+              style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent)" }}
+            />
             {tabs.map((t) => {
               const isActive = pathname === t.to || (t.to !== "/" && pathname.startsWith(t.to));
               const Icon = t.icon;
@@ -214,18 +222,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={t.to}
                   to={t.to}
-                  className="pressable relative flex flex-1 flex-col items-center justify-center gap-[5px] rounded-[16px] py-2"
-                  style={{ color: isActive ? "var(--gold)" : "#7C7D83" }}
+                  className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[5px] rounded-[20px] py-2.5"
+                  style={{ color: isActive ? "var(--gold)" : "#85858B" }}
                 >
                   <span
                     aria-hidden
-                    className="absolute inset-x-1 inset-y-0 rounded-[16px] transition-opacity duration-200"
-                    style={{ background: "linear-gradient(145deg, rgba(255,255,255,.075), rgba(200,179,138,.075))", opacity: isActive ? 1 : 0, boxShadow: isActive ? "inset 0 0 0 1px rgba(200,179,138,0.14)" : "none" }}
+                    className="absolute inset-0 rounded-[20px] transition-all duration-300"
+                    style={{
+                      background: "linear-gradient(145deg, rgba(255,255,255,.105), rgba(200,179,138,.075) 55%, rgba(255,255,255,.018))",
+                      opacity: isActive ? 1 : 0,
+                      boxShadow: isActive
+                        ? "inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 18px rgba(200,179,138,.035), 0 0 22px -14px rgba(200,179,138,.75)"
+                        : "none",
+                    }}
                   />
                   <Icon className="relative h-[21px] w-[21px]" strokeWidth={isActive ? 2.1 : 1.6} />
                   <span
                     className="relative text-[10px] font-semibold"
-                    style={{ letterSpacing: "0.03em", opacity: isActive ? 1 : 0.85 }}
+                    style={{ letterSpacing: "0.04em", opacity: isActive ? 1 : 0.82 }}
                   >
                     {t.label}
                   </span>
@@ -235,25 +249,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => setMoreOpen((v) => !v)}
               aria-label="Más secciones"
-              className="pressable relative flex flex-1 flex-col items-center justify-center gap-[5px] rounded-[16px] py-2"
-              style={{ color: moreActive || moreOpen ? "var(--gold)" : "#7C7D83" }}
+              className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[5px] rounded-[20px] py-2.5"
+              style={{ color: moreActive || moreOpen ? "var(--gold)" : "#85858B" }}
             >
               <span
                 aria-hidden
-                className="absolute inset-x-1 inset-y-0 rounded-[16px] transition-opacity duration-200"
-                style={{ background: "rgba(216,180,107,0.10)", opacity: moreActive || moreOpen ? 1 : 0 }}
+                className="absolute inset-0 rounded-[20px] transition-all duration-300"
+                style={{
+                  background: "linear-gradient(145deg, rgba(255,255,255,.105), rgba(200,179,138,.075))",
+                  opacity: moreActive || moreOpen ? 1 : 0,
+                  boxShadow: moreActive || moreOpen
+                    ? "inset 0 1px 0 rgba(255,255,255,.18), 0 0 22px -14px rgba(200,179,138,.75)"
+                    : "none",
+                }}
               />
               <MoreHorizontal className="relative h-[21px] w-[21px]" strokeWidth={moreActive || moreOpen ? 2.1 : 1.6} />
               {chatUnread > 0 && (
                 <span
                   aria-hidden
-                  className="absolute right-[26%] top-[6px] grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-bold gold-gradient"
+                  className="absolute right-[24%] top-[5px] grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-bold gold-gradient"
                   style={{ color: "var(--gold-foreground)" }}
                 >
                   {chatUnread > 9 ? "9+" : chatUnread}
                 </span>
               )}
-              <span className="relative text-[10px] font-semibold" style={{ letterSpacing: "0.03em" }}>Más</span>
+              <span className="relative text-[10px] font-semibold" style={{ letterSpacing: "0.04em", opacity: moreActive || moreOpen ? 1 : 0.82 }}>Más</span>
             </button>
           </div>
         </div>

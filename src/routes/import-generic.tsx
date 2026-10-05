@@ -15,6 +15,7 @@ import {
   parseGenericFile,
   rowIssues,
 } from "@/lib/generic-import";
+import { mergePlanningPreservingPrevious, parsePdfPlanning } from "@/lib/pdf-import";
 
 export const Route = createFileRoute("/import-generic")({
   head: () => ({
@@ -42,12 +43,12 @@ function GenericImportPage() {
   const [filename, setFilename] = useState("");
   const [monthKey, setMonthKey] = useState("1. IMPORTADO");
   const [monthLabel, setMonthLabel] = useState("Importado");
-  const [confirmOverwrite, setConfirmOverwrite] = useState(false);
 
   async function onFile(f: File) {
     setBusy(true);
     try {
-      const result = await parseGenericFile(f);
+      const isPdf = /\.pdf$/i.test(f.name);
+      const result = isPdf ? await parsePdfPlanning(f) : await parseGenericFile(f);
       if (result.rows.length === 0) {
         toast.error("El archivo se ha leído, pero no contiene filas con datos.");
         return;
@@ -55,7 +56,10 @@ function GenericImportPage() {
       setParsed(result);
       setRows(result.rows);
       setFilename(f.name);
-      setConfirmOverwrite(false);
+      if ("detectedMonth" in result) {
+        setMonthKey(result.detectedMonth.key);
+        setMonthLabel(result.detectedMonth.label);
+      }
       toast.success(`${result.rows.length} filas leídas. Revísalas antes de confirmar.`);
     } catch (e) {
       const err = e as { message?: string };
@@ -78,13 +82,10 @@ function GenericImportPage() {
       toast.error("Ninguna fila es válida todavía. Corrige día y ejercicio.");
       return;
     }
-    if (current && !confirmOverwrite) {
-      toast.error("Marca la casilla para reemplazar la planificación activa.");
-      return;
-    }
     const planning = buildPlanningFromRows(rows, { monthKey, monthLabel });
+    const mergedPlanning = mergePlanningPreservingPrevious(current?.data, planning);
     try {
-      await save.mutateAsync({ planning, filename: filename || "Importación genérica" });
+      await save.mutateAsync({ planning: mergedPlanning, filename: filename || "Importación genérica" });
       toast.success(`Planificación importada: ${validCount} filas.`);
       navigate({ to: "/calendar" });
     } catch (e) {
@@ -97,7 +98,7 @@ function GenericImportPage() {
     <AppShell>
       <h1 className="text-2xl font-semibold tracking-tight">Importar planificación</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Excel o CSV con cualquier formato de columnas. <span className="gold-text">Nada se guarda hasta que confirmes.</span>
+        Excel, CSV o PDF. <span className="gold-text">Nada se guarda hasta que confirmes y lo anterior se conserva.</span>
       </p>
 
       {!parsed && (
@@ -107,11 +108,11 @@ function GenericImportPage() {
           </div>
           <div>
             <div className="text-sm font-medium">{busy ? "Leyendo…" : "Seleccionar archivo"}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Archivo .xlsx o .csv</div>
+            <div className="mt-1 text-xs text-muted-foreground">Archivo .xlsx, .xls, .csv o .pdf</div>
           </div>
           <input
             type="file"
-            accept=".xlsx,.xls,.csv,text/csv"
+            accept=".xlsx,.xls,.csv,.pdf,text/csv,application/pdf"
             disabled={busy}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
             className="hidden"
@@ -240,18 +241,11 @@ function GenericImportPage() {
           <GlassSection title="Confirmar">
             <GlassCard className="p-4">
               {current && (
-                <label className="flex items-start gap-3 text-xs text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    checked={confirmOverwrite}
-                    onChange={(e) => setConfirmOverwrite(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 accent-[color:var(--gold)]"
-                  />
-                  <span>
-                    Entiendo que esto pasa a ser la planificación activa (v{current.version} dejará de estarlo).{" "}
-                    <span className="gold-text">Tus pesos, PR y notas no se tocan.</span>
-                  </span>
-                </label>
+                <div className="rounded-2xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] p-3 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">Actualización segura.</span>{" "}
+                  La nueva planificación se integra con la actual por mes, semana y día.
+                  Las sesiones anteriores, pesos, PR, tiempos y notas se conservan.
+                </div>
               )}
               <GlassButton variant="gold" className="mt-3 w-full" onClick={onConfirm} disabled={save.isPending}>
                 <CheckCircle2 className="h-4 w-4" />

@@ -207,8 +207,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           style={{
             background: "linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.045) 45%, rgba(200,179,138,.055)), rgba(10,10,12,.58)",
             borderColor: "rgba(255,255,255,0.22)",
-            backdropFilter: "blur(42px) saturate(190%)",
-            WebkitBackdropFilter: "blur(42px) saturate(190%)",
+            backdropFilter: "blur(24px) saturate(165%)",
+            WebkitBackdropFilter: "blur(24px) saturate(165%)",
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(0,0,0,.28), inset 0 0 42px rgba(255,255,255,.025), 0 18px 55px -22px rgba(0,0,0,.98), 0 8px 28px -16px rgba(200,179,138,.18)",
           }}
         >

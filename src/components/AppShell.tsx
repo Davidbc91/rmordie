@@ -32,7 +32,7 @@ export function AppShell({ children, hideBottomNav = false }: { children: React.
   const [moreOpen, setMoreOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const keyboardOpen = hideBottomNav;
-  const chatUnread = useChatUnread();
+  const chatUnread = useChatUnread(!pathname.startsWith("/chat"));
   const currentProfileId = getCurrentUserId();
   const { data: profiles = [] } = useProfiles();
   const currentProfile = profiles.find((profile) => profile.id === currentProfileId);

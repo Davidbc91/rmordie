@@ -9,7 +9,7 @@ const corsHeaders = {
 const BUCKET = "movement-videos";
 
 type Body = {
-  action: "check" | "verify" | "create_upload" | "save_upload" | "save_youtube" | "delete";
+  action: "check" | "verify" | "create_upload" | "save_upload" | "save_youtube" | "review" | "delete";
   profile_id?: string;
   pin_hash?: string;
   movement_id?: string;
@@ -183,13 +183,22 @@ Deno.serve(async (req) => {
 
     if (body.action === "review") {
       if (!body.profile_id || !body.pin_hash) return json({ error: "No autorizado" }, 401);
-      if (!(await isAdmin(body.profile_id, body.pin_hash))) return json({ error: "No autorizado" }, 403);
+      const authorized = await isAdmin(body.profile_id, body.pin_hash);
+      if (!authorized) return json({ error: "No autorizado" }, 403);
       const movementId = String(body.movement_id ?? "");
       const status = String(body.status ?? "");
       if (!/^move-\d{3}$/.test(movementId)) return json({ error: "Movimiento inválido" }, 400);
       if (!["pending", "verified", "needs_review"].includes(status)) {
         return json({ error: "Estado de revisión inválido" }, 400);
       }
+      const { data: profileCheck, error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("id", body.profile_id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      if (!profileCheck) return json({ error: "Perfil administrador no encontrado" }, 403);
+
       const { error } = await supabaseAdmin
         .from("movement_video_reviews")
         .upsert({

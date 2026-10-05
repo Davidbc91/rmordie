@@ -349,7 +349,7 @@ function WorkoutPage() {
 function WorkoutReviewCard({ review, onClose, onDownload }: { review: WorkoutReview; onClose: () => void; onDownload: () => void }) {
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center">
-      <div className="cinematic-card-strong w-full max-w-lg rounded-[28px] p-5 sm:p-6">
+      <div className="cinematic-card-strong max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-[28px] p-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] sm:max-h-[90vh] sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <span className="cinematic-label">POST-WORKOUT REVIEW</span>

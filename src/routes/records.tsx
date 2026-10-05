@@ -644,7 +644,7 @@ function StrengthRecords({
                             })}
                           </div>
                         </div>
-                        <Sparkline exercise={r.exercise} repMax={r.rep_max ?? 1} />
+                        <SparklinePlaceholder />
                         <ChevronRight
                           className="h-4 w-4 shrink-0 text-muted-foreground"
                           strokeWidth={1.5}
@@ -682,33 +682,17 @@ function StrengthRecords({
   );
 }
 
-function Sparkline({ exercise, repMax }: { exercise: string; repMax: number }) {
-  const { data: history = [] } = usePersonalRecordHistory(exercise, repMax);
-  const points = useMemo(() => {
-    const sorted = [...history].sort(
-      (a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime(),
-    );
-    return sorted.map((h) => Number(h.new_weight));
-  }, [history]);
-
-  if (points.length < 2) return <div className="h-8 w-16 shrink-0" />;
-
-  const min = Math.min(...points);
-  const max = Math.max(...points);
-  const span = max - min || 1;
-  const w = 64;
-  const h = 28;
-  const d = points
-    .map((p, i) => {
-      const x = (i / (points.length - 1)) * (w - 4) + 2;
-      const y = h - 3 - ((p - min) / span) * (h - 6);
-      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-
+function SparklinePlaceholder() {
   return (
-    <svg width={w} height={h} className="shrink-0" aria-hidden="true">
-      <path d={d} fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.85" />
+    <svg width={64} height={28} className="shrink-0 opacity-30" aria-hidden="true">
+      <path
+        d="M2 23 L14 20 L26 21 L38 14 L50 16 L62 7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

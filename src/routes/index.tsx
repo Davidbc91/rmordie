@@ -135,6 +135,18 @@ function Home() {
     };
   }, [planning, blockMap, records, todayPlan]);
 
+  const resultsByBlock = useMemo(() => {
+    const map = new Map<string, WorkoutResult[]>();
+    for (const result of results) {
+      if (result.status !== "completed" || result.weight == null || result.reps == null || result.weight <= 0 || result.reps <= 0) continue;
+      const key = `${result.month_key}|${result.week}|${result.day_key}|${result.block_key}`;
+      const bucket = map.get(key);
+      if (bucket) bucket.push(result);
+      else map.set(key, [result]);
+    }
+    return map;
+  }, [results]);
+
   const sessionCoach = useMemo(() => {
     if (!planning || !next || next.focus.length === 0) return null;
     const byExercise = new Map<string, { result: WorkoutResult; date: number }[]>();
@@ -144,7 +156,7 @@ function Home() {
           for (const block of day.blocks) {
             const detected = detectExercise(block.content, records);
             if (!detected) continue;
-            const matches = results.filter((r) => r.status === "completed" && r.month_key === month.key && r.week === week.index && r.day_key === day.key && r.block_key === block.key && r.weight != null && r.reps != null && r.weight > 0 && r.reps > 0);
+            const matches = resultsByBlock.get(`${month.key}|${week.index}|${day.key}|${block.key}`) ?? [];
             if (!matches.length) continue;
             const list = byExercise.get(detected.exercise) ?? [];
             for (const result of matches) list.push({ result, date: new Date(result.updated_at).getTime() });

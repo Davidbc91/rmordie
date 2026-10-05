@@ -40,7 +40,7 @@ export function AppShell({ children, hideBottomNav = false }: { children: React.
   const { data: isAdmin } = useQuery({
     queryKey: ["video-admin", currentProfileId],
     queryFn: isVideoAdmin,
-    enabled: !!currentProfileId,
+    enabled: !!currentProfileId && moreOpen,
     staleTime: 5 * 60 * 1000,
   });
   const visibleMoreLinks = useMemo(

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { LinkedText } from "@/components/LinkedText";
-import { usePlanning, useDayResults, useSaveResult, useSettings, usePersonalRecords, findDay, useUpsertPersonalRecord } from "@/lib/store";
+import { usePlanning, useDayResults, useSaveResult, useDeleteWorkoutResults, useSettings, usePersonalRecords, findDay, useUpsertPersonalRecord } from "@/lib/store";
 import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { detectExercise, loadsForPercentages, formatKg, compareLoads, LOAD_STATUS_LABEL } from "@/lib/rm-matcher";
 import { resolveMovementId } from "@/lib/dictionary/resolve";
@@ -20,7 +20,7 @@ import {
   WOD_TYPE_LABEL,
   type WodScale,
 } from "@/lib/wod";
-import { useWodResults, useSaveWodResult, type WodResult, type WodSaveInput, type PrOutcome } from "@/lib/wod-store";
+import { useWodResults, useSaveWodResult, useDeleteWodResult, type WodResult, type WodSaveInput, type PrOutcome } from "@/lib/wod-store";
 import { WodScoreFields } from "@/components/WodRecords";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
 import { useCreatePost } from "@/lib/social";
@@ -68,7 +68,9 @@ function WorkoutPage() {
   const { data: wodResults = [] } = useWodResults();
   const { data: settings } = useSettings();
   const save = useSaveResult();
+  const deleteWorkoutResults = useDeleteWorkoutResults();
   const saveWod = useSaveWodResult();
+  const deleteWodResult = useDeleteWodResult();
   const createPost = useCreatePost();
   const { data: wellnessLogs = [] } = useWellnessLogs();
   const formsRef = useRef<Record<string, () => BlockPayload>>({});
@@ -114,6 +116,27 @@ function WorkoutPage() {
       day_key: day,
       block_key: blockKey,
     });
+  }
+
+  async function unmarkWorkout() {
+    if (results.length === 0 && dayWods.length === 0) return;
+    const confirmed = window.confirm(
+      "¿Quieres desmarcar este entreno? Se eliminarán las cargas, RPE, notas y resultado del WOD registrados para este día. Los 1RM ya confirmados no se borrarán."
+    );
+    if (!confirmed) return;
+    try {
+      await deleteWorkoutResults.mutateAsync({ month_key: month, week: weekN, day_key: day });
+      const wodDeletes = dayWods.map((w) => w.id);
+      if (wodDeletes.length) {
+        await Promise.all(wodDeletes.map((id) => deleteWodResult.mutateAsync(id)));
+      }
+      d!.blocks.forEach((b) => clearDraft(month, weekN, day, b.key));
+      setReview(null);
+      clearActiveWorkout();
+      toast.success("Entreno desmarcado");
+    } catch (error: any) {
+      toast.error(error?.message ?? "No se pudo desmarcar el entreno");
+    }
   }
 
   async function saveAll() {
@@ -260,6 +283,17 @@ function WorkoutPage() {
           </div>
         </div>
       </header>
+
+      {(results.length > 0 || dayWods.length > 0) && (
+        <button
+          type="button"
+          onClick={unmarkWorkout}
+          disabled={deleteWorkoutResults.isPending || deleteWodResult.isPending}
+          className="pressable mb-4 flex min-h-[48px] w-full items-center justify-center rounded-[var(--r-lg)] border border-red-400/25 bg-red-500/5 text-sm font-semibold text-red-300 disabled:opacity-50"
+        >
+          {deleteWorkoutResults.isPending || deleteWodResult.isPending ? "Desmarcando entreno…" : "Desmarcar entreno realizado por error"}
+        </button>
+      )}
 
       {d.isRest && (
         <div className="glass glass-sheen p-6 text-center">

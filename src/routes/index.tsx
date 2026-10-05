@@ -18,6 +18,7 @@ import {
   planningCompletion,
   sessionProgress,
 } from "@/lib/session-progress";
+import { Moon } from "lucide-react";
 
 
 
@@ -36,11 +37,16 @@ export const Route = createFileRoute("/")({
 });
 
 const MONTH_ABBR = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
+const WEEKDAY_KEYS = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
+
+function normalizeDayKey(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+}
 
 function Home() {
   const navigate = Route.useNavigate();
   const [selectedTrendWeek, setSelectedTrendWeek] = useState<string | null>(null);
-  const { data: planning, isLoading } = usePlanning();
+  const { data: planning, isLoading, isError, refetch } = usePlanning();
   const { data: results = [] } = useAllResults();
   const { data: records = [] } = usePersonalRecords();
   const { data: milestones = [] } = useMilestones();
@@ -51,6 +57,19 @@ function Home() {
 
 
   const blockMap = useMemo(() => completedBlockMap(results), [results]);
+
+  const todayPlan = useMemo(() => {
+    if (!planning) return null;
+    const now = new Date();
+    const month = planning.data.months.find((m) => m.key.toUpperCase().includes(MONTH_ABBR[now.getMonth()]));
+    if (!month) return null;
+    const weekday = normalizeDayKey(WEEKDAY_KEYS[now.getDay()]);
+    const weekOfMonth = Math.ceil((now.getDate() + ((new Date(now.getFullYear(), now.getMonth(), 1).getDay() + 6) % 7)) / 7);
+    const week = month.weeks.find((item) => item.index === weekOfMonth) ?? month.weeks.find((item) => item.days.some((d) => normalizeDayKey(d.key) === weekday));
+    const day = week?.days.find((item) => normalizeDayKey(item.key) === weekday);
+    if (!week || !day) return null;
+    return { month, week, day, progress: sessionProgress(day, month.key, week.index, blockMap) };
+  }, [planning, blockMap]);
 
   const stats = useMemo(() => {
     const done = results.filter((r) => r.status === "completed");
@@ -63,30 +82,26 @@ function Home() {
     const months = planning.data.months;
     const now = new Date();
     const cur = MONTH_ABBR[now.getMonth()];
-    const todayKey = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"][now.getDay()];
     const currentMonth = months.find((m) => m.key.toUpperCase().includes(cur));
-
-    const todayCandidate = currentMonth
-      ? currentMonth.weeks
-          .flatMap((w) => w.days.map((d) => ({ d, w })))
-          .find(({ d, w }) => !d.isRest && d.key === todayKey && sessionProgress(d, currentMonth.key, w.index, blockMap).state !== "completed")
-      : null;
-
-    const pick = todayCandidate
-      ? { m: currentMonth!, w: todayCandidate.w, d: todayCandidate.d, isToday: true }
-      : (() => {
-          const startIdx = Math.max(0, months.findIndex((m) => m.key.toUpperCase().includes(cur)));
-          const order = [...months.slice(startIdx), ...months.slice(0, startIdx)];
-          for (const m of order)
-            for (const w of m.weeks)
-              for (const d of w.days) {
-                if (d.isRest) continue;
-                const prog = sessionProgress(d, m.key, w.index, blockMap);
-                if (prog.state === "completed") continue;
-                return { m, w, d, isToday: false };
-              }
-          return null;
-        })();
+    const startIdx = Math.max(0, months.findIndex((m) => m.key.toUpperCase().includes(cur)));
+    const order = [...months.slice(startIdx), ...months.slice(0, startIdx)];
+    const pick = (() => {
+      for (const m of order) {
+        const days = m.weeks.flatMap((w) => w.days.map((d) => ({ d, w })));
+        const todayIndex = currentMonth && todayPlan?.month.key === m.key
+          ? days.findIndex(({ d, w }) => d.key === todayPlan.day.key && w.index === todayPlan.week.index)
+          : -1;
+        const candidates = todayIndex >= 0 ? days.slice(todayIndex) : days;
+        for (const { d, w } of candidates) {
+          if (d.isRest) continue;
+          const prog = sessionProgress(d, m.key, w.index, blockMap);
+          if (prog.state === "completed") continue;
+          const isToday = !!todayPlan && todayPlan.month.key === m.key && todayPlan.week.index === w.index && todayPlan.day.key === d.key;
+          return { m, w, d, isToday };
+        }
+      }
+      return null;
+    })();
 
     if (!pick) return null;
     const { m, w, d, isToday } = pick;
@@ -119,7 +134,7 @@ function Home() {
       isToday,
       focus,
     };
-  }, [planning, blockMap, records]);
+  }, [planning, blockMap, records, todayPlan]);
 
   const sessionCoach = useMemo(() => {
     if (!planning || !next || next.focus.length === 0) return null;
@@ -224,12 +239,19 @@ function Home() {
     return { weeks, volumeChange, recoveryAvg, latestWellness };
   }, [results, wellnessLogs]);
 
-  const topRecords = useMemo(
-    () =>
-      [...records]
+  const recentPrs = useMemo(
+    () => {
+      if (prHistory.length) {
+        return [...prHistory]
+          .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime())
+          .slice(0, 3);
+      }
+      return [...records]
         .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-        .slice(0, 3),
-    [records],
+        .slice(0, 3)
+        .map((record) => ({ ...record, changed_at: record.updated_at, new_weight: record.weight }));
+    },
+    [prHistory, records],
   );
 
   return (
@@ -244,16 +266,30 @@ function Home() {
         <p className="mt-4 max-w-xs text-xs leading-relaxed text-muted-foreground">Tu rendimiento, tu sesión y tu progreso. Todo lo importante, de un vistazo.</p>
       </header>
 
-      {!planning && !isLoading && <EmptyState />}
+      {isLoading && <DashboardLoading />}
+      {isError && !planning && !isLoading && <PlanningError onRetry={() => void refetch()} />}
+      {!planning && !isLoading && !isError && <EmptyState />}
 
       {planning && (
         <>
-          {/* 1 · Entreno de hoy */}
+          {/* Entrenamiento de hoy */}
+          {todayPlan?.day.isRest ? (
+            <GlassCard level={3} className="rise rise-2 glass-panel glass-refraction p-6">
+              <div className="flex items-center justify-between gap-3"><GlassBadge>Hoy · Recuperación</GlassBadge><Moon className="h-5 w-5 text-muted-foreground" /></div>
+              <h2 className="display-lg mt-5">Día de descanso</h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Tu planificación marca hoy como día de descanso. Recarga energía; la próxima sesión está preparada abajo.</p>
+              <Link to="/calendar" className="mt-4 inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-gold">Ver planificación <ChevronRight className="h-4 w-4" /></Link>
+            </GlassCard>
+          ) : todayPlan?.day && todayPlan.progress.state === "completed" ? (
+            <GlassCard level={3} className="rise rise-2 glass-panel p-6"><GlassBadge tone="gold">Hoy · Completado</GlassBadge><h2 className="mt-4 text-xl font-semibold">Entrenamiento hecho</h2><p className="mt-2 text-sm text-muted-foreground">Buen trabajo. Tu próxima sesión aparece a continuación.</p></GlassCard>
+          ) : null}
+
+          {/* Próxima sesión disponible; si hoy toca entrenar, esta tarjeta es el CTA principal. */}
           {next ? (
             <GlassCard level={3} gold className="rise rise-2 sheen glass-panel glass-refraction p-6">
               <div className="flex items-center justify-between gap-3">
                 <GlassBadge tone="gold">
-                  {next.progress.state === "in_progress" ? "Sesión en curso" : next.isToday ? "Hoy" : "Siguiente sesión"}
+                  {next.progress.state === "in_progress" ? "Sesión en curso" : next.isToday ? "Entrenamiento de hoy" : "Próximo entrenamiento"}
                 </GlassBadge>
                 {weekProgress && (
                   <span className="text-[11px] tabular text-muted-foreground">
@@ -441,19 +477,19 @@ function Home() {
             <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "progress" } })} className="text-left"><MiniStat label="Constancia" value={String(stats.pct) + "%"} icon={<Flame className="h-3.5 w-3.5" />} /></button>
           </div>
 
-          {/* 7 · PRs */}
-          {topRecords.length > 0 && (
-            <GlassSection
-              title="Récords recientes"
-              action={
-                <Link to="/records" className="inline-flex items-center gap-1 text-[11px] font-semibold text-gold">
-                  Ver todos <ArrowUpRight className="h-3 w-3" />
-                </Link>
-              }
-              className="rise rise-4"
-            >
+          {/* PRs recientes desde el historial real */}
+          <GlassSection
+            title="PRs recientes"
+            action={
+              <Link to="/records" className="inline-flex items-center gap-1 text-[11px] font-semibold text-gold">
+                Ver todos <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            }
+            className="rise rise-4"
+          >
+            {recentPrs.length > 0 ? (
               <div className="space-y-2">
-                {topRecords.map((r) => (
+                {recentPrs.map((r) => (
                   <Link
                     key={r.id}
                     to="/records"
@@ -462,17 +498,19 @@ function Home() {
                     <Trophy className="h-4 w-4 shrink-0 text-gold" strokeWidth={1.8} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold">{r.exercise}</span>
-                      <span className="eyebrow mt-1 block">{r.rep_max ? `${r.rep_max}RM` : "RM"}</span>
+                      <span className="eyebrow mt-1 block">{r.rep_max ? `${r.rep_max}RM` : "RM"} · {new Date(r.changed_at).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}</span>
                     </span>
                     <span className="metric shrink-0 text-right gold-text">
-                      {r.weight}
+                      {r.new_weight}
                       <span className="ml-1 text-xs font-medium text-muted-foreground">kg</span>
                     </span>
                   </Link>
                 ))}
               </div>
-            </GlassSection>
-          )}
+            ) : (
+              <p className="rounded-2xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-4 py-5 text-sm text-muted-foreground">Cuando registres una nueva marca personal, aparecerá aquí.</p>
+            )}
+          </GlassSection>
 
           {/* 8 · Accesos */}
           <GlassSection title="Accesos" className="rise rise-5">
@@ -539,6 +577,27 @@ function EmptyState() {
       >
         Importar Excel <ChevronRight className="h-4 w-4" />
       </Link>
+    </GlassCard>
+  );
+}
+
+function DashboardLoading() {
+  return (
+    <div className="space-y-3" role="status" aria-label="Cargando inicio">
+      <span className="sr-only">Cargando tu planificación y rendimiento…</span>
+      <div className="glass glass-sheen h-48 animate-pulse rounded-[28px]" />
+      <div className="grid grid-cols-3 gap-2"><div className="glass h-20 animate-pulse rounded-2xl" /><div className="glass h-20 animate-pulse rounded-2xl" /><div className="glass h-20 animate-pulse rounded-2xl" /></div>
+      <div className="glass glass-sheen h-36 animate-pulse rounded-[24px]" />
+    </div>
+  );
+}
+
+function PlanningError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <GlassCard level={3} className="rise rise-2 p-6 text-center">
+      <h2 className="text-lg font-semibold">No se pudo cargar el inicio</h2>
+      <p className="mt-2 text-sm text-muted-foreground">Comprueba la conexión y vuelve a intentarlo.</p>
+      <button type="button" onClick={onRetry} className="pressable gold-gradient mt-5 min-h-[46px] rounded-[var(--r-lg)] px-5 text-sm font-semibold">Reintentar</button>
     </GlassCard>
   );
 }

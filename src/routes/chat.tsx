@@ -176,7 +176,7 @@ function ChatPage() {
 
   return (
     <AppShell>
-      <div className="flex flex-col" style={{ height: "calc(100vh - 10rem)" }}>
+      <div className="flex min-h-0 flex-col" style={{ height: "min(700px, max(220px, calc(100dvh - 15rem)))" }}>
         <header className="mb-3 flex items-center gap-2">
           <MessageCircle className="h-5 w-5" style={{ color: "var(--gold)" }} />
           <div className="min-w-0 flex-1">
@@ -212,7 +212,7 @@ function ChatPage() {
 
         <div
           ref={scrollRef}
-          className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-border bg-surface/40 p-3"
+          className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface/40 p-3"
         >
           {isLoading ? (
             <p className="text-center text-sm text-muted-foreground">Cargando…</p>
@@ -264,7 +264,7 @@ function ChatPage() {
           )}
         </div>
 
-        <form onSubmit={handleSend} className="mt-3 flex items-end gap-2">
+        <form onSubmit={handleSend} className="mt-3 flex shrink-0 items-end gap-2 pb-[max(env(safe-area-inset-bottom),4px)]">
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}

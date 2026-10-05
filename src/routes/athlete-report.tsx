@@ -428,30 +428,30 @@ function buildSimplePdf(lines: string[]): Uint8Array {
       "/F1 9 Tf",
       `${LEFT} ${TOP} Td`,
       ...pageLines.map((line, index) => {
-        const prefix = index === 0 ? "" : `0 -${LINE_HEIGHT} Td\\n`;
+        const prefix = index === 0 ? "" : `0 -${LINE_HEIGHT} Td\n`;
         return `${prefix}<${encodeWinAnsi(line)}> Tj`;
       }),
       "ET",
-    ].join("\\n");
-    objects[contentId] = `<< /Length ${content.length} >>\\nstream\\n${content}\\nendstream`;
+    ].join("\n");
+    objects[contentId] = `<< /Length ${content.length} >>\nstream\n${content}\nendstream`;
     objects[pageId] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentId} 0 R >>`;
   });
 
   objects[2] = `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>`;
 
-  let pdf = "%PDF-1.4\\n%RMOR\n";
+  let pdf = "%PDF-1.4\n%RMOR\n";
   const offsets: number[] = [0];
   for (let i = 1; i < objects.length; i++) {
     if (!objects[i]) continue;
     offsets[i] = pdf.length;
-    pdf += `${i} 0 obj\\n${objects[i]}\\nendobj\\n`;
+    pdf += `${i} 0 obj\n${objects[i]}\nendobj\n`;
   }
   const xrefOffset = pdf.length;
-  pdf += `xref\\n0 ${objects.length}\\n0000000000 65535 f \\n`;
+  pdf += `xref\n0 ${objects.length}\n0000000000 65535 f \n`;
   for (let i = 1; i < objects.length; i++) {
-    pdf += `${String(offsets[i] ?? 0).padStart(10, "0")} 00000 n \\n`;
+    pdf += `${String(offsets[i] ?? 0).padStart(10, "0")} 00000 n \n`;
   }
-  pdf += `trailer\\n<< /Size ${objects.length} /Root 1 0 R >>\\nstartxref\\n${xrefOffset}\\n%%EOF`;
+  pdf += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
 
   return new TextEncoder().encode(pdf);
 }

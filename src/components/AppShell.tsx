@@ -31,6 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState<ActiveWorkout | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const chatUnread = useChatUnread();
   const currentProfileId = getCurrentUserId();
   const { data: profiles = [] } = useProfiles();
@@ -60,12 +61,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { setMoreOpen(false); setProfileOpen(false); }, [pathname]);
 
+  // iOS/Android: hide the floating navigation while the on-screen keyboard
+  // is open so the composer and conversation get the full available height.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const updateKeyboardState = () => {
+      const activeElement = document.activeElement;
+      const editing =
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        (activeElement instanceof HTMLElement && activeElement.isContentEditable);
+
+      const heightDelta = window.innerHeight - vv.height;
+      setKeyboardOpen(editing && heightDelta > 120);
+    };
+
+    updateKeyboardState();
+    vv.addEventListener("resize", updateKeyboardState);
+    vv.addEventListener("scroll", updateKeyboardState);
+    document.addEventListener("focusin", updateKeyboardState);
+    document.addEventListener("focusout", updateKeyboardState);
+
+    return () => {
+      vv.removeEventListener("resize", updateKeyboardState);
+      vv.removeEventListener("scroll", updateKeyboardState);
+      document.removeEventListener("focusin", updateKeyboardState);
+      document.removeEventListener("focusout", updateKeyboardState);
+    };
+  }, []);
+
   const activePath = active ? `/workout/${active.month}/${active.week}/${active.day}` : null;
   const showResume = !!active && pathname !== activePath;
   const moreActive = visibleMoreLinks.some((l) => pathname.startsWith(l.to));
 
   return (
-    <div className="grain relative min-h-[100dvh] overflow-x-hidden pb-[88px]">
+    <div className={"grain relative min-h-[100dvh] overflow-x-hidden " + (keyboardOpen ? "pb-0" : "pb-[88px]")}>
       <div aria-hidden className="aura pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
       <div aria-hidden className="pointer-events-none absolute -left-32 top-28 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(200,179,138,.09),transparent_68%)] blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -right-36 top-[34rem] h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(150,160,180,.07),transparent_68%)] blur-3xl" />
@@ -199,9 +231,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <nav
+        aria-hidden={keyboardOpen}
         aria-label="Navegación principal"
         data-main-navigation
-        className="pointer-events-none fixed inset-x-0 bottom-0 px-0"
+        className={"pointer-events-none fixed inset-x-0 bottom-0 px-0 transition-opacity duration-150 " + (keyboardOpen ? "pointer-events-none opacity-0" : "opacity-100")}
         style={{
           zIndex: 2147483000,
           bottom: "max(env(safe-area-inset-bottom), 12px)",

@@ -82,11 +82,11 @@ function SettingsPage() {
         {settingsError && !s && <p role="alert" className="mt-2 text-xs text-destructive">No se pudo cargar tu material. Inténtalo de nuevo antes de guardar.</p>}
         <label className="mt-4 block">
           <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">Barras (kg)</span>
-          <input value={bars} onChange={(e) => { setBarsEdited(true); setBars(e.target.value); }} disabled={!s} className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular outline-none focus:border-gold disabled:opacity-50" />
+          <input value={bars} onChange={(e) => { setBarsEdited(true); setBars(e.target.value); }} disabled={!s} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular outline-none focus:border-gold disabled:opacity-50" />
         </label>
         <label className="mt-3 block">
           <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">Discos por lado (kg)</span>
-          <input value={plates} onChange={(e) => { setPlatesEdited(true); setPlates(e.target.value); }} disabled={!s} className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular outline-none focus:border-gold disabled:opacity-50" />
+          <input value={plates} onChange={(e) => { setPlatesEdited(true); setPlates(e.target.value); }} disabled={!s} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular outline-none focus:border-gold disabled:opacity-50" />
         </label>
         <button onClick={saveGym} disabled={!s || save.isPending} className="mt-4 rounded-xl gold-gradient px-4 py-2 text-sm font-semibold disabled:opacity-50" style={{ color: "var(--gold-foreground)" }}>{save.isPending ? "Guardando…" : "Guardar"}</button>
       </section>
@@ -95,9 +95,9 @@ function SettingsPage() {
         <h2 className="text-sm font-semibold">Perfil y seguridad</h2>
         <label className="mt-3 block">
           <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">Cambiar mi PIN</span>
-          <input type="password" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))} className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular tracking-widest outline-none focus:border-gold" />
+          <input type="password" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular tracking-widest outline-none focus:border-gold" />
         </label>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
           <button onClick={changePin} className="rounded-xl bg-surface-2 px-4 py-2 text-sm font-medium">Actualizar PIN</button>
           <button onClick={switchProfile} className="rounded-xl border border-border px-4 py-2 text-sm font-medium">Cambiar de perfil</button>
           <button onClick={removeProfile} className="rounded-xl border border-destructive/40 text-destructive px-4 py-2 text-sm font-medium">Eliminar mi perfil</button>

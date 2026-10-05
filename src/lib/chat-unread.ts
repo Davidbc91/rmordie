@@ -17,12 +17,12 @@ export function markChatSeen() {
   window.dispatchEvent(new Event(EVENT));
 }
 
-export function useChatUnread(): number {
+export function useChatUnread(enabled = true): number {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    const uid = getCurrentUserId();
+    if (!enabled) return;\n    const uid = getCurrentUserId();
 
     async function refresh() {
       if (!uid) return;
@@ -53,7 +53,7 @@ export function useChatUnread(): number {
       window.removeEventListener("focus", refresh);
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [enabled]);
 
   return count;
 }

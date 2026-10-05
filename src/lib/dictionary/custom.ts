@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import type { Movement } from "./types";
 
 let cachedCustomMovements: Movement[] = [];
@@ -46,4 +47,13 @@ export function setCustomMovements(value: Movement[]) {
 
 export function getCustomMovementCacheVersion() {
   return cacheVersion;
+}
+
+
+export function useCustomMovements() {
+  return useQuery({
+    queryKey: ["custom-movements"],
+    queryFn: fetchCustomMovements,
+    staleTime: 5 * 60_000,
+  });
 }

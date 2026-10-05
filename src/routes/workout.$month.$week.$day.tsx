@@ -74,6 +74,7 @@ function WorkoutPage() {
   const createPost = useCreatePost();
   const { data: wellnessLogs = [] } = useWellnessLogs();
   const formsRef = useRef<Record<string, () => BlockPayload>>({});
+  const prRef = useRef<Record<string, () => Promise<boolean>>>({});
   const wodRef = useRef<Record<string, () => WodSaveInput | null>>({});
   const [savingAll, setSavingAll] = useState(false);
   const [celebrate, setCelebrate] = useState<{ data: PrCelebrationData; outcome: PrOutcome } | null>(null);
@@ -151,6 +152,8 @@ function WorkoutPage() {
         const block = get();
         payloads.push(block);
         await save.mutateAsync({ month_key: month, week: weekN, day_key: day, ...block });
+        const strengthPr = await prRef.current[blockKey]?.();
+        if (strengthPr) toast.success(`Nuevo 1RM: ${formatKg(Number(block.weight))} kg`);
         const out = await persistWod(blockKey);
         if (out) {
           wodOutcomes.push(out);
@@ -325,6 +328,7 @@ function WorkoutPage() {
               existingWod={existingWod}
               settings={settings}
               register={(fn) => { formsRef.current[b.key] = fn; }}
+              registerPr={(fn) => { prRef.current[b.key] = fn; }}
               registerWod={(fn) => { wodRef.current[b.key] = fn; }}
               onWodSaved={(out) => {
                 if (out.kind === "pr" || out.kind === "matched") {
@@ -409,19 +413,19 @@ function estimateOneRm(weight: number, reps: number): number | null {
 }
 
 function BlockCard({
-  blockKey, content, existing, existingWod, settings, contextIds, register, registerWod, persistWod, onWodSaved,
+  blockKey, content, existing, existingWod, settings, contextIds, register, registerPr, registerWod, persistWod, onWodSaved,
 }: {
   blockKey: string; content: string;
   existing: import("@/lib/store").WorkoutResult | undefined;
   existingWod: WodResult | null;
   settings: import("@/lib/store").AppSettings | undefined;
   register: (fn: () => BlockPayload) => void;
+  registerPr: (fn: () => Promise<boolean>) => void;
   registerWod: (fn: () => WodSaveInput | null) => void;
   persistWod: () => Promise<PrOutcome | null>;
   onWodSaved: (out: PrOutcome) => void;
   contextIds: { month_key: string; week: number; day_key: string };
 }) {
-  const save = useSaveResult();
   const upsertRecord = useUpsertPersonalRecord();
   const { data: records = [] } = usePersonalRecords();
   const [weight, setWeight] = useState<string>(existing?.weight?.toString() ?? "");
@@ -439,7 +443,6 @@ function BlockCard({
   const [wodTime, setWodTime] = useState<string>(existingWod?.time_seconds ? formatTime(existingWod.time_seconds) : "");
   const [wodRounds, setWodRounds] = useState<string>(existingWod?.rounds?.toString() ?? "");
   const [wodReps, setWodReps] = useState<string>(existingWod?.reps?.toString() ?? "");
-  const [savingWod, setSavingWod] = useState(false);
 
   // Restaurar borrador (valores escritos y no guardados) al volver a la pantalla
   useEffect(() => {
@@ -550,6 +553,7 @@ function BlockCard({
 
   useEffect(() => {
     register(payload);
+    registerPr(maybeSaveStrengthPr);
     registerWod(wodPayload);
   });
 
@@ -564,22 +568,6 @@ function BlockCard({
     if (current && w <= Number(current.weight)) return false;
     await upsertRecord.mutateAsync({ exercise: movement.name, weight: w, rep_max: 1 });
     return true;
-  }
-
-  async function onSaveClick() {
-    await save.mutateAsync({ ...contextIds, ...payload() });
-    const strengthPr = await maybeSaveStrengthPr();
-    if (strengthPr) toast.success(`Nuevo 1RM: ${formatKg(Number(weight.replace(",", ".")))} kg`);
-    if (wod) {
-      setSavingWod(true);
-      try {
-        const out = await persistWod();
-        if (out) onWodSaved(out);
-      } finally {
-        setSavingWod(false);
-      }
-    }
-    toast.success(`${blockKey} guardado`);
   }
 
   return (
@@ -706,7 +694,7 @@ function BlockCard({
               />
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Se guardará automáticamente como marca en WOD PRs.
+              Se guardará al guardar el entrenamiento completo.
             </p>
           </div>
         )}
@@ -776,13 +764,7 @@ function BlockCard({
           className="mt-3 w-full rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] outline-none transition focus:border-[rgba(216,180,107,0.55)]"
         />
 
-        <button
-          onClick={onSaveClick}
-          disabled={save.isPending || savingWod}
-          className="pressable mt-4 min-h-[50px] w-full rounded-[var(--r-md)] border border-[color:var(--glass-border-strong)] bg-[color:var(--glass-bg-2)] text-sm font-semibold text-foreground disabled:opacity-45"
-        >
-        {save.isPending || savingWod ? "Guardando…" : (existing ? "Actualizar" : "Guardar")}
-        </button>
+
       </div>
       )}
     </div>

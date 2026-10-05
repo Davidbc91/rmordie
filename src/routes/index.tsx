@@ -217,7 +217,7 @@ function Home() {
   }, [analyticsReady, deferredPlanning, next, blockMap]);
 
 
-  const streak = useMemo(() => analyticsReady ? streaks(deferredResults) : null, [analyticsReady, deferredResults]);
+  const streak = useMemo(() => analyticsReady ? streaks(deferredResults) : { current: 0, best: 0 }, [analyticsReady, deferredResults]);
   const weekStats = useMemo(() => {
     if (!analyticsReady) return { sessions: 0, volume: 0, avgRpe: null as number | null };
     const cutoff = Date.now() - 7 * 864e5;
@@ -231,7 +231,7 @@ function Home() {
   const activeGoal = useMemo(() => goals.find((g) => g.status !== "completed"), [goals]);
 
   const smartState = useMemo(() => {
-    if (!analyticsReady) return null;
+    if (!analyticsReady) return { tone: "neutral", title: "Analizando tu rendimiento…", detail: "Cargando métricas de entrenamiento.", sessions: 0, volume: 0, avgRpe: null as number | null };
     const cutoff = Date.now() - 7 * 864e5;
     const recent = results.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
     const rpes = recent.map((r) => r.rpe).filter((x): x is number => x != null);
@@ -250,7 +250,7 @@ function Home() {
   }, [analyticsReady, deferredResults]);
 
   const dashboardTrend = useMemo(() => {
-    if (!analyticsReady) return null;
+    if (!analyticsReady) return { weeks: [], volumeChange: null, recoveryAvg: null, latestWellness: undefined };
     const weeks = Array.from({ length: 8 }, (_, i) => {
       const end = new Date(); end.setHours(23,59,59,999); end.setDate(end.getDate() - (7 - i) * 7);
       const start = new Date(end); start.setDate(end.getDate() - 6); start.setHours(0,0,0,0);

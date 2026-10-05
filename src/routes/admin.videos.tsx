@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, AlertTriangle, Check, CheckCircle2, ExternalLink, KeyRound, Link2, Loader2, Search, Trash2, Upload, X } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { movements } from "@/lib/dictionary/catalog";
+import { useCustomMovements } from "@/lib/dictionary/custom";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { useProfiles } from "@/lib/store";
@@ -37,6 +38,15 @@ function AdminVideosPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [youtubeDrafts, setYoutubeDrafts] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
+  const { data: customMovements = [] } = useCustomMovements();
+  const allMovements = useMemo(() => [...movements, ...customMovements], [customMovements]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newMovement, setNewMovement] = useState({
+    name: "", nameEs: "", aliases: "", category: "Personalizado", equipment: "",
+    level: "Intermediate" as "Beginner" | "Intermediate" | "Advanced", rm: false,
+    description: "", technique: "", commonMistakes: "", progressions: "", regressions: "", muscles: "", videoUrl: "",
+  });
 
   const { data: admin, isLoading: checking } = useQuery({
     queryKey: ["video-admin", profileId],
@@ -85,7 +95,7 @@ function AdminVideosPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return movements.filter((movement) => {
+    return allMovements.filter((movement) => {
       const matchesSearch = !q || [movement.id, movement.name, movement.nameEs].some((value) =>
         value.toLowerCase().includes(q),
       );
@@ -96,7 +106,7 @@ function AdminVideosPage() {
       if (reviewFilter === "all") return true;
       return status === reviewFilter;
     });
-  }, [search, reviewFilter, videoByMovement, reviewByMovement]);
+  }, [search, reviewFilter, videoByMovement, reviewByMovement, allMovements]);
 
   const stats = useMemo(() => {
     let configured = 0;
@@ -104,7 +114,7 @@ function AdminVideosPage() {
     let verified = 0;
     let needsReview = 0;
     let pending = 0;
-    for (const movement of movements) {
+    for (const movement of allMovements) {
       const managed = videoByMovement.get(movement.id);
       const hasCatalogVideo = !!getDictionaryVideoId(movement.videoUrl);
       if (managed || hasCatalogVideo) configured++;
@@ -115,16 +125,16 @@ function AdminVideosPage() {
       else if (status === "pending") pending++;
     }
     return {
-      total: movements.length,
+      total: allMovements.length,
       configured,
-      missing: movements.length - configured,
+      missing: allMovements.length - configured,
       uploads: videos.filter((v) => v.source_type === "upload").length,
       youtube: videos.filter((v) => v.source_type === "youtube").length + catalogYoutube,
       verified,
       needsReview,
       pending,
     };
-  }, [videoByMovement, videos, reviewByMovement]);
+  }, [videoByMovement, videos, reviewByMovement, allMovements]);
 
   async function unlock() {
     setPinError("");
@@ -134,6 +144,47 @@ function AdminVideosPage() {
       setPin("");
     } catch {
       setPinError("PIN incorrecto.");
+    }
+  }
+
+  async function createMovement() {
+    if (!pinHash) return;
+    if (!newMovement.name.trim() || !newMovement.nameEs.trim()) {
+      setNotice("Necesitas nombre y nombre en español.");
+      return;
+    }
+    setCreating(true);
+    setNotice("");
+    const list = (value: string) => value.split(/[\\n,]/).map((x) => x.trim()).filter(Boolean);
+    try {
+      await createCustomMovement(pinHash, {
+        name: newMovement.name,
+        nameEs: newMovement.nameEs,
+        aliases: list(newMovement.aliases),
+        category: newMovement.category,
+        equipment: list(newMovement.equipment),
+        level: newMovement.level,
+        rm: newMovement.rm,
+        description: newMovement.description,
+        technique: list(newMovement.technique),
+        commonMistakes: list(newMovement.commonMistakes),
+        progressions: list(newMovement.progressions),
+        regressions: list(newMovement.regressions),
+        muscles: list(newMovement.muscles),
+        videoUrl: newMovement.videoUrl,
+      });
+      await qc.invalidateQueries({ queryKey: ["custom-movements"] });
+      setNewMovement({
+        name: "", nameEs: "", aliases: "", category: "Personalizado", equipment: "",
+        level: "Intermediate", rm: false, description: "", technique: "", commonMistakes: "",
+        progressions: "", regressions: "", muscles: "", videoUrl: "",
+      });
+      setShowCreate(false);
+      setNotice("Movimiento personalizado creado. Ya forma parte del diccionario y del detector automático.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "No se pudo crear el movimiento.");
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -291,6 +342,56 @@ function AdminVideosPage() {
           <span>{notice}</span>
         </div>
       )}
+
+      <div className="mt-5 cinematic-card-strong rounded-[24px] p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <span className="cinematic-label">DICCIONARIO</span>
+            <h2 className="mt-1 text-lg font-semibold">Crear movimiento personalizado</h2>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Añade un movimiento que no exista en el catálogo. Quedará disponible para todos y el detector podrá reconocerlo.
+            </p>
+          </div>
+          <button type="button" onClick={() => setShowCreate((v) => !v)} className="shrink-0 rounded-xl border border-[rgba(200,169,107,.3)] px-3 py-2 text-xs font-semibold text-[var(--gold)]">
+            {showCreate ? "Cerrar" : "Nuevo"}
+          </button>
+        </div>
+
+        {showCreate && (
+          <form onSubmit={(e) => { e.preventDefault(); void createMovement(); }} className="mt-5 space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Nombre"><input required value={newMovement.name} onChange={(e) => setNewMovement((s) => ({ ...s, name: e.target.value }))} placeholder="Ej. Cyclist Squat" /></Field>
+              <Field label="Nombre en español"><input required value={newMovement.nameEs} onChange={(e) => setNewMovement((s) => ({ ...s, nameEs: e.target.value }))} placeholder="Ej. Sentadilla ciclista" /></Field>
+              <Field label="Alias, separados por coma"><input value={newMovement.aliases} onChange={(e) => setNewMovement((s) => ({ ...s, aliases: e.target.value }))} placeholder="cyclist squat, heel elevated squat" /></Field>
+              <Field label="Categoría"><input value={newMovement.category} onChange={(e) => setNewMovement((s) => ({ ...s, category: e.target.value }))} placeholder="Fuerza" /></Field>
+              <Field label="Equipamiento"><input value={newMovement.equipment} onChange={(e) => setNewMovement((s) => ({ ...s, equipment: e.target.value }))} placeholder="Barra, discos" /></Field>
+              <Field label="Nivel">
+                <select value={newMovement.level} onChange={(e) => setNewMovement((s) => ({ ...s, level: e.target.value as typeof s.level }))}>
+                  <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+                </select>
+              </Field>
+            </div>
+            <Field label="Descripción"><textarea value={newMovement.description} onChange={(e) => setNewMovement((s) => ({ ...s, description: e.target.value }))} rows={3} placeholder="Qué es y para qué sirve..." /></Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Técnica, una línea por paso"><textarea value={newMovement.technique} onChange={(e) => setNewMovement((s) => ({ ...s, technique: e.target.value }))} rows={4} placeholder={"Postura inicial\nEjecuta el movimiento\nFinaliza..."}/></Field>
+              <Field label="Errores frecuentes"><textarea value={newMovement.commonMistakes} onChange={(e) => setNewMovement((s) => ({ ...s, commonMistakes: e.target.value }))} rows={4} placeholder={"Rodillas colapsan\nPierdes tensión..."}/></Field>
+              <Field label="Progresiones"><textarea value={newMovement.progressions} onChange={(e) => setNewMovement((s) => ({ ...s, progressions: e.target.value }))} rows={3} /></Field>
+              <Field label="Regresiones"><textarea value={newMovement.regressions} onChange={(e) => setNewMovement((s) => ({ ...s, regressions: e.target.value }))} rows={3} /></Field>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="Músculos"><input value={newMovement.muscles} onChange={(e) => setNewMovement((s) => ({ ...s, muscles: e.target.value }))} placeholder="Cuádriceps, glúteos" /></Field>
+              <Field label="Vídeo YouTube"><input value={newMovement.videoUrl} onChange={(e) => setNewMovement((s) => ({ ...s, videoUrl: e.target.value }))} placeholder="https://youtube.com/..." /></Field>
+              <label className="flex min-h-11 items-center gap-2 rounded-xl border border-white/8 bg-black/15 px-3 text-xs">
+                <input type="checkbox" checked={newMovement.rm} onChange={(e) => setNewMovement((s) => ({ ...s, rm: e.target.checked }))} />
+                <span>Usar para RM</span>
+              </label>
+            </div>
+            <button type="submit" disabled={creating} className="h-12 w-full rounded-2xl gold-gradient font-semibold disabled:opacity-50" style={{ color: "var(--gold-foreground)" }}>
+              {creating ? "Creando ficha..." : "Crear ficha personalizada"}
+            </button>
+          </form>
+        )}
+      </div>
 
       <div className="cinematic-card-dark mt-5 flex items-center gap-3 rounded-2xl px-4 py-3">
         <Search className="h-4 w-4 text-muted-foreground" />
@@ -465,5 +566,17 @@ function AdminStat({ label, value }: { label: string; value: number }) {
       <p className="cinematic-label">{label}</p>
       <p className="mt-1 text-xl font-semibold tabular">{value}</p>
     </div>
+  );
+}
+
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[.18em] text-muted-foreground">{label}</span>
+      <span className="[&_input]:min-h-11 [&_input]:w-full [&_input]:rounded-xl [&_input]:border [&_input]:border-white/10 [&_input]:bg-black/20 [&_input]:px-3 [&_input]:text-sm [&_input]:outline-none [&_textarea]:w-full [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-white/10 [&_textarea]:bg-black/20 [&_textarea]:px-3 [&_textarea]:py-3 [&_textarea]:text-sm [&_textarea]:outline-none [&_select]:min-h-11 [&_select]:w-full [&_select]:rounded-xl [&_select]:border [&_select]:border-white/10 [&_select]:bg-black/20 [&_select]:px-3 [&_select]:text-sm [&_select]:outline-none">
+        {children}
+      </span>
+    </label>
   );
 }

@@ -174,7 +174,7 @@ function AthleteReport() {
     if (planning?.source_filename) add(`Plan activo: ${planning.source_filename}`);
 
     const pdf = buildSimplePdf(lines);
-    const blob = new Blob([pdf], { type: "application/pdf" });
+    const blob = new Blob([pdf as unknown as BlobPart], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;

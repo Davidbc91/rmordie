@@ -26,6 +26,7 @@ import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebratio
 import { useCreatePost } from "@/lib/social";
 import { useWellnessLogs } from "@/lib/profile-store";
 import { getCurrentUserId } from "@/lib/pin-gate";
+import { downloadSessionReport, type SessionReportLoad, type SessionReportWod } from "@/lib/session-report";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
   head: () => ({ meta: [{ title: "Entrenamiento — RMORDIE" }] }),
@@ -40,6 +41,8 @@ type WorkoutReview = {
   estimatedBest: number | null;
   recovery: { sleep: number | null; energy: number | null; mood: number | null } | null;
   recommendation: string;
+  loads: SessionReportLoad[];
+  wods: SessionReportWod[];
 };
 
 type BlockPayload = {
@@ -125,7 +128,7 @@ function WorkoutPage() {
         payloads.push(block);
         await save.mutateAsync({ month_key: month, week: weekN, day_key: day, ...block });
         const out = await persistWod(blockKey);
-        if (out && (out.kind === "pr" || out.kind === "matched")) prs.push(out);
+        if (out) {\n          wodOutcomes.push(out);\n          if (out.kind === "pr" || out.kind === "matched") prs.push(out);\n        }
       }
       const weightedRpes = payloads.filter((b) => b.rpe != null);
       const avgRpe = weightedRpes.length
@@ -212,7 +215,7 @@ function WorkoutPage() {
   return (
     <AppShell>
       {review && (
-        <WorkoutReviewCard review={review} onClose={() => { setReview(null); navigate({ to: "/" }); }} />
+        <WorkoutReviewCard review={review} onClose={() => { setReview(null); navigate({ to: "/" }); }} onDownload={() => downloadSessionReport({ title: `${month} · Semana ${weekN} · ${day}`, date: new Date().toLocaleDateString("es-ES"), rpe: review.avgRpe, loads: review.loads, wods: review.wods })} />
       )}
 
       {celebrate && (
@@ -292,7 +295,7 @@ function WorkoutPage() {
 }
 
 
-function WorkoutReviewCard({ review, onClose }: { review: WorkoutReview; onClose: () => void }) {
+function WorkoutReviewCard({ review, onClose, onDownload }: { review: WorkoutReview; onClose: () => void; onDownload: () => void }) {
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center">
       <div className="cinematic-card-strong w-full max-w-lg rounded-[28px] p-5 sm:p-6">

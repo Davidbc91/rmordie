@@ -40,7 +40,7 @@ export function useChatUnread(enabled = true): number {
     window.addEventListener("focus", refresh);
 
     const channel = supabase
-      .channel("chat_unread_badge")
+      .channel(`chat_unread_badge_${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "chat_messages" },

@@ -81,7 +81,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           paddingTop: "calc(env(safe-area-inset-top) + 2rem)",
         }}
       >
-        {header}{children}
+        <header className="mb-5 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setProfileOpen((v) => !v)}
+            aria-expanded={profileOpen}
+            className="pressable flex items-center gap-2 rounded-full px-1 py-1 text-left"
+          >
+            <span className="eyebrow tracking-[0.34em] text-gold/90">RM / OR DIE</span>
+            <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${profileOpen ? "rotate-180" : ""}`} />
+          </button>
+          <SyncIndicator />
+        </header>
+        {children}
       </main>
 
       {showResume && active && (
@@ -180,8 +192,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
-
-      <SyncIndicator />
 
       <nav className="fixed inset-x-0 bottom-0" style={{ zIndex: 2147483000 }}>
         <div

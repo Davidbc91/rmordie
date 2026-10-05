@@ -123,3 +123,31 @@ export async function reviewMovementVideo(
     notes: notes ?? null,
   });
 }
+
+export type CustomMovementInput = {
+  name: string;
+  nameEs: string;
+  aliases: string[];
+  category: string;
+  equipment: string[];
+  level: "Beginner" | "Intermediate" | "Advanced";
+  rm: boolean;
+  description: string;
+  technique: string[];
+  commonMistakes: string[];
+  progressions: string[];
+  regressions: string[];
+  muscles: string[];
+  videoUrl?: string;
+};
+
+export async function createCustomMovement(pinHash: string, movement: CustomMovementInput) {
+  const profileId = getCurrentUserId();
+  if (!profileId) throw new Error("No hay perfil activo");
+  return invoke({
+    action: "create_custom_movement",
+    profile_id: profileId,
+    pin_hash: pinHash,
+    movement,
+  }) as Promise<{ id: string }>;
+}

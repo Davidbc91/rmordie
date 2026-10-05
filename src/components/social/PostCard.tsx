@@ -85,7 +85,84 @@ function DataBlock({ post }: { post: Post }) {
       </div>
     );
   }
-  if (post.kind === "workout" || post.kind === "progress") {
+  if (post.kind === "workout") {
+    const loads = Array.isArray(d.loads) ? d.loads : [];
+    const wods = Array.isArray(d.wods) ? d.wods : [];
+    const hasSummary = d.volume != null || d.avg_rpe != null || d.blocks != null || d.prs != null;
+    if (!hasSummary && !loads.length && !wods.length && !d.title) return null;
+
+    return (
+      <div
+        className="mt-3 overflow-hidden rounded-[22px] border"
+        style={{
+          borderColor: "rgba(200,179,138,0.24)",
+          background: "linear-gradient(145deg, rgba(200,179,138,0.11), rgba(255,255,255,0.035) 42%, rgba(255,255,255,0.02))",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
+        }}
+      >
+        <div className="border-b px-4 pb-3 pt-4" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.28em] text-gold/80">RM / OR DIE · SESSION</p>
+              <p className="mt-1 truncate text-base font-semibold">
+                {d.day ? `${d.month ?? ""} · S${d.week ?? ""} · ${d.day}` : (d.title ?? "Entreno completado")}
+              </p>
+            </div>
+            {Number(d.prs) > 0 && (
+              <span className="shrink-0 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em]" style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}>
+                {d.prs} PR{Number(d.prs) === 1 ? "" : "s"}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {hasSummary && (
+          <div className="grid grid-cols-2 gap-px border-b" style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.06)" }}>
+            <WorkoutMetric label="Volumen" value={d.volume != null ? `${Math.round(Number(d.volume)).toLocaleString("es-ES")} kg` : "—"} />
+            <WorkoutMetric label="RPE medio" value={d.avg_rpe != null ? Number(d.avg_rpe).toFixed(1) : "—"} />
+            <WorkoutMetric label="Bloques" value={d.blocks != null ? String(d.blocks) : "—"} />
+            <WorkoutMetric label="WODs" value={String(wods.length)} />
+          </div>
+        )}
+
+        {wods.length > 0 && (
+          <div className="space-y-2 p-3">
+            <p className="px-1 text-[9px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">WOD · RESULTADO</p>
+            {wods.slice(0, 3).map((w: any, i: number) => (
+              <div key={i} className="flex items-center justify-between gap-3 rounded-[14px] border px-3 py-2.5" style={{ borderColor: "rgba(255,255,255,0.07)", background: "rgba(0,0,0,0.16)" }}>
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold">{w.name || "WOD"}</p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">{w.type ?? "WOD"} · {w.scale ?? "RX"}{w.isPr ? " · PR" : ""}</p>
+                </div>
+                <span className="shrink-0 text-sm font-semibold tabular text-gold">{w.result ?? "—"}</span>
+              </div>
+            ))}
+            {wods.length > 3 && <p className="px-1 text-[10px] text-muted-foreground">+{wods.length - 3} WODs más</p>}
+          </div>
+        )}
+
+        {loads.length > 0 && (
+          <details className="border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+            <summary className="cursor-pointer px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Ver cargas · {loads.length} bloques
+            </summary>
+            <div className="space-y-1.5 px-3 pb-3">
+              {loads.slice(0, 8).map((load: any, i: number) => (
+                <div key={i} className="flex items-center justify-between gap-3 rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.035)" }}>
+                  <span className="min-w-0 truncate text-xs">{load.block ?? `Bloque ${i + 1}`}</span>
+                  <span className="shrink-0 text-xs font-semibold tabular">
+                    {load.weight != null ? `${load.weight} kg` : "Sin carga"}{load.reps != null ? ` · ${load.reps} reps` : ""}{load.rpe != null ? ` · RPE ${load.rpe}` : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+      </div>
+    );
+  }
+
+  if (post.kind === "progress") {
     const items: Array<[string, string]> = [];
     if (d.weight != null) items.push(["Peso", `${d.weight} kg`]);
     if (d.sets != null) items.push(["Series", String(d.sets)]);
@@ -107,6 +184,15 @@ function DataBlock({ post }: { post: Post }) {
     );
   }
   return null;
+}
+
+function WorkoutMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-black/15 px-3 py-3.5">
+      <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-lg font-semibold tabular">{value}</p>
+    </div>
+  );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {

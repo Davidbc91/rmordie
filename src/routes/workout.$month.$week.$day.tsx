@@ -6,7 +6,7 @@ import { extractPercentages, roundToPlates } from "@/lib/plates";
 import { detectExercise, loadsForPercentages, formatKg, compareLoads, LOAD_STATUS_LABEL } from "@/lib/rm-matcher";
 import { resolveMovementId } from "@/lib/dictionary/resolve";
 import { movements } from "@/lib/dictionary/catalog";
-import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy } from "lucide-react";
+import { ChevronLeft, Sparkles, Check, CheckCheck, Timer, Trophy, Share2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -254,7 +254,34 @@ function WorkoutPage() {
   return (
     <AppShell>
       {review && (
-        <WorkoutReviewCard review={review} onClose={() => { setReview(null); navigate({ to: "/" }); }} onDownload={() => downloadSessionReport({ title: `${month} · Semana ${weekN} · ${day}`, date: new Date().toLocaleDateString("es-ES"), rpe: review.avgRpe, loads: review.loads, wods: review.wods })} />
+        <WorkoutReviewCard
+        review={review}
+        onClose={() => { setReview(null); navigate({ to: "/" }); }}
+        onDownload={() => downloadSessionReport({ title: `${month} · Semana ${weekN} · ${day}`, date: new Date().toLocaleDateString("es-ES"), rpe: review.avgRpe, loads: review.loads, wods: review.wods })}
+        sharing={createPost.isPending}
+        onShare={async () => {
+          try {
+            await createPost.mutateAsync({
+              kind: "workout",
+              caption: `Entreno completado · ${month} · S${weekN} · ${day} #workout #rmordie`,
+              data: {
+                month,
+                week: weekN,
+                day,
+                volume: review.volume,
+                avg_rpe: review.avgRpe,
+                blocks: review.blocks,
+                prs: review.prs,
+                loads: review.loads,
+                wods: review.wods,
+              },
+            });
+            toast.success("Entreno compartido en tu feed");
+          } catch (e: any) {
+            toast.error(e?.message ?? "No se pudo compartir el entreno");
+          }
+        }}
+      />
       )}
 
       {celebrate && (
@@ -346,7 +373,7 @@ function WorkoutPage() {
 }
 
 
-function WorkoutReviewCard({ review, onClose, onDownload }: { review: WorkoutReview; onClose: () => void; onDownload: () => void }) {
+function WorkoutReviewCard({ review, onClose, onDownload, onShare, sharing }: { review: WorkoutReview; onClose: () => void; onDownload: () => void; onShare: () => void | Promise<void>; sharing: boolean }) {
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center">
       <div className="cinematic-card-strong max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-[28px] p-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] sm:max-h-[90vh] sm:p-6">
@@ -378,11 +405,15 @@ function WorkoutReviewCard({ review, onClose, onDownload }: { review: WorkoutRev
           </div>
         )}
 
-        <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <button type="button" onClick={onDownload} className="h-12 rounded-2xl border border-white/10 bg-white/5 font-semibold">
-            Generar informe de sesión
+        <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <button type="button" onClick={onShare} disabled={sharing} className="pressable flex h-12 items-center justify-center gap-2 rounded-2xl border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/8 font-semibold disabled:opacity-50">
+            <Share2 className="h-4 w-4" />
+            {sharing ? "Compartiendo…" : "Compartir entreno"}
           </button>
-          <button type="button" onClick={onClose} className="h-12 rounded-2xl gold-gradient font-semibold" style={{ color: "var(--gold-foreground)" }}>
+          <button type="button" onClick={onDownload} className="pressable h-12 rounded-2xl border border-white/10 bg-white/5 font-semibold">
+            Generar informe
+          </button>
+          <button type="button" onClick={onClose} className="pressable h-12 rounded-2xl gold-gradient font-semibold" style={{ color: "var(--gold-foreground)" }}>
             Continuar
           </button>
         </div>

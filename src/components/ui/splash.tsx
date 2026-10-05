@@ -7,7 +7,7 @@ export function SplashScreen({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => setFading(true), 1700);
-    const hideTimer = setTimeout(() => setVisible(false), 2150);
+    const hideTimer = setTimeout(() => setVisible(false), 2250);
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(hideTimer);
@@ -16,18 +16,22 @@ export function SplashScreen({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {children}
+      <div
+        className={"transition-opacity duration-300 " + (visible ? "opacity-0" : "opacity-100")}
+        aria-hidden={visible}
+      >
+        {children}
+      </div>
+
       {visible && (
         <div
           aria-hidden
-          className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden transition-opacity duration-500 ${
-            fading ? "opacity-0" : "opacity-100"
-          }`}
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
           style={{ background: "#000000" }}
         >
           <div className="splash-aura pointer-events-none absolute inset-0" />
           <div className="splash-pulse pointer-events-none absolute h-56 w-56 rounded-[44px]" />
-          <div className="splash-mark relative flex flex-col items-center">
+          <div className={"splash-mark relative flex flex-col items-center " + (fading ? "splash-fade-out" : "")}>
             <img
               src={logoAsset.url}
               alt="RM OR DIE"
@@ -51,6 +55,9 @@ export function SplashScreen({ children }: { children: ReactNode }) {
               animation: splash-ring 1800ms cubic-bezier(0.22, 1, 0.36, 1) 320ms infinite;
             }
             .splash-mark { animation: splash-in 720ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+            .splash-mark.splash-fade-out {
+              animation: splash-out 430ms cubic-bezier(0.4, 0, 0.2, 1) both;
+            }
             .splash-logo {
               box-shadow: 0 24px 70px rgba(255,255,255,0.14);
               animation: splash-logo 1500ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -65,6 +72,10 @@ export function SplashScreen({ children }: { children: ReactNode }) {
               0% { transform: scale(0.72) rotate(-6deg); opacity: 0; filter: blur(6px); }
               55% { transform: scale(1.06) rotate(1deg); opacity: 1; filter: blur(0); }
               100% { transform: scale(1) rotate(0deg); opacity: 1; filter: blur(0); }
+            }
+            @keyframes splash-out {
+              0% { transform: scale(1); opacity: 1; filter: blur(0); }
+              100% { transform: scale(1.035); opacity: 0; filter: blur(5px); }
             }
             @keyframes splash-ring {
               0% { transform: scale(0.85); opacity: 0.55; }

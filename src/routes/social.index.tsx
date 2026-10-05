@@ -36,6 +36,7 @@ function SocialFeed() {
   const list = tab === "saved" ? saved : posts;
 
   return (
+    <>
       <header className="rise rise-1 mb-6">
         <p className="eyebrow">Comunidad</p>
         <h1 className="mt-3 text-[2.2rem] font-semibold leading-[0.95] tracking-tight">Social</h1>
@@ -90,6 +91,7 @@ function SocialFeed() {
       </button>
 
       {composing && <Composer onClose={() => setComposing(false)} />}
+    </>
   );
 }
 

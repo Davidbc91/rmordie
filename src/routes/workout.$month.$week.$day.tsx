@@ -27,6 +27,7 @@ import { useCreatePost } from "@/lib/social";
 import { useWellnessLogs } from "@/lib/profile-store";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { downloadSessionReport, type SessionReportLoad, type SessionReportWod } from "@/lib/session-report";
+import { renderWorkoutCard, shareOrDownloadCard } from "@/lib/share-card";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
   head: () => ({ meta: [{ title: "Entrenamiento — RMORDIE" }] }),
@@ -79,6 +80,7 @@ function WorkoutPage() {
   const [savingAll, setSavingAll] = useState(false);
   const [celebrate, setCelebrate] = useState<{ data: PrCelebrationData; outcome: PrOutcome } | null>(null);
   const [review, setReview] = useState<WorkoutReview | null>(null);
+  const [sharingCard, setSharingCard] = useState(false);
 
   useEffect(() => {
     setActiveWorkout({ month, week: weekN, day, label: `${month} · S${weekN} · ${day}` });
@@ -346,11 +348,11 @@ function WorkoutPage() {
         <button
           type="button"
           onClick={shareToday}
-          disabled={createPost.isPending}
+          disabled={sharingCard}
           className="pressable mb-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/8 text-sm font-semibold disabled:opacity-50"
         >
           <Share2 className="h-4 w-4" />
-          {createPost.isPending ? "Compartiendo…" : "Compartir entreno con mis compañeros"}
+          {sharingCard ? "Generando imagen…" : "Compartir imagen del entreno"}
         </button>
       )}
 

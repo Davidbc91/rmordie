@@ -176,7 +176,7 @@ function ChatPage() {
 
   return (
     <AppShell>
-      <div className="flex flex-col" style={{ height: "calc(100vh - 10rem)" }}>
+      <div\n        className="flex flex-col"\n        style={{\n          height: "calc(100dvh - 10rem)",\n          boxSizing: "border-box",\n          paddingBottom: "calc(max(env(safe-area-inset-bottom), 12px) + 104px)",\n        }}\n      >
         <header className="mb-3 flex items-center gap-2">
           <MessageCircle className="h-5 w-5" style={{ color: "var(--gold)" }} />
           <div className="min-w-0 flex-1">

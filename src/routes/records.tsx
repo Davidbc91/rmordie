@@ -84,17 +84,18 @@ function RecordsPage() {
 
   return (
     <AppShell>
-      <header className="rise rise-1 mb-6">
+      <header className="rise rise-1 mb-7 glass-panel glass-refraction rounded-[28px] p-6">
         <div className="flex items-center gap-2">
           <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-gold" />
           <p className="cinematic-label">PERSONAL RECORDS</p>
         </div>
-        <h1 className="cinematic-title mt-5">
+        <p className="mt-3 text-xs text-muted-foreground">Tu fuerza, evolución y próximos objetivos en un solo lugar.</p>
+        <h1 className="cinematic-title mt-4 text-[3.4rem] leading-[.88]">
           {category === "wods" ? "WOD PRs" : "Mis RM"}
         </h1>
       </header>
 
-      <div className="rise rise-2 cinematic-card-dark mb-5 flex gap-1 rounded-2xl border border-white/[.08] p-1">
+      <div className="rise rise-2 glass-panel mb-5 flex gap-1 rounded-[20px] border-white/[.14] p-1.5">
         {([
           { label: "Fuerza", value: "strength" as const },
           { label: "WODs", value: "wods" as const },
@@ -235,7 +236,7 @@ function ProgressionRecommendations({
   if (!recommendations.length) return null;
 
   return (
-    <section className="rise rise-2 cinematic-card-strong mb-5 rounded-[24px] p-5">
+    <section className="rise rise-2 glass-panel glass-refraction mb-5 rounded-[28px] p-5">
       <p className="cinematic-label">LOAD STRATEGY</p>
       <h2 className="mt-2 text-xl font-semibold tracking-tight">Sugerencias según tu historial</h2>
       <p className="mt-1 text-xs text-muted-foreground">
@@ -423,7 +424,7 @@ function StrengthRecords({
       </div>
 
       {showAdd && (
-        <form onSubmit={handleAdd} className="cinematic-card-strong animate-fade mb-6 space-y-4 rounded-[24px] p-5">
+        <form onSubmit={handleAdd} className="glass-panel glass-refraction animate-fade mb-6 space-y-4 rounded-[28px] p-5">
           <div>
             <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               Tipo de RM
@@ -525,7 +526,7 @@ function StrengthRecords({
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando…</p>
       ) : visible.length === 0 ? (
-        <div className="cinematic-card-strong rounded-[24px] p-10 text-center">
+        <div className="glass-panel rounded-[28px] p-10 text-center">
           <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-border">
             <Trophy className="h-5 w-5" strokeWidth={1.5} />
           </div>
@@ -754,7 +755,7 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
       onClick={onClose}
     >
       <div
-        className="cinematic-card-strong animate-fade max-h-[calc(100dvh-72px-env(safe-area-inset-bottom)-16px)] w-full max-w-md overflow-x-hidden overflow-y-auto overscroll-contain rounded-b-none p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch] sm:max-h-[88dvh] sm:rounded-b-3xl sm:pb-5"
+        className="glass-panel glass-refraction animate-fade max-h-[calc(100dvh-72px-env(safe-area-inset-bottom)-16px)] w-full max-w-md overflow-x-hidden overflow-y-auto overscroll-contain rounded-b-none p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch] sm:max-h-[88dvh] sm:rounded-b-3xl sm:pb-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-start justify-between gap-3">
@@ -775,19 +776,19 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
           </button>
         </div>
 
-        <div className="cinematic-card-dark mb-4 rounded-2xl border border-white/[.08] p-4">
+        <div className="glass-quiet mb-4 rounded-[20px] border-white/[.11] bg-white/[.045] p-4">
           <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Tendencia</p>
           <p className="mt-1.5 text-sm font-semibold">{trend.text}</p>
         </div>
 
         <div className="mb-5 grid grid-cols-2 gap-2.5">
-          <div className="cinematic-card-dark rounded-2xl border border-white/[.07] p-3.5">
+          <div className="glass-quiet rounded-[20px] border-white/[.10] bg-white/[.04] p-4">
             <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">RM actual</p>
             <p className="mt-1.5 text-3xl font-semibold tracking-tight tabular text-[var(--gold)]">
               {formatKg(Number(record.weight))} kg
             </p>
           </div>
-          <div className="rounded-2xl border border-border p-3.5">
+          <div className="glass-quiet rounded-[20px] p-4">
             <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Mejor marca</p>
             <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular">{formatKg(bestEver)} kg</p>
           </div>
@@ -898,7 +899,7 @@ function EvolutionChart({
   const pad = Math.max(2, (max - min) * 0.15);
 
   return (
-    <div className="cinematic-card-dark mb-5 rounded-2xl border border-white/[.08] p-4">
+    <div className="glass-quiet mb-5 rounded-[20px] border-white/[.11] bg-white/[.045] p-4">
       <div className="mb-3 flex items-baseline justify-between">
         <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
           Evolución

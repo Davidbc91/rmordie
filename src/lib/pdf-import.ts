@@ -4,41 +4,122 @@ import type { ParsedImport, ReviewRow } from "./generic-import";
 import { IMPORT_DAYS, normalizeDay } from "./generic-import";
 import { uid } from "./manual-plan";
 
-const WEEK_RE = /(?:SEMANA|WEEK|MICROCICLO)\s*[:#-]?\s*(\d+)/i;
-const DAY_RE = /^(LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO)\s*[:\-–]?\s*(.*)$/i;
+const WEEK_RE = /(?:SEMANA|WEEK|MICROCICLO)\s*[:#-]?\s*(\d{1,2})(?!\s*[–-]\s*\d)/i;
+const DAY_RE = /^(LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO)\s*(?:\d{1,2}(?:\s+[A-ZÁÉÍÓÚÜÑ]+)?)?\s*[:\-–·]?\s*(.*)$/i;
 const DATE_RE = /\b(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?\b/;
-const BLOCK_RE = /^(WARM\s*UP|CALENTAMIENTO|MOVILIDAD|MOBILITY|FUERZA|STRENGTH|HALTEROFILIA|WEIGHTLIFTING|GIMNÁSTICOS|GIMNASTICOS|GYMNASTICS|SKILL|METCON|WOD|CONDITIONING|CARDIO|CORE|ZONA MEDIA|COOL\s*DOWN|VUELTA A LA CALMA|REST|DESCANSO)\s*[:\-–]?$/i;
+const BLOCK_RE = /^(WARM\s*[-–]?\s*UP|CALENTAMIENTO|MOVILIDAD|MOBILITY|FUERZA|STRENGTH|HALTEROFILIA|WEIGHTLIFTING|GIMNÁSTICOS|GIMNASTICOS|GYMNASTICS|SKILL|METCON|WOD|CONDITIONING|CARDIO|CORE|ZONA MEDIA|COOL\s*DOWN|VUELTA A LA CALMA|REST|DESCANSO)\s*[:\-–·]?\s*$/i;
+const NUMBERED_RE = /^\s*(\d{1,2})\.\s*(.+?)\s*$/;
+const DAY_INLINE_RE = /\b(LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO)\b\s*(?:\d{1,2}(?:\s+[A-ZÁÉÍÓÚÜÑ]+)?)?\s*[:\-–·]/i;
 
 function cleanLine(value: string): string {
   return value
-    .replace(/[•·▪◦]/g, " ")
+    .replace(/[•▪◦]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeForMatch(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
     .replace(/\s+/g, " ")
     .trim();
 }
 
 function isNoise(line: string): boolean {
-  if (!line) return true;
-  if (/^\d{1,3}$/.test(line)) return true;
-  if (/^(page|página)\s*\d+(\s*(of|de)\s*\d+)?$/i.test(line)) return true;
-  if (/^(rm\s*or\s*die|team\s*vader)$/i.test(line)) return true;
+  const normalized = normalizeForMatch(line);
+  if (!normalized) return true;
+  if (/^\d{1,3}$/.test(normalized)) return true;
+  if (/^(PAGE|PAGINA)\s*\d+(\s*(OF|DE)\s*\d+)?$/.test(normalized)) return true;
+  if (/^(RM\s*OR\s*DIE|TEAM\s*VADER)$/.test(normalized)) return true;
+  if (/^(CROSSFIT\s*[·-]\s*PLANIFICACION SEMANAL|PLANIFICACION CROSSFIT.*)$/.test(normalized)) return true;
+  if (/^(DATO|VALOR|DATO VALOR)$/.test(normalized)) return true;
+  if (/^(REGISTRO DEL ATLETA|DIA CARGAS \/ RESULTADO RPE DIFICULTAD \/ NOTAS)$/.test(normalized)) return true;
+  if (/^(REGISTRO|NOTA|ESTRATEGIA|RECUPERACION|OBJETIVO|REGLA DE AJUSTE|REFERENCIA)$/.test(normalized)) return true;
+  if (/^COMPLETAR DESPUES DE CADA SESION/.test(normalized)) return true;
   return false;
 }
 
 function looksLikeTrainingLine(line: string): boolean {
   if (line.length < 3) return false;
-  if (BLOCK_RE.test(line) || WEEK_RE.test(line) || DAY_RE.test(line)) return true;
-  if (/\b(amrap|emom|for\s*time|every\s*\d+|on\s*the\s*\d+|rest|rounds?|reps?|sets?|kg|%|cal|m|sec|min)\b/i.test(line)) return true;
+  if (BLOCK_RE.test(line) || WEEK_RE.test(line) || DAY_RE.test(line) || DAY_INLINE_RE.test(line)) return true;
+  if (/\b(amrap|emom|for\s*time|every\s*\d+|on\s*the\s*\d+|rest|rounds?|reps?|sets?|kg|%|cal|sec|min|time\s*cap|zone\s*2|zona\s*2)\b/i.test(line)) return true;
   return /\d/.test(line);
 }
 
 function blockFromLine(line: string): string | null {
   const m = line.match(BLOCK_RE);
-  return m ? m[1].toUpperCase() : null;
+  return m ? cleanLine(m[1]).toUpperCase() : null;
 }
 
 function normalizeDayLine(value: string): string | null {
   const cleaned = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
   return normalizeDay(cleaned);
+}
+
+function blockTypeFromLabel(label: string): ReviewRow["blockType"] {
+  const n = normalizeForMatch(label);
+  if (/WARM UP|CALENTAMIENTO|MOVILIDAD|MOBILITY/.test(n)) return "MOVILIDAD";
+  if (/HALTEROFILIA|WEIGHTLIFTING|SNATCH|CLEAN|JERK/.test(n)) return "HALTEROFILIA";
+  if (/GIMNAST|GYMNAST|SKILL|PULL UP|MUSCLE UP|HANDSTAND/.test(n)) return "GIMNASTICOS";
+  if (/METCON|WOD|CONDITIONING|AMRAP|EMOM|FOR TIME/.test(n)) return "METCON";
+  if (/CARDIO|ENGINE|RUN|ROW|BIKE|ZONE 2|ZONA 2/.test(n)) return "CARDIO";
+  if (/FUERZA|STRENGTH|SQUAT|DEADLIFT|PRESS|BENCH/.test(n)) return "FUERZA";
+  if (/CORE|ZONA MEDIA|HOLLOW|GHD/.test(n)) return "OTRO";
+  return "OTRO";
+}
+
+function cleanNumberedHeading(line: string): { number: number; text: string } | null {
+  const match = line.match(NUMBERED_RE);
+  if (!match) return null;
+  return { number: Number(match[1]), text: cleanLine(match[2]) };
+}
+
+function splitSectionHeading(text: string): { title: string; detail: string } {
+  const parts = text.split(/\s*[·|]\s*/);
+  if (parts.length < 2) return { title: text.trim(), detail: "" };
+  return { title: parts[0].trim(), detail: parts.slice(1).join(" · ").trim() };
+}
+
+function isSectionHeading(text: string): boolean {
+  const normalized = normalizeForMatch(text);
+  if (!normalized || normalized.length > 48) return false;
+  if (/\d+\s*(KG|CAL|REPS?|ROUNDS?|MIN|SEC|M|%)/i.test(text)) return false;
+  if (/^(3|4|5|6|7|8|9|10|12|15|20|30)\s/.test(normalized)) return false;
+  return /^[A-ZÁÉÍÓÚÜÑ&'’ +/\-]+$/.test(normalized);
+}
+
+function addRow(rows: ReviewRow[], args: {
+  line: string;
+  sourceRow: number;
+  day: string;
+  week: number;
+  block: string;
+  blockType: ReviewRow["blockType"];
+  dateText?: string;
+}): void {
+  const exercise = cleanLine(args.line);
+  if (!exercise || !args.day) return;
+
+  const date = exercise.match(DATE_RE);
+  rows.push({
+    id: uid(),
+    sourceRow: args.sourceRow,
+    day: args.day,
+    dateText: args.dateText ?? date?.[0] ?? "",
+    week: args.week,
+    block: args.block || "PLAN",
+    blockType: args.blockType,
+    exercise,
+    sets: "",
+    reps: "",
+    percent: "",
+    load: "",
+    time: "",
+    distance: "",
+    raw: exercise,
+  });
 }
 
 async function extractPdfLines(file: File): Promise<string[]> {
@@ -81,7 +162,7 @@ function inferMonthFromText(lines: string[], filename: string): { key: string; l
     julio: ["JUL", "Julio"], agosto: ["AGO", "Agosto"], septiembre: ["SEP", "Septiembre"],
     octubre: ["OCT", "Octubre"], noviembre: ["NOV", "Noviembre"], diciembre: ["DIC", "Diciembre"],
   };
-  const haystack = [...lines.slice(0, 40), filename].join(" ").toLowerCase();
+  const haystack = [...lines.slice(0, 50), filename].join(" ").toLowerCase();
   for (const [name, [abbr, label]] of Object.entries(months)) {
     if (haystack.includes(name)) return { key: `1. ${abbr}`, label };
   }
@@ -93,17 +174,26 @@ function rowsFromLines(lines: string[]): ReviewRow[] {
   let day = "";
   let week = 1;
   let block = "PLAN";
+  let blockType: ReviewRow["blockType"] = "OTRO";
+  let skipRestOfDocument = false;
 
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
-    if (!looksLikeTrainingLine(line)) continue;
+    let line = cleanLine(lines[i]);
+    if (!line) continue;
+
+    const normalized = normalizeForMatch(line);
+    if (/^REGISTRO DEL ATLETA$/.test(normalized)) {
+      skipRestOfDocument = true;
+      continue;
+    }
+    if (skipRestOfDocument) continue;
 
     const weekMatch = line.match(WEEK_RE);
     if (weekMatch) {
       week = Math.max(1, Number(weekMatch[1]));
-      const rest = line.replace(WEEK_RE, "").replace(/^[:\-–\s]+/, "").trim();
+      const rest = cleanLine(line.replace(WEEK_RE, ""));
       if (!rest) continue;
-      line = rest;
+      line = rest.replace(/^[:\-–·\s]+/, "").trim();
     }
 
     const dayMatch = line.match(DAY_RE);
@@ -113,40 +203,79 @@ function rowsFromLines(lines: string[]): ReviewRow[] {
       const rest = cleanLine(dayMatch[2]);
       if (!rest) continue;
       line = rest;
+    } else {
+      const inlineDay = line.match(DAY_INLINE_RE);
+      if (inlineDay) {
+        const nextDay = normalizeDayLine(inlineDay[1]);
+        if (nextDay) day = nextDay;
+        line = cleanLine(line.slice((inlineDay.index ?? 0) + inlineDay[0].length));
+      }
     }
 
-    const blockName = blockFromLine(line);
-    if (blockName) {
-      block = blockName;
+    if (!line || isNoise(line)) continue;
+
+    const explicitBlock = blockFromLine(line);
+    if (explicitBlock) {
+      block = explicitBlock;
+      blockType = blockTypeFromLabel(block);
       continue;
     }
 
-    const inlineDay = line.match(/\b(LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO)\b\s*[:\-–]/i);
-    if (inlineDay) {
-      const nextDay = normalizeDayLine(inlineDay[1]);
-      if (nextDay) day = nextDay;
-      line = cleanLine(line.slice((inlineDay.index ?? 0) + inlineDay[0].length));
+    const numbered = cleanNumberedHeading(line);
+    if (numbered) {
+      const { title, detail } = splitSectionHeading(numbered.text);
+      const titleBlock = blockFromLine(title);
+
+      if (titleBlock) {
+        block = titleBlock;
+        blockType = blockTypeFromLabel(block);
+        if (detail) {
+          addRow(rows, {
+            line: detail,
+            sourceRow: i + 1,
+            day,
+            week,
+            block,
+            blockType,
+          });
+        }
+        continue;
+      }
+
+      if (isSectionHeading(title)) {
+        block = title.toUpperCase();
+        blockType = blockTypeFromLabel(title);
+        addRow(rows, {
+          line: title,
+          sourceRow: i + 1,
+          day,
+          week,
+          block,
+          blockType,
+        });
+        if (detail) {
+          addRow(rows, {
+            line: detail,
+            sourceRow: i + 1,
+            day,
+            week,
+            block,
+            blockType,
+          });
+        }
+        continue;
+      }
     }
 
-    if (!day || !line) continue;
+    if (!looksLikeTrainingLine(line)) continue;
 
-    const date = line.match(DATE_RE);
-    rows.push({
-      id: uid(),
+    addRow(rows, {
+      line,
       sourceRow: i + 1,
       day,
-      dateText: date?.[0] ?? "",
       week,
       block,
-      blockType: "OTRO",
-      exercise: line,
-      sets: "",
-      reps: "",
-      percent: "",
-      load: "",
-      time: "",
-      distance: "",
-      raw: line,
+      blockType,
     });
   }
 
@@ -156,8 +285,10 @@ function rowsFromLines(lines: string[]): ReviewRow[] {
 export async function parsePdfPlanning(file: File): Promise<ParsedImport & { detectedMonth: { key: string; label: string } }> {
   const lines = await extractPdfLines(file);
   if (lines.length === 0) throw new Error("El PDF no contiene texto seleccionable. Si es un PDF escaneado, necesitaremos OCR.");
+
   const rows = rowsFromLines(lines);
-  if (rows.length === 0) throw new Error("No pude detectar sesiones de entrenamiento en el PDF.");
+  if (rows.length === 0) throw new Error("No pude detectar sesiones de entrenamiento en el PDF. Comprueba que contiene texto seleccionable y encabezados de días.");
+
   return {
     header: ["Texto PDF"],
     columns: {},

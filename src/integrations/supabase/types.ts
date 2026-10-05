@@ -420,6 +420,80 @@ export type Database = {
           },
         ]
       }
+      movement_video_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          movement_id: string
+          notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          movement_id: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          movement_id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movement_video_reviews_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      movement_videos: {
+        Row: {
+          created_at: string
+          id: string
+          movement_id: string
+          source_type: string
+          storage_path: string | null
+          title: string
+          updated_at: string
+          youtube_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          movement_id: string
+          source_type: string
+          storage_path?: string | null
+          title: string
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          movement_id?: string
+          source_type?: string
+          storage_path?: string | null
+          title?: string
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string | null

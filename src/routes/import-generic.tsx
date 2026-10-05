@@ -56,9 +56,10 @@ function GenericImportPage() {
       setParsed(result);
       setRows(result.rows);
       setFilename(f.name);
-      if ("detectedMonth" in result) {
-        setMonthKey(result.detectedMonth.key);
-        setMonthLabel(result.detectedMonth.label);
+      const detectedMonth = (result as { detectedMonth?: { key: string; label: string } }).detectedMonth;
+      if (detectedMonth) {
+        setMonthKey(detectedMonth.key);
+        setMonthLabel(detectedMonth.label);
       }
       toast.success(`${result.rows.length} filas leídas. Revísalas antes de confirmar.`);
     } catch (e) {

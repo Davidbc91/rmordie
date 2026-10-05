@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
+  useRouterState,
   createRootRouteWithContext,
   useRouter,
   HeadContent,
@@ -13,6 +14,7 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { PinGate } from "@/components/ui/gate";
+import { AppShell } from "@/components/AppShell";
 import { SplashScreen } from "@/components/ui/splash";
 import { startSyncEngine } from "@/lib/offline/sync";
 import { registerAppSw } from "@/lib/offline/register-sw";
@@ -100,6 +102,8 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const usePersistentMainShell = pathname === "/" || pathname === "/calendar" || pathname === "/records" || pathname === "/social" || pathname === "/social/";
   useEffect(() => {
     const stop = startSyncEngine(queryClient);
     void registerAppSw();

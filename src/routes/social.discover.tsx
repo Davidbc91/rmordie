@@ -37,7 +37,7 @@ function Discover() {
             value={term}
             onChange={(e) => setTerm(e.target.value)}
             placeholder="Atletas, box, #hashtag, ejercicio"
-            className="w-full bg-transparent text-sm outline-none"
+            className="min-h-11 w-full bg-transparent text-sm outline-none"
           />
         </div>
       </header>

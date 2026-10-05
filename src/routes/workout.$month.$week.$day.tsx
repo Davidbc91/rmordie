@@ -177,6 +177,15 @@ function WorkoutPage() {
         estimatedBest: null,
         recovery,
         recommendation,
+        loads: payloads.map((p) => ({ block: p.block_key, weight: p.weight, sets: p.sets, reps: p.reps, rpe: p.rpe, notes: p.notes })),
+        wods: wodOutcomes.map((out) => ({
+          name: out.wod_name,
+          type: WOD_TYPE_LABEL[out.wod_type],
+          scale: SCALE_LABEL[out.scale],
+          result: formatScore(out.result),
+          status: out.result.status === "cap" ? "CAP" : "Completado",
+          isPr: out.kind === "pr",
+        })),
       });
       d!.blocks.forEach((b) => clearDraft(month, weekN, day, b.key));
       clearActiveWorkout();
@@ -330,9 +339,14 @@ function WorkoutReviewCard({ review, onClose, onDownload }: { review: WorkoutRev
           </div>
         )}
 
-        <button type="button" onClick={onClose} className="mt-5 h-12 w-full rounded-2xl gold-gradient font-semibold" style={{ color: "var(--gold-foreground)" }}>
-          Continuar
-        </button>
+        <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <button type="button" onClick={onDownload} className="h-12 rounded-2xl border border-white/10 bg-white/5 font-semibold">
+            Generar informe de sesión
+          </button>
+          <button type="button" onClick={onClose} className="h-12 rounded-2xl gold-gradient font-semibold" style={{ color: "var(--gold-foreground)" }}>
+            Continuar
+          </button>
+        </div>
       </div>
     </div>
   );

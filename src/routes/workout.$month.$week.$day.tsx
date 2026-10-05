@@ -254,7 +254,34 @@ function WorkoutPage() {
   return (
     <AppShell>
       {review && (
-        <WorkoutReviewCard\n        review={review}\n        onClose={() => { setReview(null); navigate({ to: "/" }); }}\n        onDownload={() => downloadSessionReport({ title: `${month} · Semana ${weekN} · ${day}`, date: new Date().toLocaleDateString("es-ES"), rpe: review.avgRpe, loads: review.loads, wods: review.wods })}\n        sharing={createPost.isPending}\n        onShare={async () => {\n          try {\n            await createPost.mutateAsync({\n              kind: "workout",\n              caption: `Entreno completado · ${month} · S${weekN} · ${day} #workout #rmordie`,\n              data: {\n                month,\n                week: weekN,\n                day,\n                volume: review.volume,\n                avg_rpe: review.avgRpe,\n                blocks: review.blocks,\n                prs: review.prs,\n                loads: review.loads,\n                wods: review.wods,\n              },\n            });\n            toast.success("Entreno compartido en tu feed");\n          } catch (e: any) {\n            toast.error(e?.message ?? "No se pudo compartir el entreno");\n          }\n        }}\n      />
+        <WorkoutReviewCard
+        review={review}
+        onClose={() => { setReview(null); navigate({ to: "/" }); }}
+        onDownload={() => downloadSessionReport({ title: `${month} · Semana ${weekN} · ${day}`, date: new Date().toLocaleDateString("es-ES"), rpe: review.avgRpe, loads: review.loads, wods: review.wods })}
+        sharing={createPost.isPending}
+        onShare={async () => {
+          try {
+            await createPost.mutateAsync({
+              kind: "workout",
+              caption: `Entreno completado · ${month} · S${weekN} · ${day} #workout #rmordie`,
+              data: {
+                month,
+                week: weekN,
+                day,
+                volume: review.volume,
+                avg_rpe: review.avgRpe,
+                blocks: review.blocks,
+                prs: review.prs,
+                loads: review.loads,
+                wods: review.wods,
+              },
+            });
+            toast.success("Entreno compartido en tu feed");
+          } catch (e: any) {
+            toast.error(e?.message ?? "No se pudo compartir el entreno");
+          }
+        }}
+      />
       )}
 
       {celebrate && (

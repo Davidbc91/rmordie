@@ -16,9 +16,11 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlanBuilderRouteImport } from './routes/plan-builder'
 import { Route as ImportGenericRouteImport } from './routes/import-generic'
 import { Route as ImportRouteImport } from './routes/import'
+import { Route as HealthRouteImport } from './routes/health'
 import { Route as DictionaryRouteImport } from './routes/dictionary'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as AthleteReportRouteImport } from './routes/athlete-report'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SocialIndexRouteImport } from './routes/social.index'
 import { Route as SocialSettingsRouteImport } from './routes/social.settings'
@@ -26,6 +28,7 @@ import { Route as SocialNotificationsRouteImport } from './routes/social.notific
 import { Route as SocialDiscoverRouteImport } from './routes/social.discover'
 import { Route as SocialBoardRouteImport } from './routes/social.board'
 import { Route as DictionaryMovementIdRouteImport } from './routes/dictionary.$movementId'
+import { Route as AdminVideosRouteImport } from './routes/admin.videos'
 import { Route as SocialUUsernameRouteImport } from './routes/social.u.$username'
 import { Route as SocialHashtagTagRouteImport } from './routes/social.hashtag.$tag'
 import { Route as WorkoutMonthWeekDayRouteImport } from './routes/workout.$month.$week.$day'
@@ -65,6 +68,11 @@ const ImportRoute = ImportRouteImport.update({
   path: '/import',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HealthRoute = HealthRouteImport.update({
+  id: '/health',
+  path: '/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DictionaryRoute = DictionaryRouteImport.update({
   id: '/dictionary',
   path: '/dictionary',
@@ -78,6 +86,11 @@ const ChatRoute = ChatRouteImport.update({
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AthleteReportRoute = AthleteReportRouteImport.update({
+  id: '/athlete-report',
+  path: '/athlete-report',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -115,6 +128,11 @@ const DictionaryMovementIdRoute = DictionaryMovementIdRouteImport.update({
   path: '/$movementId',
   getParentRoute: () => DictionaryRoute,
 } as any)
+const AdminVideosRoute = AdminVideosRouteImport.update({
+  id: '/admin/videos',
+  path: '/admin/videos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SocialUUsernameRoute = SocialUUsernameRouteImport.update({
   id: '/social/u/$username',
   path: '/social/u/$username',
@@ -133,9 +151,11 @@ const WorkoutMonthWeekDayRoute = WorkoutMonthWeekDayRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/athlete-report': typeof AthleteReportRoute
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/dictionary': typeof DictionaryRouteWithChildren
+  '/health': typeof HealthRoute
   '/import': typeof ImportRoute
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
@@ -143,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/admin/videos': typeof AdminVideosRoute
   '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
@@ -155,9 +176,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/athlete-report': typeof AthleteReportRoute
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/dictionary': typeof DictionaryRouteWithChildren
+  '/health': typeof HealthRoute
   '/import': typeof ImportRoute
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
@@ -165,6 +188,7 @@ export interface FileRoutesByTo {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/admin/videos': typeof AdminVideosRoute
   '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
@@ -178,9 +202,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/athlete-report': typeof AthleteReportRoute
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/dictionary': typeof DictionaryRouteWithChildren
+  '/health': typeof HealthRoute
   '/import': typeof ImportRoute
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
@@ -188,6 +214,7 @@ export interface FileRoutesById {
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
+  '/admin/videos': typeof AdminVideosRoute
   '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
@@ -202,9 +229,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/athlete-report'
     | '/calendar'
     | '/chat'
     | '/dictionary'
+    | '/health'
     | '/import'
     | '/import-generic'
     | '/plan-builder'
@@ -212,6 +241,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/admin/videos'
     | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
@@ -224,9 +254,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/athlete-report'
     | '/calendar'
     | '/chat'
     | '/dictionary'
+    | '/health'
     | '/import'
     | '/import-generic'
     | '/plan-builder'
@@ -234,6 +266,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/admin/videos'
     | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
@@ -246,9 +279,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/athlete-report'
     | '/calendar'
     | '/chat'
     | '/dictionary'
+    | '/health'
     | '/import'
     | '/import-generic'
     | '/plan-builder'
@@ -256,6 +291,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/settings'
     | '/timers'
+    | '/admin/videos'
     | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
@@ -269,9 +305,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AthleteReportRoute: typeof AthleteReportRoute
   CalendarRoute: typeof CalendarRoute
   ChatRoute: typeof ChatRoute
   DictionaryRoute: typeof DictionaryRouteWithChildren
+  HealthRoute: typeof HealthRoute
   ImportRoute: typeof ImportRoute
   ImportGenericRoute: typeof ImportGenericRoute
   PlanBuilderRoute: typeof PlanBuilderRoute
@@ -279,6 +317,7 @@ export interface RootRouteChildren {
   RecordsRoute: typeof RecordsRoute
   SettingsRoute: typeof SettingsRoute
   TimersRoute: typeof TimersRoute
+  AdminVideosRoute: typeof AdminVideosRoute
   SocialBoardRoute: typeof SocialBoardRoute
   SocialDiscoverRoute: typeof SocialDiscoverRoute
   SocialNotificationsRoute: typeof SocialNotificationsRoute
@@ -340,6 +379,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/health': {
+      id: '/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dictionary': {
       id: '/dictionary'
       path: '/dictionary'
@@ -359,6 +405,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/athlete-report': {
+      id: '/athlete-report'
+      path: '/athlete-report'
+      fullPath: '/athlete-report'
+      preLoaderRoute: typeof AthleteReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -410,6 +463,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DictionaryMovementIdRouteImport
       parentRoute: typeof DictionaryRoute
     }
+    '/admin/videos': {
+      id: '/admin/videos'
+      path: '/admin/videos'
+      fullPath: '/admin/videos'
+      preLoaderRoute: typeof AdminVideosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/social/u/$username': {
       id: '/social/u/$username'
       path: '/social/u/$username'
@@ -448,9 +508,11 @@ const DictionaryRouteWithChildren = DictionaryRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AthleteReportRoute: AthleteReportRoute,
   CalendarRoute: CalendarRoute,
   ChatRoute: ChatRoute,
   DictionaryRoute: DictionaryRouteWithChildren,
+  HealthRoute: HealthRoute,
   ImportRoute: ImportRoute,
   ImportGenericRoute: ImportGenericRoute,
   PlanBuilderRoute: PlanBuilderRoute,
@@ -458,6 +520,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecordsRoute: RecordsRoute,
   SettingsRoute: SettingsRoute,
   TimersRoute: TimersRoute,
+  AdminVideosRoute: AdminVideosRoute,
   SocialBoardRoute: SocialBoardRoute,
   SocialDiscoverRoute: SocialDiscoverRoute,
   SocialNotificationsRoute: SocialNotificationsRoute,

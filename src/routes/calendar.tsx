@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AppShell } from "@/components/AppShell";
 import { usePlanning, useAllResults } from "@/lib/store";
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Check, Circle, Moon, Calendar } from "lucide-react";
@@ -99,17 +98,14 @@ function CalendarPage() {
 
   if (!planning || !month) {
     return (
-      <AppShell>
-        <div className="glass glass-sheen p-6 text-center">
+              <div className="glass glass-sheen p-6 text-center">
           <p className="text-sm text-muted-foreground">Importa primero tu planificación.</p>
         </div>
-      </AppShell>
     );
   }
 
   return (
-    <AppShell>
-      <div className="page-enter select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+          <div className="page-enter select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <div className="glass glass-sheen rise rise-1 flex items-center justify-between gap-2 p-2.5">
           <button
             onClick={goPrev}
@@ -224,6 +220,5 @@ function CalendarPage() {
           })}
         </div>
       </div>
-    </AppShell>
   );
 }

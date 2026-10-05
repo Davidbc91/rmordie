@@ -87,7 +87,7 @@ function SocialSettings() {
           rows={3}
           value={form.bio}
           onChange={(e) => setForm({ ...form, bio: e.target.value })}
-          className="mt-1 w-full rounded-[16px] border bg-transparent px-3.5 py-3 text-sm outline-none focus:border-foreground/40"
+          className="mt-1 min-h-11 w-full rounded-[16px] border bg-transparent px-3.5 py-3 text-sm outline-none focus:border-foreground/40"
           style={{ borderColor: "rgba(255,255,255,0.09)" }}
         />
       </label>
@@ -158,7 +158,7 @@ function Text({ label, value, onChange, className = "" }: { label: string; value
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-[14px] border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
+        className="mt-1 min-h-11 w-full rounded-[14px] border bg-transparent px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
         style={{ borderColor: "rgba(255,255,255,0.09)" }}
       />
     </label>

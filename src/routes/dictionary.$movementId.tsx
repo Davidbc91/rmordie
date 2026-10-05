@@ -4,6 +4,7 @@ import { ArrowLeft, Dumbbell } from "lucide-react";
 import { GlassCard } from "@/components/glass";
 import { MovementVideoEmbed } from "@/components/MovementVideoEmbed";
 import { movements } from "@/lib/dictionary/catalog";
+import { getCustomMovements } from "@/lib/dictionary/custom";
 import { resolveMovementId } from "@/lib/dictionary/resolve";
 import { usePersonalRecordHistory, usePersonalRecords } from "@/lib/store";
 import type { Movement } from "@/lib/dictionary/types";

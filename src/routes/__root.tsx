@@ -100,10 +100,20 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function MainRouteShell({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const usePersistentMainShell =
+    pathname === "/" ||
+    pathname === "/calendar" ||
+    pathname === "/records" ||
+    pathname === "/social" ||
+    pathname === "/social/";
+
+  return usePersistentMainShell ? <AppShell>{children}</AppShell> : <>{children}</>;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const usePersistentMainShell = pathname === "/" || pathname === "/calendar" || pathname === "/records" || pathname === "/social" || pathname === "/social/";
   useEffect(() => {
     const stop = startSyncEngine(queryClient);
     void registerAppSw();

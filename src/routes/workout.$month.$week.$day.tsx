@@ -226,6 +226,30 @@ function WorkoutPage() {
     }
   }
 
+  async function shareToday() {
+    const loads = (results as any[]).map((r) => ({ block: r.block_key, weight: r.weight ?? null, sets: r.sets ?? null, reps: r.reps ?? null, rpe: r.rpe ?? null, notes: r.notes ?? null }));
+    const rpes = loads.map((l) => l.rpe).filter((x): x is number => typeof x === "number");
+    const volume = loads.reduce((a, l) => a + (Number(l.weight) || 0) * (Number(l.sets) || 0) * (Number(l.reps) || 0), 0);
+    try {
+      await createPost.mutateAsync({
+        kind: "workout",
+        caption: `Entreno de hoy · ${month} · S${weekN} · ${day} #workout #rmordie`,
+        data: {
+          month, week: weekN, day,
+          volume,
+          avg_rpe: rpes.length ? Math.round((rpes.reduce((a, b) => a + b, 0) / rpes.length) * 10) / 10 : null,
+          blocks: d?.blocks.length ?? 0,
+          prs: 0,
+          loads,
+          wods: [],
+        },
+      });
+      toast.success("Entreno compartido con tus compañeros");
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo compartir el entreno");
+    }
+  }
+
   async function shareCelebrated() {
     if (!celebrate) return;
     const out = celebrate.outcome;
@@ -313,6 +337,18 @@ function WorkoutPage() {
           </div>
         </div>
       </header>
+
+      {!d.isRest && (
+        <button
+          type="button"
+          onClick={shareToday}
+          disabled={createPost.isPending}
+          className="pressable mb-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/8 text-sm font-semibold disabled:opacity-50"
+        >
+          <Share2 className="h-4 w-4" />
+          {createPost.isPending ? "Compartiendo…" : "Compartir entreno con mis compañeros"}
+        </button>
+      )}
 
       {(results.length > 0 || dayWods.length > 0) && (
         <button

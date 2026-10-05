@@ -6,6 +6,10 @@ export function SplashScreen({ children }: { children: ReactNode }) {
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
+    try {
+      if (sessionStorage.getItem("rmordie-splash-shown")) { setVisible(false); return; }
+      sessionStorage.setItem("rmordie-splash-shown", "1");
+    } catch {}
     const fadeTimer = setTimeout(() => setFading(true), 1700);
     const hideTimer = setTimeout(() => setVisible(false), 2250);
     return () => {

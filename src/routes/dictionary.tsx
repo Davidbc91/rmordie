@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { GlassCard } from "@/components/glass";
 import { MOVEMENT_CATEGORIES, MOVEMENT_EQUIPMENT, movements } from "@/lib/dictionary/catalog";
+import { useCustomMovements } from "@/lib/dictionary/custom";
 import type { MovementLevel } from "@/lib/dictionary/types";
 
 export const Route = createFileRoute("/dictionary")({
@@ -21,6 +22,8 @@ function DictionaryPage() {
   const [category, setCategory] = useState("");
   const [equipment, setEquipment] = useState("");
   const [level, setLevel] = useState("");
+  const { data: customMovements = [] } = useCustomMovements();
+  const allMovements = useMemo(() => [...movements, ...customMovements], [customMovements]);
   const showingMovement = useRouterState({
     select: (state) => state.location.pathname.startsWith("/dictionary/"),
   });
@@ -31,7 +34,7 @@ function DictionaryPage() {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, " ")
       .trim();
-    return movements.filter((m) => {
+    return allMovements.filter((m) => {
       const matchesQuery =
         !term ||
         [m.name, m.nameEs, ...m.aliases].some((value) =>
@@ -49,10 +52,12 @@ function DictionaryPage() {
         (!level || m.level === level)
       );
     });
-  }, [query, category, equipment, level]);
+  }, [query, category, equipment, level, allMovements]);
   const selectClass =
     "min-w-0 rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3 py-2.5 text-sm text-foreground outline-none focus:border-[rgba(216,180,107,0.55)]";
   const levels: MovementLevel[] = ["Beginner", "Intermediate", "Advanced"];
+  const categories = useMemo(() => Array.from(new Set([...MOVEMENT_CATEGORIES, ...customMovements.map((m) => m.category)])).sort(), [customMovements]);
+  const equipmentOptions = useMemo(() => Array.from(new Set([...MOVEMENT_EQUIPMENT, ...customMovements.flatMap((m) => m.equipment)])).sort(), [customMovements]);
 
   return (
     <AppShell>
@@ -96,7 +101,7 @@ function DictionaryPage() {
                 className={selectClass}
               >
                 <option value="">Todas las categorías</option>
-                {MOVEMENT_CATEGORIES.map((x) => (
+                {categories.map((x) => (
                   <option key={x}>{x}</option>
                 ))}
               </select>
@@ -107,7 +112,7 @@ function DictionaryPage() {
                 className={selectClass}
               >
                 <option value="">Todo el equipamiento</option>
-                {MOVEMENT_EQUIPMENT.map((x) => (
+                {equipmentOptions.map((x) => (
                   <option key={x}>{x}</option>
                 ))}
               </select>

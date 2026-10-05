@@ -558,8 +558,8 @@
 
 /* RM OR DIE typography system */
 :root, .dark {
-  --font-display: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Arial Narrow", Arial, sans-serif;
-  --font-editorial: "Arial Narrow", "Helvetica Neue", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --font-display: "Avenir Next", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-editorial: "Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
 }
 
 body {

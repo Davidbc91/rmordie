@@ -18,6 +18,7 @@ import { AppShell } from "@/components/AppShell";
 import { SplashScreen } from "@/components/ui/splash";
 import { startSyncEngine } from "@/lib/offline/sync";
 import { registerAppSw } from "@/lib/offline/register-sw";
+import { fetchCustomMovements } from "@/lib/dictionary/custom";
 
 function NotFoundComponent() {
   return (
@@ -117,6 +118,7 @@ function RootComponent() {
   useEffect(() => {
     const stop = startSyncEngine(queryClient);
     void registerAppSw();
+    void fetchCustomMovements().catch(() => undefined);
     // iOS Safari ignora user-scalable=no: bloquear el gesto de pinza nativo
     const blockGesture = (e: Event) => e.preventDefault();
     document.addEventListener("gesturestart", blockGesture, { passive: false });

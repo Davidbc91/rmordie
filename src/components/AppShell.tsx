@@ -65,7 +65,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const moreActive = visibleMoreLinks.some((l) => pathname.startsWith(l.to));
 
   return (
-    <div className="grain relative min-h-[100dvh] overflow-x-hidden pb-[104px]">
+    <div className="grain relative min-h-[100dvh] overflow-x-hidden pb-[88px]">
       <div aria-hidden className="aura pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
       <div aria-hidden className="pointer-events-none absolute -left-32 top-28 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(200,179,138,.09),transparent_68%)] blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -right-36 top-[34rem] h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(150,160,180,.07),transparent_68%)] blur-3xl" />
@@ -99,7 +99,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
 
       {showResume && active && (
-        <div className="fixed inset-x-0 bottom-[86px] z-40 px-4">
+        <div
+          className="fixed inset-x-0 z-40 px-4"
+          style={{ bottom: "calc(max(env(safe-area-inset-bottom), 12px) + 76px)" }}
+        >
           <div className="glass-elevated glass-sheen animate-fade mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
             <Link
               to="/workout/$month/$week/$day"
@@ -196,11 +199,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <nav
-        className="pointer-events-none fixed inset-x-0 bottom-0 px-3"
-        style={{ zIndex: 2147483000 }}
+        className="pointer-events-none fixed inset-x-0 bottom-0 px-0"
+        style={{ zIndex: 2147483000, bottom: "max(env(safe-area-inset-bottom), 12px)" }}
       >
         <div
-          className="pointer-events-auto safe-bottom mx-auto mb-3 max-w-2xl overflow-hidden rounded-[30px] border"
+          className="pointer-events-auto mx-auto w-[calc(100vw-32px)] max-w-[360px] overflow-hidden rounded-[26px] border"
           style={{
             background: "linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.045) 45%, rgba(200,179,138,.055)), rgba(10,10,12,.58)",
             borderColor: "rgba(255,255,255,0.22)",
@@ -209,7 +212,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(0,0,0,.28), inset 0 0 42px rgba(255,255,255,.025), 0 18px 55px -22px rgba(0,0,0,.98), 0 8px 28px -16px rgba(200,179,138,.18)",
           }}
         >
-          <div className="relative flex items-stretch gap-1.5 px-2.5 pt-2.5">
+          <div className="relative flex items-stretch gap-1 px-2 pt-2">
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-10 top-0 h-px"
@@ -222,12 +225,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={t.to}
                   to={t.to}
-                  className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[5px] rounded-[20px] py-2.5"
+                  className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2"
                   style={{ color: isActive ? "var(--gold)" : "#85858B" }}
                 >
                   <span
                     aria-hidden
-                    className="absolute inset-0 rounded-[20px] transition-all duration-300"
+                    className="absolute inset-0 rounded-[18px] transition-all duration-300"
                     style={{
                       background: "linear-gradient(145deg, rgba(255,255,255,.105), rgba(200,179,138,.075) 55%, rgba(255,255,255,.018))",
                       opacity: isActive ? 1 : 0,
@@ -236,7 +239,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         : "none",
                     }}
                   />
-                  <Icon className="relative h-[21px] w-[21px]" strokeWidth={isActive ? 2.1 : 1.6} />
+                  <Icon className="relative h-[19px] w-[19px]" strokeWidth={isActive ? 2.1 : 1.6} />
                   <span
                     className="relative text-[10px] font-semibold"
                     style={{ letterSpacing: "0.04em", opacity: isActive ? 1 : 0.82 }}
@@ -249,12 +252,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => setMoreOpen((v) => !v)}
               aria-label="Más secciones"
-              className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[5px] rounded-[20px] py-2.5"
+              className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2"
               style={{ color: moreActive || moreOpen ? "var(--gold)" : "#85858B" }}
             >
               <span
                 aria-hidden
-                className="absolute inset-0 rounded-[20px] transition-all duration-300"
+                className="absolute inset-0 rounded-[18px] transition-all duration-300"
                 style={{
                   background: "linear-gradient(145deg, rgba(255,255,255,.105), rgba(200,179,138,.075))",
                   opacity: moreActive || moreOpen ? 1 : 0,
@@ -263,11 +266,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     : "none",
                 }}
               />
-              <MoreHorizontal className="relative h-[21px] w-[21px]" strokeWidth={moreActive || moreOpen ? 2.1 : 1.6} />
+              <MoreHorizontal className="relative h-[19px] w-[19px]" strokeWidth={moreActive || moreOpen ? 2.1 : 1.6} />
               {chatUnread > 0 && (
                 <span
                   aria-hidden
-                  className="absolute right-[24%] top-[5px] grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-bold gold-gradient"
+                  className="absolute right-[24%] top-[4px] grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-bold gold-gradient"
                   style={{ color: "var(--gold-foreground)" }}
                 >
                   {chatUnread > 9 ? "9+" : chatUnread}

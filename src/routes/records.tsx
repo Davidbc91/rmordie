@@ -26,7 +26,7 @@ import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebratio
 import { normalizeExerciseName, sameExercise, mentionsExercise, formatKg } from "@/lib/rm-matcher";
 import { WodRecords } from "@/components/WodRecords";
 import { MovementDictionaryLink } from "@/components/MovementDictionaryLink";
-import { resolveMovement, resolveMovementId } from "@/lib/dictionary/resolve";
+import { resolveMovement, resolveMovementId, resolveMovements } from "@/lib/dictionary/resolve";
 import {
   LineChart,
   Line,

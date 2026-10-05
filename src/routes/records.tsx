@@ -175,6 +175,34 @@ const SUGGESTED = [
   "Turkish Get-up",
 ];
 
+function LazyProgressionRecommendations({ records }: { records: PersonalRecord[] }) {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = () => {
+      if (!cancelled) setReady(true);
+    };
+
+    if (typeof window === "undefined") return;
+    const idle = "requestIdleCallback" in window
+      ? window.requestIdleCallback(run, { timeout: 900 })
+      : window.setTimeout(run, 250);
+
+    return () => {
+      cancelled = true;
+      if ("cancelIdleCallback" in window && typeof idle === "number") {
+        window.cancelIdleCallback(idle);
+      } else {
+        window.clearTimeout(idle);
+      }
+    };
+  }, []);
+
+  if (!ready) return null;
+  return <ProgressionRecommendations records={records} />;
+}
+
 function ProgressionRecommendations({
   records,
   planning,
@@ -274,8 +302,6 @@ function StrengthRecords({
   clearFocus: () => void;
 }) {
   const { data: records = [], isLoading } = usePersonalRecords();
-  const { data: planning } = usePlanning();
-  const { data: results = [] } = useAllResults();
   const upsert = useUpsertPersonalRecord();
   const update = useUpdatePersonalRecord();
   const del = useDeletePersonalRecord();
@@ -522,7 +548,7 @@ function StrengthRecords({
       )}
 
       {!isLoading && records.length > 0 && (
-        <ProgressionRecommendations records={records} planning={planning?.data} results={results} />
+        <LazyProgressionRecommendations records={records} />
       )}
 
       {isLoading ? (

@@ -31,7 +31,7 @@ export async function fetchCustomMovements(): Promise<Movement[]> {
     .select("*")
     .order("name");
   if (error) throw error;
-  const movements = (data ?? []).map((row) => mapRow(row as Record<string, unknown>));
+  const movements = (data ?? []).map((row: any) => mapRow(row as Record<string, unknown>));
   setCustomMovements(movements);
   return movements;
 }

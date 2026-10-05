@@ -23,7 +23,7 @@ import {
 import { lazy, Suspense, useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
-import { normalizeExerciseName, sameExercise, formatKg } from "@/lib/rm-matcher";
+import { normalizeExerciseName, sameExercise, mentionsExercise, formatKg } from "@/lib/rm-matcher";
 const WodRecords = lazy(() => import("@/components/WodRecords").then((m) => ({ default: m.WodRecords })));
 
 type RecordsSearch = {
@@ -630,9 +630,7 @@ function HistoryModal({ record, onClose }: { record: PersonalRecord; onClose: ()
           <div className="min-w-0">
             <p className="cinematic-label">{repMax}RM · EVOLUTION</p>
             <h2 className="cinematic-title mt-3 truncate text-[2.25rem]">
-              <MovementDictionaryLink exerciseName={record.exercise}>
-                {record.exercise}
-              </MovementDictionaryLink>
+              <span>{record.exercise}</span>
             </h2>
           </div>
           <button

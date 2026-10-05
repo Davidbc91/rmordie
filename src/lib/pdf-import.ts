@@ -43,7 +43,7 @@ function normalizeDayLine(value: string): string | null {
 
 async function extractPdfLines(file: File): Promise<string[]> {
   const data = new Uint8Array(await file.arrayBuffer());
-  const pdf = await getDocument({ data, disableWorker: true }).promise;
+  const pdf = await getDocument({ data }).promise;
   const lines: string[] = [];
 
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {

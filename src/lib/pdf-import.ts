@@ -341,3 +341,55 @@ export function mergePlanningPreservingPrevious(current: Planning | null | undef
     importedAt: new Date().toISOString(),
   };
 }
+
+
+/**
+ * OCR de planificaciones en imagen.
+ * Tesseract.js trabaja en un Web Worker, por lo que el reconocimiento no bloquea
+ * el hilo principal. Se cargan español + inglés porque las planificaciones pueden
+ * mezclar nombres de movimientos y etiquetas en ambos idiomas.
+ */
+export async function parseImagePlanning(
+  file: File,
+  onProgress?: (progress: number) => void,
+): Promise<ParsedImport & { detectedMonth: { key: string; label: string } }> {
+  if (!/^image\\/(png|jpe?g|webp)$/i.test(file.type) && !/\\.(png|jpe?g|webp)$/i.test(file.name)) {
+    throw new Error("Formato de imagen no compatible. Usa JPG, PNG o WEBP.");
+  }
+
+  const { createWorker } = await import("tesseract.js");
+  const worker = await createWorker(["spa", "eng"], 1, {
+    logger: (message: { progress?: number }) => {
+      if (typeof message.progress === "number") onProgress?.(Math.max(0, Math.min(1, message.progress)));
+    },
+  });
+
+  try {
+    const result = await worker.recognize(file, { rotateAuto: true });
+    const text = result.data.text ?? "";
+    const lines = text
+      .split(/\\r?\\n/)
+      .map(cleanLine)
+      .filter(Boolean)
+      .filter((line) => !isNoise(line));
+
+    if (lines.length === 0) {
+      throw new Error("No pude detectar texto en la imagen. Usa una foto nítida y bien iluminada.");
+    }
+
+    const rows = rowsFromLines(lines);
+    if (rows.length === 0) {
+      throw new Error("Detecté texto, pero no pude identificar sesiones. Comprueba que aparezcan los días y ejercicios.");
+    }
+
+    return {
+      header: ["Texto OCR"],
+      columns: {},
+      rows,
+      unmapped: [],
+      detectedMonth: inferMonthFromText(lines, file.name),
+    };
+  } finally {
+    await worker.terminate();
+  }
+}

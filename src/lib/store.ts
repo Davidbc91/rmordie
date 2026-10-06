@@ -116,6 +116,101 @@ export function usePlanning() {
   });
 }
 
+export function usePlanningVersions() {
+  const uid = getCurrentUserId();
+  return useQuery({
+    queryKey: ["planning_versions", uid],
+    enabled: !!uid,
+    queryFn: async (): Promise<PlanningRow[]> =>
+      offlineRead(cacheKeys.planningVersions(uid!), async () => {
+        const { data, error } = await supabase
+          .from("planning")
+          .select("*")
+          .eq("user_id", uid!)
+          .order("imported_at", { ascending: false });
+        if (error) throw error;
+        return (data ?? []) as unknown as PlanningRow[];
+      }),
+  });
+}
+
+export function useDeletePlanningMonth() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+  return useMutation({
+    mutationFn: async ({ planningId, monthKey }: { planningId: string; monthKey: string }) => {
+      if (!uid) throw new Error("No hay perfil activo");
+      const { data: row, error: readError } = await supabase
+        .from("planning")
+        .select("data")
+        .eq("id", planningId)
+        .eq("user_id", uid)
+        .single();
+      if (readError) throw readError;
+
+      const current = row?.data as Planning;
+      const months = current?.months ?? [];
+      if (months.length <= 1) {
+        throw new Error("No puedes eliminar el único mes de una planificación. Elimina la planificación completa.");
+      }
+      const nextMonths = months.filter((m) => m.key !== monthKey);
+      if (nextMonths.length === months.length) throw new Error("El mes ya no existe.");
+      const nextPlanning: Planning = { ...current, months: nextMonths };
+      const { error } = await supabase
+        .from("planning")
+        .update({ data: nextPlanning as unknown as never })
+        .eq("id", planningId)
+        .eq("user_id", uid);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["planning", uid] });
+      qc.invalidateQueries({ queryKey: ["planning_versions", uid] });
+    },
+  });
+}
+
+export function useDeletePlanningVersion() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+  return useMutation({
+    mutationFn: async (planningId: string) => {
+      if (!uid) throw new Error("No hay perfil activo");
+      const { data: row, error: readError } = await supabase
+        .from("planning")
+        .select("is_active")
+        .eq("id", planningId)
+        .eq("user_id", uid)
+        .single();
+      if (readError) throw readError;
+
+      const { error } = await supabase
+        .from("planning")
+        .delete()
+        .eq("id", planningId)
+        .eq("user_id", uid);
+      if (error) throw error;
+
+      if (row?.is_active) {
+        const { data: fallback } = await supabase
+          .from("planning")
+          .select("id")
+          .eq("user_id", uid)
+          .order("imported_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (fallback?.id) {
+          await supabase.from("planning").update({ is_active: true }).eq("id", fallback.id).eq("user_id", uid);
+        }
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["planning", uid] });
+      qc.invalidateQueries({ queryKey: ["planning_versions", uid] });
+    },
+  });
+}
+
 export function useSavePlanning() {
   const qc = useQueryClient();
   return useMutation({
@@ -457,6 +552,7 @@ export function findDay(p: Planning, monthKey: string, week: number, dayKey: str
 // -------- Offline cache keys + write helpers --------
 export const cacheKeys = {
   planning: (uid: string | null) => `planning:${uid ?? "shared"}`,
+  planningVersions: (uid: string) => `planning:versions:${uid}`,
   resultsAll: (uid: string) => `results:all:${uid}`,
   resultsDay: (uid: string, m: string, w: number, d: string) => `results:day:${uid}:${m}:${w}:${d}`,
   settings: (uid: string) => `settings:${uid}`,

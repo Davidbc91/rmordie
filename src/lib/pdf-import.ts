@@ -353,7 +353,7 @@ export async function parseImagePlanning(
   file: File,
   onProgress?: (progress: number) => void,
 ): Promise<ParsedImport & { detectedMonth: { key: string; label: string } }> {
-  if (!/^image\\/(png|jpe?g|webp)$/i.test(file.type) && !/\\.(png|jpe?g|webp)$/i.test(file.name)) {
+  if (!/^image\/(png|jpe?g|webp)$/i.test(file.type) && !/\.(png|jpe?g|webp)$/i.test(file.name)) {
     throw new Error("Formato de imagen no compatible. Usa JPG, PNG o WEBP.");
   }
 
@@ -368,7 +368,7 @@ export async function parseImagePlanning(
     const result = await worker.recognize(file, { rotateAuto: true });
     const text = result.data.text ?? "";
     const lines = text
-      .split(/\\r?\\n/)
+      .split(/\r?\n/)
       .map(cleanLine)
       .filter(Boolean)
       .filter((line) => !isNoise(line));

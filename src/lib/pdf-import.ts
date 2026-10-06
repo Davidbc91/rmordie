@@ -198,10 +198,10 @@ async function extractPdfOcrLines(file: File): Promise<string[]> {
     const context = canvas.getContext("2d");
     if (!context) continue;
 
-    await page.render({ canvasContext: context, viewport }).promise;
+    await page.render({ canvasContext: context, canvas, viewport }).promise;
     const worker = await Tesseract.createWorker(["spa", "eng"], 1);
     try {
-      const result = await worker.recognize(canvas, { rotateAuto: true });
+      const result = await worker.recognize(canvas as unknown as File, { rotateAuto: true });
       const ocrLines = result.data.lines ?? [];
       const positioned = ocrLines
         .filter((line) => line.text?.trim() && line.bbox)

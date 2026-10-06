@@ -134,6 +134,51 @@ export function usePlanningVersions() {
   });
 }
 
+export function useReorderPlanningMonths() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+  return useMutation({
+    mutationFn: async ({ planningId, monthKeys }: { planningId: string; monthKeys: string[] }) => {
+      if (!uid) throw new Error("No hay perfil activo");
+      const { data: row, error: readError } = await supabase
+        .from("planning")
+        .select("data")
+        .eq("id", planningId)
+        .eq("user_id", uid)
+        .single();
+      if (readError) throw readError;
+
+      const current = row?.data as Planning;
+      const months = current?.months ?? [];
+      const byKey = new Map(months.map((month) => [month.key, month]));
+      if (monthKeys.length !== months.length || monthKeys.some((key) => !byKey.has(key))) {
+        throw new Error("El orden recibido no coincide con los meses de la planificación.");
+      }
+
+      const nextMonths = monthKeys.map((key, index) => ({
+        ...byKey.get(key)!,
+        order: index + 1,
+      }));
+      const nextPlanning: Planning = {
+        ...current,
+        months: nextMonths,
+        importedAt: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from("planning")
+        .update({ data: nextPlanning as unknown as never })
+        .eq("id", planningId)
+        .eq("user_id", uid);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["planning", uid] });
+      qc.invalidateQueries({ queryKey: ["planning_versions", uid] });
+    },
+  });
+}
+
 export function useDeletePlanningMonth() {
   const qc = useQueryClient();
   const uid = getCurrentUserId();

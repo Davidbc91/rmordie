@@ -115,8 +115,12 @@ function GenericImportPage() {
             {busy && ocrProgress > 0 ? <ImageIcon className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} /> : <Upload className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} />}
           </div>
           <div>
-            <div className="text-sm font-medium">{busy ? "Leyendo…" : "Seleccionar archivo"}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Archivo .xlsx, .xls, .csv o .pdf</div>
+            <div className="text-sm font-medium">
+              {busy
+                ? (ocrProgress > 0 ? `Analizando imagen… ${Math.round(ocrProgress * 100)}%` : "Leyendo…")
+                : "Seleccionar archivo"}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">.xlsx, .xls, .csv, .pdf, .jpg, .jpeg, .png o .webp</div>
           </div>
           <input
             type="file"

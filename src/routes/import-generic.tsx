@@ -37,7 +37,8 @@ function GenericImportPage() {
   const { data: records = [] } = usePersonalRecords();
   const save = useSavePlanning();
 
-  const [busy, setBusy] = useState(false);\n  const [ocrProgress, setOcrProgress] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
   const [parsed, setParsed] = useState<ParsedImport | null>(null);
   const [rows, setRows] = useState<ReviewRow[]>([]);
   const [filename, setFilename] = useState("");
@@ -46,9 +47,15 @@ function GenericImportPage() {
 
   async function onFile(f: File) {
     setBusy(true);
+    setOcrProgress(0);
     try {
       const isPdf = /\.pdf$/i.test(f.name);
-      const result = isPdf ? await parsePdfPlanning(f) : await parseGenericFile(f);
+      const isImage = /^image\/(png|jpe?g|webp)$/i.test(f.type) || /\.(png|jpe?g|webp)$/i.test(f.name);
+      const result = isImage
+        ? await parseImagePlanning(f, setOcrProgress)
+        : isPdf
+          ? await parsePdfPlanning(f)
+          : await parseGenericFile(f);
       if (result.rows.length === 0) {
         toast.error("El archivo se ha leído, pero no contiene filas con datos.");
         return;
@@ -99,7 +106,7 @@ function GenericImportPage() {
     <AppShell>
       <h1 className="text-2xl font-semibold tracking-tight">Importar planificación</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Excel, CSV o PDF. <span className="gold-text">Nada se guarda hasta que confirmes y lo anterior se conserva.</span>
+        Excel, CSV, PDF o imagen. <span className="gold-text">Nada se guarda hasta que confirmes y lo anterior se conserva.</span>
       </p>
 
       {!parsed && (

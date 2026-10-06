@@ -7,8 +7,9 @@ import type { ParsedImport, ReviewRow } from "./generic-import";
 import { IMPORT_DAYS, normalizeDay } from "./generic-import";
 import { uid } from "./manual-plan";
 
-const WEEK_RE = /(?:SEMANA|WEEK|MICROCICLO)\s*[:#-]?\s*(\d{1,2})(?!\s*[–-]\s*\d)/i;
-const DAY_NAMES = "LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO";
+const WEEK_RE = /(?:SEMANA|WEEK|MICROCICLO|MICROCYCLE)\s*(?:N[º°]?\s*)?[:#-]?\s*(\d{1,2})(?:\s*(?:DE|OF|\/)\s*\d{1,2})?/i;
+const PHASE_RE = /^(?:FASE|PHASE|BLOQUE|BLOCK|MESOCICLO|MESOCYCLE|CICLO|CYCLE|PROGRAMA|PROGRAM)\b\s*[:#-]?\s*(.+)$/i;
+const DAY_NAMES = "LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO|MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY|MON|TUE|TUES|WED|THU|THUR|FRI|SAT|SUN";
 const DAY_RE = new RegExp("^\\s*(?:\\d{1,2}\\s*[.)-]?\\s*)?(" + DAY_NAMES + ")\\s*(?:\\d{1,2}(?:\\s+[A-ZÁÉÍÓÚÜÑ]+)?)?\\s*[:\\-–·]?\\s*(.*)$", "i");
 const DATE_RE = /\b(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?\b/;
 const BLOCK_RE = /^(?:[A-F]\s*[.)-]?\s*)?(WARM\s*[-–]?\s*UP|CALENTAMIENTO|MOVILIDAD|MOBILITY|FUERZA|STRENGTH|STRENGH|MAX\s*STRENGH(?:\s+COMBINE)?|STRENGTH\s+WOD|STRENGH\s+WOD|ACCESS(?:ORY|SORY)?\s+STRENGH\s+WOD|METABOLIC\s+PUMP(?:\s+\d+)?|BODY\s+ARMOUR|BODY\s+ARMOR|POWER\s+WOD|AGONIST\s+ANTAGONIST|HALTEROFILIA|WEIGHTLIFTING|GIMNÁSTICOS|GIMNASTICOS|GYMNASTICS|SKILL|METCON|WOD|CONDITIONING|CARDIO|CORE|ZONA MEDIA|COOL\s*DOWN|VUELTA A LA CALMA|REST|DESCANSO)\s*[:\-–·]?\s*$/i;
@@ -35,20 +36,22 @@ function isNoise(line: string): boolean {
   const normalized = normalizeForMatch(line);
   if (!normalized) return true;
   if (/^\d{1,3}$/.test(normalized)) return true;
-  if (/^(PAGE|PAGINA)\s*\d+(\s*(OF|DE)\s*\d+)?$/.test(normalized)) return true;
+  if (/^(PAGE|PAGINA|P)\s*\d+(\s*(OF|DE)\s*\d+)?$/.test(normalized)) return true;
   if (/^(RM\s*OR\s*DIE|TEAM\s*VADER)$/.test(normalized)) return true;
   if (/^(CROSSFIT\s*[·-]\s*PLANIFICACION SEMANAL|PLANIFICACION CROSSFIT.*)$/.test(normalized)) return true;
   if (/^(DATO|VALOR|DATO VALOR)$/.test(normalized)) return true;
   if (/^(REGISTRO DEL ATLETA|DIA CARGAS \/ RESULTADO RPE DIFICULTAD \/ NOTAS)$/.test(normalized)) return true;
   if (/^(REGISTRO|NOTA|ESTRATEGIA|RECUPERACION|OBJETIVO|REGLA DE AJUSTE|REFERENCIA)$/.test(normalized)) return true;
   if (/^COMPLETAR DESPUES DE CADA SESION/.test(normalized)) return true;
+  if (/^(WARM\s*UP|COOL\s*DOWN|STRENGTH|STRENGH|METCON|WOD|AMRAP|EMOM|FOR TIME)$/i.test(line)) return false;
   return false;
 }
 
 function looksLikeTrainingLine(line: string): boolean {
   if (line.length < 3) return false;
-  if (BLOCK_RE.test(line) || WEEK_RE.test(line) || DAY_RE.test(line) || DAY_INLINE_RE.test(line)) return true;
-  if (/\b(amrap|emom|for\s*time|every\s*\d+|on\s*the\s*\d+|rest|rounds?|reps?|sets?|kg|%|cal|sec|min|time\s*cap|zone\s*2|zona\s*2)\b/i.test(line)) return true;
+  if (BLOCK_RE.test(line) || WEEK_RE.test(line) || DAY_RE.test(line) || DAY_INLINE_RE.test(line) || PHASE_RE.test(line)) return true;
+  if (/\b(amrap|emom|e\d+mom|for\s*time|for\s*reps?|for\s*load|every\s*\d+|on\s*the\s*\d+|rest|rounds?|reps?|sets?|kg|lb|lbs|%|cal|sec|seconds?|min|mins?|minutes?|time\s*cap|zone\s*[1-5]|zona\s*[1-5]|rft|rft|interval|intervals?|ladder|descending|ascending|death\s*by|max\s*reps?|quality|tempo|rm|1rm|3rm|5rm|8rm|10rm|rx|rx'd|scaled|beginner|intermediate|advanced)\b/i.test(line)) return true;
+  if (/\b(air\s*squat|back\s*squat|front\s*squat|overhead\s*squat|deadlift|clean|snatch|jerk|thruster|press|bench|pull[- ]?up|push[- ]?up|muscle[- ]?up|toes?\s*to\s*bar|handstand|burpee|box\s*jump|double[- ]?under|run|row|bike|ski|swim|wall\s*ball|kettlebell|dumbbell|barbell|lunges?|sit[- ]?up|plank|carry|sled|rope\s*climb)\b/i.test(line)) return true;
   return /\d/.test(line);
 }
 
@@ -118,13 +121,13 @@ function normalizeDayLine(value: string): string | null {
 
 function blockTypeFromLabel(label: string): ReviewRow["blockType"] {
   const n = normalizeForMatch(label);
-  if (/WARM UP|CALENTAMIENTO|MOVILIDAD|MOBILITY/.test(n)) return "MOVILIDAD";
-  if (/HALTEROFILIA|WEIGHTLIFTING|SNATCH|CLEAN|JERK/.test(n)) return "HALTEROFILIA";
-  if (/GIMNAST|GYMNAST|SKILL|PULL UP|MUSCLE UP|HANDSTAND/.test(n)) return "GIMNASTICOS";
-  if (/METCON|WOD|CONDITIONING|AMRAP|EMOM|FOR TIME/.test(n)) return "METCON";
-  if (/CARDIO|ENGINE|RUN|ROW|BIKE|ZONE 2|ZONA 2/.test(n)) return "CARDIO";
-  if (/FUERZA|STRENGTH|SQUAT|DEADLIFT|PRESS|BENCH/.test(n)) return "FUERZA";
-  if (/CORE|ZONA MEDIA|HOLLOW|GHD/.test(n)) return "OTRO";
+  if (/WARM UP|CALENTAMIENTO|MOVILIDAD|MOBILITY|ACTIVATION|ACTIVACION|STRETCH|FLEXIBILITY|COOL DOWN|RECOVERY/.test(n)) return "MOVILIDAD";
+  if (/HALTEROFILIA|WEIGHTLIFTING|OLYMPIC|SNATCH|CLEAN|JERK/.test(n)) return "HALTEROFILIA";
+  if (/GIMNAST|GYMNAST|SKILL|PULL UP|MUSCLE UP|HANDSTAND|HSPU|HOLLOW|L[- ]?SIT|TOES TO BAR/.test(n)) return "GIMNASTICOS";
+  if (/METCON|WOD|CONDITIONING|AMRAP|EMOM|E\dMOM|FOR TIME|FOR REPS|CHIPPER|COUPLET|TRIPLET|INTERVAL|RFT/.test(n)) return "METCON";
+  if (/CARDIO|ENGINE|MONOSTRUCTURAL|RUN|ROW|BIKE|SKI|SWIM|ZONE [1-5]|ZONA [1-5]/.test(n)) return "CARDIO";
+  if (/FUERZA|STRENGTH|STRENGH|MAX STRENGTH|SQUAT|DEADLIFT|PRESS|BENCH|RM/.test(n)) return "FUERZA";
+  if (/CORE|ZONA MEDIA|TRUNK|ABDOMINAL|HOLLOW|GHD/.test(n)) return "OTRO";
   return "OTRO";
 }
 
@@ -260,6 +263,13 @@ function rowsFromLines(lines: string[]): ReviewRow[] {
     }
 
     if (!line || isNoise(line)) continue;
+
+    const phaseMatch = line.match(PHASE_RE);
+    if (phaseMatch) {
+      block = cleanLine(phaseMatch[2]).toUpperCase();
+      blockType = blockTypeFromLabel(block);
+      continue;
+    }
 
     const explicitBlock = blockFromLine(line);
     if (explicitBlock) {

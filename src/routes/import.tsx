@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useState } from "react";
 import { parsePlanningFromArrayBuffer } from "@/lib/excel-parser";
-import { usePlanning, useSavePlanning } from "@/lib/store";
+import { usePlanning, usePlanningVersions, useSavePlanning, useDeletePlanningMonth, useDeletePlanningVersion } from "@/lib/store";
 import { toast } from "sonner";
 import { Upload, CheckCircle2 } from "lucide-react";
 
@@ -13,7 +13,10 @@ export const Route = createFileRoute("/import")({
 
 function ImportPage() {
   const { data: current } = usePlanning();
+  const { data: planningVersions = [] } = usePlanningVersions();
   const save = useSavePlanning();
+  const deleteMonth = useDeletePlanningMonth();
+  const deletePlanning = useDeletePlanningVersion();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
 
@@ -84,6 +87,91 @@ function ImportPage() {
             {current.source_filename ?? "Sin nombre"} · {current.data.months.length} meses · importada {new Date(current.imported_at).toLocaleDateString("es-ES")}
           </div>
         </div>
+      )}
+
+      {current && (
+        <section className="mt-6">
+          <div className="mb-2 flex items-end justify-between gap-3">
+            <div>
+              <p className="eyebrow">Gestionar planificación activa</p>
+              <h2 className="mt-1 text-lg font-semibold">Meses importados</h2>
+            </div>
+            <span className="text-[11px] text-muted-foreground">{current.data.months.length} meses</span>
+          </div>
+          <div className="space-y-2">
+            {current.data.months.map((month) => (
+              <div key={month.key} className="glass flex items-center gap-3 px-4 py-3.5">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold truncate">{month.label}</div>
+                  <div className="text-[11px] text-muted-foreground">{month.key} · {month.weeks.length} semanas</div>
+                </div>
+                <button
+                  type="button"
+                  className="pressable rounded-full border border-red-400/20 bg-red-400/10 px-3 py-2 text-[11px] font-semibold text-red-300 disabled:opacity-40"
+                  disabled={current.data.months.length <= 1 || deleteMonth.isPending}
+                  onClick={async () => {
+                    if (!window.confirm('¿Eliminar el mes "' + month.label + '" de esta planificación? Los registros de entrenamiento no se borrarán.')) return;
+                    try {
+                      await deleteMonth.mutateAsync({ planningId: current.id, monthKey: month.key });
+                      toast.success("Mes eliminado: " + month.label);
+                    } catch (e) {
+                      toast.error((e as { message?: string })?.message ?? "No se pudo eliminar el mes.");
+                    }
+                  }}
+                >
+                  Eliminar
+                </button>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Eliminar un mes solo modifica la planificación. Tus entrenamientos registrados, pesos, PR y notas se conservan.
+          </p>
+        </section>
+      )}
+
+      {planningVersions.length > 0 && (
+        <section className="mt-7">
+          <div className="mb-2">
+            <p className="eyebrow">Historial</p>
+            <h2 className="mt-1 text-lg font-semibold">Otras planificaciones</h2>
+          </div>
+          <div className="space-y-2">
+            {planningVersions.map((version) => {
+              const active = version.id === current?.id;
+              return (
+                <div key={version.id} className="glass flex items-center gap-3 px-4 py-3.5">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold truncate">
+                      {version.source_filename ?? ("Planificación v" + version.version)}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      v{version.version} · {version.data.months.length} meses · {new Date(version.imported_at).toLocaleDateString("es-ES")}
+                      {active ? " · ACTIVA" : ""}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="pressable rounded-full border border-red-400/20 bg-red-400/10 px-3 py-2 text-[11px] font-semibold text-red-300"
+                    disabled={deletePlanning.isPending}
+                    onClick={async () => {
+                      const label = version.source_filename ?? ("planificación v" + version.version);
+                      if (!window.confirm('¿Eliminar "' + label + '" por completo? Esta acción elimina esa versión guardada, pero no tus resultados de entrenamiento.')) return;
+                      try {
+                        await deletePlanning.mutateAsync(version.id);
+                        toast.success("Planificación eliminada.");
+                      } catch (e) {
+                        toast.error((e as { message?: string })?.message ?? "No se pudo eliminar la planificación.");
+                      }
+                    }}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       <button

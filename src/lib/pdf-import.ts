@@ -7,12 +7,14 @@ import type { ParsedImport, ReviewRow } from "./generic-import";
 import { IMPORT_DAYS, normalizeDay } from "./generic-import";
 import { uid } from "./manual-plan";
 
-const WEEK_RE = /(?:SEMANA|WEEK|MICROCICLO)\s*[:#-]?\s*(\d{1,2})(?!\s*[–-]\s*\d)/i;
-const DAY_RE = /^(LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO)\s*(?:\d{1,2}(?:\s+[A-ZÁÉÍÓÚÜÑ]+)?)?\s*[:\-–·]?\s*(.*)$/i;
+const WEEK_RE = /(?:SEMANA|WEEK|MICROCICLO|MICROCYCLE)\s*(?:N[º°]?\s*)?[:#-]?\s*(\d{1,2})(?:\s*(?:DE|OF|\/)\s*\d{1,2})?/i;
+const PHASE_RE = /^(?:FASE|PHASE|BLOQUE|BLOCK|MESOCICLO|MESOCYCLE|CICLO|CYCLE|PROGRAMA|PROGRAM)\b\s*[:#-]?\s*(.+)$/i;
+const DAY_NAMES = "LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO|MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY|MON|TUE|TUES|WED|THU|THUR|FRI|SAT|SUN";
+const DAY_RE = new RegExp("^\\s*(?:\\d{1,2}\\s*[.)-]?\\s*)?(" + DAY_NAMES + ")\\s*(?:\\d{1,2}(?:\\s+[A-ZÁÉÍÓÚÜÑ]+)?)?\\s*[:\\-–·]?\\s*(.*)$", "i");
 const DATE_RE = /\b(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?\b/;
-const BLOCK_RE = /^(WARM\s*[-–]?\s*UP|CALENTAMIENTO|MOVILIDAD|MOBILITY|FUERZA|STRENGTH|HALTEROFILIA|WEIGHTLIFTING|GIMNÁSTICOS|GIMNASTICOS|GYMNASTICS|SKILL|METCON|WOD|CONDITIONING|CARDIO|CORE|ZONA MEDIA|COOL\s*DOWN|VUELTA A LA CALMA|REST|DESCANSO)\s*[:\-–·]?\s*$/i;
-const NUMBERED_RE = /^\s*(\d{1,2})\.\s*(.+?)\s*$/;
-const DAY_INLINE_RE = /\b(LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO)\b\s*(?:\d{1,2}(?:\s+[A-ZÁÉÍÓÚÜÑ]+)?)?\s*[:\-–·]/i;
+const BLOCK_RE = /^(?:[A-F]\s*[.)-]?\s*)?(WARM\s*[-–]?\s*UP|CALENTAMIENTO|MOVILIDAD|MOBILITY|FUERZA|STRENGTH|STRENGH|MAX\s*STRENGH(?:\s+COMBINE)?|STRENGTH\s+WOD|STRENGH\s+WOD|ACCESS(?:ORY|SORY)?\s+STRENGH\s+WOD|METABOLIC\s+PUMP(?:\s+\d+)?|BODY\s+ARMOUR|BODY\s+ARMOR|POWER\s+WOD|AGONIST\s+ANTAGONIST|HALTEROFILIA|WEIGHTLIFTING|GIMNÁSTICOS|GIMNASTICOS|GYMNASTICS|SKILL|METCON|WOD|CONDITIONING|CARDIO|CORE|ZONA MEDIA|COOL\s*DOWN|VUELTA A LA CALMA|REST|DESCANSO)\s*[:\-–·]?\s*$/i;
+const NUMBERED_RE = /^\s*(\d{1,2})[.)]\s*(.+?)\s*$/;
+const DAY_INLINE_RE = new RegExp("\\b(?:\\d{1,2}\\s*[.)-]?\\s*)?(" + DAY_NAMES + ")\\b\\s*(?:\\d{1,2}(?:\\s+[A-ZÁÉÍÓÚÜÑ]+)?)?\\s*[:\\-–·]", "i");
 
 function cleanLine(value: string): string {
   return value
@@ -34,26 +36,82 @@ function isNoise(line: string): boolean {
   const normalized = normalizeForMatch(line);
   if (!normalized) return true;
   if (/^\d{1,3}$/.test(normalized)) return true;
-  if (/^(PAGE|PAGINA)\s*\d+(\s*(OF|DE)\s*\d+)?$/.test(normalized)) return true;
+  if (/^(PAGE|PAGINA|P)\s*\d+(\s*(OF|DE)\s*\d+)?$/.test(normalized)) return true;
   if (/^(RM\s*OR\s*DIE|TEAM\s*VADER)$/.test(normalized)) return true;
   if (/^(CROSSFIT\s*[·-]\s*PLANIFICACION SEMANAL|PLANIFICACION CROSSFIT.*)$/.test(normalized)) return true;
   if (/^(DATO|VALOR|DATO VALOR)$/.test(normalized)) return true;
   if (/^(REGISTRO DEL ATLETA|DIA CARGAS \/ RESULTADO RPE DIFICULTAD \/ NOTAS)$/.test(normalized)) return true;
   if (/^(REGISTRO|NOTA|ESTRATEGIA|RECUPERACION|OBJETIVO|REGLA DE AJUSTE|REFERENCIA)$/.test(normalized)) return true;
   if (/^COMPLETAR DESPUES DE CADA SESION/.test(normalized)) return true;
+  if (/^(WARM\s*UP|COOL\s*DOWN|STRENGTH|STRENGH|METCON|WOD|AMRAP|EMOM|FOR TIME)$/i.test(line)) return false;
   return false;
 }
 
 function looksLikeTrainingLine(line: string): boolean {
   if (line.length < 3) return false;
-  if (BLOCK_RE.test(line) || WEEK_RE.test(line) || DAY_RE.test(line) || DAY_INLINE_RE.test(line)) return true;
-  if (/\b(amrap|emom|for\s*time|every\s*\d+|on\s*the\s*\d+|rest|rounds?|reps?|sets?|kg|%|cal|sec|min|time\s*cap|zone\s*2|zona\s*2)\b/i.test(line)) return true;
+  if (BLOCK_RE.test(line) || WEEK_RE.test(line) || DAY_RE.test(line) || DAY_INLINE_RE.test(line) || PHASE_RE.test(line)) return true;
+  if (/\b(amrap|emom|e\d+mom|for\s*time|for\s*reps?|for\s*load|every\s*\d+|on\s*the\s*\d+|rest|rounds?|reps?|sets?|kg|lb|lbs|%|cal|sec|seconds?|min|mins?|minutes?|time\s*cap|zone\s*[1-5]|zona\s*[1-5]|rft|rft|interval|intervals?|ladder|descending|ascending|death\s*by|max\s*reps?|quality|tempo|rm|1rm|3rm|5rm|8rm|10rm|rx|rx'd|scaled|beginner|intermediate|advanced)\b/i.test(line)) return true;
+  if (/\b(air\s*squat|back\s*squat|front\s*squat|overhead\s*squat|deadlift|clean|snatch|jerk|thruster|press|bench|pull[- ]?up|push[- ]?up|muscle[- ]?up|toes?\s*to\s*bar|handstand|burpee|box\s*jump|double[- ]?under|run|row|bike|ski|swim|wall\s*ball|kettlebell|dumbbell|barbell|lunges?|sit[- ]?up|plank|carry|sled|rope\s*climb)\b/i.test(line)) return true;
   return /\d/.test(line);
 }
 
 function blockFromLine(line: string): string | null {
   const m = line.match(BLOCK_RE);
   return m ? cleanLine(m[1]).toUpperCase() : null;
+}
+
+type LayoutLine = { text: string; x: number; y: number };
+
+function groupLayoutItems(items: LayoutLine[]): LayoutLine[] {
+  const sorted = [...items].sort((a, b) => a.y - b.y || a.x - b.x);
+  const grouped: LayoutLine[] = [];
+  for (const item of sorted) {
+    const current = grouped.at(-1);
+    if (!current || Math.abs(current.y - item.y) > 3 || Math.abs(item.x - current.x) > 120) {
+      grouped.push({ text: item.text, x: item.x, y: item.y });
+    } else {
+      current.text += current.text.endsWith(" ") || item.text.startsWith(" ") ? item.text : " " + item.text;
+    }
+  }
+  return grouped.map((line) => ({ ...line, text: cleanLine(line.text) })).filter((line) => line.text);
+}
+
+function orderColumnLayout(items: LayoutLine[], pageWidth: number): string[] {
+  const raw = items.filter((item) => item.text.trim());
+  const provisional = groupLayoutItems(raw);
+  const dayAnchors = raw
+    .filter((item) => /^(?:\d{1,2}[.)-]?\s*)?(?:LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO)$/i.test(cleanLine(item.text)))
+    .map((item) => ({ x: item.x, y: item.y, day: item.text }));
+
+  if (dayAnchors.length < 2) {
+    return provisional
+      .sort((a, b) => a.y - b.y || a.x - b.x)
+      .map((line) => line.text)
+      .filter((line) => !isNoise(line));
+  }
+
+  const xCenters = [...new Set(dayAnchors.map((a) => Math.round(a.x * 10) / 10))].sort((a, b) => a - b);
+  const yCenters = [...new Set(dayAnchors.map((a) => Math.round(a.y * 10) / 10))].sort((a, b) => a - b);
+  const maxX = Math.max(...raw.map((item) => item.x));
+  const minX = Math.min(...raw.map((item) => item.x));
+  const result: string[] = [];
+
+  for (const yCenter of yCenters) {
+    const yIndex = yCenters.indexOf(yCenter);
+    const yMin = yIndex === 0 ? -Infinity : (yCenters[yIndex - 1] + yCenter) / 2;
+    const yMax = yIndex === yCenters.length - 1 ? Infinity : (yCenter + yCenters[yIndex + 1]) / 2;
+
+    for (let xIndex = 0; xIndex < xCenters.length; xIndex++) {
+      const xCenter = xCenters[xIndex];
+      const xMin = xIndex === 0 ? minX - 10 : (xCenters[xIndex - 1] + xCenter) / 2;
+      const xMax = xIndex === xCenters.length - 1 ? Math.min(pageWidth, maxX + 8) : (xCenter + xCenters[xIndex + 1]) / 2;
+      const regionItems = raw.filter((item) => item.x >= xMin && item.x < xMax && item.y >= yMin && item.y < yMax);
+      const regionLines = groupLayoutItems(regionItems).sort((a, b) => a.y - b.y || a.x - b.x);
+      result.push(...regionLines.map((line) => line.text).filter((line) => !isNoise(line)));
+    }
+  }
+
+  return result;
 }
 
 function normalizeDayLine(value: string): string | null {
@@ -63,13 +121,13 @@ function normalizeDayLine(value: string): string | null {
 
 function blockTypeFromLabel(label: string): ReviewRow["blockType"] {
   const n = normalizeForMatch(label);
-  if (/WARM UP|CALENTAMIENTO|MOVILIDAD|MOBILITY/.test(n)) return "MOVILIDAD";
-  if (/HALTEROFILIA|WEIGHTLIFTING|SNATCH|CLEAN|JERK/.test(n)) return "HALTEROFILIA";
-  if (/GIMNAST|GYMNAST|SKILL|PULL UP|MUSCLE UP|HANDSTAND/.test(n)) return "GIMNASTICOS";
-  if (/METCON|WOD|CONDITIONING|AMRAP|EMOM|FOR TIME/.test(n)) return "METCON";
-  if (/CARDIO|ENGINE|RUN|ROW|BIKE|ZONE 2|ZONA 2/.test(n)) return "CARDIO";
-  if (/FUERZA|STRENGTH|SQUAT|DEADLIFT|PRESS|BENCH/.test(n)) return "FUERZA";
-  if (/CORE|ZONA MEDIA|HOLLOW|GHD/.test(n)) return "OTRO";
+  if (/WARM UP|CALENTAMIENTO|MOVILIDAD|MOBILITY|ACTIVATION|ACTIVACION|STRETCH|FLEXIBILITY|COOL DOWN|RECOVERY/.test(n)) return "MOVILIDAD";
+  if (/HALTEROFILIA|WEIGHTLIFTING|OLYMPIC|SNATCH|CLEAN|JERK/.test(n)) return "HALTEROFILIA";
+  if (/GIMNAST|GYMNAST|SKILL|PULL UP|MUSCLE UP|HANDSTAND|HSPU|HOLLOW|L[- ]?SIT|TOES TO BAR/.test(n)) return "GIMNASTICOS";
+  if (/METCON|WOD|CONDITIONING|AMRAP|EMOM|E\dMOM|FOR TIME|FOR REPS|CHIPPER|COUPLET|TRIPLET|INTERVAL|RFT/.test(n)) return "METCON";
+  if (/CARDIO|ENGINE|MONOSTRUCTURAL|RUN|ROW|BIKE|SKI|SWIM|ZONE [1-5]|ZONA [1-5]/.test(n)) return "CARDIO";
+  if (/FUERZA|STRENGTH|STRENGH|MAX STRENGTH|SQUAT|DEADLIFT|PRESS|BENCH|RM/.test(n)) return "FUERZA";
+  if (/CORE|ZONA MEDIA|TRUNK|ABDOMINAL|HOLLOW|GHD/.test(n)) return "OTRO";
   return "OTRO";
 }
 
@@ -125,6 +183,51 @@ function addRow(rows: ReviewRow[], args: {
   });
 }
 
+async function extractPdfOcrLines(file: File): Promise<string[]> {
+  const data = new Uint8Array(await file.arrayBuffer());
+  const pdf = await getDocument({ data }).promise;
+  const Tesseract = await loadBrowserTesseract();
+  const lines: string[] = [];
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+    const page = await pdf.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 2 });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    const context = canvas.getContext("2d");
+    if (!context) continue;
+
+    await page.render({ canvasContext: context, viewport }).promise;
+    const worker = await Tesseract.createWorker(["spa", "eng"], 1);
+    try {
+      const result = await worker.recognize(canvas, { rotateAuto: true });
+      const ocrLines = result.data.lines ?? [];
+      const positioned = ocrLines
+        .filter((line) => line.text?.trim() && line.bbox)
+        .map((line) => ({
+          text: line.text as string,
+          x: Number(line.bbox?.x0 ?? 0),
+          y: Number(line.bbox?.y0 ?? 0),
+        }));
+      if (positioned.length >= 2) {
+        lines.push(...orderColumnLayout(positioned, canvas.width));
+      } else {
+        lines.push(
+          ...(result.data.text ?? "")
+            .split(/\r?\n/)
+            .map(cleanLine)
+            .filter(Boolean),
+        );
+      }
+    } finally {
+      await worker.terminate();
+    }
+  }
+
+  return lines.filter((line) => !isNoise(line));
+}
+
 async function extractPdfLines(file: File): Promise<string[]> {
   const data = new Uint8Array(await file.arrayBuffer());
   const pdf = await getDocument({ data }).promise;
@@ -133,26 +236,15 @@ async function extractPdfLines(file: File): Promise<string[]> {
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
     const page = await pdf.getPage(pageNumber);
     const content = await page.getTextContent();
-    const items = content.items
+    const items: LayoutLine[] = content.items
       .filter((item: any) => typeof item?.str === "string" && item.str.trim())
       .map((item: any) => ({
         text: item.str as string,
         x: Number(item.transform?.[4] ?? 0),
         y: Number(item.transform?.[5] ?? 0),
-      }))
-      .sort((a, b) => b.y - a.y || a.x - b.x);
+      }));
 
-    const pageLines: { y: number; text: string; x: number }[] = [];
-    for (const item of items) {
-      const current = pageLines.at(-1);
-      if (!current || Math.abs(current.y - item.y) > 3) {
-        pageLines.push({ y: item.y, text: item.text, x: item.x });
-      } else {
-        current.text += current.text.endsWith(" ") || item.text.startsWith(" ") ? item.text : " " + item.text;
-      }
-    }
-
-    lines.push(...pageLines.map((line) => cleanLine(line.text)));
+    lines.push(...orderColumnLayout(items, page.viewBox?.[2] ?? 595));
   }
 
   return lines.filter((line) => !isNoise(line));
@@ -216,6 +308,13 @@ function rowsFromLines(lines: string[]): ReviewRow[] {
     }
 
     if (!line || isNoise(line)) continue;
+
+    const phaseMatch = line.match(PHASE_RE);
+    if (phaseMatch) {
+      block = cleanLine(phaseMatch[2]).toUpperCase();
+      blockType = blockTypeFromLabel(block);
+      continue;
+    }
 
     const explicitBlock = blockFromLine(line);
     if (explicitBlock) {
@@ -286,11 +385,25 @@ function rowsFromLines(lines: string[]): ReviewRow[] {
 }
 
 export async function parsePdfPlanning(file: File): Promise<ParsedImport & { detectedMonth: { key: string; label: string } }> {
-  const lines = await extractPdfLines(file);
-  if (lines.length === 0) throw new Error("El PDF no contiene texto seleccionable. Si es un PDF escaneado, necesitaremos OCR.");
+  let lines = await extractPdfLines(file);
 
-  const rows = rowsFromLines(lines);
-  if (rows.length === 0) throw new Error("No pude detectar sesiones de entrenamiento en el PDF. Comprueba que contiene texto seleccionable y encabezados de días.");
+  if (lines.length === 0) {
+    lines = await extractPdfOcrLines(file);
+  }
+
+  let rows = rowsFromLines(lines);
+
+  if (rows.length === 0) {
+    const ocrLines = await extractPdfOcrLines(file);
+    if (ocrLines.length && ocrLines.join("\n") !== lines.join("\n")) {
+      lines = ocrLines;
+      rows = rowsFromLines(lines);
+    }
+  }
+
+  if (rows.length === 0) {
+    throw new Error("No pude detectar sesiones de entrenamiento en el PDF. Si es un PDF escaneado, comprueba que las páginas sean nítidas y que aparezcan días y ejercicios.");
+  }
 
   return {
     header: ["Texto PDF"],
@@ -343,6 +456,54 @@ export function mergePlanningPreservingPrevious(current: Planning | null | undef
 }
 
 
+type BrowserTesseract = {
+  createWorker: (
+    langs?: string | string[],
+    oem?: number,
+    options?: { logger?: (message: { progress?: number }) => void },
+  ) => Promise<{
+    recognize: (image: File, options?: { rotateAuto?: boolean }) => Promise<{
+      data: {
+        text?: string;
+        lines?: Array<{ text?: string; bbox?: { x0?: number; y0?: number } }>;
+      };
+    }>;
+    terminate: () => Promise<unknown>;
+  }>;
+};
+
+let tesseractPromise: Promise<BrowserTesseract> | null = null;
+
+async function loadBrowserTesseract(): Promise<BrowserTesseract> {
+  const getTesseract = () => (globalThis as typeof globalThis & { Tesseract?: BrowserTesseract }).Tesseract;
+
+  const existing = getTesseract();
+  if (existing) return existing;
+  if (typeof document === "undefined") {
+    throw new Error("El OCR de imágenes solo está disponible en el navegador.");
+  }
+
+  if (!tesseractPromise) {
+    tesseractPromise = new Promise<BrowserTesseract>((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js";
+      script.async = true;
+      script.onload = () => {
+        const api = getTesseract();
+        if (api) resolve(api);
+        else reject(new Error("No se pudo cargar el motor OCR."));
+      };
+      script.onerror = () => reject(new Error("No se pudo cargar el motor OCR. Comprueba la conexión a internet."));
+      document.head.appendChild(script);
+    }).catch((error) => {
+      tesseractPromise = null;
+      throw error;
+    });
+  }
+
+  return tesseractPromise;
+}
+
 /**
  * OCR de planificaciones en imagen.
  * Tesseract.js trabaja en un Web Worker, por lo que el reconocimiento no bloquea
@@ -357,21 +518,30 @@ export async function parseImagePlanning(
     throw new Error("Formato de imagen no compatible. Usa JPG, PNG o WEBP.");
   }
 
-  const { createWorker } = await import("tesseract.js");
-  const worker = await createWorker(["spa", "eng"], 1, {
-    logger: (message: { progress?: number }) => {
+  const Tesseract = await loadBrowserTesseract();
+  const worker = await Tesseract.createWorker(["spa", "eng"], 1, {
+    logger: (message) => {
       if (typeof message.progress === "number") onProgress?.(Math.max(0, Math.min(1, message.progress)));
     },
   });
 
   try {
     const result = await worker.recognize(file, { rotateAuto: true });
-    const text = result.data.text ?? "";
-    const lines = text
-      .split(/\r?\n/)
-      .map(cleanLine)
-      .filter(Boolean)
-      .filter((line) => !isNoise(line));
+    const ocrLines = result.data.lines ?? [];
+    const positioned = ocrLines
+      .filter((line) => line.text?.trim() && line.bbox)
+      .map((line) => ({
+        text: line.text as string,
+        x: Number(line.bbox?.x0 ?? 0),
+        y: Number(line.bbox?.y0 ?? 0),
+      }));
+    const lines = positioned.length >= 2
+      ? orderColumnLayout(positioned, Math.max(...positioned.map((line) => line.x), 1000) + 10)
+      : (result.data.text ?? "")
+          .split(/\r?\n/)
+          .map(cleanLine)
+          .filter(Boolean)
+          .filter((line) => !isNoise(line));
 
     if (lines.length === 0) {
       throw new Error("No pude detectar texto en la imagen. Usa una foto nítida y bien iluminada.");

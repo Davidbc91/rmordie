@@ -8,11 +8,12 @@ import { IMPORT_DAYS, normalizeDay } from "./generic-import";
 import { uid } from "./manual-plan";
 
 const WEEK_RE = /(?:SEMANA|WEEK|MICROCICLO)\s*[:#-]?\s*(\d{1,2})(?!\s*[–-]\s*\d)/i;
-const DAY_RE = /^(LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO)\s*(?:\d{1,2}(?:\s+[A-ZÁÉÍÓÚÜÑ]+)?)?\s*[:\-–·]?\s*(.*)$/i;
+const DAY_NAMES = "LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO";
+const DAY_RE = new RegExp("^\\s*(?:\\d{1,2}\\s*[.)-]?\\s*)?(" + DAY_NAMES + ")\\s*(?:\\d{1,2}(?:\\s+[A-ZÁÉÍÓÚÜÑ]+)?)?\\s*[:\\-–·]?\\s*(.*)$", "i");
 const DATE_RE = /\b(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?\b/;
-const BLOCK_RE = /^(WARM\s*[-–]?\s*UP|CALENTAMIENTO|MOVILIDAD|MOBILITY|FUERZA|STRENGTH|HALTEROFILIA|WEIGHTLIFTING|GIMNÁSTICOS|GIMNASTICOS|GYMNASTICS|SKILL|METCON|WOD|CONDITIONING|CARDIO|CORE|ZONA MEDIA|COOL\s*DOWN|VUELTA A LA CALMA|REST|DESCANSO)\s*[:\-–·]?\s*$/i;
-const NUMBERED_RE = /^\s*(\d{1,2})\.\s*(.+?)\s*$/;
-const DAY_INLINE_RE = /\b(LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO)\b\s*(?:\d{1,2}(?:\s+[A-ZÁÉÍÓÚÜÑ]+)?)?\s*[:\-–·]/i;
+const BLOCK_RE = /^(?:[A-F]\s*[.)-]?\s*)?(WARM\s*[-–]?\s*UP|CALENTAMIENTO|MOVILIDAD|MOBILITY|FUERZA|STRENGTH|STRENGH|MAX\s*STRENGH(?:\s+COMBINE)?|STRENGTH\s+WOD|STRENGH\s+WOD|ACCESS(?:ORY|SORY)?\s+STRENGH\s+WOD|METABOLIC\s+PUMP(?:\s+\d+)?|BODY\s+ARMOUR|BODY\s+ARMOR|POWER\s+WOD|AGONIST\s+ANTAGONIST|HALTEROFILIA|WEIGHTLIFTING|GIMNÁSTICOS|GIMNASTICOS|GYMNASTICS|SKILL|METCON|WOD|CONDITIONING|CARDIO|CORE|ZONA MEDIA|COOL\s*DOWN|VUELTA A LA CALMA|REST|DESCANSO)\s*[:\-–·]?\s*$/i;
+const NUMBERED_RE = /^\s*(\d{1,2})[.)]\s*(.+?)\s*$/;
+const DAY_INLINE_RE = new RegExp("\\b(?:\\d{1,2}\\s*[.)-]?\\s*)?(" + DAY_NAMES + ")\\b\\s*(?:\\d{1,2}(?:\\s+[A-ZÁÉÍÓÚÜÑ]+)?)?\\s*[:\\-–·]", "i");
 
 function cleanLine(value: string): string {
   return value
@@ -54,6 +55,60 @@ function looksLikeTrainingLine(line: string): boolean {
 function blockFromLine(line: string): string | null {
   const m = line.match(BLOCK_RE);
   return m ? cleanLine(m[1]).toUpperCase() : null;
+}
+
+type LayoutLine = { text: string; x: number; y: number };
+
+function groupLayoutItems(items: LayoutLine[]): LayoutLine[] {
+  const sorted = [...items].sort((a, b) => a.y - b.y || a.x - b.x);
+  const grouped: LayoutLine[] = [];
+  for (const item of sorted) {
+    const current = grouped.at(-1);
+    if (!current || Math.abs(current.y - item.y) > 3 || Math.abs(item.x - current.x) > 120) {
+      grouped.push({ text: item.text, x: item.x, y: item.y });
+    } else {
+      current.text += current.text.endsWith(" ") || item.text.startsWith(" ") ? item.text : " " + item.text;
+    }
+  }
+  return grouped.map((line) => ({ ...line, text: cleanLine(line.text) })).filter((line) => line.text);
+}
+
+function orderColumnLayout(items: LayoutLine[], pageWidth: number): string[] {
+  const raw = items.filter((item) => item.text.trim());
+  const provisional = groupLayoutItems(raw);
+  const dayAnchors = raw
+    .filter((item) => /^(?:\d{1,2}[.)-]?\s*)?(?:LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO)$/i.test(cleanLine(item.text)))
+    .map((item) => ({ x: item.x, y: item.y, day: item.text }));
+
+  if (dayAnchors.length < 2) {
+    return provisional
+      .sort((a, b) => a.y - b.y || a.x - b.x)
+      .map((line) => line.text)
+      .filter((line) => !isNoise(line));
+  }
+
+  const xCenters = [...new Set(dayAnchors.map((a) => Math.round(a.x * 10) / 10))].sort((a, b) => a - b);
+  const yCenters = [...new Set(dayAnchors.map((a) => Math.round(a.y * 10) / 10))].sort((a, b) => a - b);
+  const maxX = Math.max(...raw.map((item) => item.x));
+  const minX = Math.min(...raw.map((item) => item.x));
+  const result: string[] = [];
+
+  for (const yCenter of yCenters) {
+    const yIndex = yCenters.indexOf(yCenter);
+    const yMin = yIndex === 0 ? -Infinity : (yCenters[yIndex - 1] + yCenter) / 2;
+    const yMax = yIndex === yCenters.length - 1 ? Infinity : (yCenter + yCenters[yIndex + 1]) / 2;
+
+    for (let xIndex = 0; xIndex < xCenters.length; xIndex++) {
+      const xCenter = xCenters[xIndex];
+      const xMin = xIndex === 0 ? minX - 10 : (xCenters[xIndex - 1] + xCenter) / 2;
+      const xMax = xIndex === xCenters.length - 1 ? Math.min(pageWidth, maxX + 8) : (xCenter + xCenters[xIndex + 1]) / 2;
+      const regionItems = raw.filter((item) => item.x >= xMin && item.x < xMax && item.y >= yMin && item.y < yMax);
+      const regionLines = groupLayoutItems(regionItems).sort((a, b) => a.y - b.y || a.x - b.x);
+      result.push(...regionLines.map((line) => line.text).filter((line) => !isNoise(line)));
+    }
+  }
+
+  return result;
 }
 
 function normalizeDayLine(value: string): string | null {
@@ -133,26 +188,15 @@ async function extractPdfLines(file: File): Promise<string[]> {
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
     const page = await pdf.getPage(pageNumber);
     const content = await page.getTextContent();
-    const items = content.items
+    const items: LayoutLine[] = content.items
       .filter((item: any) => typeof item?.str === "string" && item.str.trim())
       .map((item: any) => ({
         text: item.str as string,
         x: Number(item.transform?.[4] ?? 0),
         y: Number(item.transform?.[5] ?? 0),
-      }))
-      .sort((a, b) => b.y - a.y || a.x - b.x);
+      }));
 
-    const pageLines: { y: number; text: string; x: number }[] = [];
-    for (const item of items) {
-      const current = pageLines.at(-1);
-      if (!current || Math.abs(current.y - item.y) > 3) {
-        pageLines.push({ y: item.y, text: item.text, x: item.x });
-      } else {
-        current.text += current.text.endsWith(" ") || item.text.startsWith(" ") ? item.text : " " + item.text;
-      }
-    }
-
-    lines.push(...pageLines.map((line) => cleanLine(line.text)));
+    lines.push(...orderColumnLayout(items, page.viewBox?.[2] ?? 595));
   }
 
   return lines.filter((line) => !isNoise(line));
@@ -349,7 +393,12 @@ type BrowserTesseract = {
     oem?: number,
     options?: { logger?: (message: { progress?: number }) => void },
   ) => Promise<{
-    recognize: (image: File, options?: { rotateAuto?: boolean }) => Promise<{ data: { text?: string } }>;
+    recognize: (image: File, options?: { rotateAuto?: boolean }) => Promise<{
+      data: {
+        text?: string;
+        lines?: Array<{ text?: string; bbox?: { x0?: number; y0?: number } }>;
+      };
+    }>;
     terminate: () => Promise<unknown>;
   }>;
 };
@@ -409,12 +458,21 @@ export async function parseImagePlanning(
 
   try {
     const result = await worker.recognize(file, { rotateAuto: true });
-    const text = result.data.text ?? "";
-    const lines = text
-      .split(/\r?\n/)
-      .map(cleanLine)
-      .filter(Boolean)
-      .filter((line) => !isNoise(line));
+    const ocrLines = result.data.lines ?? [];
+    const positioned = ocrLines
+      .filter((line) => line.text?.trim() && line.bbox)
+      .map((line) => ({
+        text: line.text as string,
+        x: Number(line.bbox?.x0 ?? 0),
+        y: Number(line.bbox?.y0 ?? 0),
+      }));
+    const lines = positioned.length >= 2
+      ? orderColumnLayout(positioned, Math.max(...positioned.map((line) => line.x), 1000) + 10)
+      : (result.data.text ?? "")
+          .split(/\r?\n/)
+          .map(cleanLine)
+          .filter(Boolean)
+          .filter((line) => !isNoise(line));
 
     if (lines.length === 0) {
       throw new Error("No pude detectar texto en la imagen. Usa una foto nítida y bien iluminada.");

@@ -343,6 +343,49 @@ export function mergePlanningPreservingPrevious(current: Planning | null | undef
 }
 
 
+type BrowserTesseract = {
+  createWorker: (
+    langs?: string | string[],
+    oem?: number,
+    options?: { logger?: (message: { progress?: number }) => void },
+  ) => Promise<{
+    recognize: (image: File, options?: { rotateAuto?: boolean }) => Promise<{ data: { text?: string } }>;
+    terminate: () => Promise<unknown>;
+  }>;
+};
+
+let tesseractPromise: Promise<BrowserTesseract> | null = null;
+
+async function loadBrowserTesseract(): Promise<BrowserTesseract> {
+  const getTesseract = () => (globalThis as typeof globalThis & { Tesseract?: BrowserTesseract }).Tesseract;
+
+  const existing = getTesseract();
+  if (existing) return existing;
+  if (typeof document === "undefined") {
+    throw new Error("El OCR de imágenes solo está disponible en el navegador.");
+  }
+
+  if (!tesseractPromise) {
+    tesseractPromise = new Promise<BrowserTesseract>((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js";
+      script.async = true;
+      script.onload = () => {
+        const api = getTesseract();
+        if (api) resolve(api);
+        else reject(new Error("No se pudo cargar el motor OCR."));
+      };
+      script.onerror = () => reject(new Error("No se pudo cargar el motor OCR. Comprueba la conexión a internet."));
+      document.head.appendChild(script);
+    }).catch((error) => {
+      tesseractPromise = null;
+      throw error;
+    });
+  }
+
+  return tesseractPromise;
+}
+
 /**
  * OCR de planificaciones en imagen.
  * Tesseract.js trabaja en un Web Worker, por lo que el reconocimiento no bloquea
@@ -357,9 +400,9 @@ export async function parseImagePlanning(
     throw new Error("Formato de imagen no compatible. Usa JPG, PNG o WEBP.");
   }
 
-  const { createWorker } = await import("tesseract.js");
-  const worker = await createWorker(["spa", "eng"], 1, {
-    logger: (message: { progress?: number }) => {
+  const Tesseract = await loadBrowserTesseract();
+  const worker = await Tesseract.createWorker(["spa", "eng"], 1, {
+    logger: (message) => {
       if (typeof message.progress === "number") onProgress?.(Math.max(0, Math.min(1, message.progress)));
     },
   });

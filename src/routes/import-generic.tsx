@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, Upload } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Image as ImageIcon, Upload } from "lucide-react";
 import { GlassBadge, GlassButton, GlassCard, GlassInput, GlassSection } from "@/components/glass";
 import { usePlanning, useSavePlanning, usePersonalRecords } from "@/lib/store";
 import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
@@ -15,7 +15,7 @@ import {
   parseGenericFile,
   rowIssues,
 } from "@/lib/generic-import";
-import { mergePlanningPreservingPrevious, parsePdfPlanning } from "@/lib/pdf-import";
+import { mergePlanningPreservingPrevious, parseImagePlanning, parsePdfPlanning } from "@/lib/pdf-import";
 
 export const Route = createFileRoute("/import-generic")({
   head: () => ({
@@ -37,7 +37,7 @@ function GenericImportPage() {
   const { data: records = [] } = usePersonalRecords();
   const save = useSavePlanning();
 
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false);\n  const [ocrProgress, setOcrProgress] = useState(0);
   const [parsed, setParsed] = useState<ParsedImport | null>(null);
   const [rows, setRows] = useState<ReviewRow[]>([]);
   const [filename, setFilename] = useState("");
@@ -105,7 +105,7 @@ function GenericImportPage() {
       {!parsed && (
         <label className="mt-6 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-border bg-surface p-10 text-center transition hover:border-gold/50">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl gold-gradient">
-            <Upload className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} />
+            {busy && ocrProgress > 0 ? <ImageIcon className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} /> : <Upload className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} />}
           </div>
           <div>
             <div className="text-sm font-medium">{busy ? "Leyendo…" : "Seleccionar archivo"}</div>
@@ -113,7 +113,7 @@ function GenericImportPage() {
           </div>
           <input
             type="file"
-            accept=".xlsx,.xls,.csv,.pdf,text/csv,application/pdf"
+            accept=".xlsx,.xls,.csv,.pdf,.jpg,.jpeg,.png,.webp,text/csv,application/pdf,image/jpeg,image/png,image/webp"
             disabled={busy}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
             className="hidden"

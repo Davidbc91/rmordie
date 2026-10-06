@@ -448,9 +448,17 @@ export function mergePlanningPreservingPrevious(current: Planning | null | undef
     }
   }
 
-  merged.sort((a, b) => a.order - b.order);
+  // Keep the athlete's existing custom month order. New months are appended
+  // following the order of the incoming file instead of resetting the calendar.
+  const incomingOnly = incoming.months.filter(
+    (month) => !current.months.some((existing) => existing.key.toUpperCase() === month.key.toUpperCase()),
+  );
+  const currentOrder = current.months
+    .map((existing) => merged.find((month) => month.key.toUpperCase() === existing.key.toUpperCase()))
+    .filter((month): month is Month => !!month);
+  const ordered = [...currentOrder, ...incomingOnly];
   return {
-    months: merged.map((month, index) => ({ ...month, order: index + 1 })),
+    months: ordered.map((month, index) => ({ ...month, order: index + 1 })),
     importedAt: new Date().toISOString(),
   };
 }

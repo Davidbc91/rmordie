@@ -27,6 +27,7 @@ import { useCreatePost } from "@/lib/social";
 import { useWellnessLogs } from "@/lib/profile-store";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { downloadSessionReport, type SessionReportLoad, type SessionReportWod } from "@/lib/session-report";
+import { renderWorkoutCard, shareOrDownloadCard } from "@/lib/share-card";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
   head: () => ({ meta: [{ title: "Entrenamiento — RMORDIE" }] }),
@@ -79,6 +80,7 @@ function WorkoutPage() {
   const [savingAll, setSavingAll] = useState(false);
   const [celebrate, setCelebrate] = useState<{ data: PrCelebrationData; outcome: PrOutcome } | null>(null);
   const [review, setReview] = useState<WorkoutReview | null>(null);
+  const [sharingCard, setSharingCard] = useState(false);
 
   useEffect(() => {
     setActiveWorkout({ month, week: weekN, day, label: `${month} · S${weekN} · ${day}` });
@@ -226,6 +228,34 @@ function WorkoutPage() {
     }
   }
 
+  async function shareToday() {
+    if (!d || !mo) return;
+    setSharingCard(true);
+    try {
+      const loads = (results as any[]).map((r) => ({
+        block: r.block_key,
+        weight: r.weight ?? null,
+        sets: r.sets ?? null,
+        reps: r.reps ?? null,
+      }));
+      const volume = loads.reduce((a, l) => a + (Number(l.weight) || 0) * (Number(l.sets) || 0) * (Number(l.reps) || 0), 0);
+      const blob = await renderWorkoutCard({
+        title: d.key,
+        subtitle: `${mo.label} · Semana ${weekN}`,
+        date: new Date().toLocaleDateString("es-ES"),
+        blocks: d.blocks.map((b) => ({ key: b.key, content: b.content })),
+        loads,
+        volume,
+      });
+      const outcome = await shareOrDownloadCard(blob, `entreno-${month}-s${weekN}-${day}.png`);
+      toast.success(outcome === "shared" ? "Imagen del entreno compartida" : "Imagen del entreno descargada");
+    } catch (e: any) {
+      if (e?.name !== "AbortError") toast.error(e?.message ?? "No se pudo generar la imagen del entreno");
+    } finally {
+      setSharingCard(false);
+    }
+  }
+
   async function shareCelebrated() {
     if (!celebrate) return;
     const out = celebrate.outcome;
@@ -313,6 +343,18 @@ function WorkoutPage() {
           </div>
         </div>
       </header>
+
+      {!d.isRest && (
+        <button
+          type="button"
+          onClick={shareToday}
+          disabled={sharingCard}
+          className="pressable mb-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/8 text-sm font-semibold disabled:opacity-50"
+        >
+          <Share2 className="h-4 w-4" />
+          {sharingCard ? "Generando imagen…" : "Compartir imagen del entreno"}
+        </button>
+      )}
 
       {(results.length > 0 || dayWods.length > 0) && (
         <button

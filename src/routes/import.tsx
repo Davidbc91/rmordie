@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useState } from "react";
 import { parsePlanningFromArrayBuffer } from "@/lib/excel-parser";
-import { usePlanning, usePlanningVersions, useSavePlanning, useDeletePlanningMonth, useDeletePlanningVersion } from "@/lib/store";
+import { usePlanning, usePlanningVersions, useSavePlanning, useDeletePlanningMonth, useDeletePlanningVersion, useReorderPlanningMonths } from "@/lib/store";
 import { toast } from "sonner";
 import { Upload, CheckCircle2 } from "lucide-react";
 
@@ -17,6 +17,7 @@ function ImportPage() {
   const save = useSavePlanning();
   const deleteMonth = useDeletePlanningMonth();
   const deletePlanning = useDeletePlanningVersion();
+  const reorderMonths = useReorderPlanningMonths();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
 
@@ -95,20 +96,56 @@ function ImportPage() {
             <div>
               <p className="eyebrow">Gestionar planificación activa</p>
               <h2 className="mt-1 text-lg font-semibold">Meses importados</h2>
+            <p className="mt-1 text-[11px] text-muted-foreground">Usa ↑ y ↓ para colocarlos en el orden que quieras. Ese orden será el de tu calendario.</p>
             </div>
             <span className="text-[11px] text-muted-foreground">{current.data.months.length} meses</span>
           </div>
           <div className="space-y-2">
-            {current.data.months.map((month) => (
-              <div key={month.key} className="glass flex items-center gap-3 px-4 py-3.5">
+            {current.data.months.map((month, index) => (
+              <div key={month.key} className="glass flex items-center gap-3 px-3 py-3">
+                <div className="flex shrink-0 flex-col gap-1">
+                  <button
+                    type="button"
+                    aria-label={"Mover " + month.label + " arriba"}
+                    disabled={index === 0 || reorderMonths.isPending}
+                    className="grid h-7 w-7 place-items-center rounded-lg border border-[color:var(--glass-border)] bg-white/[0.03] text-xs text-muted-foreground disabled:opacity-20"
+                    onClick={async () => {
+                      const keys = current.data.months.map((m) => m.key);
+                      [keys[index - 1], keys[index]] = [keys[index], keys[index - 1]];
+                      try {
+                        await reorderMonths.mutateAsync({ planningId: current.id, monthKeys: keys });
+                      } catch (e) {
+                        toast.error((e as { message?: string })?.message ?? "No se pudo cambiar el orden.");
+                      }
+                    }}
+                  >↑</button>
+                  <button
+                    type="button"
+                    aria-label={"Mover " + month.label + " abajo"}
+                    disabled={index === current.data.months.length - 1 || reorderMonths.isPending}
+                    className="grid h-7 w-7 place-items-center rounded-lg border border-[color:var(--glass-border)] bg-white/[0.03] text-xs text-muted-foreground disabled:opacity-20"
+                    onClick={async () => {
+                      const keys = current.data.months.map((m) => m.key);
+                      [keys[index], keys[index + 1]] = [keys[index + 1], keys[index]];
+                      try {
+                        await reorderMonths.mutateAsync({ planningId: current.id, monthKeys: keys });
+                      } catch (e) {
+                        toast.error((e as { message?: string })?.message ?? "No se pudo cambiar el orden.");
+                      }
+                    }}
+                  >↓</button>
+                </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold truncate">{month.label}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold tabular text-gold">{index + 1}</span>
+                    <div className="text-sm font-semibold truncate">{month.label}</div>
+                  </div>
                   <div className="text-[11px] text-muted-foreground">{month.key} · {month.weeks.length} semanas</div>
                 </div>
                 <button
                   type="button"
                   className="pressable rounded-full border border-red-400/20 bg-red-400/10 px-3 py-2 text-[11px] font-semibold text-red-300 disabled:opacity-40"
-                  disabled={current.data.months.length <= 1 || deleteMonth.isPending}
+                  disabled={current.data.months.length <= 1 || deleteMonth.isPending || reorderMonths.isPending}
                   onClick={async () => {
                     if (!window.confirm('¿Eliminar el mes "' + month.label + '" de esta planificación? Los registros de entrenamiento no se borrarán.')) return;
                     try {

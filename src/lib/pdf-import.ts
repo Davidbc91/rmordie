@@ -244,7 +244,7 @@ async function extractPdfLines(file: File): Promise<string[]> {
         y: Number(item.transform?.[5] ?? 0),
       }));
 
-    lines.push(...orderColumnLayout(items, page.viewBox?.[2] ?? 595));
+    lines.push(...orderColumnLayout(items, page.view?.[2] ?? 595));
   }
 
   return lines.filter((line) => !isNoise(line));
@@ -462,7 +462,7 @@ type BrowserTesseract = {
     oem?: number,
     options?: { logger?: (message: { progress?: number }) => void },
   ) => Promise<{
-    recognize: (image: File, options?: { rotateAuto?: boolean }) => Promise<{
+    recognize: (image: File | HTMLCanvasElement, options?: { rotateAuto?: boolean }) => Promise<{
       data: {
         text?: string;
         lines?: Array<{ text?: string; bbox?: { x0?: number; y0?: number } }>;

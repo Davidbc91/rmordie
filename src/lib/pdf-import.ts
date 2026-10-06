@@ -37,7 +37,9 @@ function isNoise(line: string): boolean {
   if (!normalized) return true;
   if (/^\d{1,3}$/.test(normalized)) return true;
   if (/^(PAGE|PAGINA|P)\s*\d+(\s*(OF|DE)\s*\d+)?$/.test(normalized)) return true;
-  if (/^(RM\s*OR\s*DIE|TEAM\s*VADER)$/.test(normalized)) return true;
+  if (/^(RM\s*OR\s*DIE|TEAM\s*VADER|TRAINCULT)$/.test(normalized)) return true;
+  if (/^(FW\s*[·-]?\s*©?\s*2023|YOU WON'T ALWAYS LOVE THE WORKOUT BUT YOU'?LL LOVE THE RESULT|PUMP PALACE|PROGRAMACION|TCPUMP)$/.test(normalized)) return true;
+  if (/^©\s*2023/.test(normalized)) return true;
   if (/^(CROSSFIT\s*[·-]\s*PLANIFICACION SEMANAL|PLANIFICACION CROSSFIT.*)$/.test(normalized)) return true;
   if (/^(DATO|VALOR|DATO VALOR)$/.test(normalized)) return true;
   if (/^(REGISTRO DEL ATLETA|DIA CARGAS \/ RESULTADO RPE DIFICULTAD \/ NOTAS)$/.test(normalized)) return true;
@@ -60,7 +62,47 @@ function blockFromLine(line: string): string | null {
   return m ? cleanLine(m[1]).toUpperCase() : null;
 }
 
-type LayoutLine = { text: string; x: number; y: number };
+type LayoutLine = { text: string; x: number; y: number; page?: number };
+
+function isDayAnchorText(value: string): boolean {
+  return /^(?:\d{1,2}\s*[.)-]?\s*)?(?:LUNES|MARTES|MI(?:E|É)RCOLES|JUEVES|VIERNES|S(?:Á|A)BADO|DOMINGO)$/i.test(cleanLine(value));
+}
+
+function orderPageColumns(items: LayoutLine[], pageWidth: number): string[] {
+  const raw = items.filter((item) => item.text.trim());
+  const anchors = raw
+    .filter((item) => isDayAnchorText(item.text))
+    .sort((a, b) => a.x - b.x);
+
+  if (anchors.length < 2) {
+    return groupLayoutItems(raw)
+      .sort((a, b) => a.y - b.y || a.x - b.x)
+      .map((line) => line.text)
+      .filter((line) => !isNoise(line));
+  }
+
+  // Grid PDFs must be read column-by-column, not by the PDF's global text order.
+  // This keeps every exercise and continuation under its actual day.
+  const columns = anchors.map((anchor, index) => ({
+    xMin: index === 0 ? -Infinity : (anchors[index - 1].x + anchor.x) / 2,
+    xMax: index === anchors.length - 1 ? Math.max(pageWidth, anchor.x + 20) : (anchor.x + anchors[index + 1].x) / 2,
+  }));
+
+  const result: string[] = [];
+  for (const column of columns) {
+    const columnItems = raw
+      .filter((item) => item.x >= column.xMin && item.x < column.xMax)
+      .sort((a, b) => a.y - b.y || a.x - b.x);
+
+    result.push(
+      ...groupLayoutItems(columnItems)
+        .sort((a, b) => a.y - b.y || a.x - b.x)
+        .map((line) => line.text)
+        .filter((line) => !isNoise(line)),
+    );
+  }
+  return result;
+}
 
 function groupLayoutItems(items: LayoutLine[]): LayoutLine[] {
   const sorted = [...items].sort((a, b) => a.y - b.y || a.x - b.x);
@@ -211,7 +253,7 @@ async function extractPdfOcrLines(file: File): Promise<string[]> {
           y: Number(line.bbox?.y0 ?? 0),
         }));
       if (positioned.length >= 2) {
-        lines.push(...orderColumnLayout(positioned, canvas.width));
+        lines.push(...orderPageColumns(positioned, canvas.width));
       } else {
         lines.push(
           ...(result.data.text ?? "")
@@ -244,7 +286,8 @@ async function extractPdfLines(file: File): Promise<string[]> {
         y: Number(item.transform?.[5] ?? 0),
       }));
 
-    lines.push(...orderColumnLayout(items, page.view?.[2] ?? 595));
+    const pageWidth = page.view?.[2] ?? 595;
+    lines.push(...orderPageColumns(items, pageWidth));
   }
 
   return lines.filter((line) => !isNoise(line));
@@ -369,7 +412,10 @@ function rowsFromLines(lines: string[]): ReviewRow[] {
       }
     }
 
-    if (!looksLikeTrainingLine(line)) continue;
+    // Once the day column is known, retain every meaningful line. Explanatory
+    // lines without a movement keyword are still part of the prescription.
+    const preserveLine = Boolean(day) && !/^[-–—_]+$/.test(line) && line.length >= 2;
+    if (!preserveLine && !looksLikeTrainingLine(line)) continue;
 
     addRow(rows, {
       line,

@@ -154,7 +154,7 @@ type MatrixSegment = {
 };
 
 function isWeekLabel(value: unknown): number | null {
-  const match = String(value ?? "").trim().match(/^(?:SEMANA|WEEK)\\s*(?:N[º°]?\\s*)?[:#-]?\\s*(\\d{1,2})/i);
+  const match = String(value ?? "").trim().match(/^(?:SEMANA|WEEK)\s*(?:N[º°]?\s*)?[:#-]?\s*(\d{1,2})/i);
   return match ? Math.max(1, Number(match[1])) : null;
 }
 
@@ -222,20 +222,20 @@ function findMatrixSegments(wb: XLSX.WorkBook): MatrixSegment[] {
 
 function matrixCellParts(rawValue: unknown, fallbackBlock: string): { block: string; exercise: string } | null {
   const raw = String(rawValue ?? "")
-    .replace(/\\r\\n/g, "\\n")
-    .replace(/\\r/g, "\\n")
-    .split("\\n")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
 
   if (raw.length === 0) return null;
 
-  const joined = raw.join("\\n");
+  const joined = raw.join("\n");
   const first = raw[0];
-  const heading = first.match(/^([A-F])\\s*[.)-]\\s*(.+)$/i);
+  const heading = first.match(/^([A-F])\s*[.)-]\s*(.+)$/i);
   const headingText = heading ? heading[2].trim() : "";
 
-  if (/^(?:REST|DESCANSO)(?:\\b|\\s)/i.test(first)) {
+  if (/^(?:REST|DESCANSO)(?:\b|\s)/i.test(first)) {
     return { block: "REST", exercise: joined };
   }
 
@@ -245,7 +245,7 @@ function matrixCellParts(rawValue: unknown, fallbackBlock: string): { block: str
 
   // The visible block heading is metadata. Keep every remaining line as the
   // exercise/prescription so no programming detail is lost.
-  const exercise = heading ? raw.slice(1).join("\\n").trim() || headingText : joined;
+  const exercise = heading ? raw.slice(1).join("\n").trim() || headingText : joined;
   return { block, exercise };
 }
 
@@ -306,7 +306,7 @@ function parseDayColumnMatrices(
         if (fingerprints.has(fingerprint)) continue;
         fingerprints.add(fingerprint);
 
-        const isRest = parts.block === "REST" || /^REST\\b|^DESCANSO\\b/i.test(parts.exercise);
+        const isRest = parts.block === "REST" || /^REST\b|^DESCANSO\b/i.test(parts.exercise);
         rows.push({
           id: uid(),
           sourceRow: r + 1,
@@ -554,7 +554,7 @@ export function buildPlanningFromRows(
               const content = serializeBlock(block);
               if (content.trim()) blocks.push({ key, content });
             }
-            const hasRestBlock = blocks.some((b) => /^REST\\b|^DESCANSO\\b/i.test(b.key) || /^(REST|DESCANSO)\\b/i.test(b.content));
+            const hasRestBlock = blocks.some((b) => /^REST\b|^DESCANSO\b/i.test(b.key) || /^(REST|DESCANSO)\b/i.test(b.content));
             return { key: dayKey, blocks: hasRestBlock ? [] : blocks, isRest: hasRestBlock || blocks.length === 0 };
           }),
         })),

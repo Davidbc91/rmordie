@@ -60,13 +60,49 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
 }
 
 export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
+  const W = 1080;
+  const pad = 64;
+  const contentWidth = W - pad * 2 - 64;
+  const contentFont = "500 30px system-ui, sans-serif";
+  const lineHeight = 40;
+
+  // Measure the complete workout before creating the canvas. The old renderer
+  // used a fixed 1350px canvas and stopped when it reached the footer, which
+  // silently clipped blocks E/F and long prescriptions.
+  const measureCanvas = document.createElement("canvas");
+  measureCanvas.width = 1;
+  measureCanvas.height = 1;
+  const measureCtx = measureCanvas.getContext("2d");
+  if (!measureCtx) throw new Error("Canvas no disponible");
+
+  const wrapMultiline = (text: string): string[] => {
+    measureCtx.font = contentFont;
+    return text
+      .split(/\n+/)
+      .flatMap((paragraph) => wrapText(measureCtx, paragraph.trim(), contentWidth));
+  };
+
+  const preparedBlocks = input.blocks.map((block) => {
+    const content = block.content.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    const lines = wrapMultiline(content);
+    const load = input.loads.find((l) => l.block === block.key);
+    const cardH = Math.max(128, 64 + lines.length * lineHeight + (load?.weight ? 76 : 0) + 28);
+    return { block, lines, load, cardH };
+  });
+
+  const statsHeight = 120;
+  const headerBottom = 320 + statsHeight + 40;
+  const blocksHeight = preparedBlocks.reduce((sum, item) => sum + item.cardH + 24, 0);
+  const footerSpace = 150;
+  const H = Math.max(1350, headerBottom + blocksHeight + footerSpace);
+
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas no disponible");
 
-  // Background with a subtle gold glow
+  // Background with a subtle gold glow.
   ctx.fillStyle = BG;
   ctx.fillRect(0, 0, W, H);
   const glow = ctx.createRadialGradient(W / 2, -120, 80, W / 2, -120, 720);
@@ -75,9 +111,7 @@ export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
 
-  const pad = 64;
-
-  // Brand
+  // Brand.
   ctx.textAlign = "center";
   ctx.fillStyle = GOLD;
   ctx.font = "700 30px system-ui, -apple-system, sans-serif";
@@ -89,7 +123,7 @@ export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
   ctx.lineTo(W / 2 + 140, 122);
   ctx.stroke();
 
-  // Title
+  // Title.
   ctx.fillStyle = TEXT;
   ctx.font = "800 76px system-ui, -apple-system, sans-serif";
   ctx.fillText(input.title.toUpperCase(), W / 2, 210);
@@ -99,7 +133,7 @@ export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
 
   let y = 320;
 
-  // Stats row
+  // Stats row.
   const stats: { label: string; value: string }[] = [
     { label: "BLOQUES", value: String(input.blocks.length) },
     {
@@ -111,7 +145,7 @@ export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
   stats.forEach((s, i) => {
     const x = pad + i * (statW + 24);
     ctx.fillStyle = PANEL;
-    roundRect(ctx, x, y, statW, 120, 24);
+    roundRect(ctx, x, y, statW, statsHeight, 24);
     ctx.fill();
     ctx.strokeStyle = BORDER;
     ctx.lineWidth = 1.5;
@@ -123,19 +157,13 @@ export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
     ctx.font = "800 44px system-ui, sans-serif";
     ctx.fillText(s.value, x + statW / 2, y + 94);
   });
-  y += 120 + 40;
+  y += statsHeight + 40;
 
-  // Blocks
+  // Render EVERY block. There is deliberately no "maxY" cut-off and no
+  // slice() on the text lines, so long sessions remain fully shareable.
   ctx.textAlign = "left";
-  const maxY = H - 150;
-  for (const block of input.blocks) {
-    if (y > maxY - 80) break;
-    const load = input.loads.find((l) => l.block === block.key);
-    const content = block.content.replace(/\s+/g, " ").trim();
-
-    ctx.font = "500 30px system-ui, sans-serif";
-    const contentLines = wrapText(ctx, content, W - pad * 2 - 64).slice(0, 3);
-    const cardH = 64 + contentLines.length * 40 + (load?.weight ? 76 : 0) + 28;
+  for (const item of preparedBlocks) {
+    const { block, lines: contentLines, load, cardH } = item;
 
     ctx.fillStyle = PANEL;
     roundRect(ctx, pad, y, W - pad * 2, cardH, 24);
@@ -144,7 +172,6 @@ export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Gold accent bar
     ctx.fillStyle = GOLD;
     roundRect(ctx, pad, y, 8, cardH, 4);
     ctx.fill();
@@ -154,26 +181,30 @@ export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
     ctx.fillText(block.key.toUpperCase(), pad + 36, y + 42);
 
     ctx.fillStyle = TEXT;
-    ctx.font = "500 30px system-ui, sans-serif";
-    contentLines.forEach((line, i) => ctx.fillText(line, pad + 36, y + 64 + (i + 1) * 40 - 8));
+    ctx.font = contentFont;
+    contentLines.forEach((line, i) => {
+      ctx.fillText(line, pad + 36, y + 64 + (i + 1) * lineHeight - 8);
+    });
 
     if (load?.weight) {
-      const ly = y + 64 + contentLines.length * 40 + 48;
+      const ly = y + 64 + contentLines.length * lineHeight + 48;
       ctx.fillStyle = GOLD;
       ctx.font = "800 36px system-ui, sans-serif";
       const parts = [`${load.weight} kg`];
       if (load.sets && load.reps) parts.push(`${load.sets}×${load.reps}`);
       ctx.fillText(parts.join("  ·  "), pad + 36, ly);
     }
+
     y += cardH + 24;
   }
 
-  // Footer
+  // Footer is positioned after the final block, not at a fixed canvas
+  // coordinate that can overlap or hide the last part of the workout.
   ctx.textAlign = "center";
   ctx.fillStyle = MUTED;
   ctx.font = "500 26px system-ui, sans-serif";
   const footer = input.athlete ? `${input.athlete} · Entrenado con RM OR DIE` : "Entrenado con RM OR DIE";
-  ctx.fillText(footer, W / 2, H - 72);
+  ctx.fillText(footer, W / 2, y + 48);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("No se pudo generar la imagen"))), "image/png");

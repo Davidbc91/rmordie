@@ -515,7 +515,7 @@ function annualDateAnchors(groups: BaselineGroup[]): Array<{ y: number; day: str
 
 function annualHeaderAnchors(groups: BaselineGroup[]): { boundaries: number[]; score: number } | null {
   const maxY = Math.max(...groups.map((group) => group.y), 0);
-  const candidates = groups.filter((group) => group.y >= maxY - 180);
+  const candidates = groups.filter((group) => group.y >= maxY - 300);
   let best: { score: number; anchors: Array<number | null> } | null = null;
 
   for (const group of candidates) {

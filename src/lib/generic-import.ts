@@ -350,6 +350,9 @@ export type ReviewRow = {
   day: string;          // "LUNES" | "" si no se pudo interpretar
   dateText: string;     // texto original de la fecha (informativo)
   week: number;
+  monthKey?: string;
+  monthLabel?: string;
+  monthOrder?: number;
   block: string;        // etiqueta del bloque visible
   blockType: BlockType;
   exercise: string;
@@ -521,26 +524,42 @@ export function buildPlanningFromRows(
   opts: { monthKey: string; monthLabel: string },
 ): Planning {
   const valid = rows.filter((r) => r.day && r.exercise.trim());
-  const weeks = Array.from(new Set(valid.map((r) => r.week))).sort((a, b) => a - b);
+  const monthGroups = new Map<string, { key: string; label: string; order: number; rows: ReviewRow[] }>();
 
-  const planning: Planning = {
-    months: [
-      {
-        key: opts.monthKey.trim() || "1. MI PLAN",
-        label: opts.monthLabel.trim() || "Mi plan",
-        order: 1,
+  for (const row of valid) {
+    const key = row.monthKey?.trim() || opts.monthKey.trim() || "1. MI PLAN";
+    const label = row.monthLabel?.trim() || opts.monthLabel.trim() || "Mi plan";
+    const order = row.monthOrder ?? Number(key.match(/^(\d+)\./)?.[1] ?? 999);
+    const existing = monthGroups.get(key.toUpperCase());
+    if (existing) existing.rows.push(row);
+    else monthGroups.set(key.toUpperCase(), { key, label, order, rows: [row] });
+  }
+
+  const months = [...monthGroups.values()]
+    .sort((a, b) => a.order - b.order || a.key.localeCompare(b.key))
+    .map((monthGroup, monthIndex) => {
+      const weeks = Array.from(new Set(monthGroup.rows.map((r) => r.week))).sort((a, b) => a - b);
+      return {
+        key: monthGroup.key,
+        label: monthGroup.label,
+        order: monthIndex + 1,
         weeks: weeks.map((wIndex) => ({
           index: wIndex,
           days: IMPORT_DAYS.map((dayKey) => {
-            const dayRows = valid.filter((r) => r.week === wIndex && r.day === dayKey);
+            const dayRows = monthGroup.rows.filter((r) => r.week === wIndex && r.day === dayKey);
             const blocks: { key: string; content: string }[] = [];
             const order: string[] = [];
             const grouped = new Map<string, ReviewRow[]>();
-            for (const r of dayRows) {
-              const key = (r.block.trim() || r.blockType).toUpperCase();
-              if (!grouped.has(key)) { grouped.set(key, []); order.push(key); }
-              grouped.get(key)!.push(r);
+
+            for (const row of dayRows) {
+              const key = (row.block.trim() || row.blockType).toUpperCase();
+              if (!grouped.has(key)) {
+                grouped.set(key, []);
+                order.push(key);
+              }
+              grouped.get(key)!.push(row);
             }
+
             for (const key of order) {
               const group = grouped.get(key)!;
               const block: ManualBlock = {
@@ -553,13 +572,22 @@ export function buildPlanningFromRows(
               const content = serializeBlock(block);
               if (content.trim()) blocks.push({ key, content });
             }
-            const hasRestBlock = blocks.some((b) => /^REST\b|^DESCANSO\b/i.test(b.key) || /^(REST|DESCANSO)\b/i.test(b.content));
-            return { key: dayKey, blocks: hasRestBlock ? [] : blocks, isRest: hasRestBlock || blocks.length === 0 };
+
+            const hasRestBlock = blocks.some(
+              (b) => /^REST\b|^DESCANSO\b/i.test(b.key) || /^(REST|DESCANSO)\b/i.test(b.content),
+            );
+            return {
+              key: dayKey,
+              blocks: hasRestBlock ? [] : blocks,
+              isRest: hasRestBlock || blocks.length === 0,
+            };
           }),
         })),
-      },
-    ],
+      };
+    });
+
+  return {
+    months,
     importedAt: new Date().toISOString(),
   };
-  return planning;
 }

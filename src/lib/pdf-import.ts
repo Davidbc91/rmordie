@@ -473,7 +473,7 @@ function groupCellItems(items: LayoutLine[]): string[] {
 function annualMonthFromGroups(groups: BaselineGroup[]): { month: number; year: number } | null {
   const candidates = groups.slice(0, 18).map((group) => group.items.map((item) => cleanLine(item.text)).join(" ")).join(" ");
   for (const [name, month] of Object.entries(ANNUAL_MONTHS)) {
-    const match = candidates.match(new RegExp("\\\\b" + name + "\\\\s+(20\\\\d{2})\\\\b", "i"));
+    const match = candidates.match(new RegExp("\\b" + name + "\\s+(20\\d{2})\\b", "i"));
     if (match) return { month, year: Number(match[1]) };
   }
   return null;
@@ -485,8 +485,8 @@ function annualMonthMeta(month: number, year: number): { key: string; label: str
   const monthAbbr = monthName.slice(0, 3);
   const order = (year - 2026) * 12 + month - 10 + 1;
   return {
-    key: \`\${Math.max(1, order)}. \${monthAbbr} \${year}\`,
-    label: \`\${monthName[0] + monthName.slice(1).toLowerCase()} \${year}\`,
+    key: `${Math.max(1, order)}. ${monthAbbr} ${year}`,
+    label: `${monthName[0] + monthName.slice(1).toLowerCase()} ${year}`,
     order: Math.max(1, order),
   };
 }
@@ -495,7 +495,7 @@ function annualWeekHeaders(groups: BaselineGroup[]): Array<{ y: number; week: nu
   return groups
     .map((group) => {
       const text = group.items.map((item) => cleanLine(item.text)).join(" ");
-      const match = text.match(/\\bSEMANA\\s*(\\d{1,2})\\b/i);
+      const match = text.match(/\bSEMANA\s*(\d{1,2})\b/i);
       return match ? { y: group.y, week: Number(match[1]) } : null;
     })
     .filter((value): value is { y: number; week: number } => value !== null);
@@ -505,7 +505,7 @@ function annualDateAnchors(groups: BaselineGroup[]): Array<{ y: number; day: str
   const result: Array<{ y: number; day: string; dateText: string; text: string }> = [];
   for (const group of groups) {
     const text = group.items.map((item) => cleanLine(item.text)).join(" ");
-    const match = text.match(/\\b(\\d{1,2}\\/\\d{1,2})\\s+(Lunes|Martes|Mi(?:e|é)rcoles|Jueves|Viernes|S(?:á|a)bado|Domingo)\\b/i);
+    const match = text.match(/\b(\d{1,2}\/\d{1,2})\s+(Lunes|Martes|Mi(?:e|é)rcoles|Jueves|Viernes|S(?:á|a)bado|Domingo)\b/i);
     if (!match) continue;
     const day = normalizeDayLine(match[2]);
     if (day) result.push({ y: group.y, day, dateText: match[1], text });
@@ -564,8 +564,8 @@ function annualCellLines(items: LayoutLine[], bounds: number[], upperY: number, 
   );
   return groupCellItems(cellItems).filter((line) => {
     const normalized = normalizeForMatch(line);
-    if (/^SEMANA\\s+\\d+/.test(normalized)) return false;
-    if (/^(OCTUBRE|NOVIEMBRE|DICIEMBRE|ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE)\\s+20\\d{2}$/.test(normalized)) return false;
+    if (/^SEMANA\s+\d+/.test(normalized)) return false;
+    if (/^(OCTUBRE|NOVIEMBRE|DICIEMBRE|ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE)\s+20\d{2}$/.test(normalized)) return false;
     if (/^(FECHA|DIA|FOCO|MOVILIDAD|CORE|CALENTAMIENTO|FUERZA|TECNICA|WOD|ACCESORIO|FESTIVO)/.test(normalized)) return false;
     return true;
   });

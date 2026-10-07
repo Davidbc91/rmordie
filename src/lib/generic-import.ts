@@ -412,7 +412,7 @@ export async function parseGenericFile(file: File): Promise<ParsedImport> {
   const isCsv = /\.csv$/i.test(file.name);
   const wb = isCsv
     ? XLSX.read(await file.text(), { type: "string", raw: false })
-    : XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+    : XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true, dense: true, nodim: true });
 
   // Primero detectamos la estructura visual de planificación con días en
   // columnas. Es el formato más propenso a pérdidas si se trata como una

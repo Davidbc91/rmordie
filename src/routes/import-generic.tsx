@@ -84,6 +84,8 @@ function GenericImportPage() {
 
   const reviewCount = rows.filter(needsReview).length;
   const validCount = rows.length - reviewCount;
+  const previewLimit = rows.length > 250 ? 250 : rows.length;
+  const previewRows = rows.slice(0, previewLimit);
 
   async function onConfirm() {
     if (validCount === 0) {
@@ -162,7 +164,16 @@ function GenericImportPage() {
 
           <GlassSection title="Filas">
             <div className="space-y-3">
-              {rows.map((r) => {
+              {rows.length > previewLimit && (
+                <GlassCard className="p-3 border-[color:var(--glass-border)]">
+                  <div className="text-xs text-muted-foreground">
+                    Planificación grande detectada: <span className="text-foreground">{rows.length} filas</span>.
+                    Para mantener la app fluida solo mostramos las primeras {previewLimit} en la revisión.
+                    <span className="text-foreground"> Todas las filas se conservarán al importar.</span>
+                  </div>
+                </GlassCard>
+              )}
+              {previewRows.map((r) => {
                 const issues = rowIssues(r);
                 const rec = r.exercise.trim() ? detectExercise(r.exercise, records) : null;
                 const pct = Number(r.percent.replace(",", "."));

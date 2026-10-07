@@ -294,7 +294,6 @@ function parseDayColumnMatrices(
         if (!parts) continue;
 
         const fingerprint = [
-          segment.sheetName,
           segment.week,
           dayColumn.key,
           parts.block,

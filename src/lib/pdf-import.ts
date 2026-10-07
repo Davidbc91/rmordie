@@ -430,7 +430,249 @@ function rowsFromLines(lines: string[]): ReviewRow[] {
   return rows;
 }
 
+
+type BaselineGroup = { y: number; items: LayoutLine[] };
+
+const ANNUAL_MONTHS: Record<string, number> = {
+  ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+  JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12,
+};
+
+const ANNUAL_COLUMN_PATTERNS: RegExp[] = [
+  /FECHA|D[ÍI]A/i, /^FOCO$/i, /MOVILIDAD.*CORE|MOVILIDAD|CORE/i,
+  /CALENTAMIENTO/i, /FUERZA.*T[ÉE]CNICA|FUERZA|T[ÉE]CNICA/i,
+  /^WOD$/i, /ACCESORIO/i, /^FESTIVO/i,
+];
+
+function baselineGroups(items: LayoutLine[]): BaselineGroup[] {
+  const sorted = [...items].filter((item) => item.text.trim()).sort((a, b) => b.y - a.y || a.x - b.x);
+  const groups: BaselineGroup[] = [];
+  for (const item of sorted) {
+    const current = groups.at(-1);
+    if (!current || Math.abs(current.y - item.y) > 3) groups.push({ y: item.y, items: [item] });
+    else current.items.push(item);
+  }
+  return groups.map((group) => ({ y: group.y, items: [...group.items].sort((a, b) => a.x - b.x) }));
+}
+
+function groupCellItems(items: LayoutLine[]): string[] {
+  const groups: BaselineGroup[] = [];
+  for (const item of [...items].sort((a, b) => b.y - a.y || a.x - b.x)) {
+    const current = groups.at(-1);
+    if (!current || Math.abs(current.y - item.y) > 3) groups.push({ y: item.y, items: [item] });
+    else current.items.push(item);
+  }
+  return groups
+    .sort((a, b) => b.y - a.y)
+    .map((group) => group.items.sort((a, b) => a.x - b.x).map((item) => cleanLine(item.text)).filter(Boolean).join(" "))
+    .map(cleanLine)
+    .filter(Boolean)
+    .filter((line) => !isNoise(line));
+}
+
+function annualMonthFromGroups(groups: BaselineGroup[]): { month: number; year: number } | null {
+  const candidates = groups.slice(0, 18).map((group) => group.items.map((item) => cleanLine(item.text)).join(" ")).join(" ");
+  for (const [name, month] of Object.entries(ANNUAL_MONTHS)) {
+    const match = candidates.match(new RegExp("\\\\b" + name + "\\\\s+(20\\\\d{2})\\\\b", "i"));
+    if (match) return { month, year: Number(match[1]) };
+  }
+  return null;
+}
+
+function annualMonthMeta(month: number, year: number): { key: string; label: string; order: number } {
+  const monthEntry = Object.entries(ANNUAL_MONTHS).find(([, value]) => value === month);
+  const monthName = monthEntry?.[0] ?? "Plan";
+  const monthAbbr = monthName.slice(0, 3);
+  const order = (year - 2026) * 12 + month - 10 + 1;
+  return {
+    key: \`\${Math.max(1, order)}. \${monthAbbr} \${year}\`,
+    label: \`\${monthName[0] + monthName.slice(1).toLowerCase()} \${year}\`,
+    order: Math.max(1, order),
+  };
+}
+
+function annualWeekHeaders(groups: BaselineGroup[]): Array<{ y: number; week: number }> {
+  return groups
+    .map((group) => {
+      const text = group.items.map((item) => cleanLine(item.text)).join(" ");
+      const match = text.match(/\\bSEMANA\\s*(\\d{1,2})\\b/i);
+      return match ? { y: group.y, week: Number(match[1]) } : null;
+    })
+    .filter((value): value is { y: number; week: number } => value !== null);
+}
+
+function annualDateAnchors(groups: BaselineGroup[]): Array<{ y: number; day: string; dateText: string; text: string }> {
+  const result: Array<{ y: number; day: string; dateText: string; text: string }> = [];
+  for (const group of groups) {
+    const text = group.items.map((item) => cleanLine(item.text)).join(" ");
+    const match = text.match(/\\b(\\d{1,2}\\/\\d{1,2})\\s+(Lunes|Martes|Mi(?:e|é)rcoles|Jueves|Viernes|S(?:á|a)bado|Domingo)\\b/i);
+    if (!match) continue;
+    const day = normalizeDayLine(match[2]);
+    if (day) result.push({ y: group.y, day, dateText: match[1], text });
+  }
+  return result;
+}
+
+function annualHeaderAnchors(groups: BaselineGroup[]): { boundaries: number[]; score: number } | null {
+  const maxY = Math.max(...groups.map((group) => group.y), 0);
+  const candidates = groups.filter((group) => group.y >= maxY - 180);
+  let best: { score: number; anchors: Array<number | null> } | null = null;
+
+  for (const group of candidates) {
+    const anchors = ANNUAL_COLUMN_PATTERNS.map((pattern) => {
+      const item = group.items.find((candidate) => pattern.test(cleanLine(candidate.text)));
+      return item ? item.x : null;
+    });
+    const score = anchors.filter((x): x is number => x !== null).length;
+    if (!best || score > best.score) best = { score, anchors };
+  }
+
+  if (!best || best.score < 5) return null;
+
+  const allX = groups.flatMap((group) => group.items.map((item) => item.x));
+  const maxX = Math.max(...allX, 595);
+  const minX = Math.min(...allX, 0);
+  const positions = [...best.anchors];
+
+  for (let i = 0; i < positions.length; i++) {
+    if (positions[i] !== null) continue;
+    let left = i - 1;
+    while (left >= 0 && positions[left] === null) left--;
+    let right = i + 1;
+    while (right < positions.length && positions[right] === null) right++;
+    if (left >= 0 && right < positions.length) {
+      positions[i] = positions[left]! + ((positions[right]! - positions[left]!) * (i - left)) / (right - left);
+    } else if (left >= 0) {
+      positions[i] = positions[left]! + (maxX - positions[left]!) / (positions.length - left);
+    } else if (right < positions.length) {
+      positions[i] = positions[right]! - (positions[right]! - minX) / (right + 1);
+    } else {
+      positions[i] = minX + ((maxX - minX) * i) / (positions.length - 1);
+    }
+  }
+
+  const sorted = positions as number[];
+  const boundaries = [minX - 10];
+  for (let i = 0; i < sorted.length - 1; i++) boundaries.push((sorted[i] + sorted[i + 1]) / 2);
+  boundaries.push(maxX + 30);
+  return { boundaries, score: best.score };
+}
+
+function annualCellLines(items: LayoutLine[], bounds: number[], upperY: number, lowerY: number, column: number): string[] {
+  const cellItems = items.filter(
+    (item) => item.x >= bounds[column] && item.x < bounds[column + 1] && item.y <= upperY && item.y > lowerY,
+  );
+  return groupCellItems(cellItems).filter((line) => {
+    const normalized = normalizeForMatch(line);
+    if (/^SEMANA\\s+\\d+/.test(normalized)) return false;
+    if (/^(OCTUBRE|NOVIEMBRE|DICIEMBRE|ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE)\\s+20\\d{2}$/.test(normalized)) return false;
+    if (/^(FECHA|DIA|FOCO|MOVILIDAD|CORE|CALENTAMIENTO|FUERZA|TECNICA|WOD|ACCESORIO|FESTIVO)/.test(normalized)) return false;
+    return true;
+  });
+}
+
+function annualRowsFromPage(items: LayoutLine[], pageNumber: number): { rows: ReviewRow[]; month?: { key: string; label: string; order: number } } {
+  const groups = baselineGroups(items);
+  const month = annualMonthFromGroups(groups);
+  const dates = annualDateAnchors(groups);
+  const weeks = annualWeekHeaders(groups);
+  const header = annualHeaderAnchors(groups);
+  if (!month || dates.length === 0 || !header) return { rows: [] };
+
+  const rows: ReviewRow[] = [];
+  const orderedDates = dates.sort((a, b) => b.y - a.y);
+  for (let index = 0; index < orderedDates.length; index++) {
+    const date = orderedDates[index];
+    const nextDate = orderedDates[index + 1];
+    const nextWeekHeader = weeks.filter((week) => week.y < date.y).sort((a, b) => b.y - a.y)[0];
+    const lowerY = nextDate ? nextDate.y + 4 : nextWeekHeader ? nextWeekHeader.y + 4 : 0;
+    const upperY = date.y + 5;
+    const week = weeks.filter((candidate) => candidate.y >= date.y).sort((a, b) => a.y - b.y)[0]?.week ?? weeks[0]?.week ?? 1;
+    const meta = annualMonthMeta(month.month, month.year);
+    const cells = Array.from({ length: 8 }, (_, column) => annualCellLines(items, header.boundaries, upperY, lowerY, column));
+    const focus = cells[1].join("\n").trim();
+    const restInDate = /DESCANSO/i.test(date.text);
+
+    const blockCells: Array<{ key: string; type: ReviewRow["blockType"]; lines: string[] }> = [
+      { key: "FOCO", type: "OTRO", lines: cells[1] },
+      { key: "1 · MOVILIDAD · CORE", type: "MOVILIDAD", lines: cells[2] },
+      { key: "2 · CALENTAMIENTO", type: "MOVILIDAD", lines: cells[3] },
+      { key: "3 · FUERZA · TÉCNICA", type: blockTypeFromLabel(cells[4].join(" ")), lines: cells[4] },
+      { key: "4 · WOD", type: "METCON", lines: cells[5] },
+      { key: "5 · ACCESORIO", type: "OTRO", lines: cells[6] },
+      { key: "FESTIVO", type: "OTRO", lines: cells[7] },
+    ];
+
+    if (restInDate && !focus) blockCells.unshift({ key: "DESCANSO", type: "OTRO", lines: ["Descanso"] });
+
+    for (const cell of blockCells) {
+      const content = cell.lines.join("\n").trim();
+      if (!content) continue;
+      rows.push({
+        id: uid(),
+        sourceRow: pageNumber * 10000 + index,
+        day: date.day,
+        dateText: date.dateText,
+        week,
+        monthKey: meta.key,
+        monthLabel: meta.label,
+        monthOrder: meta.order,
+        block: cell.key,
+        blockType: cell.type,
+        exercise: content,
+        sets: "",
+        reps: "",
+        percent: "",
+        load: "",
+        time: "",
+        distance: "",
+        raw: content,
+      });
+    }
+  }
+
+  return { rows, month: annualMonthMeta(month.month, month.year) };
+}
+
+async function extractAnnualPdfRows(file: File): Promise<{ rows: ReviewRow[]; months: Array<{ key: string; label: string; order: number }> }> {
+  const data = new Uint8Array(await file.arrayBuffer());
+  const pdf = await getDocument({ data }).promise;
+  const rows: ReviewRow[] = [];
+  const months = new Map<string, { key: string; label: string; order: number }>();
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    const items: LayoutLine[] = content.items
+      .filter((item: any) => typeof item?.str === "string" && item.str.trim())
+      .map((item: any) => ({
+        text: item.str as string,
+        x: Number(item.transform?.[4] ?? 0),
+        y: Number(item.transform?.[5] ?? 0),
+        page: pageNumber,
+      }));
+
+    const parsed = annualRowsFromPage(items, pageNumber);
+    rows.push(...parsed.rows);
+    if (parsed.month) months.set(parsed.month.key, parsed.month);
+  }
+
+  return { rows, months: [...months.values()].sort((a, b) => a.order - b.order) };
+}
+
 export async function parsePdfPlanning(file: File): Promise<ParsedImport & { detectedMonth: { key: string; label: string } }> {
+  const annual = await extractAnnualPdfRows(file);
+  if (annual.rows.length > 0) {
+    const firstMonth = annual.months[0] ?? { key: "1. PDF", label: "Plan PDF", order: 1 };
+    return {
+      header: ["FECHA", "DÍA", "FOCO", "MOVILIDAD · CORE", "CALENTAMIENTO", "FUERZA · TÉCNICA", "WOD", "ACCESORIO", "FESTIVO"],
+      columns: {},
+      rows: annual.rows,
+      unmapped: [],
+      detectedMonth: { key: firstMonth.key, label: firstMonth.label },
+    };
+  }
+
   let lines = await extractPdfLines(file);
 
   if (lines.length === 0) {

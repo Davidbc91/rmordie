@@ -49,7 +49,7 @@ function isRestContent(s: string) {
 }
 
 export function parsePlanningFromArrayBuffer(buf: ArrayBuffer): Planning {
-  const wb = XLSX.read(buf, { type: "array" });
+  const wb = XLSX.read(buf, { type: "array", dense: true, nodim: true });
   const months: Month[] = [];
 
   for (const sheetName of wb.SheetNames) {

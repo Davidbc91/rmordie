@@ -144,6 +144,193 @@ export function dayFromDate(d: Date): string {
   return DAY_FROM_INDEX[d.getUTCDay()];
 }
 
+type MatrixSegment = {
+  sheetName: string;
+  headerRow: number;
+  week: number;
+  dayColumns: Array<{ key: string; col: number }>;
+  startRow: number;
+  endRow: number;
+};
+
+function isWeekLabel(value: unknown): number | null {
+  const match = String(value ?? "").trim().match(/^(?:SEMANA|WEEK)\\s*(?:N[º°]?\\s*)?[:#-]?\\s*(\\d{1,2})/i);
+  return match ? Math.max(1, Number(match[1])) : null;
+}
+
+/**
+ * Detecta la estructura más importante de una planificación visual:
+ * días en columnas y bloques en filas. Este formato no debe pasar por el
+ * detector de columnas convencional porque "Lunes", "Martes"... son datos
+ * estructurales, no campos equivalentes a una sola columna "día".
+ */
+function findMatrixSegments(wb: XLSX.WorkBook): MatrixSegment[] {
+  const segments: MatrixSegment[] = [];
+
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const table = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+      header: 1,
+      defval: "",
+      blankrows: true,
+      raw: true,
+    });
+
+    let activeWeek = 1;
+
+    for (let r = 0; r < table.length; r++) {
+      const row = table[r] ?? [];
+      const weekHere = row.map(isWeekLabel).find((value): value is number => value !== null);
+      if (weekHere) activeWeek = weekHere;
+
+      const dayColumns: Array<{ key: string; col: number }> = [];
+      for (let c = 0; c < row.length; c++) {
+        const day = normalizeDay(row[c]);
+        if (day) dayColumns.push({ key: day, col: c });
+      }
+
+      // A genuine weekly matrix has at least two day columns on the same row.
+      // We require 2+ rather than exactly 7 so abbreviated Mon-Fri files also work.
+      if (dayColumns.length < 2) continue;
+
+      // A repeated header starts a new matrix segment.
+      let endRow = table.length;
+      for (let rr = r + 1; rr < table.length; rr++) {
+        const nextRow = table[rr] ?? [];
+        const nextDayCount = nextRow.reduce((count, cell) => count + (normalizeDay(cell) ? 1 : 0), 0);
+        if (nextDayCount >= 2) {
+          endRow = rr;
+          break;
+        }
+      }
+
+      segments.push({
+        sheetName,
+        headerRow: r,
+        week: activeWeek,
+        dayColumns,
+        startRow: r + 1,
+        endRow,
+      });
+
+      r = endRow - 1;
+    }
+  }
+
+  return segments;
+}
+
+function matrixCellParts(rawValue: unknown, fallbackBlock: string): { block: string; exercise: string } | null {
+  const raw = String(rawValue ?? "")
+    .replace(/\\r\\n/g, "\\n")
+    .replace(/\\r/g, "\\n")
+    .split("\\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (raw.length === 0) return null;
+
+  const joined = raw.join("\\n");
+  const first = raw[0];
+  const heading = first.match(/^([A-F])\\s*[.)-]\\s*(.+)$/i);
+  const headingText = heading ? heading[2].trim() : "";
+
+  if (/^(?:REST|DESCANSO)(?:\\b|\\s)/i.test(first)) {
+    return { block: "REST", exercise: joined };
+  }
+
+  const block = heading
+    ? `${heading[1].toUpperCase()}. ${headingText.toUpperCase()}`
+    : fallbackBlock.trim() || "PLAN";
+
+  // The visible block heading is metadata. Keep every remaining line as the
+  // exercise/prescription so no programming detail is lost.
+  const exercise = heading ? raw.slice(1).join("\\n").trim() || headingText : joined;
+  return { block, exercise };
+}
+
+function parseDayColumnMatrices(
+  wb: XLSX.WorkBook,
+): { header: string[]; rows: ReviewRow[] } | null {
+  const segments = findMatrixSegments(wb);
+  if (segments.length === 0) return null;
+
+  const rows: ReviewRow[] = [];
+  const fingerprints = new Set<string>();
+  let header: string[] = [];
+
+  for (const segment of segments) {
+    const ws = wb.Sheets[segment.sheetName];
+    const table = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+      header: 1,
+      defval: "",
+      blankrows: true,
+      raw: true,
+    });
+
+    if (header.length === 0) {
+      header = (table[segment.headerRow] ?? []).map((v) => String(v ?? "").trim()).filter(Boolean);
+    }
+
+    const firstDayCol = Math.min(...segment.dayColumns.map((d) => d.col));
+
+    for (let r = segment.startRow; r < segment.endRow; r++) {
+      const source = table[r] ?? [];
+
+      // In "BLOQUE | LUNES | ..." layouts, the label is the first meaningful
+      // cell before the first day column. In pure 7-column layouts the label
+      // lives inside each day cell ("A. WARM UP").
+      let fallbackBlock = "";
+      for (let c = 0; c < firstDayCol; c++) {
+        const value = String(source[c] ?? "").trim();
+        if (value) {
+          fallbackBlock = value;
+          break;
+        }
+      }
+
+      for (const dayColumn of segment.dayColumns) {
+        const parts = matrixCellParts(source[dayColumn.col], fallbackBlock);
+        if (!parts) continue;
+
+        const fingerprint = [
+          segment.sheetName,
+          segment.week,
+          dayColumn.key,
+          parts.block,
+          parts.exercise,
+        ].join("|").toUpperCase();
+
+        // Some workbooks intentionally contain a display sheet plus an
+        // "IMPORTAR" mirror. Never import the same visual cell twice.
+        if (fingerprints.has(fingerprint)) continue;
+        fingerprints.add(fingerprint);
+
+        const isRest = parts.block === "REST" || /^REST\\b|^DESCANSO\\b/i.test(parts.exercise);
+        rows.push({
+          id: uid(),
+          sourceRow: r + 1,
+          day: dayColumn.key,
+          dateText: "",
+          week: segment.week,
+          block: parts.block,
+          blockType: isRest ? "OTRO" : blockTypeFrom(parts.block + " " + parts.exercise),
+          exercise: parts.exercise,
+          sets: "",
+          reps: "",
+          percent: "",
+          load: "",
+          time: "",
+          distance: "",
+          raw: String(source[dayColumn.col] ?? "").trim(),
+        });
+      }
+    }
+  }
+
+  return rows.length ? { header, rows } : null;
+}
+
 function blockTypeFrom(value: string): BlockType {
   const n = norm(value);
   if (!n) return "OTRO";
@@ -227,6 +414,19 @@ export async function parseGenericFile(file: File): Promise<ParsedImport> {
   const wb = isCsv
     ? XLSX.read(await file.text(), { type: "string", raw: false })
     : XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+
+  // Primero detectamos la estructura visual de planificación con días en
+  // columnas. Es el formato más propenso a pérdidas si se trata como una
+  // tabla genérica convencional.
+  const matrix = parseDayColumnMatrices(wb);
+  if (matrix) {
+    return {
+      header: matrix.header,
+      columns: {},
+      rows: matrix.rows,
+      unmapped: [],
+    };
+  }
 
   const table = rowsFromWorkbook(wb);
   if (table.length < 2) throw new Error("El archivo no contiene una tabla con cabecera y filas de datos.");
@@ -354,7 +554,8 @@ export function buildPlanningFromRows(
               const content = serializeBlock(block);
               if (content.trim()) blocks.push({ key, content });
             }
-            return { key: dayKey, blocks, isRest: blocks.length === 0 };
+            const hasRestBlock = blocks.some((b) => /^REST\\b|^DESCANSO\\b/i.test(b.key) || /^(REST|DESCANSO)\\b/i.test(b.content));
+            return { key: dayKey, blocks: hasRestBlock ? [] : blocks, isRest: hasRestBlock || blocks.length === 0 };
           }),
         })),
       },

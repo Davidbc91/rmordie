@@ -566,7 +566,7 @@ function annualCellLines(items: LayoutLine[], bounds: number[], upperY: number, 
     const normalized = normalizeForMatch(line);
     if (/^SEMANA\s+\d+/.test(normalized)) return false;
     if (/^(OCTUBRE|NOVIEMBRE|DICIEMBRE|ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE)\s+20\d{2}$/.test(normalized)) return false;
-    if (/^(FECHA|DIA|FOCO|MOVILIDAD|CORE|CALENTAMIENTO|FUERZA|TECNICA|WOD|ACCESORIO|FESTIVO)/.test(normalized)) return false;
+    if (/^(FECHA|DIA|FOCO|MOVILIDAD|CORE|CALENTAMIENTO|FUERZA|TECNICA|WOD|ACCESORIO|FESTIVO)$/.test(normalized)) return false;
     return true;
   });
 }

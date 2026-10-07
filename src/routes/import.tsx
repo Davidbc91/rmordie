@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useState } from "react";
 import { parsePlanningFromArrayBuffer } from "@/lib/excel-parser";
+import { buildPlanningFromRows, parseGenericFile } from "@/lib/generic-import";
 import { usePlanning, usePlanningVersions, useSavePlanning, useDeletePlanningMonth, useDeletePlanningVersion, useReorderPlanningMonths } from "@/lib/store";
 import { toast } from "sonner";
 import { Upload, CheckCircle2 } from "lucide-react";
@@ -24,11 +25,25 @@ function ImportPage() {
   async function onFile(f: File) {
     setBusy(true);
     try {
-      // 1) Lectura del archivo Excel
+      // 1) Lectura robusta del archivo Excel.
+      // Primero usamos el parser nativo de meses/semanas. Si el libro usa el
+      // formato visual de días en columnas, usamos el parser matricial como fallback.
       let planning;
       try {
         const buf = await f.arrayBuffer();
         planning = parsePlanningFromArrayBuffer(buf);
+
+        if (planning.months.length === 0) {
+          const parsed = await parseGenericFile(f);
+          if (!parsed.rows.length) {
+            toast.error("El Excel se ha leído, pero no se detectaron sesiones.");
+            return;
+          }
+          planning = buildPlanningFromRows(parsed.rows, {
+            monthKey: "1. IMPORTADO",
+            monthLabel: "Importado",
+          });
+        }
       } catch (e) {
         console.error("[import] error leyendo el Excel:", e);
         toast.error("No pude leer el Excel. Revisa el formato del archivo.");
@@ -36,7 +51,7 @@ function ImportPage() {
       }
 
       if (planning.months.length === 0) {
-        toast.error("El Excel se ha leído, pero no se detectaron meses.");
+        toast.error("El Excel se ha leído, pero no se detectaron meses ni sesiones.");
         return;
       }
 

@@ -717,6 +717,14 @@ async function looksLikeStructuredDailyPdf(file: File): Promise<boolean> {
   );
 }
 
+function pdfRowQuality(rows: ReviewRow[]): number {
+  if (!rows.length) return 0;
+  const dayCoverage = rows.filter((row) => !!row.day).length / rows.length;
+  const contentCoverage = rows.filter((row) => row.exercise.trim().length >= 3).length / rows.length;
+  const weekCoverage = new Set(rows.map((row) => row.week).filter((week) => week > 0)).size > 1 ? 1 : 0.5;
+  return Math.min(1, dayCoverage * 0.6 + contentCoverage * 0.3 + weekCoverage * 0.1);
+}
+
 export async function parsePdfPlanning(file: File): Promise<ParsedImport & { detectedMonth: { key: string; label: string } }> {
   // Este PDF es la versión paginada del TXT estructurado: un día completo
   // por página. Detectarlo antes del parser de cuadrículas evita recorrer las
@@ -756,11 +764,16 @@ export async function parsePdfPlanning(file: File): Promise<ParsedImport & { det
 
   let rows = rowsFromLines(lines);
 
-  if (rows.length === 0) {
+  // Texto parcial: no damos por buena una extracción solo porque haya
+  // encontrado alguna sesión. Si faltan días o contenido, hacemos un segundo
+  // intento con OCR y conservamos la interpretación que tenga mayor calidad.
+  if (rows.length === 0 || pdfRowQuality(rows) < 0.72) {
+    const textRows = rows;
     const ocrLines = await extractPdfOcrLines(file);
-    if (ocrLines.length && ocrLines.join("\n") !== lines.join("\n")) {
+    const ocrRows = ocrLines.length ? rowsFromLines(ocrLines) : [];
+    if (pdfRowQuality(ocrRows) > pdfRowQuality(textRows)) {
       lines = ocrLines;
-      rows = rowsFromLines(lines);
+      rows = ocrRows;
     }
   }
 

@@ -111,7 +111,9 @@ function dateForPlannedDay(
     return date >= anchor.date ? date : null;
   }
 
-  const nextMonday = addDays(anchor.date, (7 - anchorWeekday) % 7);
+  // La primera semana comienza a mitad de semana. Desde ahí, la siguiente
+  // semana real empieza el lunes siguiente.
+  const nextMonday = addDays(anchor.date, 7 - anchorWeekday);
   return addDays(nextMonday, (weekIndex - anchor.week - 1) * 7 + weekday);
 }
 

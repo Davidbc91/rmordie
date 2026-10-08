@@ -294,6 +294,7 @@ function teamVaderRoundCount(context: string): string {
 function parseTeamVaderExerciseLine(line: string, context: string) {
   let text = line.trim().replace(/^[.\-•]+\s*/, "").trim();
   text = text.replace(/^[A-Z]\s*[-:]\s*/i, "").trim();
+  text = text.replace(/^\d+\s*-\s*(?=\d)/, "").trim();
   const result = { exercise: text, sets: teamVaderRoundCount(context), reps: "", percent: "", load: "", time: "", distance: "" };
   const percentMatch = text.match(/(\d+(?:[.,]\d+)?)\s*%/);
   if (percentMatch) result.percent = percentMatch[1].replace(",", ".");
@@ -311,8 +312,13 @@ function parseTeamVaderExerciseLine(line: string, context: string) {
     result.reps = "Max";
     text = text.replace(/^max\b\s*/i, "").trim();
   }
+  const rmFirst = text.match(/^(\d*)RM\s+(.+)$/i);
+  if (rmFirst) {
+    result.reps = rmFirst[1] ? rmFirst[1] + "RM" : "RM";
+    text = rmFirst[2].trim();
+  }
   const repFirst = text.match(/^(\d+(?:[.,]\d+)?(?:\/\d+(?:[.,]\d+)?)?(?:\+\d+(?:[.,]\d+)?)*)(?:\s+|$)(.*)$/);
-  if (repFirst && !/^\d+(?:[.,]\d+)?\s*(?:m|km|mi|metros|min|mins?)\b/i.test(text)) {
+  if (repFirst && !/^\d+(?:[.,]\d+)?\s*(?:m|km|mi|metros|min|mins?|s|seg|['´]|")(?=\s|$)/i.test(text)) {
     result.reps = result.reps || repFirst[1];
     text = repFirst[2].trim();
   } else {
@@ -331,7 +337,12 @@ function parseTeamVaderExerciseLine(line: string, context: string) {
       break;
     }
   }
-  result.exercise = text.trim() || line.trim();
+  text = text
+    .replace(/\([^()]*%[^()]*\)/g, "")
+    .replace(/\((?:\d+(?:[.,]\d+)?(?:\/\d+(?:[.,]\d+)?){0,3})\)/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  result.exercise = text || line.trim();
   return result;
 }
 

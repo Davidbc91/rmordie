@@ -46,8 +46,8 @@ function orderMonthNumber(monKey: string) {
 
 function dayKey(v: unknown) {
   const n = norm(v);
-  const first = n.split(/\\r?\\n/)[0].trim();
-  const match = first.match(/^(LUNES|MARTES|MIERCOLES|MIÉRCOLES|JUEVES|VIERNES|SABADO|SÁBADO|DOMINGO)\\b/i);
+  const first = n.split(/\r?\n/)[0].trim();
+  const match = first.match(/^(LUNES|MARTES|MIERCOLES|MIÉRCOLES|JUEVES|VIERNES|SABADO|SÁBADO|DOMINGO)\b/i);
   if (!match) return "";
   return match[1].toUpperCase().replace("MIÉRCOLES", "MIERCOLES").replace("SÁBADO", "SABADO");
 }
@@ -57,8 +57,8 @@ function isDay(v: unknown) {
 }
 
 function extractExplicitDate(v: unknown, year?: number) {
-  const text = String(v ?? "").replace(/\\r/g, "");
-  const match = text.match(/(?:^|\\n)\\s*(\\d{1,2})\\/(\\d{1,2})(?:\\/(\\d{2,4}))?\\s*$/m);
+  const text = String(v ?? "").replace(/\r/g, "");
+  const match = text.match(/(?:^|\n)\s*(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s*$/m);
   if (!match) return undefined;
   const day = match[1].padStart(2, "0");
   const month = match[2].padStart(2, "0");
@@ -73,7 +73,7 @@ function extractExplicitDate(v: unknown, year?: number) {
 function sheetYear(rows: unknown[][]) {
   for (const row of rows.slice(0, 6)) {
     for (const value of row ?? []) {
-      const match = String(value ?? "").match(/\\b(20\\d{2})\\b/);
+      const match = String(value ?? "").match(/\b(20\d{2})\b/);
       if (match) return Number(match[1]);
     }
   }

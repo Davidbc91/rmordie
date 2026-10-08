@@ -9,6 +9,8 @@ export type Day = {
   key: string;   // "LUNES" | "MARTES" | ...
   blocks: Block[];
   isRest: boolean;
+  /** Fecha exacta del entrenamiento cuando el origen la proporciona. YYYY-MM-DD. */
+  date?: string;
 };
 
 export type Week = {

@@ -410,6 +410,180 @@ function rowsFromWorkbook(wb: XLSX.WorkBook): unknown[][] {
   return [];
 }
 
+
+const TEXT_MONTHS = [
+  "ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
+  "JUL", "AGO", "SEP", "OCT", "NOV", "DIC",
+] as const;
+
+const TEXT_MONTH_LABELS = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+] as const;
+
+function structuredTextMonth(date: Date, firstDate: Date) {
+  const order =
+    (date.getUTCFullYear() - firstDate.getUTCFullYear()) * 12 +
+    date.getUTCMonth() - firstDate.getUTCMonth() +
+    1;
+  const safeOrder = Math.max(1, order);
+  const month = date.getUTCMonth();
+  return {
+    key: `${safeOrder}. ${TEXT_MONTHS[month]} ${date.getUTCFullYear()}`,
+    label: `${TEXT_MONTH_LABELS[month]} ${date.getUTCFullYear()}`,
+    order: safeOrder,
+  };
+}
+
+function cleanStructuredTextSection(lines: string[]): string[] {
+  return lines
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !/^SIN CONTENIDO$/i.test(line))
+    // El generador puede colocar el resumen de la siguiente semana al final
+    // de un domingo. No forma parte del entrenamiento de ese día.
+    .filter((line) => !/^\d{1,2}\/\d{1,2}\s*-\s*\d{1,2}\/\d{1,2}\s*·/i.test(line))
+    .filter((line) => !/^[1-5]\s*·\s*(MOVILIDAD|CALENTAMIENTO|FUERZA|WOD|ACCESORIO)/i.test(line));
+}
+
+/**
+ * Importador nativo para el formato estructurado "RM OR DIE | FORMATO DE
+ * IMPORTACIÓN ESTRUCTURADO". Es texto plano, un registro por día, con cinco
+ * secciones fijas. Se conserva el contenido de cada sección completo para no
+ * perder prescripciones, porcentajes, descansos ni notas.
+ */
+export async function parseStructuredTextPlanning(file: File): Promise<ParsedImport> {
+  const source = (await file.text()).replace(/\r\n?/g, "\n").replace(/^\uFEFF/, "");
+  if (!/===\s*INICIO DIA\s*===/i.test(source)) {
+    throw new Error("El TXT no usa el formato estructurado de RM OR DIE.");
+  }
+
+  const chunks = source.match(/===\s*INICIO DIA\s*===([\\s\\S]*?)===\s*FIN DIA\s*===/gi) ?? [];
+  const parsedDays: Array<{
+    date: Date;
+    dateText: string;
+    day: string;
+    week: number;
+    focus: string;
+    sections: Array<{ title: string; content: string }>;
+  }> = [];
+
+  for (const chunk of chunks) {
+    const body = chunk
+      .replace(/^===\s*INICIO DIA\s*===/i, "")
+      .replace(/===\s*FIN DIA\s*===\s*$/i, "")
+      .trim();
+
+    const meta: Record<string, string> = {};
+    for (const line of body.split("\n")) {
+      const match = line.match(/^\s*(FECHA|DIA|SEMANA|BLOQUE|FASE|FOCO|ESTADO):\s*(.*)\s*$/i);
+      if (match) meta[match[1].toUpperCase()] = match[2].trim();
+    }
+
+    const date = parseDate(meta.FECHA);
+    const day = normalizeDay(meta.DIA) ?? (date ? dayFromDate(date) : "");
+    const week = Math.max(1, Number(meta.SEMANA) || 1);
+    if (!date || !day) continue;
+
+    const sections: Array<{ title: string; content: string }> = [];
+    const sectionMatches = [...body.matchAll(/^SECCION:\s*(.+?)\s*$([\\s\\S]*?)(?=^SECCION:|$)/gim)];
+    for (const match of sectionMatches) {
+      const title = String(match[1] ?? "").trim();
+      const content = cleanStructuredTextSection(String(match[2] ?? "").split("\n")).join("\n");
+      if (content) sections.push({ title, content });
+    }
+
+    parsedDays.push({
+      date,
+      dateText: meta.FECHA,
+      day,
+      week,
+      focus: meta.FOCO ?? "",
+      sections,
+    });
+  }
+
+  if (parsedDays.length === 0) {
+    throw new Error("No encontré registros diarios válidos en el TXT.");
+  }
+
+  parsedDays.sort((a, b) => a.date.getTime() - b.date.getTime());
+  const firstDate = parsedDays[0].date;
+  const rows: ReviewRow[] = [];
+
+  for (const day of parsedDays) {
+    const month = structuredTextMonth(day.date, firstDate);
+    const isRestDay = /^descanso\b/i.test(day.focus.trim());
+
+    if (isRestDay) {
+      const restText =
+        day.sections.map((section) => section.content).find(Boolean) ??
+        "Descanso total";
+      rows.push({
+        id: uid(),
+        sourceRow: rows.length + 1,
+        day: day.day,
+        dateText: day.dateText,
+        week: day.week,
+        monthKey: month.key,
+        monthLabel: month.label,
+        monthOrder: month.order,
+        block: "REST",
+        blockType: "OTRO",
+        exercise: restText,
+        sets: "",
+        reps: "",
+        percent: "",
+        load: "",
+        time: "",
+        distance: "",
+        raw: restText,
+      });
+      continue;
+    }
+
+    for (const section of day.sections) {
+      const normalizedTitle = norm(section.title);
+      const blockType =
+        normalizedTitle.includes("movilidad") || normalizedTitle.includes("calentamiento")
+          ? "MOVILIDAD"
+          : normalizedTitle.includes("fuerza")
+            ? blockTypeFrom("FUERZA " + section.content)
+            : normalizedTitle === "wod" || normalizedTitle.includes("metcon")
+              ? "METCON"
+              : blockTypeFrom(section.title + " " + section.content);
+
+      rows.push({
+        id: uid(),
+        sourceRow: rows.length + 1,
+        day: day.day,
+        dateText: day.dateText,
+        week: day.week,
+        monthKey: month.key,
+        monthLabel: month.label,
+        monthOrder: month.order,
+        block: section.title.toUpperCase(),
+        blockType,
+        exercise: section.content,
+        sets: "",
+        reps: "",
+        percent: "",
+        load: "",
+        time: "",
+        distance: "",
+        raw: section.content,
+      });
+    }
+  }
+
+  return {
+    header: ["FECHA", "DIA", "SEMANA", "BLOQUE", "FASE", "FOCO", "SECCION", "CONTENIDO"],
+    columns: {},
+    rows,
+    unmapped: [],
+  };
+}
+
 /** Lee el archivo (sin guardar nada) y devuelve la interpretación revisable. */
 export async function parseGenericFile(file: File): Promise<ParsedImport> {
   const isCsv = /\.csv$/i.test(file.name);

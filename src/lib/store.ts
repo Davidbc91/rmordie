@@ -145,10 +145,11 @@ export function useReorderPlanningMonths() {
         .select("data")
         .eq("id", planningId)
         .eq("user_id", uid)
-        .single();
+        .maybeSingle();
       if (readError) throw readError;
 
-      const current = row?.data as Planning;
+      if (!row) throw new Error("No se encontró esta planificación para tu perfil.");
+      const current = row.data as Planning;
       const months = current?.months ?? [];
       const byKey = new Map(months.map((month) => [month.key, month]));
       if (monthKeys.length !== months.length || monthKeys.some((key) => !byKey.has(key))) {

@@ -13,6 +13,7 @@ import {
   buildPlanningFromRows,
   needsReview,
   parseGenericFile,
+  parseStructuredTextPlanning,
   rowIssues,
 } from "@/lib/generic-import";
 import { mergePlanningPreservingPrevious, parseImagePlanning, parsePdfPlanning } from "@/lib/pdf-import";
@@ -50,12 +51,15 @@ function GenericImportPage() {
     setOcrProgress(0);
     try {
       const isPdf = /\.pdf$/i.test(f.name);
+      const isStructuredText = /\.txt$/i.test(f.name);
       const isImage = /^image\/(png|jpe?g|webp)$/i.test(f.type) || /\.(png|jpe?g|webp)$/i.test(f.name);
       const result = isImage
         ? await parseImagePlanning(f, setOcrProgress)
         : isPdf
           ? await parsePdfPlanning(f)
-          : await parseGenericFile(f);
+          : isStructuredText
+            ? await parseStructuredTextPlanning(f)
+            : await parseGenericFile(f);
       if (result.rows.length === 0) {
         toast.error("El archivo se ha leído, pero no contiene filas con datos.");
         return;
@@ -108,7 +112,7 @@ function GenericImportPage() {
     <AppShell>
       <h1 className="text-2xl font-semibold tracking-tight">Importar planificación</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Excel, CSV, PDF o imagen. <span className="gold-text">Nada se guarda hasta que confirmes y lo anterior se conserva.</span>
+        Excel, CSV, TXT estructurado, PDF o imagen. <span className="gold-text">Nada se guarda hasta que confirmes y lo anterior se conserva.</span>
       </p>
 
       {!parsed && (
@@ -122,11 +126,11 @@ function GenericImportPage() {
                 ? (ocrProgress > 0 ? `Analizando imagen… ${Math.round(ocrProgress * 100)}%` : "Leyendo…")
                 : "Seleccionar archivo"}
             </div>
-            <div className="mt-1 text-xs text-muted-foreground">.xlsx, .xls, .csv, .pdf, .jpg, .jpeg, .png o .webp</div>
+            <div className="mt-1 text-xs text-muted-foreground">.xlsx, .xls, .csv, .txt, .pdf, .jpg, .jpeg, .png o .webp</div>
           </div>
           <input
             type="file"
-            accept=".xlsx,.xls,.csv,.pdf,.jpg,.jpeg,.png,.webp,text/csv,application/pdf,image/jpeg,image/png,image/webp"
+            accept=".xlsx,.xls,.csv,.txt,.pdf,.jpg,.jpeg,.png,.webp,text/plain,text/csv,application/pdf,image/jpeg,image/png,image/webp"
             disabled={busy}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
             className="hidden"

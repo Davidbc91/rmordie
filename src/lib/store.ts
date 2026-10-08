@@ -256,6 +256,90 @@ export function useDeletePlanningVersion() {
   });
 }
 
+export function useClearAllPlanning() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!uid) throw new Error("No hay perfil activo");
+
+      // Vacía únicamente la planificación del atleta. Resultados, PRs,
+      // historial, notas, métricas y cualquier otro dato permanecen intactos.
+      const { data: ownRows, error: readError } = await supabase
+        .from("planning")
+        .select("id,version,imported_at,is_active")
+        .eq("user_id", uid)
+        .order("imported_at", { ascending: false });
+
+      if (readError) throw readError;
+
+      const rows = (ownRows ?? []) as Array<{
+        id: string;
+        version: number;
+        imported_at: string;
+        is_active: boolean;
+      }>;
+
+      const keep =
+        rows.find((row) => row.is_active) ??
+        rows[0] ??
+        null;
+
+      if (keep) {
+        const nextPlanning: Planning = {
+          months: [],
+          importedAt: new Date().toISOString(),
+        };
+
+        const { error: updateError } = await supabase
+          .from("planning")
+          .update({
+            data: nextPlanning as unknown as never,
+            source_filename: "Sin planificación",
+            is_active: true,
+          })
+          .eq("id", keep.id)
+          .eq("user_id", uid);
+
+        if (updateError) throw updateError;
+
+        const otherIds = rows.filter((row) => row.id !== keep.id).map((row) => row.id);
+        if (otherIds.length) {
+          const { error: deleteError } = await supabase
+            .from("planning")
+            .delete()
+            .eq("user_id", uid)
+            .in("id", otherIds);
+          if (deleteError) throw deleteError;
+        }
+      } else {
+        const { data: latest } = await supabase
+          .from("planning")
+          .select("version")
+          .order("version", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const nextVersion = ((latest?.version as number | undefined) ?? 0) + 1;
+        const { error: insertError } = await supabase.from("planning").insert({
+          user_id: uid,
+          version: nextVersion,
+          source_filename: "Sin planificación",
+          data: { months: [], importedAt: new Date().toISOString() } as never,
+          is_active: true,
+        });
+
+        if (insertError) throw insertError;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["planning", uid] });
+      qc.invalidateQueries({ queryKey: ["planning_versions", uid] });
+    },
+  });
+}
+
 export function useSavePlanning() {
   const qc = useQueryClient();
   return useMutation({

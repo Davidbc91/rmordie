@@ -118,7 +118,7 @@ function dateForPlannedDay(
 }
 
 function parseISODate(value: string) {
-  const match = value.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return null;
   const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
   return Number.isNaN(date.getTime()) ? null : date;

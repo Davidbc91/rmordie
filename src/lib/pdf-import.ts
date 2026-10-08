@@ -840,9 +840,10 @@ function dailyPlanRowsFromLines(lines: string[], filename: string): { rows: Revi
         dateText: dateTextForDay(header.dateDay),
         week: weekForDay(header.dateDay),
       };
-      block = "FOCO";
+      const isRestDay = /\\bDESCANSO\\b/i.test(header.title);
+      block = isRestDay ? "DESCANSO" : "FOCO";
       blockType = "OTRO";
-      push(header.title, i + 1, block, blockType);
+      push(isRestDay ? "Descanso" : header.title, i + 1, block, blockType);
       continue;
     }
 

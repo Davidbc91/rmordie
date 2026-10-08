@@ -1016,55 +1016,93 @@ export async function parsePdfPlanning(file: File): Promise<ParsedImport & { det
   };
 }
 
+function monthIdentity(month: { key: string; label: string }) {
+  const text = `${month.key} ${month.label}`.toUpperCase();
+  const monthMap: Record<string, string> = {
+    ENE: "01", ENERO: "01", FEB: "02", FEBRERO: "02", MAR: "03", MARZO: "03",
+    ABR: "04", ABRIL: "04", MAY: "05", MAYO: "05", JUN: "06", JUNIO: "06",
+    JUL: "07", JULIO: "07", AGO: "08", AGOSTO: "08", SEP: "09", SEPT: "09",
+    SEPTIEMBRE: "09", OCT: "10", OCTUBRE: "10", NOV: "11", NOVIEMBRE: "11",
+    DIC: "12", DICIEMBRE: "12",
+  };
+  const token = Object.keys(monthMap).sort((a, b) => b.length - a.length)
+    .find((key) => new RegExp(`\\b${key}\\b`).test(text));
+  if (!token) return text;
+  const year = text.match(/(?:19|20)\\d{2}/)?.[0] ?? "";
+  return `${monthMap[token]}-${year}`;
+}
+
 export function mergePlanningPreservingPrevious(current: Planning | null | undefined, incoming: Planning): Planning {
   if (!current) return incoming;
 
-  const incomingByKey = new Map(incoming.months.map((m) => [m.key.toUpperCase(), m]));
-  const merged = current.months.map((existingMonth) => {
-    const incomingMonth = incomingByKey.get(existingMonth.key.toUpperCase());
-    if (!incomingMonth) return existingMonth;
+  const incomingEntries = incoming.months.map((month) => ({
+    month,
+    identity: monthIdentity(month),
+    hasExactDates: month.weeks.some((week) => week.days.some((day) => Boolean(day.date))),
+  }));
 
-    const incomingWeeks = new Map(incomingMonth.weeks.map((w) => [w.index, w]));
+  const usedCurrent = new Set<string>();
+  const merged: Planning["months"] = [];
+
+  for (const existingMonth of current.months) {
+    const identity = monthIdentity(existingMonth);
+    const match = incomingEntries.find((entry) =>
+      !usedCurrent.has(entry.identity) &&
+      entry.identity === identity,
+    );
+
+    if (!match) {
+      merged.push(existingMonth);
+      continue;
+    }
+
+    usedCurrent.add(match.identity);
+
+    // A dated import represents the authoritative calendar for that month.
+    // Replace the old month wholesale so stale days from an older planning
+    // cannot survive and reappear on the calendar.
+    if (match.hasExactDates) {
+      merged.push({
+        ...match.month,
+        order: existingMonth.order,
+      });
+      continue;
+    }
+
+    const incomingWeeks = new Map(match.month.weeks.map((week) => [week.index, week]));
     const mergedWeeks = existingMonth.weeks.map((existingWeek) => {
       const incomingWeek = incomingWeeks.get(existingWeek.index);
       if (!incomingWeek) return existingWeek;
 
-      const incomingDays = new Map(incomingWeek.days.map((d) => [d.key, d]));
+      const incomingDays = new Map(incomingWeek.days.map((day) => [day.key, day]));
       return {
         ...existingWeek,
         days: existingWeek.days.map((existingDay) => incomingDays.get(existingDay.key) ?? existingDay),
       };
     });
 
-    for (const incomingWeek of incomingMonth.weeks) {
-      if (!mergedWeeks.some((w) => w.index === incomingWeek.index)) mergedWeeks.push(incomingWeek);
+    for (const incomingWeek of match.month.weeks) {
+      if (!mergedWeeks.some((week) => week.index === incomingWeek.index)) mergedWeeks.push(incomingWeek);
     }
 
-    mergedWeeks.sort((a, b) => a.index - b.index);
-    return { ...existingMonth, weeks: mergedWeeks };
-  });
+    merged.push({
+      ...existingMonth,
+      weeks: mergedWeeks.sort((a, b) => a.index - b.index),
+    });
+  }
 
-  for (const incomingMonth of incoming.months) {
-    if (!current.months.some((m) => m.key.toUpperCase() === incomingMonth.key.toUpperCase())) {
-      merged.push(incomingMonth);
+  for (const entry of incomingEntries) {
+    if (!usedCurrent.has(entry.identity)) {
+      merged.push(entry.month);
+      usedCurrent.add(entry.identity);
     }
   }
 
-  // Keep the athlete's existing custom month order. New months are appended
-  // following the order of the incoming file instead of resetting the calendar.
-  const incomingOnly = incoming.months.filter(
-    (month) => !current.months.some((existing) => existing.key.toUpperCase() === month.key.toUpperCase()),
-  );
-  const currentOrder = current.months
-    .map((existing) => merged.find((month) => month.key.toUpperCase() === existing.key.toUpperCase()))
-    .filter((month): month is Month => !!month);
-  const ordered = [...currentOrder, ...incomingOnly];
   return {
-    months: ordered.map((month, index) => ({ ...month, order: index + 1 })),
+    months: merged.map((month, index) => ({ ...month, order: index + 1 })),
     importedAt: new Date().toISOString(),
   };
 }
-
 
 type BrowserTesseract = {
   createWorker: (

@@ -486,12 +486,26 @@ export async function parseStructuredTextPlanning(file: File): Promise<ParsedImp
     if (!date || !day) continue;
 
     const sections: Array<{ title: string; content: string }> = [];
-    const sectionMatches = [...body.matchAll(/^SECCION:\s*(.+?)\s*$([\\s\\S]*?)(?=^SECCION:|$)/gim)];
-    for (const match of sectionMatches) {
-      const title = String(match[1] ?? "").trim();
-      const content = cleanStructuredTextSection(String(match[2] ?? "").split("\n")).join("\n");
-      if (content) sections.push({ title, content });
+    let activeTitle = "";
+    let activeLines: string[] = [];
+    const flushSection = () => {
+      if (!activeTitle) return;
+      const content = cleanStructuredTextSection(activeLines).join("\n");
+      if (content) sections.push({ title: activeTitle, content });
+      activeTitle = "";
+      activeLines = [];
+    };
+
+    for (const line of body.split("\n")) {
+      const sectionMatch = line.match(/^SECCION:\s*(.+?)\s*$/i);
+      if (sectionMatch) {
+        flushSection();
+        activeTitle = sectionMatch[1].trim();
+      } else if (activeTitle) {
+        activeLines.push(line);
+      }
     }
+    flushSection();
 
     parsedDays.push({
       date,

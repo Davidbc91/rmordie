@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ChevronLeft, Mail, User, UserPlus } from "lucide-react";
-import { authErrorMessage, sendLoginEmail, useSession, verifyLoginCode } from "@/lib/auth";
+import { authErrorMessage, sendLoginEmail, signInWithPassword, useSession, verifyLoginCode } from "@/lib/auth";
 import {
   getCurrentUserId,
   isUnlocked,
@@ -217,6 +217,8 @@ function EmailStep() {
     }
   }, []);
   const [code, setCode] = useState("");
+  const [usePassword, setUsePassword] = useState(false);
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
@@ -264,6 +266,56 @@ function EmailStep() {
     }
   }
 
+  async function onSubmitPassword(e: FormEvent) {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError("Escribe un correo válido.");
+    if (!password) return setError("Escribe tu contraseña.");
+    setError(null);
+    setBusy(true);
+    try {
+      await signInWithPassword(email, password);
+      writePendingLogin(null);
+    } catch (e) {
+      setError(authErrorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!sentTo && usePassword) {
+    return (
+      <form onSubmit={onSubmitPassword} className="space-y-3">
+        <input
+          type="email"
+          inputMode="email"
+          autoComplete="username"
+          placeholder="tu@correo.com"
+          aria-label="Correo electrónico"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={inputCls}
+        />
+        <input
+          type="password"
+          autoComplete="current-password"
+          placeholder="Contraseña"
+          aria-label="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className={inputCls}
+        />
+        {error && <p role="alert" className="text-center text-sm text-destructive">{error}</p>}
+        <button type="submit" disabled={busy} className={primaryCls} style={{ color: "var(--gold-foreground)" }}>
+          {busy ? "Entrando…" : "Entrar"}
+        </button>
+        <button type="button" onClick={() => { setUsePassword(false); setError(null); }} className={secondaryCls}>
+          <ChevronLeft className="h-4 w-4" /> Entrar con código por correo
+        </button>
+        <p className="text-center text-xs text-muted-foreground">La contraseña se crea en Ajustes, después de entrar una vez con el correo.</p>
+      </form>
+    );
+  }
+
   if (!sentTo) {
     return (
       <form onSubmit={onSubmitEmail} className="space-y-3">
@@ -282,7 +334,10 @@ function EmailStep() {
         <button type="submit" disabled={busy} className={primaryCls} style={{ color: "var(--gold-foreground)" }}>
           {busy ? "Enviando…" : "Enviarme el acceso"}
         </button>
-        <p className="text-center text-xs text-muted-foreground">Sin contraseñas: te llega un correo para entrar.</p>
+        <p className="text-center text-xs text-muted-foreground">Te llega un correo para entrar.</p>
+        <button type="button" onClick={() => { setUsePassword(true); setError(null); }} className={secondaryCls}>
+          Tengo contraseña
+        </button>
       </form>
     );
   }

@@ -5,6 +5,7 @@ import { signOut, getCurrentUserId } from "@/lib/pin-gate";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { PasswordSettings } from "@/components/settings/PasswordSettings";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Ajustes — RM OR DIE" }] }),
@@ -108,6 +109,8 @@ function SettingsPage() {
       </section>
 
       <NotificationSettings />
+
+      <PasswordSettings />
 
       <section className="mt-4 card-elevated p-5">
         <h2 className="text-sm font-semibold">Perfil y seguridad</h2>

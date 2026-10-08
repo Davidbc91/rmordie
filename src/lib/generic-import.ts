@@ -164,203 +164,237 @@ function isWeekLabel(value: unknown): number | null {
  * detector de columnas convencional porque "Lunes", "Martes"... son datos
  * estructurales, no campos equivalentes a una sola columna "día".
  */
-type TeamVaderMeta = { month: number; year: number; label: string; sheetName: string };
+type TeamVaderSheetMeta = {
+  sheetName: string;
+  month: number;
+  year: number;
+  label: string;
+  order: number;
+};
 
-function detectTeamVaderMeta(wb: XLSX.WorkBook): TeamVaderMeta | null {
-  const months: Record<string, number> = {
-    ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
-    JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12,
-  };
+const MONTH_NUMBER_BY_TOKEN: Record<string, number> = {
+  ENE: 1, ENERO: 1, FEB: 2, FEBRERO: 2, MAR: 3, MARZO: 3, ABR: 4, ABRIL: 4,
+  MAY: 5, MAYO: 5, JUN: 6, JUNIO: 6, JUL: 7, JULIO: 7, AGO: 8, AGOSTO: 8,
+  SEP: 9, SEPT: 9, SEPTIEMBRE: 9, OCT: 10, OCTUBRE: 10, NOV: 11, NOVIEMBRE: 11,
+  DIC: 12, DICIEMBRE: 12,
+};
 
+function parseTeamVaderSheetName(sheetName: string): { order: number; month: number } | null {
+  const match = sheetName.trim().match(/^(\d{1,2})\.\s*([A-ZÁÉÍÓÚÜÑ]+)$/i);
+  if (!match) return null;
+  const month = MONTH_NUMBER_BY_TOKEN[norm(match[2]).toUpperCase()];
+  if (!month) return null;
+  return { order: Number(match[1]), month };
+}
+
+function inferWorkbookStartYear(wb: XLSX.WorkBook): number {
+  const years = new Set<number>();
   for (const sheetName of wb.SheetNames) {
-    const ws = wb.Sheets[sheetName];
-    const table = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+    const table = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[sheetName], {
       header: 1,
       defval: "",
       blankrows: true,
       raw: true,
-    }).slice(0, 8);
-
-    const text = table.flat().map((value) => String(value ?? "")).join(" ");
-    if (!/RM\s*OR\s*DIE/i.test(text) || !/TEAM\s*VADER/i.test(text) && !/^\d+\.\s*OCTUBRE$/i.test(sheetName)) continue;
-
-    const match = text.match(/\b(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\s+(20\d{2})\b/i);
-    if (!match) continue;
-    const month = months[match[1].toUpperCase()];
-    if (!month) continue;
-
-    return {
-      month,
-      year: Number(match[2]),
-      label: `${match[1][0]}${match[1].slice(1).toLowerCase()} ${match[2]}`,
-      sheetName,
-    };
+    }).slice(0, 260);
+    for (const value of table.flat()) {
+      const matches = String(value ?? "").match(/\b(20\d{2})\b/g) ?? [];
+      for (const match of matches) years.add(Number(match));
+    }
   }
-
-  return null;
+  const candidates = [...years].filter((year) => year >= 2020 && year <= 2099).sort();
+  return candidates[0] ?? new Date().getFullYear();
 }
 
-function teamVaderDayCell(value: unknown): { day: string; explicitDate?: { day: number; month: number } } | null {
+function buildTeamVaderSheetMetas(wb: XLSX.WorkBook): TeamVaderSheetMeta[] {
+  const sheets = wb.SheetNames
+    .map((sheetName) => {
+      const parsed = parseTeamVaderSheetName(sheetName);
+      return parsed ? { sheetName, ...parsed } : null;
+    })
+    .filter((value): value is { sheetName: string; order: number; month: number } => Boolean(value))
+    .sort((a, b) => a.order - b.order);
+
+  if (!sheets.length) return [];
+
+  const startYear = inferWorkbookStartYear(wb);
+  let year = startYear;
+  let previousMonth = sheets[0].month;
+  return sheets.map((sheet, index) => {
+    if (index > 0 && sheet.month < previousMonth) year += 1;
+    previousMonth = sheet.month;
+    return {
+      ...sheet,
+      year,
+      label: ${TEXT_MONTH_LABELS[sheet.month - 1]} ${year},
+    };
+  });
+}
+
+
+function teamVaderDayCell(value: unknown): string | null {
   const raw = String(value ?? "").replace(/\r/g, "").trim();
   if (!raw) return null;
-  const lines = raw.split("\n").map((line) => line.trim()).filter(Boolean);
-  if (!lines.length) return null;
-
-  const day = normalizeDay(lines[0]);
-  if (!day) return null;
-
-  const dateMatch = raw.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);
-  return {
-    day,
-    explicitDate: dateMatch
-      ? { day: Number(dateMatch[1]), month: Number(dateMatch[2]) }
-      : undefined,
-  };
+  const firstLine = raw.split("\n").map((line) => line.trim()).find(Boolean) ?? "";
+  return normalizeDay(firstLine);
 }
 
-function teamVaderDateFor(day: string, week: number, month: number, year: number): Date {
+function teamVaderWeekNumber(value: unknown): number | null {
+  const match = String(value ?? "").trim().match(/^SEMANA\s*(\d+)\b/i);
+  return match ? Math.max(1, Number(match[1])) : null;
+}
+
+function teamVaderDateFor(day: string, week: number, month: number, year: number): Date | null {
   const first = new Date(Date.UTC(year, month - 1, 1));
-  const monday = new Date(first);
-  monday.setUTCDate(first.getUTCDate() - ((first.getUTCDay() + 6) % 7));
   const dayIndex = IMPORT_DAYS.indexOf(day as typeof IMPORT_DAYS[number]);
-  const date = new Date(monday);
-  date.setUTCDate(monday.getUTCDate() + (week - 1) * 7 + Math.max(0, dayIndex));
-  return date;
+  if (dayIndex < 0) return null;
+
+  const firstMondayIndex = (first.getUTCDay() + 6) % 7;
+  if (week === 1) {
+    const offset = dayIndex - firstMondayIndex;
+    if (offset < 0) return null;
+    const date = new Date(first);
+    date.setUTCDate(1 + offset);
+    return date;
+  }
+
+  const nextMondayOffset = (7 - firstMondayIndex) % 7;
+  const firstMonday = new Date(first);
+  firstMonday.setUTCDate(1 + nextMondayOffset);
+  firstMonday.setUTCDate(firstMonday.getUTCDate() + (week - 2) * 7 + dayIndex);
+  return firstMonday;
 }
 
 function teamVaderDateText(date: Date): string {
-  return `${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/${date.getUTCFullYear()}`;
+  return \${String(date.getUTCDate()).padStart(2, "0")}/\${String(date.getUTCMonth() + 1).padStart(2, "0")}/\${date.getUTCFullYear()};
+}
+
+function teamVaderCellHasContent(value: unknown): boolean {
+  const raw = String(value ?? "").replace(/\r/g, "").trim();
+  return Boolean(raw) && !/^[-–—]+$/.test(raw);
 }
 
 function parseTeamVaderWorkbook(
   wb: XLSX.WorkBook,
-): { header: string[]; rows: ReviewRow[]; monthKey: string; monthLabel: string; monthOrder: number } | null {
-  const meta = detectTeamVaderMeta(wb);
-  if (!meta) return null;
+): { header: string[]; columns: ColumnMap; rows: ReviewRow[]; unmapped: GenericField[]; detectedMonth?: { key: string; label: string } } | null {
+  const metas = buildTeamVaderSheetMetas(wb);
+  if (!metas.length) return null;
 
-  const ws = wb.Sheets[meta.sheetName];
-  const table = XLSX.utils.sheet_to_json<unknown[]>(ws, {
-    header: 1,
-    defval: "",
-    blankrows: true,
-    raw: true,
-  });
+  const allRows: ReviewRow[] = [];
+  const header: string[] = [];
+  const seenHeaderDays = new Set<string>();
 
-  const weekStarts: Array<{ col: number; week: number }> = [];
-  let dayHeaderRow = -1;
-  for (let r = 0; r < Math.min(table.length, 8); r++) {
-    const row = table[r] ?? [];
-    const weekHere = row
-      .map((value, col) => {
-        const match = String(value ?? "").match(/^\s*SEMANA\s*(\d+)\b/i);
-        return match ? { col, week: Number(match[1]) } : null;
-      })
-      .filter(Boolean) as Array<{ col: number; week: number }>;
-    if (weekHere.length) weekStarts.push(...weekHere);
+  for (const meta of metas) {
+    const table = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[meta.sheetName], {
+      header: 1,
+      defval: "",
+      blankrows: true,
+      raw: true,
+    });
 
-    const dayCount = row.filter((value) => teamVaderDayCell(value)).length;
-    if (dayCount >= 2) {
-      dayHeaderRow = r;
-      break;
+    const weekStarts: Array<{ col: number; week: number }> = [];
+    for (let r = 0; r < Math.min(table.length, 4); r++) {
+      const row = table[r] ?? [];
+      for (let col = 0; col < row.length; col++) {
+        const week = teamVaderWeekNumber(row[col]);
+        if (week) weekStarts.push({ col, week });
+      }
     }
-  }
 
-  if (dayHeaderRow < 0 || weekStarts.length === 0) return null;
+    const dayColumns: Array<{ col: number; day: string; week: number; date: Date }> = [];
+    const dayHeader = table[2] ?? [];
+    for (let col = 0; col < dayHeader.length; col++) {
+      const day = teamVaderDayCell(dayHeader[col]);
+      if (!day) continue;
+      const week = [...weekStarts].reverse().find((item) => item.col <= col)?.week ?? Math.floor((col - 1) / 6) + 1;
+      const date = teamVaderDateFor(day, week, meta.month, meta.year);
+      if (!date || date.getUTCMonth() !== meta.month - 1) continue;
+      dayColumns.push({ col, day, week, date });
+      const label = \${day} \${teamVaderDateText(date)};
+      if (!seenHeaderDays.has(label)) {
+        seenHeaderDays.add(label);
+        header.push(label);
+      }
+    }
 
-  const dayColumns: Array<{ col: number; day: string; week: number; date: Date }> = [];
-  for (let col = 0; col < (table[dayHeaderRow] ?? []).length; col++) {
-    const parsed = teamVaderDayCell((table[dayHeaderRow] ?? [])[col]);
-    if (!parsed) continue;
+    if (dayColumns.length < 2) continue;
 
-    const week = [...weekStarts].reverse().find((item) => item.col <= col)?.week ?? 1;
-    const inferred = teamVaderDateFor(parsed.day, week, meta.month, meta.year);
-    const date = parsed.explicitDate
-      ? new Date(Date.UTC(meta.year, parsed.explicitDate.month - 1, parsed.explicitDate.day))
-      : inferred;
+    for (let r = 3; r < table.length; r++) {
+      const source = table[r] ?? [];
+      const label = String(source[0] ?? "").trim();
+      if (!label && source.every((value) => !teamVaderCellHasContent(value))) continue;
 
-    if (date.getUTCFullYear() !== meta.year || date.getUTCMonth() !== meta.month - 1) continue;
-    dayColumns.push({ col, day: parsed.day, week, date });
-  }
+      const normalizedLabel = norm(label);
+      if (/^orden de ejecucion/.test(normalizedLabel)) break;
 
-  if (dayColumns.length < 3) return null;
+      for (const column of dayColumns) {
+        const raw = String(source[column.col] ?? "").replace(/\r/g, "").trim();
+        if (!teamVaderCellHasContent(raw)) continue;
 
-  const firstDataRow = dayHeaderRow + 1;
-  const rows: ReviewRow[] = [];
-  let sourceRow = firstDataRow + 1;
+        const block = label || "PLAN";
+        const isRest = /^(?:REST|DESCANSO)\b/i.test(raw);
+        allRows.push({
+          id: uid(),
+          sourceRow: r + 1,
+          day: column.day,
+          dateText: teamVaderDateText(column.date),
+          week: column.week,
+          monthKey: \${meta.order}. \${TEXT_MONTHS[meta.month - 1]} \${meta.year},
+          monthLabel: meta.label,
+          monthOrder: meta.order,
+          block: isRest ? "REST" : block.toUpperCase(),
+          blockType: isRest ? "OTRO" : blockTypeFrom(block + " " + raw),
+          exercise: raw,
+          sets: "",
+          reps: "",
+          percent: "",
+          load: "",
+          time: "",
+          distance: "",
+          raw,
+        });
+      }
+    }
 
-  for (let r = firstDataRow; r < table.length; r++, sourceRow++) {
-    const source = table[r] ?? [];
-    const label = String(source[0] ?? "").trim();
-    if (/^ORDEN\s+DE\s+EJECUCIÓN/i.test(label)) break;
-    if (!label) continue;
-
-    for (const column of dayColumns) {
-      const raw = String(source[column.col] ?? "").replace(/\r/g, "").trim();
-      if (!raw || /^[-–—]+$/.test(raw)) continue;
-
-      const isRest = /^(?:REST|DESCANSO)\b/i.test(raw);
-      const block = isRest ? "REST" : label.toUpperCase();
-      const blockType = isRest ? "OTRO" : blockTypeFrom(label + " " + raw);
-      rows.push({
+    const first = new Date(Date.UTC(meta.year, meta.month - 1, 1));
+    const lastDay = new Date(Date.UTC(meta.year, meta.month, 0)).getUTCDate();
+    for (let day = 1; day <= lastDay; day++) {
+      const date = new Date(Date.UTC(meta.year, meta.month - 1, day));
+      if (date.getUTCDay() !== 0) continue;
+      const week = Math.floor((((first.getUTCDay() + 6) % 7) + day - 1) / 7) + 1;
+      allRows.push({
         id: uid(),
-        sourceRow,
-        day: column.day,
-        dateText: teamVaderDateText(column.date),
-        week: column.week,
-        monthKey: `1. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
+        sourceRow: 0,
+        day: "DOMINGO",
+        dateText: teamVaderDateText(date),
+        week,
+        monthKey: \${meta.order}. \${TEXT_MONTHS[meta.month - 1]} \${meta.year},
         monthLabel: meta.label,
-        monthOrder: meta.month,
-        block,
-        blockType,
-        exercise: raw,
+        monthOrder: meta.order,
+        block: "REST",
+        blockType: "OTRO",
+        exercise: "DESCANSO",
         sets: "",
         reps: "",
         percent: "",
         load: "",
         time: "",
         distance: "",
-        raw,
+        raw: "DESCANSO",
       });
     }
   }
 
-  // Team Vader keeps Sundays outside the visual grid and explicitly states
-  // that Thursdays and Sundays are rest days. Materialize Sundays so RM OR DIE
-  // has a complete exact-date calendar.
-  const first = new Date(Date.UTC(meta.year, meta.month - 1, 1));
-  const lastDay = new Date(Date.UTC(meta.year, meta.month, 0)).getUTCDate();
-  for (let day = 1; day <= lastDay; day++) {
-    const date = new Date(Date.UTC(meta.year, meta.month - 1, day));
-    if (date.getUTCDay() !== 0) continue;
-    const week = Math.floor((((first.getUTCDay() + 6) % 7) + day - 1) / 7) + 1;
-    rows.push({
-      id: uid(),
-      sourceRow: sourceRow++,
-      day: "DOMINGO",
-      dateText: teamVaderDateText(date),
-      week,
-      monthKey: `1. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
-      monthLabel: meta.label,
-      monthOrder: meta.month,
-      block: "REST",
-      blockType: "OTRO",
-      exercise: "DESCANSO",
-      sets: "",
-      reps: "",
-      percent: "",
-      load: "",
-      time: "",
-      distance: "",
-      raw: "DESCANSO",
-    });
-  }
-
+  if (!allRows.length) return null;
+  const first = metas[0];
   return {
-    header: (table[dayHeaderRow] ?? []).map((value) => String(value ?? "").trim()),
-    rows,
-    monthKey: `1. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
-    monthLabel: meta.label,
-    monthOrder: meta.month,
+    header,
+    columns: {},
+    rows: allRows,
+    unmapped: [],
+    detectedMonth: {
+      key: \${first.order}. \${TEXT_MONTHS[first.month - 1]} \${first.year},
+      label: first.label,
+    },
   };
 }
 
@@ -810,15 +844,7 @@ export async function parseGenericFile(file: File): Promise<ParsedImport> {
   // dentro de algunas cabeceras y domingos fuera de la cuadrícula. Tiene un
   // parser específico para conservar las fechas exactas y el orden de bloques.
   const teamVader = parseTeamVaderWorkbook(wb);
-  if (teamVader) {
-    return {
-      header: teamVader.header,
-      columns: {},
-      rows: teamVader.rows,
-      unmapped: [],
-      detectedMonth: { key: teamVader.monthKey, label: teamVader.monthLabel },
-    };
-  }
+  if (teamVader) return teamVader;
 
   // Primero detectamos la estructura visual de planificación con días en
   // columnas. Es el formato más propenso a pérdidas si se trata como una

@@ -72,9 +72,9 @@ function diagnose(format: ImportFormat, rows: ReviewRow[]): ImportDiagnostics {
   confidence = Math.max(0, Math.min(1, confidence));
 
   const warnings: string[] = [];
-  if (missingDayRows) warnings.push(\`${missingDayRows} filas no tienen día identificado.\`);
-  if (emptyExerciseRows) warnings.push(\`${emptyExerciseRows} filas no tienen contenido de entrenamiento.\`);
-  if (duplicateRows) warnings.push(\`${duplicateRows} filas parecen duplicadas.\`);
+  if (missingDayRows) warnings.push(`${missingDayRows} filas no tienen día identificado.`);
+  if (emptyExerciseRows) warnings.push(`${emptyExerciseRows} filas no tienen contenido de entrenamiento.`);
+  if (duplicateRows) warnings.push(`${duplicateRows} filas parecen duplicadas.`);
   if (format === "pdf" && confidence < 0.7) warnings.push("El PDF tiene una lectura parcial; conviene revisar antes de importar.");
   if (format === "image") warnings.push("La lectura procede de OCR y puede requerir revisión.");
   if (format === "excel" && confidence < 0.7) warnings.push("La estructura del Excel no coincide completamente con los formatos conocidos.");

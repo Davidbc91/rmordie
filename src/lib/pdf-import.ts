@@ -660,6 +660,39 @@ async function extractAnnualPdfRows(file: File): Promise<{ rows: ReviewRow[]; mo
   return { rows, months: [...months.values()].sort((a, b) => a.order - b.order) };
 }
 
+async function extractStructuredDailyPdfLines(file: File): Promise<string[]> {
+  const data = new Uint8Array(await file.arrayBuffer());
+  const pdf = await getDocument({ data }).promise;
+  const lines: string[] = [];
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    const items = content.items
+      .filter((item: any) => typeof item?.str === "string" && item.str.trim())
+      .map((item: any) => ({
+        text: item.str as string,
+        x: Number(item.transform?.[4] ?? 0),
+        y: Number(item.transform?.[5] ?? 0),
+      }))
+      .sort((a, b) => b.y - a.y || a.x - b.x);
+
+    const grouped: Array<{ y: number; text: string }> = [];
+    for (const item of items) {
+      const current = grouped.at(-1);
+      if (!current || Math.abs(current.y - item.y) > 3) {
+        grouped.push({ y: item.y, text: item.text });
+      } else {
+        current.text += current.text.endsWith(" ") || item.text.startsWith(" ") ? item.text : " " + item.text;
+      }
+    }
+
+    lines.push(...grouped.map((line) => cleanLine(line.text)).filter(Boolean));
+  }
+
+  return lines;
+}
+
 async function looksLikeStructuredDailyPdf(file: File): Promise<boolean> {
   const data = new Uint8Array(await file.arrayBuffer());
   const pdf = await getDocument({ data }).promise;
@@ -685,7 +718,7 @@ export async function parsePdfPlanning(file: File): Promise<ParsedImport & { det
   // por página. Detectarlo antes del parser de cuadrículas evita recorrer las
   // 366 páginas dos veces y conserva las cinco secciones originales.
   if (await looksLikeStructuredDailyPdf(file)) {
-    const lines = await extractPdfLines(file);
+    const lines = await extractStructuredDailyPdfLines(file);
     const structuredSource = lines.join("\n");
     const structuredFile = new File(
       [structuredSource],

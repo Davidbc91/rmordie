@@ -383,6 +383,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
         </button>
         <button
           onClick={reset}
+          aria-label="Reiniciar temporizador"
           className="flex items-center justify-center gap-2 rounded-xl border px-5 py-4"
           style={{ borderColor: "var(--border)" }}
         >
@@ -427,6 +428,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
             </button>
             <button
               onClick={() => { reset(); setFullscreen(false); }}
+              aria-label="Reiniciar y salir de pantalla completa"
               className="flex items-center justify-center gap-2 rounded-xl border px-5 py-3"
               style={{ borderColor: "rgba(255,255,255,0.2)", color: "#fff" }}
             >
@@ -461,6 +463,7 @@ function NumberField({
       <div className="flex items-center gap-2">
         <button
           disabled={disabled}
+          aria-label={`Restar ${step} a ${label}`}
           onClick={() => onChange(clamp(value - step))}
           className="rounded-lg border p-2 disabled:opacity-40"
           style={{ borderColor: "var(--border)" }}
@@ -477,12 +480,14 @@ function NumberField({
             if (raw !== "") onChange(clamp(parseInt(raw, 10)));
           }}
           onBlur={() => setDraft(null)}
+          aria-label={label}
           className="w-16 rounded-lg border bg-transparent px-2 py-2 text-center font-mono disabled:opacity-40"
           style={{ borderColor: "var(--border)" }}
           inputMode="numeric"
         />
         <button
           disabled={disabled}
+          aria-label={`Sumar ${step} a ${label}`}
           onClick={() => onChange(clamp(value + step))}
           className="rounded-lg border p-2 disabled:opacity-40"
           style={{ borderColor: "var(--border)" }}

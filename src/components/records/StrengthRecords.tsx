@@ -17,6 +17,7 @@ import { resolveMovement, resolveMovementId } from "@/lib/dictionary/resolve";
 import { ProgressionRecommendations } from "./progression";
 import { Sparkline } from "./charts";
 import { HistoryModal } from "./HistoryModal";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
 export const REP_MAXES = [1, 3, 5, 10] as const;
 
@@ -327,7 +328,7 @@ export function StrengthRecords({
       )}
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Cargando…</p>
+        <PageSkeleton label="Cargando récords" />
       ) : visible.length === 0 ? (
         <div className="glass-panel rounded-[28px] p-10 text-center">
           <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-border">

@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Check, Circle, Moon, Calendar } from "lucide-react";
 import type { Month } from "@/lib/excel-parser";
 import { completedBlockMap, isSessionCompleted, sessionProgress } from "@/lib/session-progress";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
 
 const CALENDAR_MONTH_KEY = "malitos_calendar_month_key";
@@ -232,7 +233,7 @@ function isSameDate(a: Date, b: Date) {
 }
 
 function CalendarPage() {
-  const { data: planning } = usePlanning();
+  const { data: planning, isLoading } = usePlanning();
   const { data: results = [] } = useAllResults();
   const [idx, setIdx] = useState(0);
   const initialized = useRef(false);
@@ -271,7 +272,14 @@ function CalendarPage() {
   }, [goPrev, goNext]);
 
   const blockMap = useMemo(() => completedBlockMap(results), [results]);
+  // Debe calcularse antes de cualquier return: si un hook se ejecuta solo
+  // cuando ya hay planificación, React falla al llegar los datos tarde.
+  const planIndex = useMemo(() => buildPlanDateIndex(months), [months]);
   const today = new Date();
+
+  if (isLoading && !planning) {
+    return <PageSkeleton label="Cargando calendario" variant="calendar" />;
+  }
 
   if (!planning || !month) {
     return (
@@ -283,7 +291,6 @@ function CalendarPage() {
 
   const weekdayLabels = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
   const parsedMonth = parseMonthDate(month);
-  const planIndex = useMemo(() => buildPlanDateIndex(months), [months]);
   const calendarWeeks = parsedMonth
     ? buildCalendarWeeks(parsedMonth.year, parsedMonth.monthIndex)
     : [];

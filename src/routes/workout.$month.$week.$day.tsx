@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import {
   usePlanning,
   useDayResults,
@@ -41,7 +42,7 @@ function WorkoutPage() {
   const weekN = Number(week);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: planning } = usePlanning();
+  const { data: planning, isLoading: planningLoading } = usePlanning();
   const { data: results = [] } = useDayResults(month, weekN, day);
   const { data: wodResults = [] } = useWodResults();
   const { data: settings } = useSettings();
@@ -68,6 +69,7 @@ function WorkoutPage() {
     [wodResults, month, weekN, day],
   );
 
+  if (!planning && planningLoading) return <AppShell><PageSkeleton label="Cargando entreno" variant="workout" /></AppShell>;
   if (!planning) return <AppShell><p className="text-sm text-muted-foreground">Importa primero tu planificación.</p></AppShell>;
 
   const { month: mo, day: d } = findDay(planning.data, month, weekN, day);

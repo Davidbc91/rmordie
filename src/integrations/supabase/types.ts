@@ -1354,7 +1354,15 @@ export type Database = {
         Args: { _name: string; _pin_hash: string }
         Returns: string
       }
+      create_my_profile: {
+        Args: { _name: string; _pin_hash: string }
+        Returns: string
+      }
       delete_own_profile: {
+        Args: { _pin_hash: string; _profile_id: string }
+        Returns: boolean
+      }
+      link_my_profile: {
         Args: { _pin_hash: string; _profile_id: string }
         Returns: boolean
       }

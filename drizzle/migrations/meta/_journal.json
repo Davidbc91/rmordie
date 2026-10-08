@@ -15,6 +15,13 @@
       "when": 1791499611551,
       "tag": "0001_fase1_admin_y_pin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791499669384,
+      "tag": "0002_fase2_login_y_politicas",
+      "breakpoints": true
     }
   ]
 }

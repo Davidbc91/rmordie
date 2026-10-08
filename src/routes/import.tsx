@@ -105,7 +105,8 @@ function ImportPage() {
             {current.source_filename ?? "Sin nombre"} · {current.data.months.length} meses · importada {new Date(current.imported_at).toLocaleDateString("es-ES")}
           </div>
         </div>
-      )
+      )}
+
       {current && current.data.months.length > 0 && (
         <section className="mt-4">
           <div className="rounded-2xl border border-red-400/25 bg-red-400/[0.07] p-4">
@@ -140,7 +141,7 @@ function ImportPage() {
           </div>
         </section>
       )}
-}
+
 
       {current && (
         <section className="mt-6">
@@ -217,10 +218,6 @@ function ImportPage() {
             Eliminar un mes solo modifica la planificación. Tus entrenamientos registrados, pesos, PR y notas se conservan.
           </p>
         </section>
-      )}
-
-      {current && current.data.months.length > 0 && (
-
       )}
 
       {visiblePlanningVersions.length > 0 && (

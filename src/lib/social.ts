@@ -7,6 +7,18 @@ const BUCKET = "social";
 const SIGNED_TTL = 60 * 60 * 24 * 365 * 5;
 
 // ---------------- Types ----------------
+// Columnas que la app usa de cada tabla social. Pedirlas de forma explícita
+// evita descargar campos que no se pintan (y cualquier columna pesada que se
+// añada en el futuro).
+const PROFILE_COLUMNS =
+  "id,user_id,username,display_name,avatar_url,bio,box_name,level,crossfit_start_date,is_private,show_stats,show_prs,allow_comments,public_exercises,is_admin,created_at";
+const POST_COLUMNS =
+  "id,user_id,kind,caption,data,hashtags,visibility,is_hidden,likes_count,comments_count,saves_count,created_at";
+const MEDIA_COLUMNS = "id,post_id,url,media_type,position";
+const COMMENT_COLUMNS = "id,post_id,user_id,parent_id,content,likes_count,created_at";
+const NOTIFICATION_COLUMNS = "id,user_id,actor_id,kind,post_id,comment_id,message,is_read,created_at";
+const PR_HISTORY_COLUMNS = "user_id,exercise,rep_max,new_weight,previous_weight,changed_at";
+
 export type PostKind = "workout" | "pr" | "wod" | "benchmark" | "progress" | "media" | "text";
 
 export type SocialProfile = {
@@ -147,7 +159,7 @@ export function useMySocialProfile() {
     queryKey: ["social_profile", uid],
     enabled: !!uid,
     queryFn: async (): Promise<SocialProfile | null> => {
-      const { data, error } = await sb.from("social_profiles").select("*").eq("user_id", uid).maybeSingle();
+      const { data, error } = await sb.from("social_profiles").select(PROFILE_COLUMNS).eq("user_id", uid).maybeSingle();
       if (error) throw error;
       return (data as SocialProfile) ?? null;
     },
@@ -159,7 +171,7 @@ export function useSocialProfileByUsername(username?: string) {
     queryKey: ["social_profile_username", username],
     enabled: !!username,
     queryFn: async (): Promise<SocialProfile | null> => {
-      const { data, error } = await sb.from("social_profiles").select("*").eq("username", username).maybeSingle();
+      const { data, error } = await sb.from("social_profiles").select(PROFILE_COLUMNS).eq("username", username).maybeSingle();
       if (error) throw error;
       return (data as SocialProfile) ?? null;
     },
@@ -187,7 +199,7 @@ export function useSaveSocialProfile() {
 
 async function fetchProfilesByIds(ids: string[]): Promise<Record<string, SocialProfile>> {
   if (ids.length === 0) return {};
-  const { data, error } = await sb.from("social_profiles").select("*").in("user_id", ids);
+  const { data, error } = await sb.from("social_profiles").select(PROFILE_COLUMNS).in("user_id", ids);
   if (error) throw error;
   const map: Record<string, SocialProfile> = {};
   for (const p of (data ?? []) as SocialProfile[]) map[p.user_id] = p;
@@ -198,7 +210,7 @@ async function hydratePosts(rows: any[]): Promise<Post[]> {
   if (rows.length === 0) return [];
   const ids = rows.map((r) => r.id);
   const [{ data: media }, profiles] = await Promise.all([
-    sb.from("post_media").select("*").in("post_id", ids).order("position", { ascending: true }),
+    sb.from("post_media").select(MEDIA_COLUMNS).in("post_id", ids).order("position", { ascending: true }),
     fetchProfilesByIds([...new Set(rows.map((r) => r.user_id))]),
   ]);
   const byPost: Record<string, PostMedia[]> = {};
@@ -245,7 +257,7 @@ export function useFeed(tab: FeedTab) {
   return useQuery({
     queryKey: ["feed", tab, uid, following.join(","), blocked.join(",")],
     queryFn: async (): Promise<Post[]> => {
-      let q = sb.from("posts").select("*").eq("is_hidden", false).order("created_at", { ascending: false }).limit(120);
+      let q = sb.from("posts").select(POST_COLUMNS).eq("is_hidden", false).order("created_at", { ascending: false }).limit(120);
       if (tab === "following") {
         const ids = [...following, uid].filter(Boolean);
         q = q.in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
@@ -278,7 +290,7 @@ export function usePostsByUser(userId?: string | null) {
     queryFn: async (): Promise<Post[]> => {
       const { data, error } = await sb
         .from("posts")
-        .select("*")
+        .select(POST_COLUMNS)
         .eq("user_id", userId)
         .eq("is_hidden", false)
         .order("created_at", { ascending: false });
@@ -298,7 +310,7 @@ export function useSavedPosts() {
       if (error) throw error;
       const ids = (saved ?? []).map((r: any) => r.post_id);
       if (!ids.length) return [];
-      const { data, error: e2 } = await sb.from("posts").select("*").in("id", ids).order("created_at", { ascending: false });
+      const { data, error: e2 } = await sb.from("posts").select(POST_COLUMNS).in("id", ids).order("created_at", { ascending: false });
       if (e2) throw e2;
       return hydratePosts(data ?? []);
     },
@@ -329,7 +341,7 @@ export function useCreatePost() {
           hashtags: caption ? extractHashtags(caption) : [],
           visibility: input.visibility ?? "public",
         })
-        .select("*")
+        .select(POST_COLUMNS)
         .single();
       if (error) throw error;
       const files = input.files ?? [];
@@ -455,7 +467,7 @@ export function useComments(postId?: string | null) {
     queryFn: async (): Promise<PostComment[]> => {
       const { data, error } = await sb
         .from("post_comments")
-        .select("*")
+        .select(COMMENT_COLUMNS)
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -475,7 +487,7 @@ export function useAddComment() {
       const { data, error } = await sb
         .from("post_comments")
         .insert({ post_id: post.id, user_id: uid, content: content.trim(), parent_id: parentId ?? null })
-        .select("*")
+        .select(COMMENT_COLUMNS)
         .single();
       if (error) throw error;
       await notify({
@@ -590,7 +602,7 @@ export function useNotifications() {
     queryFn: async (): Promise<Notification[]> => {
       const { data, error } = await sb
         .from("notifications")
-        .select("*")
+        .select(NOTIFICATION_COLUMNS)
         .eq("user_id", uid)
         .order("created_at", { ascending: false })
         .limit(80);
@@ -634,7 +646,7 @@ export function useSearchProfiles(term: string) {
       const t = `%${term.trim()}%`;
       const { data, error } = await sb
         .from("social_profiles")
-        .select("*")
+        .select(PROFILE_COLUMNS)
         .or(`username.ilike.${t},display_name.ilike.${t},box_name.ilike.${t}`)
         .limit(30);
       if (error) throw error;
@@ -652,7 +664,7 @@ export function useSearchPosts(term: string) {
       const t = `%${raw}%`;
       const { data, error } = await sb
         .from("posts")
-        .select("*")
+        .select(POST_COLUMNS)
         .eq("is_hidden", false)
         .eq("visibility", "public")
         .or(`caption.ilike.${t},data->>exercise.ilike.${t},data->>name.ilike.${t},data->>benchmark.ilike.${t}`)
@@ -671,7 +683,7 @@ export function usePostsByHashtag(tag?: string) {
     queryFn: async (): Promise<Post[]> => {
       const { data, error } = await sb
         .from("posts")
-        .select("*")
+        .select(POST_COLUMNS)
         .contains("hashtags", [tag!.toLowerCase()])
         .eq("is_hidden", false)
         .order("created_at", { ascending: false })
@@ -688,8 +700,8 @@ export function useDiscover() {
     queryKey: ["discover", uid],
     queryFn: async () => {
       const [{ data: posts }, { data: profiles }] = await Promise.all([
-        sb.from("posts").select("*").eq("is_hidden", false).eq("visibility", "public").order("created_at", { ascending: false }).limit(150),
-        sb.from("social_profiles").select("*").order("created_at", { ascending: false }).limit(40),
+        sb.from("posts").select(POST_COLUMNS).eq("is_hidden", false).eq("visibility", "public").order("created_at", { ascending: false }).limit(150),
+        sb.from("social_profiles").select(PROFILE_COLUMNS).order("created_at", { ascending: false }).limit(40),
       ]);
       const rows = (posts ?? []) as any[];
       const now = Date.now();
@@ -729,7 +741,7 @@ export function usePrBoard() {
     queryFn: async (): Promise<PrBoardRow[]> => {
       const { data: profiles, error: pErr } = await sb
         .from("social_profiles")
-        .select("*")
+        .select(PROFILE_COLUMNS)
         .eq("show_prs", true)
         .eq("is_private", false);
       if (pErr) throw pErr;
@@ -739,7 +751,7 @@ export function usePrBoard() {
       const byId: Record<string, SocialProfile> = Object.fromEntries(list.map((p) => [p.user_id, p]));
       const { data, error } = await sb
         .from("personal_record_history")
-        .select("*")
+        .select(PR_HISTORY_COLUMNS)
         .in("user_id", ids)
         .order("changed_at", { ascending: false })
         .limit(800);
@@ -782,7 +794,7 @@ export function useLeaderboard() {
     queryFn: async (): Promise<LeaderboardRow[]> => {
       const { data, error } = await sb
         .from("posts")
-        .select("*")
+        .select(POST_COLUMNS)
         .in("kind", ["wod", "benchmark"])
         .eq("is_hidden", false)
         .eq("visibility", "public")

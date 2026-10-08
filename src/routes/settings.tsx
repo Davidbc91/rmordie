@@ -26,6 +26,7 @@ function SettingsPage() {
   const [barsEdited, setBarsEdited] = useState(false);
   const [platesEdited, setPlatesEdited] = useState(false);
   const [pin, setPin] = useState("");
+  const [currentPin, setCurrentPin] = useState("");
 
   useEffect(() => {
     setBarsEdited(false);
@@ -44,12 +45,20 @@ function SettingsPage() {
     toast.success("Material guardado");
   }
 
+  const errorMessage = (e: unknown, fallback: string) => (e as { message?: string })?.message ?? fallback;
+
   async function changePin() {
     if (!uid) return;
-    if (pin.length < 4) return toast.error("Mínimo 4 dígitos");
-    await updatePin.mutateAsync({ id: uid, pin });
-    setPin("");
-    toast.success("PIN actualizado");
+    if (currentPin.length < 4) return toast.error("Escribe tu PIN actual");
+    if (pin.length < 4) return toast.error("El PIN nuevo necesita mínimo 4 dígitos");
+    try {
+      await updatePin.mutateAsync({ id: uid, currentPin, pin });
+      setPin("");
+      setCurrentPin("");
+      toast.success("PIN actualizado");
+    } catch (e) {
+      toast.error(errorMessage(e, "No se pudo cambiar el PIN"));
+    }
   }
 
   function switchProfile() {
@@ -60,9 +69,15 @@ function SettingsPage() {
 
   async function removeProfile() {
     if (!uid) return;
+    if (currentPin.length < 4) return toast.error("Escribe tu PIN actual para eliminar el perfil");
     const ok = window.confirm("¿Eliminar tu perfil y TODOS tus registros? Esta acción no se puede deshacer.");
     if (!ok) return;
-    await deleteProfile.mutateAsync(uid);
+    try {
+      await deleteProfile.mutateAsync({ id: uid, pin: currentPin });
+    } catch (e) {
+      toast.error(errorMessage(e, "No se pudo eliminar el perfil"));
+      return;
+    }
     signOut();
     window.location.reload();
   }
@@ -97,13 +112,18 @@ function SettingsPage() {
       <section className="mt-4 card-elevated p-5">
         <h2 className="text-sm font-semibold">Perfil y seguridad</h2>
         <label className="mt-3 block">
-          <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">Cambiar mi PIN</span>
-          <input type="password" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular tracking-widest outline-none focus:border-gold" />
+          <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">PIN actual</span>
+          <input type="password" inputMode="numeric" autoComplete="current-password" value={currentPin} onChange={(e) => setCurrentPin(e.target.value.replace(/[^0-9]/g, ""))} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular tracking-widest outline-none focus:border-gold" />
+          <span className="mt-1 block text-xs text-muted-foreground">Necesario para cambiar el PIN o eliminar el perfil.</span>
+        </label>
+        <label className="mt-3 block">
+          <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">PIN nuevo</span>
+          <input type="password" inputMode="numeric" autoComplete="new-password" value={pin} onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular tracking-widest outline-none focus:border-gold" />
         </label>
         <div className="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
-          <button onClick={changePin} className="rounded-xl bg-surface-2 px-4 py-2 text-sm font-medium">Actualizar PIN</button>
+          <button onClick={changePin} disabled={updatePin.isPending} className="rounded-xl bg-surface-2 px-4 py-2 text-sm font-medium disabled:opacity-50">{updatePin.isPending ? "Actualizando…" : "Actualizar PIN"}</button>
           <button onClick={switchProfile} className="rounded-xl border border-border px-4 py-2 text-sm font-medium">Cambiar de perfil</button>
-          <button onClick={removeProfile} className="rounded-xl border border-destructive/40 text-destructive px-4 py-2 text-sm font-medium">Eliminar mi perfil</button>
+          <button onClick={removeProfile} disabled={deleteProfile.isPending} className="rounded-xl border border-destructive/40 text-destructive px-4 py-2 text-sm font-medium disabled:opacity-50">Eliminar mi perfil</button>
         </div>
       </section>
     </AppShell>

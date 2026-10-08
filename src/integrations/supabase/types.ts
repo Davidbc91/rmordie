@@ -1245,6 +1245,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      change_profile_pin: {
+        Args: { _current_pin_hash: string; _new_pin_hash: string; _profile_id: string }
+        Returns: boolean
+      }
+      delete_own_profile: {
+        Args: { _pin_hash: string; _profile_id: string }
+        Returns: boolean
+      }
       claim_profile: {
         Args: { _pin_hash: string; _profile_id: string }
         Returns: boolean

@@ -34,11 +34,16 @@ function requirePinHash(pinHash: unknown) {
   }
 }
 
+/** Comprueba el PIN con verify_profile_pin, que aplica el límite de intentos. */
 async function isValidProfilePin(profileId: string, pinHash: string) {
   requirePinHash(pinHash);
-  const { data, error } = await supabase.from("profiles").select("id,pin_hash").eq("id", profileId).maybeSingle();
-  if (error || !data || data.pin_hash !== pinHash) return false;
-  return true;
+  const { data, error } = await supabase.rpc("verify_profile_pin", {
+    _profile_id: profileId,
+    _pin_hash: pinHash,
+  });
+  // Perfil bloqueado por demasiados intentos: el mensaje explica cuánto falta.
+  if (error) throw new Error(error.message);
+  return data === true;
 }
 
 async function deriveKey() {

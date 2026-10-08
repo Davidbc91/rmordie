@@ -58,27 +58,38 @@ export function useCreateProfile() {
 }
 
 
+/**
+ * Cambia el PIN comprobando antes el PIN actual en la base de datos
+ * (con límite de intentos). Ya no se puede escribir el PIN directamente.
+ */
 export function useUpdateProfilePin() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, pin }: { id: string; pin: string }) => {
-      const pin_hash = await sha256(pin);
-      const { error } = await supabase.from("profiles").update({ pin_hash }).eq("id", id);
+    mutationFn: async ({ id, currentPin, pin }: { id: string; currentPin: string; pin: string }) => {
+      const [current, next] = await Promise.all([sha256(currentPin), sha256(pin)]);
+      const { data, error } = await supabase.rpc("change_profile_pin", {
+        _profile_id: id,
+        _current_pin_hash: current,
+        _new_pin_hash: next,
+      });
       if (error) throw error;
+      if (data !== true) throw new Error("El PIN actual no es correcto.");
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profiles"] }),
   });
 }
 
+/** Elimina el propio perfil y sus registros. Exige el PIN; el administrador no se puede eliminar. */
 export function useDeleteProfile() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      await supabase.from("workout_results").delete().eq("user_id", id);
-      await supabase.from("exercise_log").delete().eq("user_id", id);
-      await supabase.from("app_settings").delete().eq("user_id", id);
-      const { error } = await supabase.from("profiles").delete().eq("id", id);
+    mutationFn: async ({ id, pin }: { id: string; pin: string }) => {
+      const { data, error } = await supabase.rpc("delete_own_profile", {
+        _profile_id: id,
+        _pin_hash: await sha256(pin),
+      });
       if (error) throw error;
+      if (data !== true) throw new Error("El PIN no es correcto.");
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profiles"] });

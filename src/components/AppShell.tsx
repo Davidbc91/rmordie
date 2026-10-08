@@ -123,16 +123,16 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
   const currentProfileId = getCurrentUserId();
   const { data: profiles = [] } = useProfiles();
   const currentProfile = profiles.find((profile) => profile.id === currentProfileId);
-  const isBcProfile = currentProfile?.name.trim().toLowerCase() === "bc";
   const { data: isAdmin } = useQuery({
     queryKey: ["video-admin", currentProfileId],
     queryFn: isVideoAdmin,
-    enabled: !!currentProfileId && moreOpen,
+    // El administrador es el perfil guardado en video_admins, nunca un nombre.
+    enabled: !!currentProfileId,
     staleTime: 5 * 60 * 1000,
   });
   const visibleMoreLinks = useMemo(
-    () => isBcProfile || isAdmin ? [...moreLinks, { to: "/admin/videos", label: "Administración", hint: "Gestionar vídeos", icon: Film }] : moreLinks,
-    [isAdmin, isBcProfile],
+    () => isAdmin ? [...moreLinks, { to: "/admin/videos", label: "Administración", hint: "Gestionar vídeos", icon: Film }] : moreLinks,
+    [isAdmin],
   );
 
   useEffect(() => {

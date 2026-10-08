@@ -42,21 +42,33 @@ const supabaseAdmin = createClient(
   secretKey(),
 );
 
-async function isAdmin(profileId: string, pinHash?: string) {
-  if (!profileId || !pinHash) return false;
+/** El PIN está bloqueado por demasiados intentos (mensaje de la base de datos). */
+class PinLockedError extends Error {}
 
-  // The app uses profile + PIN rather than Supabase Auth.
-  // Verify the stored SHA-256 hash directly with the service role.
-  const { data: profile, error } = await supabaseAdmin
-    .from("profiles")
-    .select("id, name, pin_hash")
-    .eq("id", profileId)
+async function isListedAdmin(profileId: string) {
+  if (!profileId) return false;
+  const { data, error } = await supabaseAdmin
+    .from("video_admins")
+    .select("profile_id")
+    .eq("profile_id", profileId)
     .maybeSingle();
+  return !error && !!data;
+}
 
-  if (error || !profile) return false;
-  if (profile.name?.trim().toLowerCase() !== "bc") return false;
-
-  return profile.pin_hash === pinHash;
+/**
+ * Administrador = perfil guardado en video_admins (el perfil BC original),
+ * nunca un perfil por su nombre. El PIN se comprueba con verify_profile_pin,
+ * que aplica el límite de intentos.
+ */
+async function isAdmin(profileId: string, pinHash?: string) {
+  if (!profileId || !pinHash || !/^[a-f0-9]{64}$/i.test(pinHash)) return false;
+  if (!(await isListedAdmin(profileId))) return false;
+  const { data, error } = await supabaseAdmin.rpc("verify_profile_pin", {
+    _profile_id: profileId,
+    _pin_hash: pinHash,
+  });
+  if (error) throw new PinLockedError(error.message);
+  return data === true;
 }
 
 function validMovementId(id?: string) {
@@ -89,12 +101,7 @@ Deno.serve(async (req) => {
 
     if (body.action === "check") {
       if (!body.profile_id) return json({ isAdmin: false });
-      const { data } = await supabaseAdmin
-        .from("profiles")
-        .select("id, name")
-        .eq("id", body.profile_id)
-        .maybeSingle();
-      return json({ isAdmin: data?.name?.trim().toLowerCase() === "bc" });
+      return json({ isAdmin: await isListedAdmin(body.profile_id) });
     }
 
     if (body.action === "verify") {
@@ -236,6 +243,7 @@ Deno.serve(async (req) => {
 
     return json({ error: "Acción no soportada" }, 400);
   } catch (error) {
+    if (error instanceof PinLockedError) return json({ error: error.message }, 429);
     console.error(error);
     return json({ error: error instanceof Error ? error.message : "Error interno" }, 500);
   }

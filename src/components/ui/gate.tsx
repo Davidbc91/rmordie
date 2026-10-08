@@ -59,7 +59,7 @@ export function PinGate({ children }: { children: React.ReactNode }) {
         setPin("");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo verificar el PIN");
+      setError((err as { message?: string })?.message || "No se pudo verificar el PIN");
     }
   }
 
@@ -80,7 +80,7 @@ export function PinGate({ children }: { children: React.ReactNode }) {
       setUnlocked(true);
       setUL(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear el perfil");
+      setError((err as { message?: string })?.message || "No se pudo crear el perfil");
     }
   }
 

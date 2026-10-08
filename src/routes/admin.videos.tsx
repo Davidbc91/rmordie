@@ -6,7 +6,6 @@ import { movements } from "@/lib/dictionary/catalog";
 import { useCustomMovements } from "@/lib/dictionary/custom";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentUserId } from "@/lib/pin-gate";
-import { useProfiles } from "@/lib/store";
 import {
   createMovementVideoUpload,
   createCustomMovement,
@@ -29,8 +28,6 @@ export const Route = createFileRoute("/admin/videos")({
 function AdminVideosPage() {
   const profileId = getCurrentUserId();
   const qc = useQueryClient();
-  const { data: profiles = [] } = useProfiles();
-  const isBcProfile = profiles.some((profile) => profile.id === profileId && profile.name.trim().toLowerCase() === "bc");
   const [pin, setPin] = useState("");
   const [pinHash, setPinHash] = useState<string | null>(null);
   const [pinError, setPinError] = useState("");

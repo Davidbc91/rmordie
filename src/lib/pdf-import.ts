@@ -280,7 +280,7 @@ async function extractPdfOcrLines(file: File, onProgress?: (progress: number) =>
     }
   }, (progress) => onProgress?.((pageIndex + progress) / Math.max(1, pdf.numPages)));
 
-  await pdf.destroy();
+  await pdf.loadingTask.destroy();
   return lines.filter((line) => !isNoise(line));
 }
 
@@ -888,7 +888,7 @@ function dailyPlanRowsFromLines(lines: string[], filename: string): { rows: Revi
     if (/^(TOBILLO|CADERA|T-SPINE|HOMBRO|SENTADILLA|MUÑECA)$/i.test(line)) continue;
     if (/^(?:•|-)\\s*$/.test(line)) continue;
 
-    push(line);
+    push(line, i + 1);
   }
 
   const explicitDates = new Set(rows.map((row) => row.dateText));

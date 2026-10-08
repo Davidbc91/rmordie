@@ -541,7 +541,7 @@ function findMatrixSegments(wb: XLSX.WorkBook): MatrixSegment[] {
       let endRow = table.length;
       for (let rr = r + 1; rr < table.length; rr++) {
         const nextRow = table[rr] ?? [];
-        const nextDayCount = nextRow.reduce((count, cell) => count + (normalizeDay(cell) ? 1 : 0), 0);
+        const nextDayCount = nextRow.reduce((count: number, cell) => count + (normalizeDay(cell) ? 1 : 0), 0);
         if (nextDayCount >= 2) {
           endRow = rr;
           break;

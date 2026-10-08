@@ -506,7 +506,7 @@ function annualWeekHeaders(groups: BaselineGroup[]): Array<{ y: number; week: nu
 }
 
 function annualCanonicalDay(dateText: string, month: number, year: number): string | null {
-  const match = dateText.match(/^(\\d{1,2})\\/(\\d{1,2})$/);
+  const match = dateText.match(/^(\d{1,2})\/(\d{1,2})$/);
   if (!match) return null;
 
   const day = Number(match[1]);

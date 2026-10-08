@@ -31,6 +31,7 @@ import { Route as DictionaryMovementIdRouteImport } from './routes/dictionary.$m
 import { Route as AdminVideosRouteImport } from './routes/admin.videos'
 import { Route as SocialUUsernameRouteImport } from './routes/social.u.$username'
 import { Route as SocialHashtagTagRouteImport } from './routes/social.hashtag.$tag'
+import { Route as ApiCronRemindersRouteImport } from './routes/api.cron.reminders'
 import { Route as WorkoutMonthWeekDayRouteImport } from './routes/workout.$month.$week.$day'
 
 const TimersRoute = TimersRouteImport.update({
@@ -143,6 +144,11 @@ const SocialHashtagTagRoute = SocialHashtagTagRouteImport.update({
   path: '/social/hashtag/$tag',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronRemindersRoute = ApiCronRemindersRouteImport.update({
+  id: '/api/cron/reminders',
+  path: '/api/cron/reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkoutMonthWeekDayRoute = WorkoutMonthWeekDayRouteImport.update({
   id: '/workout/$month/$week/$day',
   path: '/workout/$month/$week/$day',
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/social/notifications': typeof SocialNotificationsRoute
   '/social/settings': typeof SocialSettingsRoute
   '/social/': typeof SocialIndexRoute
+  '/api/cron/reminders': typeof ApiCronRemindersRoute
   '/social/hashtag/$tag': typeof SocialHashtagTagRoute
   '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
@@ -195,6 +202,7 @@ export interface FileRoutesByTo {
   '/social/notifications': typeof SocialNotificationsRoute
   '/social/settings': typeof SocialSettingsRoute
   '/social': typeof SocialIndexRoute
+  '/api/cron/reminders': typeof ApiCronRemindersRoute
   '/social/hashtag/$tag': typeof SocialHashtagTagRoute
   '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/social/notifications': typeof SocialNotificationsRoute
   '/social/settings': typeof SocialSettingsRoute
   '/social/': typeof SocialIndexRoute
+  '/api/cron/reminders': typeof ApiCronRemindersRoute
   '/social/hashtag/$tag': typeof SocialHashtagTagRoute
   '/social/u/$username': typeof SocialUUsernameRoute
   '/workout/$month/$week/$day': typeof WorkoutMonthWeekDayRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/social/notifications'
     | '/social/settings'
     | '/social/'
+    | '/api/cron/reminders'
     | '/social/hashtag/$tag'
     | '/social/u/$username'
     | '/workout/$month/$week/$day'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/social/notifications'
     | '/social/settings'
     | '/social'
+    | '/api/cron/reminders'
     | '/social/hashtag/$tag'
     | '/social/u/$username'
     | '/workout/$month/$week/$day'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/social/notifications'
     | '/social/settings'
     | '/social/'
+    | '/api/cron/reminders'
     | '/social/hashtag/$tag'
     | '/social/u/$username'
     | '/workout/$month/$week/$day'
@@ -323,6 +335,7 @@ export interface RootRouteChildren {
   SocialNotificationsRoute: typeof SocialNotificationsRoute
   SocialSettingsRoute: typeof SocialSettingsRoute
   SocialIndexRoute: typeof SocialIndexRoute
+  ApiCronRemindersRoute: typeof ApiCronRemindersRoute
   SocialHashtagTagRoute: typeof SocialHashtagTagRoute
   SocialUUsernameRoute: typeof SocialUUsernameRoute
   WorkoutMonthWeekDayRoute: typeof WorkoutMonthWeekDayRoute
@@ -484,6 +497,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SocialHashtagTagRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/reminders': {
+      id: '/api/cron/reminders'
+      path: '/api/cron/reminders'
+      fullPath: '/api/cron/reminders'
+      preLoaderRoute: typeof ApiCronRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/workout/$month/$week/$day': {
       id: '/workout/$month/$week/$day'
       path: '/workout/$month/$week/$day'
@@ -526,6 +546,7 @@ const rootRouteChildren: RootRouteChildren = {
   SocialNotificationsRoute: SocialNotificationsRoute,
   SocialSettingsRoute: SocialSettingsRoute,
   SocialIndexRoute: SocialIndexRoute,
+  ApiCronRemindersRoute: ApiCronRemindersRoute,
   SocialHashtagTagRoute: SocialHashtagTagRoute,
   SocialUUsernameRoute: SocialUUsernameRoute,
   WorkoutMonthWeekDayRoute: WorkoutMonthWeekDayRoute,

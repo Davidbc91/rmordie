@@ -265,7 +265,7 @@ function teamVaderDateFor(day: string, week: number, month: number, year: number
 }
 
 function teamVaderDateText(date: Date): string {
-  return \${String(date.getUTCDate()).padStart(2, "0")}/\${String(date.getUTCMonth() + 1).padStart(2, "0")}/\${date.getUTCFullYear()};
+  return ${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/${date.getUTCFullYear()};
 }
 
 function teamVaderCellHasContent(value: unknown): boolean {
@@ -309,7 +309,7 @@ function parseTeamVaderWorkbook(
       const date = teamVaderDateFor(day, week, meta.month, meta.year);
       if (!date || date.getUTCMonth() !== meta.month - 1) continue;
       dayColumns.push({ col, day, week, date });
-      const label = \${day} \${teamVaderDateText(date)};
+      const label = ${day} ${teamVaderDateText(date)};
       if (!seenHeaderDays.has(label)) {
         seenHeaderDays.add(label);
         header.push(label);
@@ -338,7 +338,7 @@ function parseTeamVaderWorkbook(
           day: column.day,
           dateText: teamVaderDateText(column.date),
           week: column.week,
-          monthKey: \${meta.order}. \${TEXT_MONTHS[meta.month - 1]} \${meta.year},
+          monthKey: ${meta.order}. ${TEXT_MONTHS[meta.month - 1]} ${meta.year},
           monthLabel: meta.label,
           monthOrder: meta.order,
           block: isRest ? "REST" : block.toUpperCase(),
@@ -367,7 +367,7 @@ function parseTeamVaderWorkbook(
         day: "DOMINGO",
         dateText: teamVaderDateText(date),
         week,
-        monthKey: \${meta.order}. \${TEXT_MONTHS[meta.month - 1]} \${meta.year},
+        monthKey: ${meta.order}. ${TEXT_MONTHS[meta.month - 1]} ${meta.year},
         monthLabel: meta.label,
         monthOrder: meta.order,
         block: "REST",
@@ -392,7 +392,7 @@ function parseTeamVaderWorkbook(
     rows: allRows,
     unmapped: [],
     detectedMonth: {
-      key: \${first.order}. \${TEXT_MONTHS[first.month - 1]} \${first.year},
+      key: ${first.order}. ${TEXT_MONTHS[first.month - 1]} ${first.year},
       label: first.label,
     },
   };

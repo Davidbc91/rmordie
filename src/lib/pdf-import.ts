@@ -505,6 +505,26 @@ function annualWeekHeaders(groups: BaselineGroup[]): Array<{ y: number; week: nu
     .filter((value): value is { y: number; week: number } => value !== null);
 }
 
+function annualCanonicalDay(dateText: string, month: number, year: number): string | null {
+  const match = dateText.match(/^(\\d{1,2})\\/(\\d{1,2})$/);
+  if (!match) return null;
+
+  const day = Number(match[1]);
+  const dateMonth = Number(match[2]);
+  const date = new Date(Date.UTC(year, dateMonth - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== dateMonth - 1 ||
+    date.getUTCDate() !== day ||
+    dateMonth !== month
+  ) {
+    return null;
+  }
+
+  const days = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
+  return days[date.getUTCDay()] ?? null;
+}
+
 function annualDateAnchors(groups: BaselineGroup[]): Array<{ y: number; day: string; dateText: string; text: string }> {
   const result: Array<{ y: number; day: string; dateText: string; text: string }> = [];
   for (const group of groups) {
@@ -615,7 +635,9 @@ function annualRowsFromPage(items: LayoutLine[], pageNumber: number): { rows: Re
       rows.push({
         id: uid(),
         sourceRow: pageNumber * 10000 + index,
-        day: date.day,
+        // La fecha impresa en el PDF es la fuente de verdad. Esto evita
+        // que un OCR o una extracción de texto desplace el día de la semana.
+        day: annualCanonicalDay(date.dateText, month.month, month.year) ?? date.day,
         dateText: date.dateText,
         week,
         monthKey: meta.key,

@@ -744,7 +744,7 @@ const DAILY_PLAN_HEADER_RE = new RegExp(
   "i",
 );
 
-const DAILY_PLAN_SECTION_RE = /^(?:MOVILIDAD|CALENTAMIENTO|T[ÉE]CNICA|GIMNASIA|FUERZA|WOD|CONDITIONING|ENGINE|ACCESORIOS|OLYMPIC|TEST|REGISTRO|VUELTA A LA CALMA|COOLDOWN|COOL DOWN)(?:\\s+|\\s*[·•:-])/i;
+const DAILY_PLAN_SECTION_RE = /^(?:MOVILIDAD|CALENTAMIENTO|T[ÉE]CNICA|GIMNASIA|FUERZA|WOD|CONDITIONING|ENGINE|ACCESORIOS|OLYMPIC|TEST|REGISTRO|VUELTA A LA CALMA|COOLDOWN|COOL DOWN)(?:\s+|\s*[·•:-])/i;
 
 function dailyPlanHeader(line: string): { day: string; dateDay: number; title: string } | null {
   const match = cleanLine(line).match(DAILY_PLAN_HEADER_RE);
@@ -758,10 +758,10 @@ function dailyPlanHeader(line: string): { day: string; dateDay: number; title: s
 function dailyPlanMonthYear(lines: string[], filename: string): { month: number; year: number; label: string } | null {
   const haystack = [...lines.slice(0, 80), filename].join(" ");
   const match = haystack.match(
-    /\\b(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\\s+(20\\d{2})\\b/i,
+    /\b(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\s+(20\d{2})\b/i,
   );
   if (!match) {
-    const monthMatch = haystack.match(/\\b(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\\b/i);
+    const monthMatch = haystack.match(/\b(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\b/i);
     if (!monthMatch) return null;
     const names: Record<string, number> = {
       ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
@@ -799,11 +799,8 @@ function dailyPlanRowsFromLines(lines: string[], filename: string): { rows: Revi
   let started = false;
 
   const makeDate = (day: number) => new Date(Date.UTC(monthYear.year, monthYear.month - 1, day));
-  const isoDate = (day: number) => {
-    const date = makeDate(day);
-    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
-  };
-  const weekForDay = (day: number) => Math.floor((day - 1) / 7) + 1;
+  const firstWeekdayMonday = (makeDate(1).getUTCDay() + 6) % 7;
+  const weekForDay = (day: number) => Math.floor((firstWeekdayMonday + day - 1) / 7) + 1;
   const dateTextForDay = (day: number) => `${String(day).padStart(2, "0")}/${String(monthYear.month).padStart(2, "0")}/${monthYear.year}`;
 
   const push = (line: string, sourceRow: number, rowBlock = block, rowType = blockType) => {
@@ -850,8 +847,9 @@ function dailyPlanRowsFromLines(lines: string[], filename: string): { rows: Revi
     }
 
     if (!started || !current) continue;
-    if (/^MOVILIDAD BASE\\s*[·•:-]\\s*REFERENCIA$/i.test(line)) break;
+    if (/^MOVILIDAD BASE\s*[·•:-]\s*REFERENCIA$/i.test(line)) break;
     if (/^REGLAS DE CARGA$/i.test(line)) break;
+    if (/^RM\s*OR\s*DIE.*P[ÁA]GINA\s+\d+/i.test(line)) continue;
     if (isNoise(line)) continue;
 
     const focus = line.match(/^ENFOQUE\\s*:\\s*(.+)$/i);

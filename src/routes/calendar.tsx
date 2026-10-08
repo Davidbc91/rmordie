@@ -42,7 +42,7 @@ export const Route = createFileRoute("/calendar")({
 
 function parseMonthDate(month: Month): { year: number; monthIndex: number } | null {
   const text = `${month.key} ${month.label}`.toUpperCase();
-  const yearMatch = text.match(/(?:19|20)\\d{2}/);
+  const yearMatch = text.match(/(?:19|20)\d{2}/);
   const year = yearMatch ? Number(yearMatch[0]) : new Date().getFullYear();
   const monthMap: Record<string, number> = {
     ENE: 0, ENERO: 0, FEB: 1, FEBRERO: 1, MAR: 2, MARZO: 2, ABR: 3, ABRIL: 3,
@@ -50,7 +50,7 @@ function parseMonthDate(month: Month): { year: number; monthIndex: number } | nu
     SEP: 8, SEPT: 8, SEPTIEMBRE: 8, OCT: 9, OCTUBRE: 9, NOV: 10, NOVIEMBRE: 10,
     DIC: 11, DICIEMBRE: 11,
   };
-  const token = Object.keys(monthMap).find((key) => text.includes(key));
+  const token = Object.keys(monthMap).sort((a, b) => b.length - a.length).find((key) => new RegExp(`\\b${key}\\b`).test(text));
   return token ? { year, monthIndex: monthMap[token] } : null;
 }
 

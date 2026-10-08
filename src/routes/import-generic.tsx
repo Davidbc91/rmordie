@@ -16,7 +16,8 @@ import {
   parseStructuredTextPlanning,
   rowIssues,
 } from "@/lib/generic-import";
-import { mergePlanningPreservingPrevious, parseImagePlanning, parsePdfPlanning } from "@/lib/pdf-import";
+import { mergePlanningPreservingPrevious } from "@/lib/pdf-import";
+import { importPlanningFile, type ImportDiagnostics } from "@/lib/import-engine";
 
 export const Route = createFileRoute("/import-generic")({
   head: () => ({
@@ -45,26 +46,19 @@ function GenericImportPage() {
   const [filename, setFilename] = useState("");
   const [monthKey, setMonthKey] = useState("1. IMPORTADO");
   const [monthLabel, setMonthLabel] = useState("Importado");
+  const [diagnostics, setDiagnostics] = useState<ImportDiagnostics | null>(null);
 
   async function onFile(f: File) {
     setBusy(true);
     setOcrProgress(0);
     try {
-      const isPdf = /\.pdf$/i.test(f.name);
-      const isStructuredText = /\.txt$/i.test(f.name);
-      const isImage = /^image\/(png|jpe?g|webp)$/i.test(f.type) || /\.(png|jpe?g|webp)$/i.test(f.name);
-      const result = isImage
-        ? await parseImagePlanning(f, setOcrProgress)
-        : isPdf
-          ? await parsePdfPlanning(f)
-          : isStructuredText
-            ? await parseStructuredTextPlanning(f)
-            : await parseGenericFile(f);
+      const result = await importPlanningFile(f, setOcrProgress);
       if (result.rows.length === 0) {
         toast.error("El archivo se ha leído, pero no contiene filas con datos.");
         return;
       }
       setParsed(result);
+      setDiagnostics(result.diagnostics);
       setRows(result.rows);
       setFilename(f.name);
       const detectedMonth = (result as { detectedMonth?: { key: string; label: string } }).detectedMonth;
@@ -146,6 +140,32 @@ function GenericImportPage() {
                 {filename} · {rows.length} filas · <span className="text-foreground">{validCount} listas</span>
                 {reviewCount > 0 && <> · <span className="text-gold">{reviewCount} necesitan revisión</span></>}
               </div>
+              {diagnostics && (
+                <div className="mt-3 rounded-2xl border border-[color:var(--glass-border)] bg-white/[0.025] p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Calidad de lectura</span>
+                    <span className={diagnostics.level === "high" ? "text-emerald-300" : diagnostics.level === "medium" ? "text-gold" : "text-red-300"}>
+                      {Math.round(diagnostics.confidence * 100)}%
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${Math.round(diagnostics.confidence * 100)}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 text-[10px] text-muted-foreground">
+                    {diagnostics.daysDetected} días · {diagnostics.weeksDetected} semanas · {diagnostics.rows} registros
+                    {diagnostics.datedRows > 0 ? ` · ${diagnostics.datedRows} con fecha` : ""}
+                  </div>
+                  {diagnostics.warnings.length > 0 && (
+                    <div className="mt-2 space-y-1 text-[10px] text-gold">
+                      {diagnostics.warnings.map((warning) => <div key={warning}>• {warning}</div>)}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="mt-2 text-[11px] text-muted-foreground">
                 Columnas detectadas:{" "}
                 {Object.keys(parsed.columns).length
@@ -278,7 +298,7 @@ function GenericImportPage() {
                 <CheckCircle2 className="h-4 w-4" />
                 {save.isPending ? "Guardando…" : "CONFIRMAR IMPORTACIÓN"}
               </GlassButton>
-              <GlassButton size="sm" variant="ghost" className="mt-2 w-full" onClick={() => { setParsed(null); setRows([]); }}>
+              <GlassButton size="sm" variant="ghost" className="mt-2 w-full" onClick={() => { setParsed(null); setRows([]); setDiagnostics(null); }}>
                 Cancelar y elegir otro archivo
               </GlassButton>
             </GlassCard>

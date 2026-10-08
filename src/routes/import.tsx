@@ -20,6 +20,7 @@ function ImportPage() {
   const deletePlanning = useDeletePlanningVersion();
   const reorderMonths = useReorderPlanningMonths();
   const clearPlanning = useClearAllPlanning();
+  const visiblePlanningVersions = planningVersions.filter((version) => version.source_filename !== "Sin planificación" || version.data.months.length > 0);
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
 
@@ -94,7 +95,7 @@ function ImportPage() {
         Sube tu Excel. Se sobrescribe únicamente la programación; <span className="gold-text">tus pesos, PR, tiempos y notas nunca se borran.</span>
       </p>
 
-      {current && (
+      {current && current.data.months.length > 0 && (
         <div className="mt-6 card-elevated p-4">
           <div className="flex items-center gap-2 text-sm">
             <CheckCircle2 className="h-4 w-4 text-gold" />
@@ -219,14 +220,14 @@ function ImportPage() {
         </section>
       )}
 
-      {planningVersions.length > 0 && (
+      {visiblePlanningVersions.length > 0 && (
         <section className="mt-7">
           <div className="mb-2">
             <p className="eyebrow">Historial</p>
             <h2 className="mt-1 text-lg font-semibold">Otras planificaciones</h2>
           </div>
           <div className="space-y-2">
-            {planningVersions.map((version) => {
+            {visiblePlanningVersions.map((version) => {
               const active = version.id === current?.id;
               return (
                 <div key={version.id} className="glass flex items-center gap-3 px-4 py-3.5">

@@ -167,14 +167,20 @@ function GenericImportPage() {
               )}
 
               <div className="mt-2 text-[11px] text-muted-foreground">
-                Columnas detectadas:{" "}
-                {Object.keys(parsed.columns).length
-                  ? Object.entries(parsed.columns)
-                      .map(([f, i]) => `${f} → ${parsed.header[i as number] || `col ${(i as number) + 1}`}`)
-                      .join(" · ")
-                  : "ninguna"}
-              </div>
-              {parsed.unmapped.length > 0 && (
+                {parsed.layout ? (
+                  <>
+                    Estructura detectada: <span className="text-foreground">{parsed.layout}</span>
+                    {parsed.detectedColumns?.length ? <> · {parsed.detectedColumns.length} columnas/días detectados</> : null}
+                  </>
+                ) : (
+                  <>
+                    Columnas detectadas:{" "}
+                    {Object.keys(parsed.columns).length
+                      ? Object.entries(parsed.columns).map(([field, index]) => `${field} → ${parsed.header[index as number] || `col ${(index as number) + 1}`}`).join(" · ")
+                      : "ninguna"}
+                  </>
+                )}
+              </div>             {parsed.unmapped.length > 0 && (
                 <div className="mt-2 text-[11px] text-gold">
                   Sin identificar: {parsed.unmapped.join(", ")}. Puedes rellenarlos a mano abajo.
                 </div>

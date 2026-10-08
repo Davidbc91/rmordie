@@ -11,6 +11,46 @@
 -- No se modifica ningún dato de entrenamiento.
 
 -- ---------------------------------------------------------------------------
+-- 0. Base: funciones de propiedad (se recrean por si producción no las tiene)
+-- ---------------------------------------------------------------------------
+create schema if not exists private;
+grant usage on schema private to anon, authenticated, service_role;
+
+create or replace function private.owner_rls_enforced()
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select owner_rls_enforced from public.security_config limit 1), false)
+$$;
+
+create or replace function private.current_profile_id()
+returns uuid language sql stable security definer set search_path = public as $$
+  select p.id from public.profiles p where p.auth_user_id = auth.uid()
+$$;
+
+create or replace function private.is_data_owner(_owner uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select case
+    when not private.owner_rls_enforced() then true
+    else _owner is not null
+         and auth.uid() is not null
+         and _owner = private.current_profile_id()
+  end
+$$;
+
+create or replace function private.is_shared_or_owner(_owner uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select _owner is null or private.is_data_owner(_owner)
+$$;
+
+revoke all on function private.owner_rls_enforced() from public;
+revoke all on function private.current_profile_id() from public;
+revoke all on function private.is_data_owner(uuid) from public;
+revoke all on function private.is_shared_or_owner(uuid) from public;
+grant execute on function private.owner_rls_enforced() to anon, authenticated, service_role;
+grant execute on function private.current_profile_id() to anon, authenticated, service_role;
+grant execute on function private.is_data_owner(uuid) to anon, authenticated, service_role;
+grant execute on function private.is_shared_or_owner(uuid) to anon, authenticated, service_role;
+
+-- ---------------------------------------------------------------------------
 -- 1. Funciones de identidad
 -- ---------------------------------------------------------------------------
 
@@ -115,6 +155,74 @@ grant execute on function public.create_my_profile(text, text) to authenticated;
 
 -- Los perfiles solo se crean con create_my_profile.
 revoke insert on public.profiles from anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 2b. Punto de partida limpio: se quitan TODAS las reglas existentes de las
+--     tablas de la app y se crean de nuevo. Así el resultado es el mismo sea
+--     cual sea el estado previo de producción.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  t text;
+  pol record;
+begin
+  foreach t in array array[
+    'profiles','planning','chat_messages','push_subscriptions','notifications',
+    'athlete_profile','athlete_goals','body_metrics','wellness_logs','milestones',
+    'app_settings','workout_results','exercise_log','personal_records',
+    'personal_record_history','wod_results','notification_preferences',
+    'social_profiles','posts','post_media','post_likes','post_comments',
+    'comment_likes','saved_posts','follows','reports','blocked_users'
+  ] loop
+    if to_regclass('public.' || t) is null then
+      continue;
+    end if;
+    execute format('alter table public.%I enable row level security', t);
+    for pol in select policyname from pg_policies where schemaname = 'public' and tablename = t loop
+      execute format('drop policy %I on public.%I', pol.policyname, t);
+    end loop;
+  end loop;
+end $$;
+
+-- Datos personales: cada perfil solo lo suyo.
+do $$
+declare
+  t text;
+begin
+  foreach t in array array[
+    'athlete_profile','athlete_goals','body_metrics','wellness_logs','milestones',
+    'app_settings','workout_results','exercise_log','personal_records',
+    'personal_record_history','wod_results','notifications','notification_preferences'
+  ] loop
+    if to_regclass('public.' || t) is null then
+      continue;
+    end if;
+    execute format('create policy %I on public.%I for select to anon, authenticated using (private.is_data_owner(user_id))', t || '_owner_select', t);
+    execute format('create policy %I on public.%I for insert to anon, authenticated with check (private.is_data_owner(user_id))', t || '_owner_insert', t);
+    execute format('create policy %I on public.%I for update to anon, authenticated using (private.is_data_owner(user_id)) with check (private.is_data_owner(user_id))', t || '_owner_update', t);
+    execute format('create policy %I on public.%I for delete to anon, authenticated using (private.is_data_owner(user_id))', t || '_owner_delete', t);
+  end loop;
+end $$;
+
+-- Planificación: la compartida (sin dueño) se lee; cada uno escribe la suya.
+create policy planning_read on public.planning
+  for select to anon, authenticated using (private.is_shared_or_owner(user_id));
+create policy planning_insert on public.planning
+  for insert to anon, authenticated with check (user_id is not null and private.is_data_owner(user_id));
+create policy planning_update on public.planning
+  for update to anon, authenticated
+  using (user_id is not null and private.is_data_owner(user_id))
+  with check (user_id is not null and private.is_data_owner(user_id));
+create policy planning_delete on public.planning
+  for delete to anon, authenticated using (user_id is not null and private.is_data_owner(user_id));
+
+-- Chat de grupo: escribe y borra cada uno lo suyo.
+create policy chat_insert on public.chat_messages
+  for insert to anon, authenticated with check (private.is_data_owner(user_id));
+create policy chat_update on public.chat_messages
+  for update to anon, authenticated using (private.is_data_owner(user_id)) with check (private.is_data_owner(user_id));
+create policy chat_delete on public.chat_messages
+  for delete to anon, authenticated using (private.is_data_owner(user_id));
 
 -- ---------------------------------------------------------------------------
 -- 3. Lecturas compartidas: solo con sesión
@@ -329,12 +437,29 @@ create policy reports_delete on public.reports
 
 -- Los contadores (likes, comentarios, guardados) se actualizan en
 -- publicaciones de otros: el disparador necesita permisos propios.
-alter function public.sync_post_counters() security definer;
-alter function public.sync_post_counters() set search_path = public;
+do $$
+begin
+  if to_regprocedure('public.sync_post_counters()') is not null then
+    alter function public.sync_post_counters() security definer;
+    alter function public.sync_post_counters() set search_path = public;
+  end if;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- 5. Almacén de fotos sociales: cada uno sube y borra en su carpeta
 -- ---------------------------------------------------------------------------
+do $$
+declare
+  pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and (coalesce(qual, '') like '%''social''%' or coalesce(with_check, '') like '%''social''%')
+  loop
+    execute format('drop policy %I on storage.objects', pol.policyname);
+  end loop;
+end $$;
 drop policy if exists "social media read" on storage.objects;
 drop policy if exists "social media insert" on storage.objects;
 drop policy if exists "social media update" on storage.objects;

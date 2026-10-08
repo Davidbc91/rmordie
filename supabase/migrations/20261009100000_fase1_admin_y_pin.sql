@@ -13,6 +13,16 @@
 -- 1. Administrador
 -- ---------------------------------------------------------------------------
 
+-- En producción la tabla puede no existir (no todas las migraciones antiguas
+-- del repositorio se aplicaron): se crea si falta.
+create table if not exists public.video_admins (
+  profile_id uuid primary key references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.video_admins enable row level security;
+revoke all on public.video_admins from anon, authenticated;
+grant all on public.video_admins to service_role;
+
 -- Garantiza que el perfil BC original (el más antiguo) es administrador.
 -- Si la tabla ya tiene un administrador, no se toca.
 insert into public.video_admins (profile_id)

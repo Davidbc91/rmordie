@@ -764,10 +764,17 @@ export function buildPlanningFromRows(
             const hasRestBlock = blocks.some(
               (b) => /^REST\b|^DESCANSO\b/i.test(b.key) || /^(REST|DESCANSO)\b/i.test(b.content),
             );
+            const dateText = dayRows.find((row) => row.dateText?.trim())?.dateText?.trim();
+            const monthYear = monthGroup.label.match(/(20\\d{2})\\b/)?.[1] ?? new Date().getFullYear().toString();
+            const dateMatch = dateText?.match(/^(\\d{1,2})\\/(\\d{1,2})(?:\\/(\\d{4}))?$/);
+            const exactDate = dateMatch
+              ? `${dateMatch[3] ?? monthYear}-${dateMatch[2].padStart(2, "0")}-${dateMatch[1].padStart(2, "0")}`
+              : undefined;
             return {
               key: dayKey,
               blocks: hasRestBlock ? [] : blocks,
               isRest: hasRestBlock || blocks.length === 0,
+              ...(exactDate ? { date: exactDate } : {}),
             };
           }),
         })),

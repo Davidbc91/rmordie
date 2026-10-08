@@ -164,6 +164,206 @@ function isWeekLabel(value: unknown): number | null {
  * detector de columnas convencional porque "Lunes", "Martes"... son datos
  * estructurales, no campos equivalentes a una sola columna "día".
  */
+type TeamVaderMeta = { month: number; year: number; label: string; sheetName: string };
+
+function detectTeamVaderMeta(wb: XLSX.WorkBook): TeamVaderMeta | null {
+  const months: Record<string, number> = {
+    ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+    JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12,
+  };
+
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const table = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+      header: 1,
+      defval: "",
+      blankrows: true,
+      raw: true,
+    }).slice(0, 8);
+
+    const text = table.flat().map((value) => String(value ?? "")).join(" ");
+    if (!/RM\s*OR\s*DIE/i.test(text) || !/TEAM\s*VADER/i.test(text) && !/^\d+\.\s*OCTUBRE$/i.test(sheetName)) continue;
+
+    const match = text.match(/\b(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\s+(20\d{2})\b/i);
+    if (!match) continue;
+    const month = months[match[1].toUpperCase()];
+    if (!month) continue;
+
+    return {
+      month,
+      year: Number(match[2]),
+      label: `${match[1][0]}${match[1].slice(1).toLowerCase()} ${match[2]}`,
+      sheetName,
+    };
+  }
+
+  return null;
+}
+
+function teamVaderDayCell(value: unknown): { day: string; explicitDate?: { day: number; month: number } } | null {
+  const raw = String(value ?? "").replace(/\r/g, "").trim();
+  if (!raw) return null;
+  const lines = raw.split("\n").map((line) => line.trim()).filter(Boolean);
+  if (!lines.length) return null;
+
+  const day = normalizeDay(lines[0]);
+  if (!day) return null;
+
+  const dateMatch = raw.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);
+  return {
+    day,
+    explicitDate: dateMatch
+      ? { day: Number(dateMatch[1]), month: Number(dateMatch[2]) }
+      : undefined,
+  };
+}
+
+function teamVaderDateFor(day: string, week: number, month: number, year: number): Date {
+  const first = new Date(Date.UTC(year, month - 1, 1));
+  const monday = new Date(first);
+  monday.setUTCDate(first.getUTCDate() - ((first.getUTCDay() + 6) % 7));
+  const dayIndex = IMPORT_DAYS.indexOf(day as typeof IMPORT_DAYS[number]);
+  const date = new Date(monday);
+  date.setUTCDate(monday.getUTCDate() + (week - 1) * 7 + Math.max(0, dayIndex));
+  return date;
+}
+
+function teamVaderDateText(date: Date): string {
+  return `${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/${date.getUTCFullYear()}`;
+}
+
+function parseTeamVaderWorkbook(
+  wb: XLSX.WorkBook,
+): { header: string[]; rows: ReviewRow[]; monthKey: string; monthLabel: string; monthOrder: number } | null {
+  const meta = detectTeamVaderMeta(wb);
+  if (!meta) return null;
+
+  const ws = wb.Sheets[meta.sheetName];
+  const table = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+    header: 1,
+    defval: "",
+    blankrows: true,
+    raw: true,
+  });
+
+  const weekStarts: Array<{ col: number; week: number }> = [];
+  let dayHeaderRow = -1;
+  for (let r = 0; r < Math.min(table.length, 8); r++) {
+    const row = table[r] ?? [];
+    const weekHere = row
+      .map((value, col) => {
+        const match = String(value ?? "").match(/^\s*SEMANA\s*(\d+)\b/i);
+        return match ? { col, week: Number(match[1]) } : null;
+      })
+      .filter(Boolean) as Array<{ col: number; week: number }>;
+    if (weekHere.length) weekStarts.push(...weekHere);
+
+    const dayCount = row.filter((value) => teamVaderDayCell(value)).length;
+    if (dayCount >= 2) {
+      dayHeaderRow = r;
+      break;
+    }
+  }
+
+  if (dayHeaderRow < 0 || weekStarts.length === 0) return null;
+
+  const dayColumns: Array<{ col: number; day: string; week: number; date: Date }> = [];
+  for (let col = 0; col < (table[dayHeaderRow] ?? []).length; col++) {
+    const parsed = teamVaderDayCell((table[dayHeaderRow] ?? [])[col]);
+    if (!parsed) continue;
+
+    const week = [...weekStarts].reverse().find((item) => item.col <= col)?.week ?? 1;
+    const inferred = teamVaderDateFor(parsed.day, week, meta.month, meta.year);
+    const date = parsed.explicitDate
+      ? new Date(Date.UTC(meta.year, parsed.explicitDate.month - 1, parsed.explicitDate.day))
+      : inferred;
+
+    if (date.getUTCFullYear() !== meta.year || date.getUTCMonth() !== meta.month - 1) continue;
+    dayColumns.push({ col, day: parsed.day, week, date });
+  }
+
+  if (dayColumns.length < 3) return null;
+
+  const firstDataRow = dayHeaderRow + 1;
+  const rows: ReviewRow[] = [];
+  let sourceRow = firstDataRow + 1;
+
+  for (let r = firstDataRow; r < table.length; r++, sourceRow++) {
+    const source = table[r] ?? [];
+    const label = String(source[0] ?? "").trim();
+    if (/^ORDEN\s+DE\s+EJECUCIÓN/i.test(label)) break;
+    if (!label) continue;
+
+    for (const column of dayColumns) {
+      const raw = String(source[column.col] ?? "").replace(/\r/g, "").trim();
+      if (!raw || /^[-–—]+$/.test(raw)) continue;
+
+      const isRest = /^(?:REST|DESCANSO)\b/i.test(raw);
+      const block = isRest ? "REST" : label.toUpperCase();
+      const blockType = isRest ? "OTRO" : blockTypeFrom(label + " " + raw);
+      rows.push({
+        id: uid(),
+        sourceRow,
+        day: column.day,
+        dateText: teamVaderDateText(column.date),
+        week: column.week,
+        monthKey: `10. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
+        monthLabel: meta.label,
+        monthOrder: meta.month,
+        block,
+        blockType,
+        exercise: raw,
+        sets: "",
+        reps: "",
+        percent: "",
+        load: "",
+        time: "",
+        distance: "",
+        raw,
+      });
+    }
+  }
+
+  // Team Vader keeps Sundays outside the visual grid and explicitly states
+  // that Thursdays and Sundays are rest days. Materialize Sundays so RM OR DIE
+  // has a complete exact-date calendar.
+  const first = new Date(Date.UTC(meta.year, meta.month - 1, 1));
+  const lastDay = new Date(Date.UTC(meta.year, meta.month, 0)).getUTCDate();
+  for (let day = 1; day <= lastDay; day++) {
+    const date = new Date(Date.UTC(meta.year, meta.month - 1, day));
+    if (date.getUTCDay() !== 0) continue;
+    const week = Math.floor((((first.getUTCDay() + 6) % 7) + day - 1) / 7) + 1;
+    rows.push({
+      id: uid(),
+      sourceRow: sourceRow++,
+      day: "DOMINGO",
+      dateText: teamVaderDateText(date),
+      week,
+      monthKey: `10. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
+      monthLabel: meta.label,
+      monthOrder: meta.month,
+      block: "REST",
+      blockType: "OTRO",
+      exercise: "DESCANSO",
+      sets: "",
+      reps: "",
+      percent: "",
+      load: "",
+      time: "",
+      distance: "",
+      raw: "DESCANSO",
+    });
+  }
+
+  return {
+    header: (table[dayHeaderRow] ?? []).map((value) => String(value ?? "").trim()),
+    rows,
+    monthKey: `10. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
+    monthLabel: meta.label,
+    monthOrder: meta.month,
+  };
+}
+
 function findMatrixSegments(wb: XLSX.WorkBook): MatrixSegment[] {
   const segments: MatrixSegment[] = [];
 
@@ -604,6 +804,19 @@ export async function parseGenericFile(file: File): Promise<ParsedImport> {
   const wb = isCsv
     ? XLSX.read(await file.text(), { type: "string", raw: false })
     : XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true, dense: true, nodim: true });
+
+  // Team Vader usa una plantilla horizontal con semanas agrupadas, fechas
+  // dentro de algunas cabeceras y domingos fuera de la cuadrícula. Tiene un
+  // parser específico para conservar las fechas exactas y el orden de bloques.
+  const teamVader = parseTeamVaderWorkbook(wb);
+  if (teamVader) {
+    return {
+      header: teamVader.header,
+      columns: {},
+      rows: teamVader.rows,
+      unmapped: [],
+    };
+  }
 
   // Primero detectamos la estructura visual de planificación con días en
   // columnas. Es el formato más propenso a pérdidas si se trata como una

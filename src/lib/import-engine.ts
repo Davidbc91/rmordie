@@ -95,7 +95,7 @@ export async function importPlanningFile(
 
   const parsed =
     format === "pdf"
-      ? await parsePdfPlanning(file)
+      ? await parsePdfPlanning(file, onOcrProgress)
       : format === "image"
         ? await parseImagePlanning(file, onOcrProgress)
         : format === "txt"

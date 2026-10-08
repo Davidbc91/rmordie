@@ -117,7 +117,7 @@ function GenericImportPage() {
           <div>
             <div className="text-sm font-medium">
               {busy
-                ? (ocrProgress > 0 ? `Analizando imagen… ${Math.round(ocrProgress * 100)}%` : "Leyendo…")
+                ? (ocrProgress > 0 ? `Reconociendo texto… ${Math.round(ocrProgress * 100)}%` : "Leyendo…")
                 : "Seleccionar archivo"}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">.xlsx, .xls, .csv, .txt, .pdf, .jpg, .jpeg, .png o .webp</div>

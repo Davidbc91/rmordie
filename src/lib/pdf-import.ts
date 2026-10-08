@@ -6,6 +6,7 @@ import type { Planning } from "./excel-parser";
 import type { ParsedImport, ReviewRow } from "./generic-import";
 import { IMPORT_DAYS, normalizeDay, parseStructuredTextPlanning } from "./generic-import";
 import { uid } from "./manual-plan";
+import { imageFileToOcrCanvas, normalizeOcrText, pdfOcrScale, withOcrWorker, type OcrPageResult } from "./ocr";
 
 const WEEK_RE = /(?:SEMANA|WEEK|MICROCICLO|MICROCYCLE)\s*(?:N[º°]?\s*)?[:#-]?\s*(\d{1,2})(?:\s*(?:DE|OF|\/)\s*\d{1,2})?/i;
 const PHASE_RE = /^(?:FASE|PHASE|BLOQUE|BLOCK|MESOCICLO|MESOCYCLE|CICLO|CYCLE|PROGRAMA|PROGRAM)\b\s*[:#-]?\s*(.+)$/i;
@@ -225,52 +226,61 @@ function addRow(rows: ReviewRow[], args: {
   });
 }
 
-async function extractPdfOcrLines(file: File): Promise<string[]> {
+/**
+ * Ordena las líneas de una página reconocida por OCR.
+ * - Con cabeceras de día (LUNES, MARTES…) usamos sus posiciones para leer la
+ *   cuadrícula columna a columna.
+ * - Sin ellas, respetamos el orden de lectura de Tesseract, que ya separa
+ *   bloques y columnas; ordenar solo por altura mezclaría columnas.
+ */
+function linesFromOcrPage(page: OcrPageResult, layout: "columns" | "grid"): string[] {
+  const anchors = page.segments.filter((segment) => isDayAnchorText(segment.text));
+  if (anchors.length >= 2) {
+    return layout === "grid"
+      ? orderColumnLayout(page.segments, page.width)
+      : orderPageColumns(page.segments, page.width);
+  }
+  const native = page.nativeLines.filter((line) => !isNoise(line));
+  if (native.length) return native;
+  return page.text
+    .split(/\r?\n/)
+    .map(normalizeOcrText)
+    .filter(Boolean)
+    .filter((line) => !isNoise(line));
+}
+
+async function extractPdfOcrLines(file: File, onProgress?: (progress: number) => void): Promise<string[]> {
   const data = new Uint8Array(await file.arrayBuffer());
   const pdf = await getDocument({ data }).promise;
-  const Tesseract = await loadBrowserTesseract();
-  const worker = await Tesseract.createWorker(["spa", "eng"], 1);
   const lines: string[] = [];
+  let pageIndex = 0;
 
-  try {
+  await withOcrWorker(async (recognize) => {
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+      pageIndex = pageNumber - 1;
       const page = await pdf.getPage(pageNumber);
-      const viewport = page.getViewport({ scale: 2 });
+      const baseViewport = page.getViewport({ scale: 1 });
+      const viewport = page.getViewport({ scale: pdfOcrScale(baseViewport.width) });
       const canvas = document.createElement("canvas");
       canvas.width = Math.ceil(viewport.width);
       canvas.height = Math.ceil(viewport.height);
       const context = canvas.getContext("2d");
       if (!context) continue;
 
+      context.fillStyle = "#fff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
       await page.render({ canvasContext: context, canvas, viewport }).promise;
-      const result = await worker.recognize(canvas as unknown as File, { rotateAuto: true });
-      const ocrLines = result.data.lines ?? [];
-      const positioned = ocrLines
-        .filter((line) => line.text?.trim() && line.bbox)
-        .map((line) => ({
-          text: line.text as string,
-          x: Number(line.bbox?.x0 ?? 0),
-          y: Number(line.bbox?.y0 ?? 0),
-        }));
-
-      if (positioned.length >= 2) {
-        lines.push(...orderPageColumns(positioned, canvas.width));
-      } else {
-        lines.push(
-          ...(result.data.text ?? "")
-            .split(/\r?\n/)
-            .map(cleanLine)
-            .filter(Boolean),
-        );
-      }
+      const result = await recognize(canvas);
+      lines.push(...linesFromOcrPage(result, "columns"));
 
       canvas.width = 1;
       canvas.height = 1;
+      page.cleanup();
+      onProgress?.(pageNumber / pdf.numPages);
     }
-  } finally {
-    await worker.terminate();
-  }
+  }, (progress) => onProgress?.((pageIndex + progress) / Math.max(1, pdf.numPages)));
 
+  await pdf.destroy();
   return lines.filter((line) => !isNoise(line));
 }
 
@@ -936,7 +946,10 @@ function pdfRowQuality(rows: ReviewRow[]): number {
   return Math.min(1, dayCoverage * 0.6 + contentCoverage * 0.3 + weekCoverage * 0.1);
 }
 
-export async function parsePdfPlanning(file: File): Promise<ParsedImport & { detectedMonth: { key: string; label: string } }> {
+export async function parsePdfPlanning(
+  file: File,
+  onOcrProgress?: (progress: number) => void,
+): Promise<ParsedImport & { detectedMonth: { key: string; label: string } }> {
   // Este PDF es la versión paginada del TXT estructurado: un día completo
   // por página. Detectarlo antes del parser de cuadrículas evita recorrer las
   // 366 páginas dos veces y conserva las cinco secciones originales.
@@ -982,10 +995,13 @@ export async function parsePdfPlanning(file: File): Promise<ParsedImport & { det
     };
   }
 
-  let lines = await extractPdfLines(file);
+  // Reutilizamos el texto ya extraído arriba en lugar de leer el PDF otra vez.
+  let lines = dailyPlanLines;
+  let usedOcr = false;
 
   if (lines.length === 0) {
-    lines = await extractPdfOcrLines(file);
+    lines = await extractPdfOcrLines(file, onOcrProgress);
+    usedOcr = true;
   }
 
   let rows = rowsFromLines(lines);
@@ -993,9 +1009,10 @@ export async function parsePdfPlanning(file: File): Promise<ParsedImport & { det
   // Texto parcial: no damos por buena una extracción solo porque haya
   // encontrado alguna sesión. Si faltan días o contenido, hacemos un segundo
   // intento con OCR y conservamos la interpretación que tenga mayor calidad.
-  if (rows.length === 0 || pdfRowQuality(rows) < 0.72) {
+  // Si el primer intento ya fue OCR, repetirlo daría el mismo resultado.
+  if (!usedOcr && (rows.length === 0 || pdfRowQuality(rows) < 0.72)) {
     const textRows = rows;
-    const ocrLines = await extractPdfOcrLines(file);
+    const ocrLines = await extractPdfOcrLines(file, onOcrProgress);
     const ocrRows = ocrLines.length ? rowsFromLines(ocrLines) : [];
     if (pdfRowQuality(ocrRows) > pdfRowQuality(textRows)) {
       lines = ocrLines;
@@ -1104,59 +1121,11 @@ export function mergePlanningPreservingPrevious(current: Planning | null | undef
   };
 }
 
-type BrowserTesseract = {
-  createWorker: (
-    langs?: string | string[],
-    oem?: number,
-    options?: { logger?: (message: { progress?: number }) => void },
-  ) => Promise<{
-    recognize: (image: File | HTMLCanvasElement, options?: { rotateAuto?: boolean }) => Promise<{
-      data: {
-        text?: string;
-        lines?: Array<{ text?: string; bbox?: { x0?: number; y0?: number } }>;
-      };
-    }>;
-    terminate: () => Promise<unknown>;
-  }>;
-};
-
-let tesseractPromise: Promise<BrowserTesseract> | null = null;
-
-async function loadBrowserTesseract(): Promise<BrowserTesseract> {
-  const getTesseract = () => (globalThis as typeof globalThis & { Tesseract?: BrowserTesseract }).Tesseract;
-
-  const existing = getTesseract();
-  if (existing) return existing;
-  if (typeof document === "undefined") {
-    throw new Error("El OCR de imágenes solo está disponible en el navegador.");
-  }
-
-  if (!tesseractPromise) {
-    tesseractPromise = new Promise<BrowserTesseract>((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js";
-      script.async = true;
-      script.onload = () => {
-        const api = getTesseract();
-        if (api) resolve(api);
-        else reject(new Error("No se pudo cargar el motor OCR."));
-      };
-      script.onerror = () => reject(new Error("No se pudo cargar el motor OCR. Comprueba la conexión a internet."));
-      document.head.appendChild(script);
-    }).catch((error) => {
-      tesseractPromise = null;
-      throw error;
-    });
-  }
-
-  return tesseractPromise;
-}
-
 /**
  * OCR de planificaciones en imagen.
- * Tesseract.js trabaja en un Web Worker, por lo que el reconocimiento no bloquea
- * el hilo principal. Se cargan español + inglés porque las planificaciones pueden
- * mezclar nombres de movimientos y etiquetas en ambos idiomas.
+ * La foto se endereza (EXIF), se lleva a un tamaño adecuado y se pasa a gris
+ * con contraste reforzado antes de reconocerla. Se cargan español + inglés
+ * porque las planificaciones mezclan nombres de movimientos en ambos idiomas.
  */
 export async function parseImagePlanning(
   file: File,
@@ -1166,48 +1135,26 @@ export async function parseImagePlanning(
     throw new Error("Formato de imagen no compatible. Usa JPG, PNG o WEBP.");
   }
 
-  const Tesseract = await loadBrowserTesseract();
-  const worker = await Tesseract.createWorker(["spa", "eng"], 1, {
-    logger: (message) => {
-      if (typeof message.progress === "number") onProgress?.(Math.max(0, Math.min(1, message.progress)));
-    },
-  });
+  const canvas = await imageFileToOcrCanvas(file);
+  const page = await withOcrWorker((recognize) => recognize(canvas), onProgress);
+  canvas.width = 1;
+  canvas.height = 1;
 
-  try {
-    const result = await worker.recognize(file, { rotateAuto: true });
-    const ocrLines = result.data.lines ?? [];
-    const positioned = ocrLines
-      .filter((line) => line.text?.trim() && line.bbox)
-      .map((line) => ({
-        text: line.text as string,
-        x: Number(line.bbox?.x0 ?? 0),
-        y: Number(line.bbox?.y0 ?? 0),
-      }));
-    const lines = positioned.length >= 2
-      ? orderColumnLayout(positioned, Math.max(...positioned.map((line) => line.x), 1000) + 10)
-      : (result.data.text ?? "")
-          .split(/\r?\n/)
-          .map(cleanLine)
-          .filter(Boolean)
-          .filter((line) => !isNoise(line));
-
-    if (lines.length === 0) {
-      throw new Error("No pude detectar texto en la imagen. Usa una foto nítida y bien iluminada.");
-    }
-
-    const rows = rowsFromLines(lines);
-    if (rows.length === 0) {
-      throw new Error("Detecté texto, pero no pude identificar sesiones. Comprueba que aparezcan los días y ejercicios.");
-    }
-
-    return {
-      header: ["Texto OCR"],
-      columns: {},
-      rows,
-      unmapped: [],
-      detectedMonth: inferMonthFromText(lines, file.name),
-    };
-  } finally {
-    await worker.terminate();
+  const lines = linesFromOcrPage(page, "grid");
+  if (lines.length === 0) {
+    throw new Error("No pude detectar texto en la imagen. Usa una foto nítida, recta y bien iluminada.");
   }
+
+  const rows = rowsFromLines(lines);
+  if (rows.length === 0) {
+    throw new Error("Detecté texto, pero no pude identificar sesiones. Comprueba que aparezcan los días y ejercicios.");
+  }
+
+  return {
+    header: ["Texto OCR"],
+    columns: {},
+    rows,
+    unmapped: [],
+    detectedMonth: inferMonthFromText(lines, file.name),
+  };
 }

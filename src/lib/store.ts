@@ -356,16 +356,30 @@ export function useSavePlanning() {
         .limit(1)
         .maybeSingle();
       const nextVersion = ((latest?.version as number | undefined) ?? 0) + 1;
-      const { error } = await supabase.from("planning").insert({
-        user_id: uid,
-        version: nextVersion,
-        source_filename: input.filename ?? null,
-        data: input.planning as unknown as never,
-        is_active: true,
-      });
+      const { data: inserted, error } = await supabase
+        .from("planning")
+        .insert({
+          user_id: uid,
+          version: nextVersion,
+          source_filename: input.filename ?? null,
+          data: input.planning as unknown as never,
+          is_active: true,
+        })
+        .select("*")
+        .single();
       if (error) throw error;
+      if (inserted) {
+        await cacheSet(cacheKeys.planning(uid), inserted as unknown as PlanningRow);
+      }
+      return inserted as unknown as PlanningRow;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["planning"] }),
+    onSuccess: (saved) => {
+      if (saved) {
+        qc.setQueryData(["planning", getCurrentUserId()], saved);
+      }
+      qc.invalidateQueries({ queryKey: ["planning"] });
+      qc.invalidateQueries({ queryKey: ["planning_versions"] });
+    },
   });
 }
 

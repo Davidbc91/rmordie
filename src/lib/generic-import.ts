@@ -250,6 +250,13 @@ function teamVaderDateFor(day: string, week: number, month: number, year: number
 
   const firstMondayIndex = (first.getUTCDay() + 6) % 7;
   if (week === 1) {
+    // If the month starts on Sunday, the first visible training week begins
+    // on the following Monday because the template has no Sunday column.
+    if (firstMondayIndex === 6) {
+      const date = new Date(first);
+      date.setUTCDate(2 + dayIndex);
+      return date;
+    }
     const offset = dayIndex - firstMondayIndex;
     if (offset < 0) return null;
     const date = new Date(first);

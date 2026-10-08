@@ -105,7 +105,42 @@ function ImportPage() {
             {current.source_filename ?? "Sin nombre"} · {current.data.months.length} meses · importada {new Date(current.imported_at).toLocaleDateString("es-ES")}
           </div>
         </div>
+      )
+      {current && current.data.months.length > 0 && (
+        <section className="mt-4">
+          <div className="rounded-2xl border border-red-400/25 bg-red-400/[0.07] p-4">
+            <div className="flex items-center gap-3">
+              <Trash2 className="h-5 w-5 shrink-0 text-red-300" />
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-semibold">Limpiar planificación</h2>
+                <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                  Borra meses y versiones de planificación sin borrar entrenamientos, RMs, marcas, pesos, progreso ni notas.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="mt-3 w-full rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-xs font-bold text-red-200 active:scale-[0.99] disabled:opacity-40"
+              disabled={clearPlanning.isPending}
+              onClick={async () => {
+                const confirmed = window.confirm(
+                  "¿Eliminar TODA la planificación?\n\nSe borrarán meses y versiones de planificación. Se conservarán entrenamientos realizados, pesos, RMs, marcas, progreso, tiempos, notas y datos del atleta.\n\nEsta acción no elimina ningún registro de entrenamiento."
+                );
+                if (!confirmed) return;
+                try {
+                  await clearPlanning.mutateAsync();
+                  toast.success("Planificación eliminada. Tus datos y progreso siguen intactos.");
+                } catch (e) {
+                  toast.error((e as { message?: string })?.message ?? "No se pudo limpiar la planificación.");
+                }
+              }}
+            >
+              {clearPlanning.isPending ? "LIMPIANDO…" : "ELIMINAR TODA LA PLANIFICACIÓN"}
+            </button>
+          </div>
+        </section>
       )}
+}
 
       {current && (
         <section className="mt-6">
@@ -185,39 +220,7 @@ function ImportPage() {
       )}
 
       {current && current.data.months.length > 0 && (
-        <section className="mt-5">
-          <div className="rounded-2xl border border-red-400/20 bg-red-400/[0.06] p-4">
-            <div className="flex items-start gap-3">
-              <Trash2 className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />
-              <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-semibold text-foreground">Limpiar toda la planificación</h3>
-                <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                  Elimina todos los meses y versiones de planificación de este perfil y deja el calendario vacío.
-                  <span className="text-foreground"> Tus entrenamientos realizados, pesos, RMs, marcas, progreso, tiempos, notas y datos del atleta no se borran.</span>
-                </p>
-                <button
-                  type="button"
-                  className="pressable mt-3 rounded-full border border-red-400/30 bg-red-400/10 px-4 py-2 text-[11px] font-semibold text-red-200 disabled:opacity-40"
-                  disabled={clearPlanning.isPending}
-                  onClick={async () => {
-                    const confirmed = window.confirm(
-                      "¿Eliminar TODA la planificación de este perfil?\n\nSe borrarán los meses y versiones importadas, pero se conservarán tus entrenamientos realizados, pesos, RMs, marcas, progreso, tiempos, notas y datos del atleta.\n\nEsta acción no elimina ningún registro de entrenamiento."
-                    );
-                    if (!confirmed) return;
-                    try {
-                      await clearPlanning.mutateAsync();
-                      toast.success("Planificación eliminada. Tus datos y progreso siguen intactos.");
-                    } catch (e) {
-                      toast.error((e as { message?: string })?.message ?? "No se pudo limpiar la planificación.");
-                    }
-                  }}
-                >
-                  {clearPlanning.isPending ? "Limpiando…" : "ELIMINAR TODA LA PLANIFICACIÓN"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+
       )}
 
       {visiblePlanningVersions.length > 0 && (

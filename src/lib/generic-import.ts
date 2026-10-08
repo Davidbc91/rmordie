@@ -458,7 +458,7 @@ export async function parseStructuredTextPlanning(file: File): Promise<ParsedImp
     throw new Error("El TXT no usa el formato estructurado de RM OR DIE.");
   }
 
-  const chunks = source.match(/===\s*INICIO DIA\s*===([\\s\\S]*?)===\s*FIN DIA\s*===/gi) ?? [];
+  const chunks = source.match(/===\s*INICIO DIA\s*===([\s\S]*?)===\s*FIN DIA\s*===/gi) ?? [];
   const parsedDays: Array<{
     date: Date;
     dateText: string;

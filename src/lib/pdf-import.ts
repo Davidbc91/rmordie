@@ -4,7 +4,7 @@ import pdfWorker from "pdfjs-dist/legacy/build/pdf.worker.mjs?url";
 GlobalWorkerOptions.workerSrc = pdfWorker;
 import type { Planning } from "./excel-parser";
 import type { ParsedImport, ReviewRow } from "./generic-import";
-import { IMPORT_DAYS, normalizeDay } from "./generic-import";
+import { IMPORT_DAYS, normalizeDay, parseStructuredTextPlanning } from "./generic-import";
 import { uid } from "./manual-plan";
 
 const WEEK_RE = /(?:SEMANA|WEEK|MICROCICLO|MICROCYCLE)\s*(?:N[º°]?\s*)?[:#-]?\s*(\d{1,2})(?:\s*(?:DE|OF|\/)\s*\d{1,2})?/i;
@@ -660,7 +660,45 @@ async function extractAnnualPdfRows(file: File): Promise<{ rows: ReviewRow[]; mo
   return { rows, months: [...months.values()].sort((a, b) => a.order - b.order) };
 }
 
+async function looksLikeStructuredDailyPdf(file: File): Promise<boolean> {
+  const data = new Uint8Array(await file.arrayBuffer());
+  const pdf = await getDocument({ data }).promise;
+  if (pdf.numPages === 0) return false;
+
+  const page = await pdf.getPage(1);
+  const content = await page.getTextContent();
+  const sample = content.items
+    .filter((item: any) => typeof item?.str === "string" && item.str.trim())
+    .map((item: any) => item.str as string)
+    .join(" ");
+
+  return (
+    /RM\s*OR\s*DIE\s*\|\s*REGISTRO\s*DIARIO/i.test(sample) &&
+    /FECHA\s*:/i.test(sample) &&
+    /SECCION\s*:/i.test(sample) &&
+    /INICIO\s+DIA/i.test(sample)
+  );
+}
+
 export async function parsePdfPlanning(file: File): Promise<ParsedImport & { detectedMonth: { key: string; label: string } }> {
+  // Este PDF es la versión paginada del TXT estructurado: un día completo
+  // por página. Detectarlo antes del parser de cuadrículas evita recorrer las
+  // 366 páginas dos veces y conserva las cinco secciones originales.
+  if (await looksLikeStructuredDailyPdf(file)) {
+    const lines = await extractPdfLines(file);
+    const structuredSource = lines.join("\n");
+    const structuredFile = new File(
+      [structuredSource],
+      file.name.replace(/\.pdf$/i, ".txt"),
+      { type: "text/plain" },
+    );
+    const structured = await parseStructuredTextPlanning(structuredFile);
+    return {
+      ...structured,
+      detectedMonth: inferMonthFromText(lines, file.name),
+    };
+  }
+
   const annual = await extractAnnualPdfRows(file);
   if (annual.rows.length > 0) {
     const firstMonth = annual.months[0] ?? { key: "1. PDF", label: "Plan PDF", order: 1 };

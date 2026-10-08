@@ -229,20 +229,20 @@ async function extractPdfOcrLines(file: File): Promise<string[]> {
   const data = new Uint8Array(await file.arrayBuffer());
   const pdf = await getDocument({ data }).promise;
   const Tesseract = await loadBrowserTesseract();
+  const worker = await Tesseract.createWorker(["spa", "eng"], 1);
   const lines: string[] = [];
 
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-    const page = await pdf.getPage(pageNumber);
-    const viewport = page.getViewport({ scale: 2 });
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.ceil(viewport.width);
-    canvas.height = Math.ceil(viewport.height);
-    const context = canvas.getContext("2d");
-    if (!context) continue;
+  try {
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      const context = canvas.getContext("2d");
+      if (!context) continue;
 
-    await page.render({ canvasContext: context, canvas, viewport }).promise;
-    const worker = await Tesseract.createWorker(["spa", "eng"], 1);
-    try {
+      await page.render({ canvasContext: context, canvas, viewport }).promise;
       const result = await worker.recognize(canvas as unknown as File, { rotateAuto: true });
       const ocrLines = result.data.lines ?? [];
       const positioned = ocrLines
@@ -252,6 +252,7 @@ async function extractPdfOcrLines(file: File): Promise<string[]> {
           x: Number(line.bbox?.x0 ?? 0),
           y: Number(line.bbox?.y0 ?? 0),
         }));
+
       if (positioned.length >= 2) {
         lines.push(...orderPageColumns(positioned, canvas.width));
       } else {
@@ -262,9 +263,12 @@ async function extractPdfOcrLines(file: File): Promise<string[]> {
             .filter(Boolean),
         );
       }
-    } finally {
-      await worker.terminate();
+
+      canvas.width = 1;
+      canvas.height = 1;
     }
+  } finally {
+    await worker.terminate();
   }
 
   return lines.filter((line) => !isNoise(line));

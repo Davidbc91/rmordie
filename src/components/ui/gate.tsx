@@ -176,9 +176,46 @@ export function PinGate({ children }: { children: ReactNode }) {
 // 1. Correo
 // ---------------------------------------------------------------------------
 
+/**
+ * Correo al que se envió el acceso. Se guarda en el dispositivo porque en
+ * iPhone, al saltar a la app de Correo, iOS suele cerrar la app instalada y al
+ * volver se perdería la pantalla del código (el "bucle" de volver a pedir correo).
+ */
+const PENDING_LOGIN_KEY = "malitos_login_pending_v1";
+const PENDING_LOGIN_TTL_MS = 60 * 60 * 1000;
+
+function readPendingLogin(): string | null {
+  const raw = readLocal(PENDING_LOGIN_KEY);
+  if (!raw) return null;
+  try {
+    const { email, at } = JSON.parse(raw) as { email?: string; at?: number };
+    if (email && at && Date.now() - at < PENDING_LOGIN_TTL_MS) return email;
+  } catch {
+    /* valor antiguo o corrupto */
+  }
+  writeLocal(PENDING_LOGIN_KEY, null);
+  return null;
+}
+function writePendingLogin(email: string | null) {
+  writeLocal(PENDING_LOGIN_KEY, email ? JSON.stringify({ email, at: Date.now() }) : null);
+}
+
 function EmailStep() {
   const [email, setEmail] = useState("");
-  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [sentTo, setSentToState] = useState<string | null>(null);
+  const setSentTo = (value: string | null) => {
+    writePendingLogin(value);
+    setSentToState(value);
+  };
+
+  // Al volver a la app tras mirar el correo, seguir en la pantalla del código.
+  useEffect(() => {
+    const pending = readPendingLogin();
+    if (pending) {
+      setEmail(pending);
+      setSentToState(pending);
+    }
+  }, []);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -218,6 +255,7 @@ function EmailStep() {
     setBusy(true);
     try {
       await verifyLoginCode(sentTo, code);
+      writePendingLogin(null);
       // La sesión llega por onAuthStateChange y la pantalla avanza sola.
     } catch (e) {
       setError(authErrorMessage(e));
@@ -254,8 +292,8 @@ function EmailStep() {
       <div className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-sm">
         <Mail className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
         <p className="text-muted-foreground">
-          Correo enviado a <span className="text-foreground">{sentTo}</span>. Pulsa el enlace o escribe aquí el código que trae.
-          En iPhone con la app instalada, usa el código.
+          Correo enviado a <span className="text-foreground">{sentTo}</span>. Escribe aquí el código que trae.
+          Si usas la app instalada en el iPhone, no pulses el enlace: abriría el navegador, no la app.
         </p>
       </div>
       <input

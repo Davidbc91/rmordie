@@ -494,6 +494,47 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          daily_enabled: boolean
+          daily_time: string
+          last_daily_on: string | null
+          last_weekly_on: string | null
+          timezone: string
+          updated_at: string
+          user_id: string
+          weekly_enabled: boolean
+        }
+        Insert: {
+          daily_enabled?: boolean
+          daily_time?: string
+          last_daily_on?: string | null
+          last_weekly_on?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id: string
+          weekly_enabled?: boolean
+        }
+        Update: {
+          daily_enabled?: boolean
+          daily_time?: string
+          last_daily_on?: string | null
+          last_weekly_on?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+          weekly_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           actor_id: string | null

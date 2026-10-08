@@ -62,7 +62,7 @@ type ProfileState =
 
 /**
  * Entrada a la app:
- * 1. Sin sesión → correo (enlace o código de 6 dígitos).
+ * 1. Sin sesión → correo (enlace o código).
  * 2. Con sesión pero sin perfil → vincular el perfil antiguo con su PIN, o crear uno.
  * 3. Con perfil → PIN como candado cada vez que se abre la app.
  */
@@ -213,7 +213,7 @@ function EmailStep() {
   async function onSubmitCode(e: FormEvent) {
     e.preventDefault();
     if (!sentTo) return;
-    if (code.trim().length < 6) return setError("El código tiene 6 dígitos.");
+    if (code.trim().length < 6) return setError("Escribe el código completo que te ha llegado.");
     setError(null);
     setBusy(true);
     try {
@@ -254,7 +254,7 @@ function EmailStep() {
       <div className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-sm">
         <Mail className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
         <p className="text-muted-foreground">
-          Correo enviado a <span className="text-foreground">{sentTo}</span>. Pulsa el enlace o escribe aquí el código de 6 dígitos.
+          Correo enviado a <span className="text-foreground">{sentTo}</span>. Pulsa el enlace o escribe aquí el código que trae.
           En iPhone con la app instalada, usa el código.
         </p>
       </div>
@@ -263,7 +263,7 @@ function EmailStep() {
         inputMode="numeric"
         autoComplete="one-time-code"
         pattern="[0-9]*"
-        maxLength={6}
+        maxLength={8}
         placeholder="Código"
         aria-label="Código de acceso"
         value={code}

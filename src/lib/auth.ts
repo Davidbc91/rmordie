@@ -1,8 +1,8 @@
 /**
  * Login con enlace o código por correo (Supabase Auth, sin contraseñas).
  *
- * El correo trae un enlace y, si la plantilla lo incluye, un código de 6
- * dígitos. El código es la vía buena en iPhone con la app instalada en la
+ * El correo trae un enlace y, si la plantilla lo incluye, un código (6–8
+ * dígitos según la configuración del proyecto). El código es la vía buena en iPhone con la app instalada en la
  * pantalla de inicio: el enlace se abriría en Safari y la sesión se quedaría
  * allí, no en la app.
  */

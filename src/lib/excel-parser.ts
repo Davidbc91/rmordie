@@ -38,9 +38,46 @@ const MONTH_NAMES: Record<string, string> = {
 
 const norm = (s: unknown) => String(s ?? "").trim().toUpperCase();
 
-function isDay(v: unknown) {
+function orderMonthNumber(monKey: string) {
+  const months = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
+  const index = months.indexOf(monKey);
+  return index >= 0 ? index + 1 : undefined;
+}
+
+function dayKey(v: unknown) {
   const n = norm(v);
-  return DAY_ORDER.includes(n);
+  const first = n.split(/\\r?\\n/)[0].trim();
+  const match = first.match(/^(LUNES|MARTES|MIERCOLES|MIÉRCOLES|JUEVES|VIERNES|SABADO|SÁBADO|DOMINGO)\\b/i);
+  if (!match) return "";
+  return match[1].toUpperCase().replace("MIÉRCOLES", "MIERCOLES").replace("SÁBADO", "SABADO");
+}
+
+function isDay(v: unknown) {
+  return Boolean(dayKey(v));
+}
+
+function extractExplicitDate(v: unknown, year?: number) {
+  const text = String(v ?? "").replace(/\\r/g, "");
+  const match = text.match(/(?:^|\\n)\\s*(\\d{1,2})\\/(\\d{1,2})(?:\\/(\\d{2,4}))?\\s*$/m);
+  if (!match) return undefined;
+  const day = match[1].padStart(2, "0");
+  const month = match[2].padStart(2, "0");
+  const rawYear = match[3];
+  const fullYear = rawYear
+    ? (rawYear.length === 2 ? Number(`20${rawYear}`) : Number(rawYear))
+    : year;
+  if (!fullYear || fullYear < 2000 || fullYear > 2100) return undefined;
+  return `${fullYear}-${month}-${day}`;
+}
+
+function sheetYear(rows: unknown[][]) {
+  for (const row of rows.slice(0, 6)) {
+    for (const value of row ?? []) {
+      const match = String(value ?? "").match(/\\b(20\\d{2})\\b/);
+      if (match) return Number(match[1]);
+    }
+  }
+  return undefined;
 }
 function isWeekHeader(v: unknown) {
   return /^SEMANA\s*\d+/i.test(String(v ?? "").trim());
@@ -146,6 +183,7 @@ export function parsePlanningFromArrayBuffer(buf: ArrayBuffer): Planning {
     const headerRow = rows[headerRowIdx] ?? [];
     const dayRow = rows[dayRowIdx] ?? [];
     const dataStartRow = dayRowIdx + 1;
+    const explicitYear = sheetYear(rows);
 
     // Detect week column ranges from headerRow
     const weekStarts: { index: number; col: number }[] = [];
@@ -175,21 +213,33 @@ export function parsePlanningFromArrayBuffer(buf: ArrayBuffer): Planning {
 
     // Build day column map per week
     const weeks: Week[] = weekRanges.map((w) => {
-      const dayCols: { key: string; col: number }[] = [];
+      const dayCols: { key: string; col: number; date?: string }[] = [];
       for (let c = w.start; c < w.end; c++) {
-        if (isDay(dayRow[c])) {
-          const k = norm(dayRow[c]).replace("MIÉRCOLES", "MIERCOLES").replace("SÁBADO", "SABADO");
-          dayCols.push({ key: k, col: c });
+        const key = dayKey(dayRow[c]);
+        if (key) {
+          dayCols.push({
+            key,
+            col: c,
+            date: extractExplicitDate(dayRow[c], explicitYear),
+          });
         }
       }
       // Collect blocks: first column of each row is block label, unless empty
-      const days: Day[] = dayCols.map((d) => ({ key: d.key, blocks: [], isRest: false }));
+      const days: Day[] = dayCols.map((d) => ({
+        key: d.key,
+        blocks: [],
+        isRest: false,
+        ...(d.date ? { date: d.date } : {}),
+      }));
 
       for (let r = dataStartRow; r < rows.length; r++) {
         const rawLabel = rows[r]?.[0];
         const label = String(rawLabel ?? "").trim();
         if (!label) continue;
-        // Skip if label looks like another header
+        // The template contains explanatory notes after the actual workout rows.
+        // They must not become workout blocks.
+        const labelNorm = norm(label);
+        if (labelNorm === "ORDEN DE EJECUCIÓN" || labelNorm.startsWith("ORDEN DE EJECUCIÓN")) break;
         if (isWeekHeader(label) || isDay(label)) continue;
         const blockKey = label.toUpperCase();
 
@@ -208,6 +258,40 @@ export function parsePlanningFromArrayBuffer(buf: ArrayBuffer): Planning {
         const restLike = d.blocks.filter((b) => isRestContent(b.content)).length;
         d.isRest = total === 0 || restLike === total || d.blocks.every((b) => /REST/i.test(b.content));
       });
+
+      // Some Team Vader sheets intentionally omit Sundays from the day header row
+      // and state that Sundays are rest days in the notes below the template.
+      // When that rule is explicit and the sheet provides a year, materialize the
+      // missing Sunday as an exact rest day so the calendar and planning view stay accurate.
+      const hasSundayRestRule = rows.some((row) =>
+        row?.some((value) => /DESCANSO/i.test(String(value ?? "")) && /DOMINGO/i.test(String(value ?? ""))),
+      );
+      if (hasSundayRestRule && explicitYear) {
+        const monthNumber = orderMonthNumber(monKey);
+        if (monthNumber) {
+          const first = new Date(Date.UTC(explicitYear, monthNumber - 1, 1));
+          const lastDay = new Date(Date.UTC(explicitYear, monthNumber, 0)).getUTCDate();
+          const weekForDate = (day: number) => {
+            const weekdayMonday = (first.getUTCDay() + 6) % 7;
+            return Math.floor((weekdayMonday + day - 1) / 7) + 1;
+          };
+          const sunday = Array.from({ length: lastDay }, (_, i) => i + 1).find(
+            (day) => weekForDate(day) === w.index && new Date(Date.UTC(explicitYear, monthNumber - 1, day)).getUTCDay() === 0,
+          );
+          if (sunday) {
+            const date = `${explicitYear}-${String(monthNumber).padStart(2, "0")}-${String(sunday).padStart(2, "0")}`;
+            const exists = days.some((day) => day.date === date);
+            if (!exists) {
+              days.push({
+                key: "DOMINGO",
+                blocks: [{ key: "DESCANSO", content: "Descanso" }],
+                isRest: true,
+                date,
+              });
+            }
+          }
+        }
+      }
 
       return { index: w.index, days };
     });

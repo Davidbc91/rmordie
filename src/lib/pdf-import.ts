@@ -840,7 +840,7 @@ function dailyPlanRowsFromLines(lines: string[], filename: string): { rows: Revi
         dateText: dateTextForDay(header.dateDay),
         week: weekForDay(header.dateDay),
       };
-      const isRestDay = /\\bDESCANSO\\b/i.test(header.title);
+      const isRestDay = /\bDESCANSO\b/i.test(header.title);
       block = isRestDay ? "DESCANSO" : "FOCO";
       blockType = "OTRO";
       push(isRestDay ? "Descanso" : header.title, i + 1, block, blockType);
@@ -853,7 +853,7 @@ function dailyPlanRowsFromLines(lines: string[], filename: string): { rows: Revi
     if (/^RM\s*OR\s*DIE.*P[ÁA]GINA\s+\d+/i.test(line)) continue;
     if (isNoise(line)) continue;
 
-    const focus = line.match(/^ENFOQUE\\s*:\\s*(.+)$/i);
+    const focus = line.match(/^ENFOQUE\s*:\s*(.+)$/i);
     if (focus) {
       block = "FOCO";
       blockType = "OTRO";

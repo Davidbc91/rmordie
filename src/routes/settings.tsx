@@ -4,6 +4,7 @@ import { useSettings, useSaveSettings, useProfiles, useUpdateProfilePin, useDele
 import { signOut, getCurrentUserId } from "@/lib/pin-gate";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { NotificationSettings } from "@/components/NotificationSettings";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Ajustes — RM OR DIE" }] }),
@@ -90,6 +91,8 @@ function SettingsPage() {
         </label>
         <button onClick={saveGym} disabled={!s || save.isPending} className="mt-4 rounded-xl gold-gradient px-4 py-2 text-sm font-semibold disabled:opacity-50" style={{ color: "var(--gold-foreground)" }}>{save.isPending ? "Guardando…" : "Guardar"}</button>
       </section>
+
+      <NotificationSettings />
 
       <section className="mt-4 card-elevated p-5">
         <h2 className="text-sm font-semibold">Perfil y seguridad</h2>

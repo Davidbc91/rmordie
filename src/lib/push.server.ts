@@ -32,10 +32,15 @@ export function serverClient() {
   });
 }
 
-/** Envía `payload` a todos los dispositivos registrados excepto los del perfil excluido. */
+/**
+ * Envía `payload` a los dispositivos registrados.
+ * - `excludeUserId`: a todos menos a ese perfil (chat).
+ * - `onlyUserId`: solo a los dispositivos de ese perfil (avisos personales).
+ */
 export async function deliver(opts: {
   payload: PushPayload;
   excludeUserId?: string | null;
+  onlyUserId?: string | null;
 }): Promise<{ sent: number; removed: number }> {
   const sb = serverClient();
   const vapid = {
@@ -47,6 +52,7 @@ export async function deliver(opts: {
 
   let query = sb.from("push_subscriptions").select("endpoint, p256dh, auth");
   if (opts.excludeUserId) query = query.neq("user_id", opts.excludeUserId);
+  if (opts.onlyUserId) query = query.eq("user_id", opts.onlyUserId);
   const { data: subs, error } = await query;
   if (error || !subs?.length) return { sent: 0, removed: 0 };
 

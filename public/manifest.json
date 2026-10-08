@@ -2,6 +2,7 @@
   "name": "RM OR DIE",
   "short_name": "RMORDIE",
   "description": "Diario minimalista de entrenamiento",
+  "lang": "es",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",

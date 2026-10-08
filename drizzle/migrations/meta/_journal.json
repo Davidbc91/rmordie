@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791499203287,
+      "tag": "0000_training_reminders",
+      "breakpoints": true
+    }
+  ]
+}

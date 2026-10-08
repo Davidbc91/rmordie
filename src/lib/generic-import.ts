@@ -571,6 +571,7 @@ export type ParsedImport = {
   rows: ReviewRow[];
   /** Campos esperados que no se han podido identificar en las cabeceras. */
   unmapped: GenericField[];
+  detectedMonth?: { key: string; label: string };
 };
 
 const cellText = (row: unknown[], idx: number | undefined) =>
@@ -815,6 +816,7 @@ export async function parseGenericFile(file: File): Promise<ParsedImport> {
       columns: {},
       rows: teamVader.rows,
       unmapped: [],
+      detectedMonth: { key: teamVader.monthKey, label: teamVader.monthLabel },
     };
   }
 

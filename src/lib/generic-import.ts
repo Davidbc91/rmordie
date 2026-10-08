@@ -281,6 +281,73 @@ function teamVaderCellHasContent(value: unknown): boolean {
   return Boolean(raw) && !/^[-–—]+$/.test(raw);
 }
 
+
+function teamVaderRoundCount(context: string): string {
+  const text = context.replace(/\s+/g, " ").trim();
+  const direct = text.match(/(?:^|\b)(\d+)\s*(?:ROUND|ROUNDS|SET|SETS)(?:\b|:)/i);
+  if (direct) return direct[1];
+  const grouped = text.match(/\((\d+)\s*(?:ROUND|ROUNDS|SET|SETS|SERIES)/i);
+  if (grouped) return grouped[1];
+  return "";
+}
+
+function parseTeamVaderExerciseLine(line: string, context: string) {
+  let text = line.trim().replace(/^[.\-•]+\s*/, "").trim();
+  text = text.replace(/^[A-Z]\s*[-:]\s*/i, "").trim();
+  const result = { exercise: text, sets: teamVaderRoundCount(context), reps: "", percent: "", load: "", time: "", distance: "" };
+  const percentMatch = text.match(/(\d+(?:[.,]\d+)?)\s*%/);
+  if (percentMatch) result.percent = percentMatch[1].replace(",", ".");
+  const distanceMatch = text.match(/\b(\d+(?:[.,]\d+)?)\s*(km|m|mi|metros)\b/i);
+  if (distanceMatch) result.distance = distanceMatch[1] + " " + distanceMatch[2];
+  const timeFirst = text.match(/^(\d+(?:[.,]\d+)?)\s*(min(?:ute)?s?|['´]|")\s*[-:]\s*(.+)$/i);
+  if (timeFirst) {
+    result.time = timeFirst[1] + " " + timeFirst[2];
+    text = timeFirst[3].trim();
+  } else {
+    const timeMatch = text.match(/\b(\d+(?:[.,]\d+)?)\s*(min(?:ute)?s?|seg(?:undo)?s?|s|['´]|")\b/i);
+    if (timeMatch) result.time = timeMatch[1] + " " + timeMatch[2];
+  }
+  if (/^max\b/i.test(text)) {
+    result.reps = "Max";
+    text = text.replace(/^max\b\s*/i, "").trim();
+  }
+  const repFirst = text.match(/^(\d+(?:[.,]\d+)?(?:\/\d+(?:[.,]\d+)?)?(?:\+\d+(?:[.,]\d+)?)*)(?:\s+|$)(.*)$/);
+  if (repFirst && !/^\d+(?:[.,]\d+)?\s*(?:m|km|mi|metros|min|mins?)\b/i.test(text)) {
+    result.reps = result.reps || repFirst[1];
+    text = repFirst[2].trim();
+  } else {
+    const parentheticalRep = text.match(/^\((\d+(?:[.,]\d+)?(?:\+\d+(?:[.,]\d+)?)+)\)\s*(.*)$/);
+    if (parentheticalRep) {
+      result.reps = parentheticalRep[1];
+      text = parentheticalRep[2].trim();
+    }
+  }
+  const parens = [...text.matchAll(/\(([^()]*)\)/g)].map((m) => m[1].trim());
+  for (const value of parens) {
+    if (!value || /%/.test(value) || /RM|DEL RM|PROPIO PESO|INTENSIDAD/i.test(value)) continue;
+    if (/^\d+(?:[.,]\d+)?(?:\/\d+(?:[.,]\d+)?){0,3}$/.test(value)
+      || /^\d+(?:[.,]\d+)?(?:-\d+(?:[.,]\d+)?)+(?:\/\d+(?:[.,]\d+)?(?:-\d+(?:[.,]\d+)?)*)?$/.test(value)) {
+      result.load = value;
+      break;
+    }
+  }
+  result.exercise = text.trim() || line.trim();
+  return result;
+}
+
+function splitTeamVaderCell(raw: string) {
+  const lines = raw.replace(/\r/g, "").split("\n").map((line) => line.trim()).filter(Boolean);
+  const bulletLines = lines.filter((line) => /^[.\-•]+\s*/.test(line));
+  const contextLines = lines.filter((line) => !/^[.\-•]+\s*/.test(line));
+  if (!bulletLines.length) {
+    return { header: lines.join("\n"), exercises: [parseTeamVaderExerciseLine(lines[0] ?? raw, lines.join("\n"))] };
+  }
+  return {
+    header: contextLines.join("\n"),
+    exercises: bulletLines.map((line) => parseTeamVaderExerciseLine(line, contextLines.join("\n"))),
+  };
+}
+
 function parseTeamVaderWorkbook(
   wb: XLSX.WorkBook,
 ): { header: string[]; columns: ColumnMap; rows: ReviewRow[]; unmapped: GenericField[]; detectedMonth?: { key: string; label: string } } | null {
@@ -340,26 +407,48 @@ function parseTeamVaderWorkbook(
 
         const block = label || "PLAN";
         const isRest = /^(?:REST|DESCANSO)\b/i.test(raw);
-        allRows.push({
-          id: uid(),
-          sourceRow: r + 1,
-          day: column.day,
-          dateText: teamVaderDateText(column.date),
-          week: column.week,
-          monthKey: `${meta.order}. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
-          monthLabel: meta.label,
-          monthOrder: meta.order,
-          block: isRest ? "REST" : block.toUpperCase(),
-          blockType: isRest ? "OTRO" : blockTypeFrom(block + " " + raw),
-          exercise: raw,
-          sets: "",
-          reps: "",
-          percent: "",
-          load: "",
-          time: "",
-          distance: "",
-          raw,
-        });
+        const parsedCell = splitTeamVaderCell(raw);
+        if (isRest) {
+          allRows.push({
+            id: uid(),
+            sourceRow: r + 1,
+            day: column.day,
+            dateText: teamVaderDateText(column.date),
+            week: column.week,
+            monthKey: `${meta.order}. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
+            monthLabel: meta.label,
+            monthOrder: meta.order,
+            block: "REST",
+            blockType: "OTRO",
+            exercise: raw,
+            sets: "", reps: "", percent: "", load: "", time: "", distance: "",
+            raw,
+          });
+        } else {
+          for (const parsedExercise of parsedCell.exercises) {
+            allRows.push({
+              id: uid(),
+              header: parsedCell.header,
+              sourceRow: r + 1,
+              day: column.day,
+              dateText: teamVaderDateText(column.date),
+              week: column.week,
+              monthKey: `${meta.order}. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
+              monthLabel: meta.label,
+              monthOrder: meta.order,
+              block: block.toUpperCase(),
+              blockType: blockTypeFrom(block + " " + parsedExercise.exercise + " " + parsedCell.header),
+              exercise: parsedExercise.exercise,
+              sets: parsedExercise.sets,
+              reps: parsedExercise.reps,
+              percent: parsedExercise.percent,
+              load: parsedExercise.load,
+              time: parsedExercise.time,
+              distance: parsedExercise.distance,
+              raw,
+            });
+          }
+        }
       }
     }
 
@@ -397,6 +486,8 @@ function parseTeamVaderWorkbook(
   return {
     header,
     columns: {},
+    layout: "Team Vader: días en columnas y bloques en filas",
+    detectedColumns: [...new Set(header.map((value) => value.split(" ").slice(0, 2).join(" ")))],
     rows: allRows,
     unmapped: [],
     detectedMonth: {
@@ -588,6 +679,7 @@ function blockTypeFrom(value: string): BlockType {
 
 export type ReviewRow = {
   id: string;
+  header?: string;
   sourceRow: number;
   day: string;          // "LUNES" | "" si no se pudo interpretar
   dateText: string;     // texto original de la fecha (informativo)
@@ -610,6 +702,8 @@ export type ReviewRow = {
 export type ParsedImport = {
   header: string[];
   columns: ColumnMap;
+  layout?: string;
+  detectedColumns?: string[];
   rows: ReviewRow[];
   /** Campos esperados que no se han podido identificar en las cabeceras. */
   unmapped: GenericField[];
@@ -1003,7 +1097,7 @@ export function buildPlanningFromRows(
                 id: uid(),
                 key,
                 type: group[0].blockType,
-                header: "",
+                header: [...new Set(group.map((row) => row.header?.trim()).filter(Boolean))].join("\n"),
                 exercises: group.map(toExercise),
               };
               const content = serializeBlock(block);

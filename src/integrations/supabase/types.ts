@@ -672,6 +672,35 @@ export type Database = {
           },
         ]
       }
+      pin_attempts: {
+        Row: {
+          failed_count: number
+          locked_until: string | null
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          failed_count?: number
+          locked_until?: string | null
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          failed_count?: number
+          locked_until?: string | null
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pin_attempts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       planning: {
         Row: {
           data: Json
@@ -1080,6 +1109,29 @@ export type Database = {
         }
         Relationships: []
       }
+      video_admins: {
+        Row: {
+          created_at: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_admins_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wellness_logs: {
         Row: {
           created_at: string
@@ -1286,6 +1338,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      change_profile_pin: {
+        Args: {
+          _current_pin_hash: string
+          _new_pin_hash: string
+          _profile_id: string
+        }
+        Returns: boolean
+      }
       claim_profile: {
         Args: { _pin_hash: string; _profile_id: string }
         Returns: boolean
@@ -1293,6 +1353,10 @@ export type Database = {
       create_linked_profile: {
         Args: { _name: string; _pin_hash: string }
         Returns: string
+      }
+      delete_own_profile: {
+        Args: { _pin_hash: string; _profile_id: string }
+        Returns: boolean
       }
       my_profile_id: { Args: never; Returns: string }
       verify_profile_pin: {

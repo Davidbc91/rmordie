@@ -304,7 +304,7 @@ function parseTeamVaderExerciseLine(line: string, context: string) {
     result.time = timeFirst[1] + " " + timeFirst[2];
     text = timeFirst[3].trim();
   } else {
-    const timeMatch = text.match(/\b(\d+(?:[.,]\d+)?)\s*(min(?:ute)?s?|seg(?:undo)?s?|s|['´]|")\b/i);
+    const timeMatch = text.match(/\b(\d+(?:[.,]\d+)?)\s*(min(?:ute)?s?|seg(?:undo)?s?|s|['´]|")(?=\s|$)/i);
     if (timeMatch) result.time = timeMatch[1] + " " + timeMatch[2];
   }
   if (/^max\b/i.test(text)) {
@@ -350,7 +350,7 @@ function splitTeamVaderCell(raw: string) {
 
 function parseTeamVaderWorkbook(
   wb: XLSX.WorkBook,
-): { header: string[]; columns: ColumnMap; rows: ReviewRow[]; unmapped: GenericField[]; detectedMonth?: { key: string; label: string } } | null {
+): { header: string[]; columns: ColumnMap; layout?: string; detectedColumns?: string[]; rows: ReviewRow[]; unmapped: GenericField[]; detectedMonth?: { key: string; label: string } } | null {
   const metas = buildTeamVaderSheetMetas(wb);
   if (!metas.length) return null;
 

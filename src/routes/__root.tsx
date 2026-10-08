@@ -65,6 +65,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
       { name: "theme-color", content: "#000000" },
+      // App en la pantalla de inicio del iPhone
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "RM OR DIE" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black" },
       { title: "RM OR DIE — Diario de entrenamiento" },
       { name: "description", content: "Diario minimalista de entrenamiento: planificación, PR, estadísticas y progreso." },
       { property: "og:title", content: "RM OR DIE" },
@@ -77,9 +82,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" },
-      { rel: "icon", href: "/icon-192.png", type: "image/png" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
-      { rel: "manifest", href: "/manifest.json" },
+      // "?v=" obliga al iPhone a pedir de nuevo el icono si guardó una versión
+      // anterior o un fallo. Súbelo cuando cambie el logo.
+      { rel: "icon", href: "/icon-192.png?v=3", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=3" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=3", sizes: "180x180" },
+      { rel: "apple-touch-icon-precomposed", href: "/apple-touch-icon-precomposed.png?v=3" },
+      { rel: "manifest", href: "/manifest.json?v=3" },
     ],
 
   }),

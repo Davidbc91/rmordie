@@ -1,14 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useState } from "react";
-import { parsePlanningFromArrayBuffer } from "@/lib/excel-parser";
-import { buildPlanningFromRows, parseGenericFile } from "@/lib/generic-import";
+import { parsePlanningFromArrayBuffer, type Planning } from "@/lib/excel-parser";
+import { importPlanningFile, type ImportEngineResult } from "@/lib/import-engine";
+import { ImportReview } from "@/components/import/ImportReview";
 import { usePlanning, usePlanningVersions, useSavePlanning, useDeletePlanningMonth, useDeletePlanningVersion, useReorderPlanningMonths, useClearAllPlanning } from "@/lib/store";
 import { toast } from "sonner";
-import { Upload, CheckCircle2, Trash2 } from "lucide-react";
+import { Upload, CheckCircle2, Trash2, Image as ImageIcon } from "lucide-react";
 
 export const Route = createFileRoute("/import")({
-  head: () => ({ meta: [{ title: "Importar planificación — RM OR DIE" }] }),
+  head: () => ({
+    meta: [
+      { title: "Importar planificación — RM OR DIE" },
+      { name: "description", content: "Importa tu planificación desde Excel, CSV, TXT, PDF o una foto y revisa la lectura antes de guardar." },
+    ],
+  }),
   component: ImportPage,
 });
 
@@ -23,76 +29,99 @@ function ImportPage() {
   const visiblePlanningVersions = planningVersions.filter((version) => version.source_filename !== "Sin planificación" || version.data.months.length > 0);
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [review, setReview] = useState<{ result: ImportEngineResult; filename: string } | null>(null);
+
+  /** Excel con el formato anual propio: se guarda directamente (solo cambia la programación). */
+  async function saveNativePlanning(planning: Planning, filename: string) {
+    try {
+      await save.mutateAsync({ planning, filename });
+    } catch (e) {
+      const err = e as { message?: string; code?: string; details?: string; hint?: string };
+      console.error("[import] error guardando la planificación:", err);
+      const raw = `${err?.code ?? ""} ${err?.message ?? ""} ${err?.details ?? ""}`.toLowerCase();
+      const isPermission =
+        raw.includes("row-level security") ||
+        raw.includes("row level security") ||
+        raw.includes("permission denied") ||
+        raw.includes("violates row") ||
+        err?.code === "42501" ||
+        err?.code === "401" ||
+        err?.code === "403";
+      if (isPermission) {
+        toast.error("Sin permisos para guardar la planificación (reglas de acceso). El Excel se leyó bien.");
+      } else {
+        toast.error(`El Excel se leyó bien, pero falló al guardar: ${err?.message ?? "error desconocido"}`);
+      }
+      return;
+    }
+    toast.success(`Planificación importada: ${planning.months.length} meses. Tus registros están intactos.`);
+    navigate({ to: "/calendar" });
+  }
 
   async function onFile(f: File) {
     setBusy(true);
+    setOcrProgress(0);
     try {
-      // 1) Lectura robusta del archivo Excel.
-      // Primero usamos el parser nativo de meses/semanas. Si el libro usa el
-      // formato visual de días en columnas, usamos el parser matricial como fallback.
-      let planning;
-      try {
-        const buf = await f.arrayBuffer();
-        planning = parsePlanningFromArrayBuffer(buf);
-
-        if (planning.months.length === 0) {
-          const parsed = await parseGenericFile(f);
-          if (!parsed.rows.length) {
-            toast.error("El Excel se ha leído, pero no se detectaron sesiones.");
-            return;
-          }
-          planning = buildPlanningFromRows(parsed.rows, {
-            monthKey: "1. IMPORTADO",
-            monthLabel: "Importado",
-          });
+      // 1) Excel con el formato anual (meses/semanas): se reconoce entero y se
+      //    guarda sin pasos intermedios, como hasta ahora.
+      if (/\.(xlsx|xls)$/i.test(f.name)) {
+        let native: Planning | null = null;
+        try {
+          native = parsePlanningFromArrayBuffer(await f.arrayBuffer());
+        } catch (e) {
+          console.warn("[import] el Excel no tiene el formato anual; se usa la lectura genérica:", e);
         }
-      } catch (e) {
-        console.error("[import] error leyendo el Excel:", e);
-        toast.error("No pude leer el Excel. Revisa el formato del archivo.");
-        return;
-      }
-
-      if (planning.months.length === 0) {
-        toast.error("El Excel se ha leído, pero no se detectaron meses ni sesiones.");
-        return;
-      }
-
-      // 2) Guardado en la base de datos
-      try {
-        await save.mutateAsync({ planning, filename: f.name });
-      } catch (e) {
-        const err = e as { message?: string; code?: string; details?: string; hint?: string };
-        console.error("[import] error guardando la planificación:", err);
-        const raw = `${err?.code ?? ""} ${err?.message ?? ""} ${err?.details ?? ""}`.toLowerCase();
-        const isPermission =
-          raw.includes("row-level security") ||
-          raw.includes("row level security") ||
-          raw.includes("permission denied") ||
-          raw.includes("violates row") ||
-          err?.code === "42501" ||
-          err?.code === "401" ||
-          err?.code === "403";
-        if (isPermission) {
-          toast.error("Sin permisos para guardar la planificación (reglas de acceso). El Excel se leyó bien.");
-        } else {
-          toast.error(`El Excel se leyó bien, pero falló al guardar: ${err?.message ?? "error desconocido"}`);
+        if (native && native.months.length > 0) {
+          await saveNativePlanning(native, f.name);
+          return;
         }
-        return;
       }
 
-      toast.success(`Planificación importada: ${planning.months.length} meses. Tus registros están intactos.`);
-      navigate({ to: "/calendar" });
+      // 2) Cualquier otro formato (o un Excel libre): lectura automática y
+      //    revisión fila a fila antes de guardar.
+      const result = await importPlanningFile(f, setOcrProgress);
+      if (result.rows.length === 0) {
+        toast.error("El archivo se ha leído, pero no contiene filas con datos.");
+        return;
+      }
+      setReview({ result, filename: f.name });
+      toast.success(`${result.rows.length} filas leídas. Revísalas antes de confirmar.`);
+    } catch (e) {
+      const err = e as { message?: string };
+      console.error("[import] error leyendo el archivo:", e);
+      toast.error(`No pude leer el archivo: ${err?.message ?? "formato no reconocido"}`);
     } finally {
       setBusy(false);
+      setOcrProgress(0);
     }
   }
 
+  if (review) {
+    return (
+      <AppShell>
+        <h1 className="text-2xl font-semibold tracking-tight">Revisar importación</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Comprueba cada fila. <span className="gold-text">Nada se guarda hasta que confirmes y lo anterior se conserva.</span>
+        </p>
+        <ImportReview
+          result={review.result}
+          filename={review.filename}
+          onCancel={() => setReview(null)}
+          onSaved={() => {
+            setReview(null);
+            navigate({ to: "/calendar" });
+          }}
+        />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
       <h1 className="text-2xl font-semibold tracking-tight">Planificación</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Sube tu Excel. Se sobrescribe únicamente la programación; <span className="gold-text">tus pesos, PR, tiempos y notas nunca se borran.</span>
+        Sube tu planificación en Excel, CSV, TXT, PDF o foto. Solo cambia la programación; <span className="gold-text">tus pesos, PR, tiempos y notas nunca se borran.</span>
       </p>
 
       {current && current.data.months.length > 0 && (
@@ -271,27 +300,29 @@ function ImportPage() {
         + CREAR PLANIFICACIÓN
       </button>
 
-      <button
-        onClick={() => navigate({ to: "/import-generic" })}
-        className="tap mt-3 w-full rounded-[var(--r-md)] glass px-4 text-sm font-semibold"
-      >
-        IMPORTAR PLANIFICACIÓN (.xlsx / .csv / .pdf)
-      </button>
-
-
       <label className="mt-3 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-border bg-surface p-10 text-center transition hover:border-gold/50">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl gold-gradient">
-          <Upload className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} />
+          {busy && ocrProgress > 0
+            ? <ImageIcon className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} />
+            : <Upload className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} />}
         </div>
         <div>
-          <div className="text-sm font-medium">{busy ? "Procesando…" : (current ? "Actualizar planificación" : "Subir Excel de planificación")}</div>
-          <div className="mt-1 text-xs text-muted-foreground">Archivo .xlsx</div>
+          <div className="text-sm font-medium">
+            {busy
+              ? (ocrProgress > 0 ? `Reconociendo texto… ${Math.round(ocrProgress * 100)}%` : "Leyendo…")
+              : (current ? "Actualizar planificación" : "Subir planificación")}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">Excel, CSV, TXT, PDF o foto (JPG, PNG, WEBP)</div>
         </div>
         <input
           type="file"
-          accept=".xlsx,.xls"
+          accept=".xlsx,.xls,.csv,.txt,.pdf,.jpg,.jpeg,.png,.webp,text/plain,text/csv,application/pdf,image/jpeg,image/png,image/webp"
           disabled={busy}
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (f) onFile(f);
+          }}
           className="hidden"
         />
       </label>

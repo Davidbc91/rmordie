@@ -117,17 +117,24 @@ function dateForPlannedDay(
   return addDays(nextMonday, (weekIndex - anchor.week - 1) * 7 + weekday);
 }
 
-function buildPlanDateIndex(months: Month[]) {
-  const anchor = inferPlanAnchor(months);
-  const index = new Map<string, PlannedDay>();
+function parseISODate(value: string) {
+  const match = value.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
-  if (!anchor) return index;
+function buildPlanDateIndex(months: Month[]) {
+  const index = new Map<string, PlannedDay>();
+  const anchor = inferPlanAnchor(months);
 
   for (const month of months) {
     const parsed = parseMonthDate(month);
+
     for (const week of month.weeks) {
       for (const day of week.days) {
-        const date = dateForPlannedDay(week.index, day.key, anchor);
+        const exactDate = day.date ? parseISODate(day.date) : null;
+        const date = exactDate ?? (anchor ? dateForPlannedDay(week.index, day.key, anchor) : null);
         if (!date) continue;
 
         const key = isoKey(date);

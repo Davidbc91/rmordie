@@ -188,7 +188,7 @@ function CalendarPage() {
 
               <div className="grid grid-cols-7 gap-1.5">
                 {w.days.map((d) => {
-                  const date = exactDateForDay(month, w.index, d.key);
+                  const date = exactDateForDay(month, wi + 1, d.key);
                   const prog = sessionProgress(d, month.key, w.index, blockMap);
                   const done = prog.state === "completed";
                   const partial = prog.state === "in_progress";

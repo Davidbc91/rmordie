@@ -54,23 +54,109 @@ function parseMonthDate(month: Month): { year: number; monthIndex: number } | nu
   return token ? { year, monthIndex: monthMap[token] } : null;
 }
 
-function exactDateForDay(month: Month, weekIndex: number, dayKey: string) {
-  const parsed = parseMonthDate(month);
-  if (!parsed) return null;
+const WEEKDAY_MAP: Record<string, number> = {
+  LUNES: 0, MARTES: 1, MIERCOLES: 2, MIÉRCOLES: 2,
+  JUEVES: 3, VIERNES: 4, SABADO: 5, SÁBADO: 5, DOMINGO: 6,
+};
 
-  const weekdayMap: Record<string, number> = {
-    LUNES: 0, MARTES: 1, MIERCOLES: 2, MIÉRCOLES: 2,
-    JUEVES: 3, VIERNES: 4, SABADO: 5, SÁBADO: 5, DOMINGO: 6,
-  };
-  const weekday = weekdayMap[dayKey.toUpperCase()];
+type PlannedDay = {
+  month: Month;
+  week: number;
+  day: import("@/lib/excel-parser").Day;
+  date: Date;
+};
+
+function isoKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function addDays(date: Date, amount: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + amount);
+  return next;
+}
+
+/**
+ * El plan anual empieza el 07/10/2026: la semana 1 es 07/10–11/10
+ * y desde la semana 2 cada semana empieza en lunes. Inferimos el anclaje
+ * desde la primera semana de la planificación para conservar las fechas
+ * reales incluso cuando una semana cruza de mes.
+ */
+function inferPlanAnchor(months: Month[]): { date: Date; week: number } | null {
+  const firstMonth = [...months].sort((a, b) => a.order - b.order)[0];
+  const firstWeek = firstMonth?.weeks.slice().sort((a, b) => a.index - b.index)[0];
+  const parsed = firstMonth ? parseMonthDate(firstMonth) : null;
+  if (!firstMonth || !firstWeek || !parsed) return null;
+
+  const firstPlannedDay = firstWeek.days.find((day) => !day.isRest);
+  const weekday = firstPlannedDay ? WEEKDAY_MAP[firstPlannedDay.key.toUpperCase()] : undefined;
   if (weekday == null) return null;
 
-  const first = new Date(parsed.year, parsed.monthIndex, 1);
-  const firstMondayOffset = (first.getDay() + 6) % 7;
-  const dayNumber = 1 + (weekIndex - 1) * 7 + weekday - firstMondayOffset;
-  const date = new Date(parsed.year, parsed.monthIndex, dayNumber);
-  if (date.getMonth() !== parsed.monthIndex) return null;
-  return date;
+  const firstOfMonth = new Date(parsed.year, parsed.monthIndex, 1);
+  const offset = (weekday - firstOfMonth.getDay() + 7) % 7;
+  return { date: addDays(firstOfMonth, offset), week: firstWeek.index };
+}
+
+function dateForPlannedDay(
+  weekIndex: number,
+  dayKey: string,
+  anchor: { date: Date; week: number },
+) {
+  const weekday = WEEKDAY_MAP[dayKey.toUpperCase()];
+  if (weekday == null) return null;
+
+  const anchorWeekday = anchor.date.getDay();
+  if (weekIndex === anchor.week) {
+    const date = addDays(anchor.date, weekday - anchorWeekday);
+    return date >= anchor.date ? date : null;
+  }
+
+  const nextMonday = addDays(anchor.date, (7 - anchorWeekday) % 7);
+  return addDays(nextMonday, (weekIndex - anchor.week - 1) * 7 + weekday);
+}
+
+function buildPlanDateIndex(months: Month[]) {
+  const anchor = inferPlanAnchor(months);
+  const index = new Map<string, PlannedDay>();
+
+  if (!anchor) return index;
+
+  for (const month of months) {
+    const parsed = parseMonthDate(month);
+    for (const week of month.weeks) {
+      for (const day of week.days) {
+        const date = dateForPlannedDay(week.index, day.key, anchor);
+        if (!date) continue;
+
+        const key = isoKey(date);
+        const existing = index.get(key);
+        const belongsToThisMonth =
+          parsed &&
+          parsed.year === date.getFullYear() &&
+          parsed.monthIndex === date.getMonth();
+
+        if (!existing || belongsToThisMonth) {
+          index.set(key, { month, week: week.index, day, date });
+        }
+      }
+    }
+  }
+
+  return index;
+}
+
+function buildCalendarWeeks(year: number, monthIndex: number) {
+  const first = new Date(year, monthIndex, 1);
+  const last = new Date(year, monthIndex + 1, 0);
+  const monday = addDays(first, -((first.getDay() + 6) % 7));
+  const sunday = addDays(last, 6 - ((last.getDay() + 6) % 7));
+  const weeks: Date[][] = [];
+
+  for (let cursor = monday; cursor <= sunday; cursor = addDays(cursor, 7)) {
+    weeks.push(Array.from({ length: 7 }, (_, offset) => addDays(cursor, offset)));
+  }
+
+  return weeks;
 }
 
 function dateLabel(date: Date | null) {
@@ -138,6 +224,11 @@ function CalendarPage() {
   }
 
   const weekdayLabels = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
+  const parsedMonth = parseMonthDate(month);
+  const planIndex = useMemo(() => buildPlanDateIndex(months), [months]);
+  const calendarWeeks = parsedMonth
+    ? buildCalendarWeeks(parsedMonth.year, parsedMonth.monthIndex)
+    : [];
 
   return (
     <div className="page-enter select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
@@ -174,79 +265,118 @@ function CalendarPage() {
       </div>
 
       <div className="mt-2 space-y-3">
-        {month.weeks.map((w, wi) => {
-          const trainDays = w.days.filter((d) => !d.isRest);
-          const doneCount = trainDays.filter((d) => isSessionCompleted(d, month.key, w.index, blockMap)).length;
+        {calendarWeeks.map((weekDates, wi) => {
+          const planned = weekDates.map((date) => planIndex.get(isoKey(date)) ?? null);
+          const weekPlans = planned.filter((value): value is PlannedDay => !!value);
+          const planWeek =
+            weekPlans.find((value) => value.month.key === month.key)?.week ??
+            weekPlans[0]?.week ??
+            null;
+          const trainDays = weekPlans.filter((value) => !value.day.isRest);
+          const doneCount = trainDays.filter((value) =>
+            isSessionCompleted(value.day, value.month.key, value.week, blockMap),
+          ).length;
           const pct = trainDays.length ? Math.round((doneCount / trainDays.length) * 100) : 0;
 
           return (
-            <section key={w.index} className={`rise rise-${Math.min(wi + 1, 5)}`}>
+            <section key={isoKey(weekDates[0])} className={`rise rise-${Math.min(wi + 1, 5)}`}>
               <div className="mb-1.5 flex items-center justify-between px-1">
-                <span className="eyebrow">SEMANA {w.index}</span>
-                <span className="text-[10px] font-semibold tabular text-muted-foreground">{doneCount}/{trainDays.length}</span>
+                <span className="eyebrow">{planWeek ? `SEMANA ${planWeek}` : "CALENDARIO"}</span>
+                {trainDays.length > 0 && (
+                  <span className="text-[10px] font-semibold tabular text-muted-foreground">
+                    {doneCount}/{trainDays.length}
+                  </span>
+                )}
               </div>
 
               <div className="grid grid-cols-7 gap-1.5">
-                {w.days.map((d) => {
-                  const date = exactDateForDay(month, wi + 1, d.key);
-                  const prog = sessionProgress(d, month.key, w.index, blockMap);
-                  const done = prog.state === "completed";
-                  const partial = prog.state === "in_progress";
-                  const isToday = date ? isSameDate(date, today) : false;
-                  const headline = d.isRest
-                    ? "DESCANSO"
-                    : (d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ??
-                      d.blocks[0]?.content.split("\n")[0] ??
-                      "Entreno");
+                {weekDates.map((date) => {
+                  const key = isoKey(date);
+                  const plannedDay = planIndex.get(key);
+                  const inMonth =
+                    date.getMonth() === parsedMonth?.monthIndex &&
+                    date.getFullYear() === parsedMonth?.year;
+                  const d = plannedDay?.day;
+                  const prog = plannedDay
+                    ? sessionProgress(plannedDay.day, plannedDay.month.key, plannedDay.week, blockMap)
+                    : null;
+                  const done = prog?.state === "completed";
+                  const partial = prog?.state === "in_progress";
+                  const isToday = isSameDate(date, today);
+                  const headline = !d
+                    ? "SIN PLAN"
+                    : d.isRest
+                      ? "DESCANSO"
+                      : (d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ??
+                        d.blocks[0]?.content.split("\n")[0] ??
+                        "Entreno");
 
                   const cell = (
                     <div
                       className={[
                         "min-h-[112px] rounded-[16px] border p-2 transition-all",
-                        d.isRest ? "glass-quiet opacity-70" : "glass glass-sheen",
+                        !inMonth
+                          ? "border-transparent bg-transparent opacity-20"
+                          : d?.isRest
+                            ? "glass-quiet opacity-70"
+                            : d
+                              ? "glass glass-sheen"
+                              : "glass-quiet opacity-45",
                         done ? "border-[rgba(216,180,107,0.48)] bg-[rgba(216,180,107,0.10)]" : "",
                         isToday ? "ring-1 ring-[rgba(216,180,107,0.9)]" : "",
                       ].join(" ")}
                     >
                       <div className="flex items-start justify-between gap-1">
-                        <span className={`text-[16px] font-bold tabular ${isToday ? "text-gold" : "text-foreground"}`}>
-                          {date ? date.getDate() : "·"}
+                        <span className={`text-[16px] font-bold tabular ${isToday ? "text-gold" : inMonth ? "text-foreground" : "text-muted-foreground"}`}>
+                          {date.getDate()}
                         </span>
-                        {done ? (
-                          <span className="gold-gradient grid h-5 w-5 place-items-center rounded-full">
-                            <Check className="h-3 w-3" strokeWidth={2.7} />
-                          </span>
-                        ) : d.isRest ? (
-                          <Moon className="h-3.5 w-3.5 text-muted-foreground/65" strokeWidth={1.8} />
-                        ) : partial ? (
-                          <span className="text-[8px] font-bold tabular text-gold">{prog.done}/{prog.total}</span>
-                        ) : (
-                          <Circle className="h-3.5 w-3.5 text-muted-foreground/35" strokeWidth={1.8} />
+                        {inMonth && d && (
+                          done ? (
+                            <span className="gold-gradient grid h-5 w-5 place-items-center rounded-full">
+                              <Check className="h-3 w-3" strokeWidth={2.7} />
+                            </span>
+                          ) : d.isRest ? (
+                            <Moon className="h-3.5 w-3.5 text-muted-foreground/65" strokeWidth={1.8} />
+                          ) : partial ? (
+                            <span className="text-[8px] font-bold tabular text-gold">{prog?.done}/{prog?.total}</span>
+                          ) : (
+                            <Circle className="h-3.5 w-3.5 text-muted-foreground/35" strokeWidth={1.8} />
+                          )
                         )}
                       </div>
 
-                      <p className={`mt-0.5 text-[8px] font-semibold uppercase tracking-[0.08em] ${isToday ? "text-gold" : "text-muted-foreground/60"}`}>
-                        {dateLabel(date)}
-                      </p>
+                      {inMonth && (
+                        <>
+                          <p className={`mt-0.5 text-[8px] font-semibold uppercase tracking-[0.08em] ${isToday ? "text-gold" : "text-muted-foreground/60"}`}>
+                            {dateLabel(date)}
+                          </p>
 
-                      <p className="mt-2 line-clamp-3 text-[10px] font-semibold leading-[1.25] text-foreground/90">
-                        {headline}
-                      </p>
+                          <p className="mt-2 line-clamp-3 text-[10px] font-semibold leading-[1.25] text-foreground/90">
+                            {headline}
+                          </p>
 
-                      {!d.isRest && (
-                        <p className="mt-1 text-[8px] text-muted-foreground/65">{prog.done}/{prog.total} bloques</p>
+                          {d && !d.isRest && (
+                            <p className="mt-1 text-[8px] text-muted-foreground/65">
+                              {prog?.done ?? 0}/{prog?.total ?? 0} bloques
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                   );
 
-                  if (d.isRest || !date) return <div key={d.key}>{cell}</div>;
+                  if (!plannedDay || !inMonth) return <div key={key}>{cell}</div>;
 
                   return (
                     <Link
-                      key={d.key}
+                      key={key}
                       to="/workout/$month/$week/$day"
-                      params={{ month: month.key, week: String(w.index), day: d.key }}
-                      aria-label={`${d.key} ${dateLabel(date)}${d.isRest ? ", descanso" : ""}`}
+                      params={{
+                        month: plannedDay.month.key,
+                        week: String(plannedDay.week),
+                        day: plannedDay.day.key,
+                      }}
+                      aria-label={`${plannedDay.day.key} ${dateLabel(date)}${plannedDay.day.isRest ? ", descanso" : ""}`}
                       className="block min-w-0"
                     >
                       {cell}

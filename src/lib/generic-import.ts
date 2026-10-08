@@ -307,7 +307,7 @@ function parseTeamVaderWorkbook(
         day: column.day,
         dateText: teamVaderDateText(column.date),
         week: column.week,
-        monthKey: `10. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
+        monthKey: `1. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
         monthLabel: meta.label,
         monthOrder: meta.month,
         block,
@@ -339,7 +339,7 @@ function parseTeamVaderWorkbook(
       day: "DOMINGO",
       dateText: teamVaderDateText(date),
       week,
-      monthKey: `10. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
+      monthKey: `1. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
       monthLabel: meta.label,
       monthOrder: meta.month,
       block: "REST",
@@ -358,7 +358,7 @@ function parseTeamVaderWorkbook(
   return {
     header: (table[dayHeaderRow] ?? []).map((value) => String(value ?? "").trim()),
     rows,
-    monthKey: `10. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
+    monthKey: `1. ${TEXT_MONTHS[meta.month - 1]} ${meta.year}`,
     monthLabel: meta.label,
     monthOrder: meta.month,
   };

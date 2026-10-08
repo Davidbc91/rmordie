@@ -3,9 +3,8 @@
  * Este archivo nunca debe importarse desde componentes ni a nivel de módulo de
  * un `.functions.ts`: se carga dinámicamente dentro del handler.
  */
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { buildPushPayload } from "@block65/webcrypto-web-push";
-import type { Database } from "@/integrations/supabase/types";
 
 export type PushPayload = {
   title: string;
@@ -15,21 +14,13 @@ export type PushPayload = {
   skipIfVisible?: string;
 };
 
+/**
+ * Cliente del servidor con la clave de servicio: con el aislamiento por
+ * usuario activado, las suscripciones push y el chat no son legibles con la
+ * clave pública sin sesión.
+ */
 export function serverClient() {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) {
-          h.delete("Authorization");
-        }
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
+  return supabaseAdmin;
 }
 
 /**

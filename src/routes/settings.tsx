@@ -61,8 +61,8 @@ function SettingsPage() {
     }
   }
 
-  function switchProfile() {
-    signOut();
+  async function switchProfile() {
+    await signOut();
     navigate({ to: "/" });
     setTimeout(() => window.location.reload(), 50);
   }
@@ -78,7 +78,7 @@ function SettingsPage() {
       toast.error(errorMessage(e, "No se pudo eliminar el perfil"));
       return;
     }
-    signOut();
+    await signOut();
     window.location.reload();
   }
 
@@ -122,7 +122,7 @@ function SettingsPage() {
         </label>
         <div className="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
           <button onClick={changePin} disabled={updatePin.isPending} className="rounded-xl bg-surface-2 px-4 py-2 text-sm font-medium disabled:opacity-50">{updatePin.isPending ? "Actualizando…" : "Actualizar PIN"}</button>
-          <button onClick={switchProfile} className="rounded-xl border border-border px-4 py-2 text-sm font-medium">Cambiar de perfil</button>
+          <button onClick={switchProfile} className="rounded-xl border border-border px-4 py-2 text-sm font-medium">Cerrar sesión</button>
           <button onClick={removeProfile} disabled={deleteProfile.isPending} className="rounded-xl border border-destructive/40 text-destructive px-4 py-2 text-sm font-medium disabled:opacity-50">Eliminar mi perfil</button>
         </div>
       </section>

@@ -150,7 +150,7 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
 
   const dismissActiveWorkout = useCallback(() => { clearActiveWorkout(); setActive(null); }, []);
   const closeProfile = useCallback(() => setProfileOpen(false), []);
-  const signOutProfile = useCallback(() => { setProfileOpen(false); signOut(); window.location.assign("/"); }, []);
+  const signOutProfile = useCallback(async () => { setProfileOpen(false); await signOut(); window.location.assign("/"); }, []);
   const closeMore = useCallback(() => setMoreOpen(false), []);
   const toggleMore = useCallback(() => setMoreOpen((v) => !v), []);
 

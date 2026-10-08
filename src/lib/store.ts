@@ -40,23 +40,47 @@ export async function verifyProfilePin(profileId: string, pin: string): Promise<
   return data === true;
 }
 
-export function useCreateProfile() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ name, pin }: { name: string; pin: string }) => {
-      const pin_hash = await sha256(pin);
-      const { data, error } = await supabase
-        .from("profiles")
-        .insert({ name: name.trim(), pin_hash })
-        .select("id,name,created_at")
-        .single();
-      if (error) throw error;
-      return data as unknown as Profile;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["profiles"] }),
-  });
+/** Perfil vinculado a la cuenta con la que se ha iniciado sesión (null si aún no hay). */
+export async function fetchMyProfile(authUserId: string): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id,name,created_at")
+    .eq("auth_user_id", authUserId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as Profile | null) ?? null;
 }
 
+/** Perfiles antiguos que todavía nadie ha vinculado a una cuenta. */
+export async function fetchUnlinkedProfiles(): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id,name,created_at")
+    .is("auth_user_id", null)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as Profile[];
+}
+
+/** Vincula la cuenta con un perfil existente demostrando que es tuyo con su PIN. */
+export async function linkMyProfile(profileId: string, pin: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("link_my_profile", {
+    _profile_id: profileId,
+    _pin_hash: await sha256(pin),
+  });
+  if (error) throw error;
+  return data === true;
+}
+
+/** Crea un perfil nuevo ya vinculado a la cuenta de la sesión. */
+export async function createMyProfile(name: string, pin: string): Promise<string> {
+  const { data, error } = await supabase.rpc("create_my_profile", {
+    _name: name.trim(),
+    _pin_hash: await sha256(pin),
+  });
+  if (error) throw error;
+  return data as string;
+}
 
 /**
  * Cambia el PIN comprobando antes el PIN actual en la base de datos
@@ -114,11 +138,11 @@ export function usePlanning() {
     queryKey: ["planning", uid],
     queryFn: async (): Promise<PlanningRow | null> =>
       offlineRead(cacheKeys.planning(uid), async () => {
-        const { data, error } = await supabase
-          .from("planning")
-          .select("*")
-          .eq("is_active", true)
-          .order("imported_at", { ascending: false });
+        // Solo la planificación activa propia y la compartida (sin dueño), no
+        // las de todos los atletas: cada una lleva el año entero dentro.
+        let query = supabase.from("planning").select("*").eq("is_active", true);
+        query = uid ? query.or(`user_id.eq.${uid},user_id.is.null`) : query.is("user_id", null);
+        const { data, error } = await query.order("imported_at", { ascending: false }).limit(4);
         if (error) throw error;
         const rows = (data ?? []) as unknown as PlanningRow[];
         // prefer the athlete's own active planning, fall back to the shared one

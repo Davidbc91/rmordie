@@ -267,7 +267,8 @@ function teamVaderDateFor(day: string, week: number, month: number, year: number
   const nextMondayOffset = (7 - firstMondayIndex) % 7;
   const firstMonday = new Date(first);
   firstMonday.setUTCDate(1 + nextMondayOffset);
-  firstMonday.setUTCDate(firstMonday.getUTCDate() + (week - 2) * 7 + dayIndex);
+  const weekOffset = firstMondayIndex === 6 ? (week - 1) * 7 : (week - 2) * 7;
+  firstMonday.setUTCDate(firstMonday.getUTCDate() + weekOffset + dayIndex);
   return firstMonday;
 }
 

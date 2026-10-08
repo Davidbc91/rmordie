@@ -739,6 +739,196 @@ async function looksLikeStructuredDailyPdf(file: File): Promise<boolean> {
   );
 }
 
+const DAILY_PLAN_HEADER_RE = new RegExp(
+  "^\\s*(" + DAY_NAMES + ")\\s+(\\d{1,2})\\s*[·•:-]\\s*(.+?)\\s*$",
+  "i",
+);
+
+const DAILY_PLAN_SECTION_RE = /^(?:MOVILIDAD|CALENTAMIENTO|T[ÉE]CNICA|GIMNASIA|FUERZA|WOD|CONDITIONING|ENGINE|ACCESORIOS|OLYMPIC|TEST|REGISTRO|VUELTA A LA CALMA|COOLDOWN|COOL DOWN)(?:\\s+|\\s*[·•:-])/i;
+
+function dailyPlanHeader(line: string): { day: string; dateDay: number; title: string } | null {
+  const match = cleanLine(line).match(DAILY_PLAN_HEADER_RE);
+  if (!match) return null;
+  const day = normalizeDayLine(match[1]);
+  const dateDay = Number(match[2]);
+  if (!day || !Number.isInteger(dateDay) || dateDay < 1 || dateDay > 31) return null;
+  return { day, dateDay, title: cleanLine(match[3]) };
+}
+
+function dailyPlanMonthYear(lines: string[], filename: string): { month: number; year: number; label: string } | null {
+  const haystack = [...lines.slice(0, 80), filename].join(" ");
+  const match = haystack.match(
+    /\\b(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\\s+(20\\d{2})\\b/i,
+  );
+  if (!match) {
+    const monthMatch = haystack.match(/\\b(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\\b/i);
+    if (!monthMatch) return null;
+    const names: Record<string, number> = {
+      ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+      JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12,
+    };
+    const month = names[normalizeForMatch(monthMatch[1])];
+    if (!month) return null;
+    return { month, year: new Date().getFullYear(), label: monthMatch[1][0] + monthMatch[1].slice(1).toLowerCase() };
+  }
+
+  const names: Record<string, number> = {
+    ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+    JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12,
+  };
+  const month = names[normalizeForMatch(match[1])];
+  if (!month) return null;
+  return {
+    month,
+    year: Number(match[2]),
+    label: `${match[1][0] + match[1].slice(1).toLowerCase()} ${match[2]}`,
+  };
+}
+
+function dailyPlanRowsFromLines(lines: string[], filename: string): { rows: ReviewRow[]; month?: { key: string; label: string; order: number } } {
+  const monthYear = dailyPlanMonthYear(lines, filename);
+  if (!monthYear) return { rows: [] };
+
+  const headers = lines.map(dailyPlanHeader).filter(Boolean) as Array<{ day: string; dateDay: number; title: string }>;
+  if (headers.length < 3) return { rows: [] };
+
+  const rows: ReviewRow[] = [];
+  let current: { day: string; dateDay: number; dateText: string; week: number } | null = null;
+  let block = "PLAN";
+  let blockType: ReviewRow["blockType"] = "OTRO";
+  let started = false;
+
+  const makeDate = (day: number) => new Date(Date.UTC(monthYear.year, monthYear.month - 1, day));
+  const isoDate = (day: number) => {
+    const date = makeDate(day);
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+  };
+  const weekForDay = (day: number) => Math.floor((day - 1) / 7) + 1;
+  const dateTextForDay = (day: number) => `${String(day).padStart(2, "0")}/${String(monthYear.month).padStart(2, "0")}/${monthYear.year}`;
+
+  const push = (line: string, sourceRow: number, rowBlock = block, rowType = blockType) => {
+    const exercise = cleanLine(line);
+    if (!exercise || !current) return;
+    rows.push({
+      id: uid(),
+      sourceRow,
+      day: current.day,
+      dateText: current.dateText,
+      week: current.week,
+      block: rowBlock,
+      blockType: rowType,
+      exercise,
+      sets: "",
+      reps: "",
+      percent: "",
+      load: "",
+      time: "",
+      distance: "",
+      raw: exercise,
+    });
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = cleanLine(lines[i]);
+    if (!line) continue;
+
+    const header = dailyPlanHeader(line);
+    if (header) {
+      started = true;
+      const date = makeDate(header.dateDay);
+      if (date.getUTCMonth() !== monthYear.month - 1 || date.getUTCDate() !== header.dateDay) continue;
+      current = {
+        day: header.day,
+        dateDay: header.dateDay,
+        dateText: dateTextForDay(header.dateDay),
+        week: weekForDay(header.dateDay),
+      };
+      block = "FOCO";
+      blockType = "OTRO";
+      push(header.title, i + 1, block, blockType);
+      continue;
+    }
+
+    if (!started || !current) continue;
+    if (/^MOVILIDAD BASE\\s*[·•:-]\\s*REFERENCIA$/i.test(line)) break;
+    if (/^REGLAS DE CARGA$/i.test(line)) break;
+    if (isNoise(line)) continue;
+
+    const focus = line.match(/^ENFOQUE\\s*:\\s*(.+)$/i);
+    if (focus) {
+      block = "FOCO";
+      blockType = "OTRO";
+      push(focus[1], i + 1, block, blockType);
+      continue;
+    }
+
+    const numbered = cleanNumberedHeading(line);
+    if (numbered) {
+      const { title } = splitSectionHeading(numbered.text);
+      block = cleanLine(numbered.text).toUpperCase();
+      blockType = blockTypeFromLabel(title || block);
+      continue;
+    }
+
+    if (DAILY_PLAN_SECTION_RE.test(line) && line === line.toUpperCase()) {
+      block = cleanLine(line).toUpperCase();
+      blockType = blockTypeFromLabel(block);
+      continue;
+    }
+
+    if (/^(TOBILLO|CADERA|T-SPINE|HOMBRO|SENTADILLA|MUÑECA)$/i.test(line)) continue;
+    if (/^(?:•|-)\\s*$/.test(line)) continue;
+
+    push(line);
+  }
+
+  const explicitDates = new Set(rows.map((row) => row.dateText));
+  const explicitSundays = new Set(
+    rows
+      .filter((row) => row.day === "DOMINGO")
+      .map((row) => row.dateText),
+  );
+
+  // Este formato omite el domingo 04/10 al comenzar el plan en jueves.
+  // Si el propio documento marca todos los demás domingos como descanso,
+  // completamos únicamente los domingos ausentes del mismo mes como descanso.
+  if (explicitSundays.size > 0) {
+    for (let day = 1; day <= new Date(Date.UTC(monthYear.year, monthYear.month, 0)).getUTCDate(); day++) {
+      const date = makeDate(day);
+      if (date.getUTCDay() !== 0) continue;
+      const dateText = dateTextForDay(day);
+      if (explicitDates.has(dateText)) continue;
+      rows.push({
+        id: uid(),
+        sourceRow: 0,
+        day: "DOMINGO",
+        dateText,
+        week: weekForDay(day),
+        block: "DESCANSO",
+        blockType: "OTRO",
+        exercise: "Descanso",
+        sets: "",
+        reps: "",
+        percent: "",
+        load: "",
+        time: "",
+        distance: "",
+        raw: "Descanso",
+      });
+    }
+  }
+
+  const order = (monthYear.year - 2026) * 12 + monthYear.month - 10 + 1;
+  return {
+    rows,
+    month: {
+      key: `${Math.max(1, order)}. ${Object.keys(ANNUAL_MONTHS).find((name) => ANNUAL_MONTHS[name] === monthYear.month)?.slice(0, 3) ?? "PDF"} ${monthYear.year}`,
+      label: monthYear.label,
+      order: Math.max(1, order),
+    },
+  };
+}
+
 function pdfRowQuality(rows: ReviewRow[]): number {
   if (!rows.length) return 0;
   const dayCoverage = rows.filter((row) => !!row.day).length / rows.length;
@@ -763,6 +953,21 @@ export async function parsePdfPlanning(file: File): Promise<ParsedImport & { det
     return {
       ...structured,
       detectedMonth: inferMonthFromText(lines, file.name),
+    };
+  }
+
+  const dailyPlanLines = await extractPdfLines(file);
+  const dailyPlan = dailyPlanRowsFromLines(dailyPlanLines, file.name);
+  if (dailyPlan.rows.length > 0) {
+    return {
+      header: ["FECHA", "DÍA", "FOCO", "BLOQUES", "PRESCRIPCIÓN"],
+      columns: {},
+      rows: dailyPlan.rows,
+      unmapped: [],
+      detectedMonth: {
+        key: dailyPlan.month?.key ?? "1. PDF",
+        label: dailyPlan.month?.label ?? "Plan PDF",
+      },
     };
   }
 

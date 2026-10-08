@@ -22,6 +22,13 @@
       "when": 1791499669384,
       "tag": "0002_fase2_login_y_politicas",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791499942953,
+      "tag": "0003_fase2_activar_aislamiento",
+      "breakpoints": true
     }
   ]
 }

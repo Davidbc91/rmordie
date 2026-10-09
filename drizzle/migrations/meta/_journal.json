@@ -29,6 +29,13 @@
       "when": 1791499942953,
       "tag": "0003_fase2_activar_aislamiento",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791505897163,
+      "tag": "0004_cerrar_lectura_security_config",
+      "breakpoints": true
     }
   ]
 }

@@ -5,16 +5,12 @@ import { streaks, sessionDays, volumeOf, fmtKg, estimate1rm } from "@/lib/analyt
 import { extractPercentages } from "@/lib/plates";
 import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
 import { GlassCard, GlassSection, GlassBadge } from "@/components/glass";
-import {
-  Calendar, Upload, Flame, Trophy, ChevronRight, Timer, Dumbbell, User, Play, ArrowUpRight, Users,
-  Award, Target, CalendarCheck, Activity, Layers,
-} from "lucide-react";
-import { useDeferredValue, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Upload, Trophy, ChevronRight, ChevronDown, Play, ArrowUpRight } from "lucide-react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 import {
   completedBlockMap,
   isSessionCompleted,
-  planningCompletion,
   sessionProgress,
 } from "@/lib/session-progress";
 import { Moon } from "lucide-react";
@@ -45,6 +41,7 @@ function normalizeDayKey(value: string) {
 function Home() {
   const navigate = Route.useNavigate();
   const [selectedTrendWeek, setSelectedTrendWeek] = useState<string | null>(null);
+  const [showKeys, setShowKeys] = useState(false);
   const [analyticsReady, setAnalyticsReady] = useState(false);
 
   useEffect(() => {
@@ -89,12 +86,6 @@ function Home() {
     if (!week || !day) return null;
     return { month, week, day, progress: sessionProgress(day, month.key, week.index, blockMap) };
   }, [planning, blockMap]);
-
-  const stats = useMemo(() => {
-    const done = results.filter((r) => r.status === "completed");
-    const comp = planningCompletion(planning?.data, results);
-    return { blocks: done.length, sessions: comp.completed, totalDays: comp.total, pct: comp.pct };
-  }, [results, planning]);
 
   const next = useMemo(() => {
     if (!planning) return null;
@@ -309,7 +300,7 @@ function Home() {
             <GlassCard level={3} className="rise rise-2 glass-panel p-6"><GlassBadge tone="gold">Hoy · Completado</GlassBadge><h2 className="mt-4 text-xl font-semibold">Entrenamiento hecho</h2><p className="mt-2 text-sm text-muted-foreground">Buen trabajo. Tu próxima sesión aparece a continuación.</p></GlassCard>
           ) : null}
 
-          {/* Próxima sesión disponible; si hoy toca entrenar, esta tarjeta es el CTA principal. */}
+          {/* Próxima sesión: lo primero y con el botón visible sin bajar. */}
           {next ? (
             <GlassCard level={3} gold className="rise rise-2 cinematic-card-strong cinematic-outline p-5">
               <div className="flex items-center justify-between gap-3">
@@ -317,7 +308,7 @@ function Home() {
                   {next.progress.state === "in_progress" ? "Sesión en curso" : next.isToday ? "Entrenamiento de hoy" : "Próximo entrenamiento"}
                 </GlassBadge>
                 {weekProgress && (
-                  <span className="text-[11px] tabular text-muted-foreground">
+                  <span className="text-[13px] tabular text-muted-foreground">
                     Semana {next.week} · {weekProgress.done}/{weekProgress.total}
                   </span>
                 )}
@@ -326,83 +317,75 @@ function Home() {
               <div className="mt-5 flex items-end justify-between gap-4">
                 <div className="min-w-0">
                   <div className="day-display gold-text">{next.dayKey}</div>
-                  <p className="cinematic-label mt-3">{next.monthLabel} · SEMANA {next.week}</p>
+                  <p className="mt-3 text-[13px] tracking-[0.12em] text-muted-foreground">{next.monthLabel} · SEMANA {next.week}</p>
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="cinematic-number tabular">
                     {next.progress.done}<span className="text-xl text-muted-foreground">/{next.progress.total}</span>
                   </div>
-                  <p className="eyebrow mt-1.5">Bloques</p>
+                  <p className="mt-1 text-xs text-muted-foreground">bloques</p>
                 </div>
               </div>
 
-              <div
-                className="mt-5 h-1.5 w-full overflow-hidden rounded-full"
-                style={{ background: "rgba(255,255,255,0.09)" }}
-              >
+              <div className="mt-5 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.09]" aria-hidden>
                 <div
-                  className="h-full rounded-full transition-[width] duration-700"
-                  style={{
-                    width: `${Math.max(next.progress.pct, 2)}%`,
-                    background: "linear-gradient(90deg,var(--gold-soft),var(--gold))",
-                  }}
+                  className="h-full rounded-full bg-[color:var(--gold)] transition-[width] duration-700"
+                  style={{ width: `${Math.max(next.progress.pct, 2)}%` }}
                 />
               </div>
-              <p className="eyebrow mt-2.5">
-                {next.progress.state === "in_progress" ? "Sesión en curso" : "Sesión pendiente"}
-              </p>
 
-              <p className="mt-4 line-clamp-2 text-sm text-muted-foreground">{next.headline}</p>
+              <p className="mt-4 line-clamp-2 text-[15px] leading-snug text-foreground/85">{next.headline}</p>
 
-              {sessionCoach && (
-                <div className="mt-4 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-black/20 p-3.5">
-                  <p className="eyebrow">Recomendación para hoy</p>
-                  <div className="mt-3 space-y-3">
-                    {sessionCoach.map((item) => (
-                      <div key={item.exercise}>
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="min-w-0 truncate text-xs font-semibold">{item.exercise}</span>
-                          {item.avgRpe != null && <span className="shrink-0 text-[11px] font-semibold text-gold">RPE {item.avgRpe.toFixed(1)}</span>}
+              {(sessionCoach || next.focus.length > 0) && (
+                <div className="mt-4 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-black/25">
+                  <button
+                    type="button"
+                    onClick={() => setShowKeys((v) => !v)}
+                    aria-expanded={showKeys}
+                    className="flex min-h-11 w-full items-center justify-between gap-3 px-3.5 text-left text-sm"
+                  >
+                    <span>
+                      Claves y cargas de hoy
+                      <span className="text-muted-foreground"> · {Math.max(next.focus.length, sessionCoach?.length ?? 0)}</span>
+                    </span>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${showKeys ? "rotate-180" : ""}`} />
+                  </button>
+                  {showKeys && (
+                    <div className="space-y-3 border-t border-[color:var(--glass-border)] px-3.5 pb-3.5 pt-3">
+                      {next.focus.map((item) => (
+                        <div key={item.exercise} className="flex items-center justify-between gap-3">
+                          <span className="min-w-0 truncate text-sm font-medium">{item.exercise}</span>
+                          {item.loads.length > 0 ? (
+                            <span className="shrink-0 text-[13px] font-semibold text-gold">
+                              {item.loads.map((load) => `${load.pct}% · ${formatKg(load.suggested)} kg`).join(" · ")}
+                            </span>
+                          ) : (
+                            <span className="shrink-0 text-[13px] text-muted-foreground">RM {formatKg(item.rm)} kg</span>
+                          )}
                         </div>
-                        <p className="mt-1 text-xs font-medium">{item.title}</p>
-                        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{item.detail}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {next.focus.length > 0 && (
-                <div className="mt-4 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-black/20 p-3.5">
-                  <p className="eyebrow">Claves de la sesión</p>
-                  <div className="mt-3 space-y-2">
-                    {next.focus.map((item) => (
-                      <div key={item.exercise} className="flex items-center justify-between gap-3">
-                        <span className="min-w-0 truncate text-xs font-medium">{item.exercise}</span>
-                        {item.loads.length > 0 ? (
-                          <span className="shrink-0 text-xs font-semibold text-gold">
-                            {item.loads.map((load) => `${load.pct}% · ${formatKg(load.suggested)} kg`).join(" · ")}
-                          </span>
-                        ) : (
-                          <span className="shrink-0 text-[11px] text-muted-foreground">
-                            RM {formatKg(item.rm)} kg
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                      {sessionCoach?.map((item) => (
+                        <div key={`coach-${item.exercise}`} className="rounded-xl bg-white/[0.04] p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="min-w-0 truncate text-[13px] font-semibold">{item.exercise} · {item.title}</span>
+                            {item.avgRpe != null && <span className="shrink-0 text-[13px] font-semibold text-gold">RPE {item.avgRpe.toFixed(1)}</span>}
+                          </div>
+                          <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{item.detail}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               <Link
                 to="/workout/$month/$week/$day"
                 params={{ month: next.monthKey, week: String(next.week), day: next.dayKey }}
-                className="pressable gold-gradient mt-5 flex min-h-[58px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] text-[15px] font-semibold"
+                className="pressable gold-gradient mt-4 flex min-h-[58px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] text-base font-semibold"
               >
                 <Play className="h-4 w-4" fill="currentColor" />{" "}
                 {next.progress.state === "in_progress" ? "Continuar entreno" : "Empezar entreno"}
               </Link>
-
             </GlassCard>
           ) : (
             <GlassCard level={3} className="rise rise-2 p-6 text-center">
@@ -410,111 +393,86 @@ function Home() {
             </GlassCard>
           )}
 
-          {/* Estado actual */}
-          <div className="rise rise-3 mt-4 grid grid-cols-3 gap-2">
-            <DashboardStat value={String(streak.current)} label="Racha" icon={<Flame className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/profile", search: { section: "consistency" } })} />
-            <DashboardStat value={String(weekStats.sessions)} label="Esta semana" icon={<Activity className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/calendar" })} />
-            <DashboardStat value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR · 30 días" icon={<Trophy className="h-3.5 w-3.5" />} onClick={() => navigate({ to: "/records" })} />
+          {/* Una sola fila de cifras */}
+          <div className="rise rise-3 mt-3 grid grid-cols-3 gap-2">
+            <DashboardStat value={String(streak.current)} label="Días de racha" onClick={() => navigate({ to: "/profile", search: { section: "consistency" } })} />
+            <DashboardStat value={String(weekStats.sessions)} label="Esta semana" onClick={() => navigate({ to: "/calendar" })} />
+            <DashboardStat value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR en 30 días" accent onClick={() => navigate({ to: "/records" })} />
           </div>
 
-          {/* Lectura de rendimiento */}
-          <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "performance" } })} className="w-full text-left">
-            <GlassCard level={2} className="rise rise-3 mt-3 glass-panel p-5 pressable">
+          {/* Cómo vas: rendimiento y recuperación juntos */}
+          <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "performance" } })} className="mt-3 w-full text-left">
+            <GlassCard level={2} className="rise rise-3 glass-panel p-5 pressable">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="eyebrow">Estado de entrenamiento</p>
-                  <h2 className="mt-2 text-lg font-semibold tracking-tight">{smartState.title}</h2>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{smartState.detail}</p>
+                  <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Cómo vas</p>
+                  <h2 className="mt-1.5 text-lg font-semibold tracking-tight">{smartState.title}</h2>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{smartState.detail}</p>
                 </div>
-                <Activity className={`h-5 w-5 shrink-0 ${smartState.tone === "positive" ? "text-gold" : "text-muted-foreground"}`} />
+                <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-muted-foreground" />
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <DashboardStat value={String(smartState.sessions)} label="Sesiones" icon={<CalendarCheck className="h-3.5 w-3.5" />} />
-                <DashboardStat value={smartState.avgRpe != null ? smartState.avgRpe.toFixed(1) : "—"} label="RPE medio" icon={<Activity className="h-3.5 w-3.5" />} />
-                <DashboardStat value={smartState.volume > 0 ? fmtKg(smartState.volume, 0) : "—"} label="Volumen" icon={<Dumbbell className="h-3.5 w-3.5" />} />
+              <div className="mt-4 grid grid-cols-3 gap-2 text-[13px] text-muted-foreground">
+                <div>
+                  <div className="text-lg font-semibold tabular text-foreground">{smartState.avgRpe != null ? smartState.avgRpe.toFixed(1) : "—"}</div>
+                  RPE medio
+                </div>
+                {dashboardTrend.latestWellness ? (
+                  <>
+                    <div>
+                      <div className="text-lg font-semibold tabular text-foreground">{dashboardTrend.latestWellness.sleep_hours != null ? `${dashboardTrend.latestWellness.sleep_hours} h` : "—"}</div>
+                      Sueño
+                    </div>
+                    <div>
+                      <div className="text-lg font-semibold tabular text-foreground">{dashboardTrend.latestWellness.energy != null ? String(dashboardTrend.latestWellness.energy) : "—"}</div>
+                      Energía
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <div className="text-lg font-semibold tabular text-foreground">{smartState.sessions}</div>
+                      Sesiones (7 d)
+                    </div>
+                    <div>
+                      <div className="text-lg font-semibold tabular text-foreground">{smartState.volume > 0 ? fmtKg(smartState.volume, 0) : "—"}</div>
+                      Volumen
+                    </div>
+                  </>
+                )}
               </div>
             </GlassCard>
           </button>
-
-          {activeGoal && (
-            <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "goals" } })} className="w-full text-left">
-            <GlassCard level={2} className="rise rise-4 rise-stagger-1 mt-4 cinematic-card-strong p-5 pressable">
-              <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Objetivo activo</p><p className="mt-2 text-sm font-semibold">{activeGoal.title}</p></div><Target className="h-5 w-5 shrink-0 text-gold" /></div>
-              <div className="mt-4 flex items-end justify-between gap-3"><div className="text-2xl font-semibold tabular">{activeGoal.current_value ?? activeGoal.start_value ?? "—"} <span className="text-xs text-muted-foreground">{activeGoal.unit ?? ""}</span></div><div className="text-right text-xs text-muted-foreground">Objetivo <span className="font-semibold text-foreground">{activeGoal.target_value} {activeGoal.unit ?? ""}</span></div></div>
-              {activeGoal.current_value != null && activeGoal.target_value > 0 && <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[linear-gradient(90deg,#EBD6A6,#D8B46B)]" style={{ width: Math.min(100, Math.max(0, (activeGoal.current_value / activeGoal.target_value) * 100)) + "%" }} /></div>}
-            </GlassCard>
-          </button>
-          )}
 
           {/* Evolución */}
-          <GlassCard level={2} className="rise rise-4 rise-stagger-2 mt-3 glass-panel p-5">
-            <div className="flex items-start justify-between gap-3"><div><p className="eyebrow">Evolución</p><h2 className="mt-2 text-xl font-semibold tracking-tight">Carga de las últimas 8 semanas</h2></div>{dashboardTrend.volumeChange != null && <span className="text-xs font-semibold text-gold">{dashboardTrend.volumeChange >= 0 ? "+" : ""}{dashboardTrend.volumeChange.toFixed(0)}%</span>}</div>
-            <div className="mt-4 h-[150px] w-full">
-              <ResponsiveContainer width="100%" height="100%"><LineChart data={dashboardTrend.weeks} margin={{ top: 8, right: 4, left: -24, bottom: 0 }} onClick={(state) => {
+          <GlassCard level={2} className="rise rise-4 mt-3 glass-panel p-5">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="text-[17px] font-semibold tracking-tight">Carga · 8 semanas</h2>
+              {dashboardTrend.volumeChange != null && <span className="text-sm font-semibold text-gold">{dashboardTrend.volumeChange >= 0 ? "+" : ""}{dashboardTrend.volumeChange.toFixed(0)} %</span>}
+            </div>
+            <div className="mt-3 h-[140px] w-full">
+              <ResponsiveContainer width="100%" height="100%"><LineChart data={dashboardTrend.weeks} margin={{ top: 8, right: 6, left: -24, bottom: 0 }} onClick={(state) => {
                 const label = state?.activeLabel;
                 if (typeof label === "string") setSelectedTrendWeek(label);
-              }}><XAxis dataKey="label" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} /><YAxis hide /><Tooltip formatter={(value: number) => [fmtKg(value, 0), "Volumen"]} contentStyle={{ background: "rgba(20,20,20,.94)", border: "1px solid rgba(216,180,107,.25)", borderRadius: 12, fontSize: 11 }} /><Line type="monotone" dataKey="volume" stroke="var(--gold)" strokeWidth={2.5} dot={{ r: 3, fill: "var(--gold)", stroke: "var(--gold)" }} activeDot={{ r: 5 }} connectNulls /></LineChart></ResponsiveContainer>
+              }}><XAxis dataKey="label" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} /><YAxis hide /><Tooltip formatter={(value: number) => [fmtKg(value, 0), "Volumen"]} contentStyle={{ background: "rgba(20,20,20,.94)", border: "1px solid rgba(200,179,138,.25)", borderRadius: 12, fontSize: 13 }} /><Line type="monotone" dataKey="volume" stroke="var(--gold)" strokeWidth={2.5} dot={{ r: 3, fill: "var(--gold)", stroke: "var(--gold)" }} activeDot={{ r: 5 }} connectNulls /></LineChart></ResponsiveContainer>
             </div>
             {selectedTrendWeek && (() => {
               const point = dashboardTrend.weeks.find((w) => w.label === selectedTrendWeek);
               return point ? (
-                <button type="button" onClick={() => setSelectedTrendWeek(null)} className="mt-2 w-full rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3 py-2 text-left pressable">
-                  <span className="eyebrow">{point.label}</span>
-                  <span className="ml-2 text-xs font-semibold">{fmtKg(point.volume, 0)} de volumen</span>
-                  {point.rpe != null && <span className="ml-2 text-xs text-muted-foreground">· RPE {point.rpe.toFixed(1)}</span>}
+                <button type="button" onClick={() => setSelectedTrendWeek(null)} className="mt-2 w-full rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3 py-2 text-left text-[13px] pressable">
+                  <span className="font-semibold">{point.label}</span>
+                  <span className="ml-2">{fmtKg(point.volume, 0)} de volumen</span>
+                  {point.rpe != null && <span className="ml-2 text-muted-foreground">· RPE {point.rpe.toFixed(1)}</span>}
                 </button>
               ) : null;
             })()}
-            <p className="mt-2 text-[11px] text-muted-foreground">Toca un punto para ver el detalle de esa semana.</p>
           </GlassCard>
 
-          {dashboardTrend.recoveryAvg != null && (
-            <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "recovery" } })} className="w-full text-left">
-            <GlassCard level={2} className="rise rise-4 rise-stagger-4 mt-3 glass-panel p-5 pressable">
-              <div className="flex items-center justify-between gap-3"><div><p className="eyebrow">Último registro de recuperación</p><h2 className="mt-2 text-lg font-semibold">Estado reciente</h2></div><Activity className="h-5 w-5 text-gold" /></div>
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <DashboardStat value={dashboardTrend.latestWellness?.sleep_hours != null ? `${dashboardTrend.latestWellness.sleep_hours}h` : "—"} label="Sueño" icon={<Activity className="h-3.5 w-3.5" />} />
-                <DashboardStat value={dashboardTrend.latestWellness?.energy != null ? String(dashboardTrend.latestWellness.energy) : "—"} label="Energía" icon={<Flame className="h-3.5 w-3.5" />} />
-                <DashboardStat value={dashboardTrend.latestWellness?.mood != null ? String(dashboardTrend.latestWellness.mood) : "—"} label="Ánimo" icon={<User className="h-3.5 w-3.5" />} />
-              </div>
-            </GlassCard>
-          </button>
-          )}
-
-          {/* 5 · Progreso */}
-          <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "progress" } })} className="w-full text-left">
-          <GlassCard level={2} className="rise rise-3 rise-stagger-5 mt-3 glass-panel p-5 pressable">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="eyebrow">Sesiones completadas</p>
-                <div className="display-xl mt-3">{stats.sessions}</div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  de {stats.totalDays} días planificados
-                </p>
-              </div>
-              <ProgressRing pct={stats.pct} />
-            </div>
-            <div className="mt-5 h-[3px] w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.09)" }}>
-              <div
-                className="h-full rounded-full transition-[width] duration-700"
-                style={{ width: `${Math.max(stats.pct, 2)}%`, background: "linear-gradient(90deg,#EBD6A6,#D8B46B)" }}
-              />
-            </div>
-          </GlassCard>
-          </button>
-
-          {/* 6 · Estadísticas rápidas */}
-          <div className="rise rise-3 mt-3 grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "progress" } })} className="text-left"><MiniStat label="Bloques" value={String(stats.blocks)} icon={<Dumbbell className="h-3.5 w-3.5" />} /></button>
-            <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "progress" } })} className="text-left"><MiniStat label="Constancia" value={String(stats.pct) + "%"} icon={<Flame className="h-3.5 w-3.5" />} /></button>
-          </div>
-
-          {/* PRs recientes desde el historial real */}
+          {/* PRs recientes */}
           <GlassSection
             title="PRs recientes"
             action={
-              <Link to="/records" className="inline-flex items-center gap-1 text-[11px] font-semibold text-gold">
-                Ver todos <ArrowUpRight className="h-3 w-3" />
+              <Link to="/records" className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-gold">
+                Ver todos <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             }
             className="rise rise-4"
@@ -525,16 +483,16 @@ function Home() {
                   <Link
                     key={r.id}
                     to="/records"
-                    className="pressable glass-quiet flex items-center gap-3 px-4 py-3.5"
+                    className="pressable glass-quiet flex min-h-[60px] items-center gap-3 px-4 py-3"
                   >
                     <Trophy className="h-4 w-4 shrink-0 text-gold" strokeWidth={1.8} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold">{r.exercise}</span>
-                      <span className="eyebrow mt-1 block">{r.rep_max ? `${r.rep_max}RM` : "RM"} · {new Date(r.changed_at).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}</span>
+                      <span className="block truncate text-[15px] font-semibold">{r.exercise}</span>
+                      <span className="mt-0.5 block text-[13px] text-muted-foreground">{r.rep_max ? `${r.rep_max}RM` : "RM"} · {new Date(r.changed_at).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}</span>
                     </span>
                     <span className="metric shrink-0 text-right gold-text">
                       {r.new_weight}
-                      <span className="ml-1 text-xs font-medium text-muted-foreground">kg</span>
+                      <span className="ml-1 text-[13px] font-medium text-muted-foreground">kg</span>
                     </span>
                   </Link>
                 ))}
@@ -544,50 +502,27 @@ function Home() {
             )}
           </GlassSection>
 
-          {/* 8 · Accesos */}
-          <GlassSection title="Accesos" className="rise rise-5">
-            <div className="space-y-2">
-              <QuickAction to="/calendar" icon={<Calendar className="h-[18px] w-[18px]" />} title="Calendario" subtitle="Tu planificación mes a mes" />
-              <QuickAction to="/profile" icon={<User className="h-[18px] w-[18px]" />} title="Mi perfil" subtitle="Progreso, fuerza, constancia e informes" />
-              <QuickAction to="/records" icon={<Trophy className="h-[18px] w-[18px]" />} title="Récords" subtitle="1RM, 3RM, 5RM y WODs" />
-              <QuickAction to="/timers" icon={<Timer className="h-[18px] w-[18px]" />} title="Temporizadores" subtitle="AMRAP · EMOM · Tabata" />
-              <QuickAction to="/social" icon={<Users className="h-[18px] w-[18px]" />} title="Comunidad" subtitle="Feed, PR board y atletas" />
-              <QuickAction
-                to="/import"
-                icon={<Upload className="h-[18px] w-[18px]" />}
-                title="Actualizar planificación"
-                subtitle={`Versión ${planning.version} · ${planning.source_filename ?? "sin nombre"}`}
-              />
-            </div>
-          </GlassSection>
+          {/* Objetivo activo, compacto */}
+          {activeGoal && (
+            <button type="button" onClick={() => navigate({ to: "/profile", search: { section: "goals" } })} className="mt-3 w-full text-left">
+              <GlassCard level={2} className="rise rise-5 glass-panel px-4 py-3.5 pressable">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="min-w-0 truncate"><span className="text-muted-foreground">Objetivo · </span>{activeGoal.title}</span>
+                  <span className="shrink-0 font-semibold tabular">
+                    {activeGoal.current_value ?? activeGoal.start_value ?? "—"}
+                    <span className="text-muted-foreground"> / {activeGoal.target_value} {activeGoal.unit ?? ""}</span>
+                  </span>
+                </div>
+                {activeGoal.current_value != null && activeGoal.target_value > 0 && (
+                  <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full rounded-full bg-[color:var(--gold)]" style={{ width: Math.min(100, Math.max(0, (activeGoal.current_value / activeGoal.target_value) * 100)) + "%" }} />
+                  </div>
+                )}
+              </GlassCard>
+            </button>
+          )}
         </>
       )}
-    </div>
-  );
-}
-
-function ProgressRing({ pct }: { pct: number }) {
-  const r = 30;
-  const c = 2 * Math.PI * r;
-  const offset = c - (c * pct) / 100;
-  return (
-    <div className="relative h-[78px] w-[78px] shrink-0">
-      <svg viewBox="0 0 76 76" className="h-full w-full -rotate-90">
-        <circle cx="38" cy="38" r={r} fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="5" />
-        <circle
-          cx="38"
-          cy="38"
-          r={r}
-          fill="none"
-          stroke="var(--gold)"
-          strokeWidth="5"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 800ms cubic-bezier(0.22,1,0.36,1)" }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold tabular">{pct}%</div>
     </div>
   );
 }
@@ -633,40 +568,13 @@ function PlanningError({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-function DashboardStat({ value, label, icon, onClick }: { value: string; label: string; icon: ReactNode; onClick?: () => void }) {
+function DashboardStat({ value, label, onClick, accent }: { value: string; label: string; onClick?: () => void; accent?: boolean }) {
   const inner = (
     <>
-      <div className="flex items-center gap-1.5 eyebrow">{icon}<span className="truncate">{label}</span></div>
-      <div className="metric mt-2 truncate">{value}</div>
+      <div className={`metric truncate tabular ${accent ? "text-gold" : ""}`}>{value}</div>
+      <div className="mt-1 truncate text-[13px] text-muted-foreground">{label}</div>
     </>
   );
-  if (onClick) return <button type="button" onClick={onClick} className="glass glass-sheen pressable min-w-0 w-full p-3 text-left cinematic-card-dark">{inner}</button>;
-  return <div className="glass glass-sheen min-w-0 p-3 cinematic-card-dark">{inner}</div>;
-}
-
-function MiniStat({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
-  return (
-    <div className="glass glass-sheen pressable p-4 cinematic-card-dark">
-      <div className="flex items-center gap-1.5 eyebrow">
-        {icon}
-        {label}
-      </div>
-      <div className="metric mt-3">{value}</div>
-    </div>
-  );
-}
-
-function QuickAction({ to, icon, title, subtitle }: { to: string; icon: React.ReactNode; title: string; subtitle: string }) {
-  return (
-    <Link to={to} className="pressable glass-quiet group flex items-center gap-4 px-4 py-3.5">
-      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[15px] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] text-foreground">
-        {icon}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold">{title}</div>
-        <div className="truncate text-xs text-muted-foreground">{subtitle}</div>
-      </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-    </Link>
-  );
+  if (onClick) return <button type="button" onClick={onClick} className="glass glass-sheen pressable min-h-[84px] min-w-0 w-full p-3 text-left cinematic-card-dark">{inner}</button>;
+  return <div className="glass glass-sheen min-h-[84px] min-w-0 p-3 cinematic-card-dark">{inner}</div>;
 }

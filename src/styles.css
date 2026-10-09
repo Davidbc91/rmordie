@@ -618,8 +618,8 @@ h1, h2, h3, h4 {
 .eyebrow,
 .cinematic-label {
   font-family: var(--font-display);
-  font-size: 9px;
-  letter-spacing: .22em;
+  font-size: 11px;
+  letter-spacing: .16em;
   font-weight: 650;
 }
 
@@ -708,7 +708,7 @@ body {
 
 .cinematic-label,
 .eyebrow {
-  letter-spacing: .22em;
+  letter-spacing: .16em;
 }
 
 .display-xl,

@@ -1,6 +1,7 @@
 import { type PersonalRecord } from "@/lib/store";
 import { useState, useEffect } from "react";
 import { formatKg } from "@/lib/rm-matcher";
+import { ChevronDown, TrendingUp } from "lucide-react";
 import { resolveMovement, resolveMovements } from "@/lib/dictionary/resolve";
 
 export type ProgressionRecommendation = {
@@ -95,6 +96,7 @@ export function ProgressionRecommendations({
   results: import("@/lib/store").WorkoutResult[];
 }) {
   const [recommendations, setRecommendations] = useState<ProgressionRecommendation[] | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,30 +123,42 @@ export function ProgressionRecommendations({
   }, [planning, records, results]);
 
   if (!recommendations?.length) return null;
+  const readyToClimb = recommendations.filter((r) => r.tone === "up").length;
+  const summary = readyToClimb > 0
+    ? `${readyToClimb} ${readyToClimb === 1 ? "ejercicio listo" : "ejercicios listos"} para subir`
+    : `Sugerencias de carga · ${recommendations.length}`;
 
   return (
-    <section className="rise rise-2 glass-panel glass-refraction mb-5 rounded-[28px] p-5">
-      <p className="cinematic-label">LOAD STRATEGY</p>
-      <h2 className="mt-2 text-xl font-semibold tracking-tight">Sugerencias según tu historial</h2>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Basadas en las últimas sesiones registradas, RPE y RM confirmado.
-      </p>
-      <div className="mt-4 space-y-2">
-        {recommendations.map((item) => (
-          <div key={item.exercise} className="glass-quiet p-3.5">
-            <div className="flex items-center justify-between gap-3">
-              <span className="min-w-0 truncate text-sm font-semibold">{item.exercise}</span>
-              {item.avgRpe != null && (
-                <span className="shrink-0 text-[11px] font-semibold text-gold">RPE {item.avgRpe.toFixed(1)}</span>
-              )}
+    <section className="rise rise-2 mb-3 overflow-hidden rounded-[16px] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/[0.09]">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex min-h-14 w-full items-center gap-3 px-4 text-left"
+      >
+        <TrendingUp className="h-[18px] w-[18px] shrink-0 text-gold" />
+        <span className="flex-1 text-[15px]">{summary}</span>
+        <ChevronDown className={`h-[18px] w-[18px] shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="space-y-2 px-4 pb-4">
+          <p className="text-[13px] text-muted-foreground">Según tus últimas sesiones, el RPE y tu RM confirmado.</p>
+          {recommendations.map((item) => (
+            <div key={item.exercise} className="rounded-[14px] bg-black/25 p-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="min-w-0 truncate text-[15px] font-semibold">{item.exercise}</span>
+                {item.avgRpe != null && (
+                  <span className="shrink-0 text-[13px] font-semibold text-gold">RPE {item.avgRpe.toFixed(1)}</span>
+                )}
+              </div>
+              <p className="mt-1.5 text-sm leading-relaxed text-foreground/85">{item.text}</p>
+              <p className="mt-1.5 text-[13px] text-muted-foreground">
+                Última sesión: {formatKg(Number(item.latest.weight))} kg × {item.latest.reps} reps
+              </p>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{item.text}</p>
-            <p className="mt-2 text-[10px] text-muted-foreground">
-              Última sesión: {formatKg(Number(item.latest.weight))} kg × {item.latest.reps} reps
-            </p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

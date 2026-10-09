@@ -17,9 +17,9 @@ export function Card({ children, className = "" }: { children: React.ReactNode; 
 export function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="cinematic-card-dark rounded-[20px] border border-white/[.07] p-4">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
+      <div className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
       <div className="mt-2 text-2xl font-semibold tabular tracking-tight">{value}</div>
-      {sub && <div className="mt-1 text-[11px] text-muted-foreground">{sub}</div>}
+      {sub && <div className="mt-1 text-[13px] text-muted-foreground">{sub}</div>}
     </div>
   );
 }
@@ -27,7 +27,7 @@ export function Stat({ label, value, sub }: { label: string; value: string; sub?
 export function Empty({ text = "Aún no hay suficientes datos." }: { text?: string }) {
   return (
     <div className="rounded-[22px] border border-dashed border-border p-6 text-center">
-      <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Not enough data</p>
+      <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Not enough data</p>
       <p className="mt-2 text-sm text-muted-foreground">{text}</p>
     </div>
   );
@@ -48,7 +48,7 @@ export function Field({
 }) {
   return (
     <label className="block min-w-0 max-w-full">
-      <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{label}</span>
+      <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{label}</span>
       <div className="mt-1.5 min-w-0 max-w-full">{children}</div>
     </label>
   );
@@ -82,8 +82,8 @@ export function MonoChart({ data, dataKey = "value" }: { data: { label: string; 
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
           <CartesianGrid stroke="#E4E4E4" vertical={false} />
-          <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#6F6F6F" }} tickLine={false} axisLine={false} />
-          <YAxis tick={{ fontSize: 10, fill: "#6F6F6F" }} tickLine={false} axisLine={false} width={44} domain={["auto", "auto"]} />
+          <XAxis dataKey="label" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+          <YAxis tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} width={44} domain={["auto", "auto"]} />
           <Tooltip
             contentStyle={{ background: "#101114", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, color: "#FFFFFF", fontSize: 12 }}
             labelStyle={{ color: "#B8B8B8" }}
@@ -127,7 +127,7 @@ export function Row({ label, value }: { label: string; value: string }) {
 export function ReportList({ title, items }: { title: string; items: string[] }) {
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>{title}</p>
+      <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>{title}</p>
       {items.length === 0 ? (
         <p className="mt-2 text-sm" style={{ color: "#6F6F6F" }}>Not enough data</p>
       ) : (

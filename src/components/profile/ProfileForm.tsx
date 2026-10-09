@@ -142,7 +142,7 @@ export function ProfileForm() {
         </div>
 
         <div className="mt-5">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Objetivos principales</p>
+          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Objetivos principales</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {GOAL_OPTIONS.map((g) => {
               const active = goals.includes(g);

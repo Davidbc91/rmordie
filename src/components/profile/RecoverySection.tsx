@@ -49,7 +49,7 @@ export function RecoverySection({ logs, results, days }: any) {
   return (
     <div className="space-y-4">
       <Card>
-        <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
+        <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
           Registro diario
         </p>
         <div className="mt-3 grid grid-cols-2 gap-3">
@@ -63,7 +63,7 @@ export function RecoverySection({ logs, results, days }: any) {
         <div className="mt-3 space-y-3">
           {WELLNESS_FIELDS.map((f) => (
             <div key={f.key}>
-              <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.18em]" style={{ color: "#6F6F6F" }}>
+              <div className="flex items-center justify-between text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
                 <span>{f.label}</span>
                 <span>{form[f.key] ?? "—"}/10</span>
               </div>

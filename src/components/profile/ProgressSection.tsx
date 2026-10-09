@@ -162,7 +162,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       <Card>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="cinematic-label">TRAINING INTELLIGENCE</p>
+            <p className="cinematic-label">ANÁLISIS DEL ENTRENAMIENTO</p>
             <h2 className="mt-2 text-xl font-semibold">Lectura de tu entrenamiento</h2>
           </div>
           <Activity className="h-5 w-5 text-gold" />
@@ -174,18 +174,18 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
         <div className="mt-4 space-y-2">
           {intelligence.signals.map((signal) => (
             <div key={signal.label} className="rounded-2xl border border-white/[.07] bg-black/20 p-4">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{signal.label}</div>
+              <div className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{signal.label}</div>
               <p className="mt-1.5 text-sm leading-relaxed">{signal.text}</p>
             </div>
           ))}
         </div>
-        <p className="mt-4 text-[10px] leading-relaxed text-muted-foreground">
+        <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
           Análisis descriptivo basado en tus entrenamientos y registros de recuperación. No modifica tu planificación.
         </p>
       </Card>
 
       <Card>
-        <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
+        <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
           Resumen del periodo
         </p>
         <p className="mt-3 text-base leading-relaxed">
@@ -196,7 +196,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       <Card>
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
+            <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
               Volumen de entrenamiento
             </p>
             <p className="mt-1 text-2xl font-semibold tabular">
@@ -213,7 +213,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
         <div className="mt-4">
           <MonoChart data={volumeSeries} />
         </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-[13px] text-muted-foreground">
           Evolución del volumen registrado en {rangeLabel.toLowerCase()}.
         </p>
       </Card>
@@ -230,7 +230,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       <Card>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
+            <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
               Fuerza
             </p>
             <p className="mt-1 text-xs text-muted-foreground">Movimientos con evolución registrada</p>
@@ -250,7 +250,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
               <div key={item.exercise} className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{item.exercise}</p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
+                  <p className="mt-1 text-[13px] text-muted-foreground">
                     {item.currentPr != null ? `${fmtNum(item.currentPr)} kg actual` : "Sin 1RM confirmado"}
                   </p>
                 </div>
@@ -258,7 +258,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
                   <p className="text-sm font-semibold">
                     {item.changePct != null ? `${item.changePct >= 0 ? "+" : ""}${item.changePct.toFixed(1)}%` : "—"}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">evolución</p>
+                  <p className="text-[13px] text-muted-foreground">evolución</p>
                 </div>
               </div>
             ))}
@@ -269,14 +269,14 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       <Card>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
+            <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
               Tendencias por movimiento
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Evolución reciente de tus RM y 1RM estimados.
             </p>
           </div>
-          <span className="text-[11px] text-muted-foreground">{movementTrends.total} con historial</span>
+          <span className="text-[13px] text-muted-foreground">{movementTrends.total} con historial</span>
         </div>
         {movementTrends.total === 0 ? (
           <p className="mt-4 text-sm text-muted-foreground">Necesitas más registros para detectar tendencias.</p>
@@ -288,7 +288,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
               { label: "A vigilar", items: movementTrends.down },
             ].map((group) => (
               <div key={group.label} className="rounded-2xl border border-border bg-surface p-3.5">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{group.label}</p>
+                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{group.label}</p>
                 {group.items.length === 0 ? (
                   <p className="mt-2 text-xs text-muted-foreground">Sin movimientos en esta categoría.</p>
                 ) : (
@@ -317,7 +317,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       </div>
 
       <Card>
-        <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
+        <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
           Cambios corporales
         </p>
         <div className="mt-3 grid grid-cols-2 gap-3">

@@ -7,11 +7,11 @@ import {
   useAllResults,
   type PersonalRecord,
 } from "@/lib/store";
-import { Trophy, Plus, Pencil, Trash2, Check, X, ChevronRight } from "lucide-react";
+import { Trophy, Pencil, Trash2, Check, X, Search } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
-import { normalizeExerciseName, sameExercise } from "@/lib/rm-matcher";
+import { formatKg, normalizeExerciseName, sameExercise } from "@/lib/rm-matcher";
 import { MovementDictionaryLink } from "@/components/MovementDictionaryLink";
 import { resolveMovement, resolveMovementId } from "@/lib/dictionary/resolve";
 import { ProgressionRecommendations } from "./progression";
@@ -20,6 +20,11 @@ import { HistoryModal } from "./HistoryModal";
 import { PageSkeleton } from "@/components/PageSkeleton";
 
 export const REP_MAXES = [1, 3, 5, 10] as const;
+
+/** Agrupa variantes del mismo movimiento (p. ej. «back squat» y «Back Squat»). */
+function groupKey(exercise: string): string {
+  return resolveMovementId(exercise) ?? normalizeExerciseName(exercise);
+}
 
 export const TABS: { label: string; value: number | "all" }[] = [
   { label: "1RM", value: 1 },
@@ -70,10 +75,14 @@ export function StrengthRecords({
   focusExercise,
   focusRepMax,
   clearFocus,
+  showAdd,
+  setShowAdd,
 }: {
   focusExercise?: string;
   focusRepMax?: number;
   clearFocus: () => void;
+  showAdd: boolean;
+  setShowAdd: (v: boolean | ((prev: boolean) => boolean)) => void;
 }) {
   const { data: records = [], isLoading } = usePersonalRecords();
   const { data: planning } = usePlanning();
@@ -82,8 +91,8 @@ export function StrengthRecords({
   const update = useUpdatePersonalRecord();
   const del = useDeletePersonalRecord();
 
-  const [tab, setTab] = useState<number | "all">(1);
-  const [showAdd, setShowAdd] = useState(false);
+  const [search, setSearch] = useState("");
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [newExercise, setNewExercise] = useState("");
   const [newWeight, setNewWeight] = useState("");
   const [newRepMax, setNewRepMax] = useState<number>(1);
@@ -104,19 +113,36 @@ export function StrengthRecords({
       return matchesMovement && (item.rep_max ?? 1) === (focusRepMax ?? 1);
     });
     if (record) {
-      setTab(focusRepMax ?? 1);
+      setExpandedKey(groupKey(record.exercise));
       setDetailFor(record);
     }
     clearFocus();
   }, [clearFocus, focusExercise, focusRepMax, isLoading, records]);
 
-  const visible = useMemo(() => {
-    const list = tab === "all" ? records : records.filter((r) => (r.rep_max ?? 1) === tab);
-    return [...list].sort(
-      (a, b) =>
-        a.exercise.localeCompare(b.exercise) || (a.rep_max ?? 1) - (b.rep_max ?? 1),
-    );
-  }, [records, tab]);
+  // Una fila por ejercicio: el 1RM (o el RM más bajo que haya) y el resto debajo.
+  const groups = useMemo(() => {
+    const byKey = new Map<string, PersonalRecord[]>();
+    for (const r of records) {
+      const key = groupKey(r.exercise);
+      const list = byKey.get(key);
+      if (list) list.push(r);
+      else byKey.set(key, [r]);
+    }
+    const q = normalizeExerciseName(search);
+    return [...byKey.entries()]
+      .map(([key, list]) => {
+        const sorted = [...list].sort((a, b) => (a.rep_max ?? 1) - (b.rep_max ?? 1));
+        const primary = sorted[0];
+        const latest = [...list].sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
+        const others = [
+          ...sorted.slice(1).map((r) => `${r.rep_max ?? 1}RM ${formatKg(Number(r.weight))}`),
+          new Date(latest.updated_at).toLocaleDateString("es-ES", { day: "numeric", month: "short" }),
+        ].join(" · ");
+        return { key, name: primary.exercise, primary, records: sorted, others, hasDictionary: !!resolveMovement(primary.exercise) };
+      })
+      .filter((g) => !q || normalizeExerciseName(g.name).includes(q))
+      .sort((a, b) => a.name.localeCompare(b.name, "es"));
+  }, [records, search]);
 
   const existingNames = new Set(
     records.filter((r) => (r.rep_max ?? 1) === newRepMax).map((r) => normalizeExerciseName(r.exercise)),
@@ -151,7 +177,6 @@ export function StrengthRecords({
       setNewExercise("");
       setNewWeight("");
       setShowAdd(false);
-      if (tab !== "all") setTab(newRepMax);
       toast.success(`${newRepMax}RM guardado`);
     } catch (err: any) {
       toast.error(err?.message ?? "Error al guardar");
@@ -200,37 +225,10 @@ export function StrengthRecords({
   return (
     <>
       {celebrate && <PrCelebration data={celebrate} onClose={() => setCelebrate(null)} />}
-      <button
-        onClick={() => setShowAdd((v) => !v)}
-        className="pressable gold-gradient mb-4 flex min-h-[56px] w-full items-center justify-center gap-2 rounded-[var(--r-md)] px-4 text-sm font-bold tracking-wide"
-      >
-        <Plus className="h-4 w-4" /> Añadir RM
-      </button>
-
-      {/* Segmented rep-max control */}
-      <div className="rise rise-2 cinematic-card-dark no-scrollbar mb-5 flex gap-1 overflow-x-auto rounded-2xl border border-white/[.08] p-1">
-        {TABS.map((t) => {
-          const active = tab === t.value;
-          return (
-            <button
-              key={t.label}
-              onClick={() => setTab(t.value)}
-              className={`flex-1 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold tracking-wide transition ${
-                active
-                  ? "gold-gradient shadow-[0_10px_22px_-16px_rgba(216,180,107,0.8)]"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
-
       {showAdd && (
         <form onSubmit={handleAdd} className="glass-panel glass-refraction animate-fade mb-6 space-y-4 rounded-[28px] p-5">
           <div>
-            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            <label className="text-[13px] text-muted-foreground">
               Tipo de RM
             </label>
             <div className="mt-2 flex gap-2">
@@ -239,7 +237,7 @@ export function StrengthRecords({
                   key={n}
                   type="button"
                   onClick={() => setNewRepMax(n)}
-                  className={`flex-1 rounded-xl border px-2 py-2 text-xs font-semibold transition ${
+                  className={`min-h-11 flex-1 rounded-xl border px-2 text-sm font-semibold transition ${
                     newRepMax === n
                       ? "gold-gradient border-transparent"
                       : "border-border text-muted-foreground"
@@ -252,7 +250,7 @@ export function StrengthRecords({
           </div>
 
           <div className="relative">
-            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            <label className="text-[13px] text-muted-foreground">
               Ejercicio
             </label>
             <input
@@ -266,7 +264,7 @@ export function StrengthRecords({
               placeholder="Escribe para buscar…"
               maxLength={60}
               autoComplete="off"
-              className="mt-1.5 w-full rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm outline-none focus:border-foreground/40"
+              className="mt-1.5 min-h-12 w-full rounded-[14px] border border-white/[0.14] bg-white/[0.06] px-3.5 text-base outline-none focus:border-[color:var(--gold)]/60"
             />
             {showSuggestions && filteredSuggestions.length > 0 && (
               <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-border bg-surface shadow-lg">
@@ -290,7 +288,7 @@ export function StrengthRecords({
           </div>
 
           <div>
-            <label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            <label className="text-[13px] text-muted-foreground">
               Peso (kg)
             </label>
             <input
@@ -301,7 +299,7 @@ export function StrengthRecords({
               value={newWeight}
               onChange={(e) => setNewWeight(e.target.value)}
               placeholder="0"
-              className="mt-1.5 w-full rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm outline-none focus:border-foreground/40"
+              className="mt-1.5 min-h-12 w-full rounded-[14px] border border-white/[0.14] bg-white/[0.06] px-3.5 text-base outline-none focus:border-[color:var(--gold)]/60"
             />
           </div>
           <div className="flex gap-2">
@@ -329,131 +327,130 @@ export function StrengthRecords({
 
       {isLoading ? (
         <PageSkeleton label="Cargando récords" />
-      ) : visible.length === 0 ? (
-        <div className="glass-panel rounded-[28px] p-10 text-center">
-          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-border">
+      ) : records.length === 0 ? (
+        <div className="glass-panel rounded-[24px] p-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-border">
             <Trophy className="h-5 w-5" strokeWidth={1.5} />
           </div>
-          <h2 className="text-lg font-semibold">
-            {tab === "all" ? "Aún no tienes RM" : `Sin ${tab}RM registrados`}
-          </h2>
+          <h2 className="text-lg font-semibold">Aún no tienes RM</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Añade tus máximos para usarlos en el asistente de porcentajes.
+            Añade tus máximos con «+ Añadir» para usarlos en el asistente de porcentajes.
           </p>
         </div>
       ) : (
-        <ul className="rise rise-3 cinematic-card-strong divide-y divide-white/[.07] overflow-hidden rounded-[24px] p-0">
-          {visible.map((r) => {
-            const isEditing = editingId === r.id;
-            const hasDictionaryMovement = !!resolveMovement(r.exercise);
-            return (
-              <li key={r.id} className="px-5 py-4 transition-colors hover:bg-white/[.025]">
-                {isEditing ? (
-                  <div className="space-y-2">
-                    <input
-                      value={editExercise}
-                      onChange={(e) => setEditExercise(e.target.value)}
-                      maxLength={60}
-                      className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-foreground/40"
-                    />
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.5"
-                        min="0"
-                        value={editWeight}
-                        onChange={(e) => setEditWeight(e.target.value)}
-                        className="flex-1 rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-foreground/40"
-                      />
-                      <span className="text-xs text-muted-foreground">kg</span>
-                      <button
-                        onClick={() => saveEdit(r.id)}
-                        className="gold-gradient tap grid place-items-center rounded-[12px]"
-                        aria-label="Guardar"
-                      >
-                        <Check className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setEditingId(null)}
-                        className="rounded-lg border border-border p-2"
-                        aria-label="Cancelar"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                        {hasDictionaryMovement ? (
-                          <MovementDictionaryLink exerciseName={r.exercise}>
-                            {r.exercise}
-                          </MovementDictionaryLink>
-                        ) : (
-                          <button
-                            onClick={() => setDetailFor(r)}
-                            className="min-h-9 max-w-full truncate text-left"
-                          >
-                            {r.exercise}
-                          </button>
+        <>
+          <label className="mb-3 flex min-h-12 items-center gap-2.5 rounded-[14px] border border-white/10 bg-white/[0.06] px-3.5 text-muted-foreground">
+            <Search className="h-[18px] w-[18px] shrink-0" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar ejercicio"
+              aria-label="Buscar ejercicio"
+              className="min-w-0 flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
+            />
+          </label>
+
+          {groups.length === 0 ? (
+            <p className="px-1 py-6 text-center text-sm text-muted-foreground">Ningún ejercicio coincide con «{search}».</p>
+          ) : (
+            <ul className="rise rise-3 overflow-hidden rounded-[20px] border border-white/[0.09] bg-white/[0.045]">
+              {groups.map((g) => {
+                const expanded = expandedKey === g.key;
+                return (
+                  <li key={g.key} className="border-b border-white/[0.07] last:border-b-0">
+                    <button
+                      type="button"
+                      aria-expanded={expanded}
+                      onClick={() => setExpandedKey(expanded ? null : g.key)}
+                      className="flex min-h-[76px] w-full items-center gap-3 px-4 py-2.5 text-left"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-base font-semibold">{g.name}</span>
+                        <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">{g.others}</span>
+                      </span>
+                      <Sparkline exercise={g.primary.exercise} repMax={g.primary.rep_max ?? 1} />
+                      <span className="min-w-[64px] shrink-0 text-right">
+                        <span className="metric block leading-none gold-text">{formatKg(Number(g.primary.weight))}</span>
+                        <span className="mt-1 block text-xs text-muted-foreground">kg · {g.primary.rep_max ?? 1}RM</span>
+                      </span>
+                    </button>
+
+                    {expanded && (
+                      <div className="space-y-2 px-4 pb-4">
+                        {g.records.map((r) => (
+                          <div key={r.id} className="rounded-[14px] bg-white/[0.04] p-3">
+                            {editingId === r.id ? (
+                              <div className="space-y-2">
+                                <input
+                                  value={editExercise}
+                                  onChange={(e) => setEditExercise(e.target.value)}
+                                  maxLength={60}
+                                  aria-label="Nombre del ejercicio"
+                                  className="min-h-11 w-full rounded-xl border border-white/[0.14] bg-white/[0.06] px-3 text-[15px] outline-none focus:border-[color:var(--gold)]/60"
+                                />
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="number"
+                                    inputMode="decimal"
+                                    step="0.5"
+                                    min="0"
+                                    value={editWeight}
+                                    onChange={(e) => setEditWeight(e.target.value)}
+                                    aria-label="Peso en kg"
+                                    className="min-h-11 flex-1 rounded-xl border border-white/[0.14] bg-white/[0.06] px-3 text-lg font-semibold tabular outline-none focus:border-[color:var(--gold)]/60"
+                                  />
+                                  <span className="text-sm text-muted-foreground">kg</span>
+                                  <button onClick={() => saveEdit(r.id)} className="gold-gradient grid h-11 w-11 place-items-center rounded-[12px]" aria-label="Guardar">
+                                    <Check className="h-4 w-4" />
+                                  </button>
+                                  <button onClick={() => setEditingId(null)} className="grid h-11 w-11 place-items-center rounded-[12px] border border-border" aria-label="Cancelar">
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex items-baseline justify-between gap-3">
+                                  <span className="text-[15px] font-semibold">{r.rep_max ?? 1}RM · {formatKg(Number(r.weight))} kg</span>
+                                  <span className="text-[13px] text-muted-foreground">{shortDate(r.updated_at)}</span>
+                                </div>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  <button onClick={() => setDetailFor(r)} className="min-h-10 rounded-xl border border-white/[0.14] px-3.5 text-sm font-medium">
+                                    Historial
+                                  </button>
+                                  <button onClick={() => startEdit(r)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/[0.14] px-3.5 text-sm">
+                                    <Pencil className="h-3.5 w-3.5" strokeWidth={1.8} /> Editar
+                                  </button>
+                                  <button onClick={() => handleDelete(r)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3.5 text-sm text-muted-foreground hover:text-destructive">
+                                    <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} /> Borrar
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                        {g.hasDictionary && (
+                          <div className="pt-1 text-sm">
+                            <MovementDictionaryLink exerciseName={g.primary.exercise}>Ver en el diccionario</MovementDictionaryLink>
+                          </div>
                         )}
                       </div>
-                      <button
-                        onClick={() => setDetailFor(r)}
-                        className="mt-1 flex w-full min-w-0 items-center gap-3 rounded-2xl p-1 text-left transition-colors hover:bg-white/[.02]"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="display-lg gold-text">{r.weight}</span>
-                            <span className="text-xs text-muted-foreground">kg</span>
-                            <span className="ml-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold tracking-wide">
-                              {r.rep_max ?? 1}RM
-                            </span>
-                          </div>
-                          <div className="mt-1 text-[11px] text-muted-foreground">
-                            {new Date(r.updated_at).toLocaleDateString(undefined, {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                            })}
-                          </div>
-                        </div>
-                        <Sparkline exercise={r.exercise} repMax={r.rep_max ?? 1} />
-                        <ChevronRight
-                          className="h-4 w-4 shrink-0 text-muted-foreground"
-                          strokeWidth={1.5}
-                        />
-                      </button>
-                    </div>
-                    <div className="flex shrink-0 gap-1">
-                      <button
-                        onClick={() => startEdit(r)}
-                        className="rounded-lg p-2 text-muted-foreground hover:text-foreground"
-                        aria-label="Editar"
-                      >
-                        <Pencil className="h-4 w-4" strokeWidth={1.5} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(r)}
-                        className="rounded-lg p-2 text-muted-foreground hover:text-destructive"
-                        aria-label="Eliminar"
-                      >
-                        <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <p className="mt-3 px-1 text-[13px] text-muted-foreground">Toca un ejercicio para ver su historial, editarlo o borrarlo.</p>
+        </>
       )}
-
       {detailFor && (
         <HistoryModal record={detailFor} onClose={() => setDetailFor(null)} />
       )}
     </>
   );
+}
+
+function shortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
 }

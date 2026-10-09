@@ -89,7 +89,7 @@ export function BodySection() {
             <button
               key={f.key}
               onClick={() => setMetricKey(f.key)}
-              className="whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition"
+              className="whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-semibold transition"
               style={
                 metricKey === f.key
                   ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }

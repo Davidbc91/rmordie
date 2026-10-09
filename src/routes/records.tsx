@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { Plus, X } from "lucide-react";
 import { WodRecords } from "@/components/WodRecords";
 import { StrengthRecords } from "@/components/records/StrengthRecords";
 
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/records")({
   }),
   head: () => ({
     meta: [
-      { title: "Personal Records — RMORDIE" },
+      { title: "Récords — RMORDIE" },
       {
         name: "description",
         content: "Consulta y edita tus RM (1RM, 3RM, 5RM, 10RM) con su evolución.",
@@ -35,6 +36,7 @@ function RecordsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const category = search.tab === "wods" ? "wods" : "strength";
+  const [showAdd, setShowAdd] = useState(false);
   const clearFocus = useCallback(
     () =>
       navigate({
@@ -49,30 +51,33 @@ function RecordsPage() {
   );
 
   return (
-          <div className="page-enter">
-      <header className="rise rise-1 mb-7 glass-panel glass-refraction rounded-[28px] p-6">
-        <div className="flex items-center gap-2">
-          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-gold" />
-          <p className="cinematic-label">PERSONAL RECORDS</p>
-        </div>
-        <p className="mt-3 text-xs text-muted-foreground">Tu fuerza, evolución y próximos objetivos en un solo lugar.</p>
-        <h1 className="cinematic-title mt-4 text-[3.4rem] leading-[.88]">
-          {category === "wods" ? "WOD PRs" : "Mis RM"}
-        </h1>
+    <div className="page-enter">
+      <header className="rise rise-1 mb-3 flex min-h-12 items-center justify-between gap-3">
+        <h1 className="text-[40px] font-extrabold leading-none tracking-tight" style={{ fontFamily: "var(--font-editorial)" }}>Récords</h1>
+        {category === "strength" && (
+          <button
+            type="button"
+            onClick={() => setShowAdd((v) => !v)}
+            aria-expanded={showAdd}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[color:var(--gold)]/45 px-4 text-[15px] font-semibold text-gold"
+          >
+            {showAdd ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showAdd ? "Cerrar" : "Añadir"}
+          </button>
+        )}
       </header>
 
-      <div className="rise rise-2 glass-panel mb-5 flex gap-1 rounded-[20px] border-white/[.14] p-1.5">
+      <div role="tablist" aria-label="Tipo de récord" className="rise rise-2 mb-3 grid grid-cols-2 gap-1 rounded-[16px] bg-white/[0.05] p-1">
         {([
           { label: "Fuerza", value: "strength" as const },
           { label: "WODs", value: "wods" as const },
         ]).map((c) => (
           <button
             key={c.value}
+            role="tab"
+            aria-selected={category === c.value}
             onClick={() => navigate({ search: { tab: c.value }, replace: true })}
-            className={`flex-1 rounded-xl px-3 py-2 text-xs font-semibold tracking-wide transition ${
-              category === c.value
-                ? "gold-gradient shadow-[0_10px_22px_-16px_rgba(200,179,138,0.36)]"
-                : "text-muted-foreground hover:text-foreground"
+            className={`min-h-11 rounded-[12px] text-[15px] transition ${
+              category === c.value ? "bg-[color:var(--gold)] font-bold text-[color:var(--gold-foreground)]" : "text-foreground/80"
             }`}
           >
             {c.label}
@@ -87,8 +92,10 @@ function RecordsPage() {
           focusExercise={search.exercise}
           focusRepMax={search.repMax}
           clearFocus={clearFocus}
+          showAdd={showAdd}
+          setShowAdd={setShowAdd}
         />
       )}
-      </div>
+    </div>
   );
 }

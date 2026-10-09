@@ -57,16 +57,17 @@ export function WodRecords({ focusSlug }: { focusSlug?: string }) {
 
   return (
     <>
-      <div className="rise rise-2 mb-4 flex gap-2">
+      <div className="rise rise-2 mb-3 flex gap-2">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar WOD…"
-          className="flex-1 rounded-2xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm outline-none focus:border-foreground/40"
+          placeholder="Buscar WOD"
+          aria-label="Buscar WOD"
+          className="min-h-12 min-w-0 flex-1 rounded-[14px] border border-white/10 bg-white/[0.06] px-3.5 text-[15px] outline-none focus:border-[color:var(--gold)]/60"
         />
         <button
           onClick={() => setShowAdd(true)}
-          className="pressable gold-gradient inline-flex min-h-[46px] items-center gap-1.5 rounded-[var(--r-md)] px-4 text-sm font-semibold shrink-0"
+          className="inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-full border border-[color:var(--gold)]/45 px-4 text-[15px] font-semibold text-gold"
         >
           <Plus className="h-4 w-4" /> Registrar
         </button>
@@ -93,23 +94,23 @@ export function WodRecords({ focusSlug }: { focusSlug?: string }) {
                 className="flex w-full items-center gap-3 px-5 py-4 text-left"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                  <div className="truncate text-base font-semibold">
                     {s.name}
                   </div>
                   <div className="mt-1 flex items-baseline gap-2">
                     <span className="text-2xl font-semibold leading-none tabular">
                       {s.best ? formatScore(s.best) : "—"}
                     </span>
-                    <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                    <span className="rounded-full border border-border px-2 py-0.5 text-xs font-semibold">
                       {WOD_TYPE_LABEL[s.type]}
                     </span>
                     {s.best && (
-                      <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold tracking-wide">
+                      <span className="rounded-full border border-border px-2 py-0.5 text-xs font-semibold">
                         {SCALE_LABEL[s.best.scale]}
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 text-[11px] text-muted-foreground">
+                  <div className="mt-1 text-[13px] text-muted-foreground">
                     {s.attempts} {s.attempts === 1 ? "intento" : "intentos"} ·{" "}
                     {new Date(s.last!.performed_on).toLocaleDateString(undefined, {
                       day: "numeric",

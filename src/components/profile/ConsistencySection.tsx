@@ -31,7 +31,7 @@ export function ConsistencySection({ results, plannedDays, completedSessions, we
         <Stat label="Racha máxima" value={`${s.best} d`} />
       </div>
       <Card>
-        <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: "#6F6F6F" }}>
+        <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
           Últimas 12 semanas
         </p>
         <div className="mt-4 grid grid-cols-[repeat(14,1fr)] gap-1.5">

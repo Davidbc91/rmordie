@@ -18,7 +18,7 @@ export function StrengthSection({ records, history, days, bodyWeight }: any) {
             <button className="w-full text-left" onClick={() => setOpenEx(open ? null : s.exercise)}>
               <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.2em]" style={{ color: "#6F6F6F" }}>
+                  <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
                     {s.exercise}
                   </p>
                   <p className="mt-1 text-[40px] font-semibold leading-none tabular tracking-tight">
@@ -26,7 +26,7 @@ export function StrengthSection({ records, history, days, bodyWeight }: any) {
                     <span className="text-base"> kg</span>
                   </p>
                 </div>
-                <div className="text-right text-[11px]" style={{ color: "#6F6F6F" }}>
+                <div className="text-right text-[13px]" style={{ color: "#6F6F6F" }}>
                   {s.changePct != null && <div>{s.changePct >= 0 ? "+" : ""}{s.changePct.toFixed(1)}%</div>}
                   <div>{s.updates} registros</div>
                 </div>
@@ -51,7 +51,7 @@ export function StrengthSection({ records, history, days, bodyWeight }: any) {
               />
             </div>
             {s.realOneRm == null && s.estimatedOneRm != null && (
-              <p className="mt-3 text-[11px]" style={{ color: "#6F6F6F" }}>
+              <p className="mt-3 text-[13px]" style={{ color: "#6F6F6F" }}>
                 Estimado (Epley) a partir de {s.estimatedFrom}. No es un récord real.
               </p>
             )}

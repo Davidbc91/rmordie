@@ -22,7 +22,7 @@ export function ReportSection({ results, history, metrics, records }: any) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <button onClick={() => setOffset(offset + 1)} className="rounded-xl border border-border px-3 py-2 text-xs">Anterior</button>
-        <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{rep.label}</p>
+        <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{rep.label}</p>
         <button onClick={() => setOffset(Math.max(0, offset - 1))} disabled={offset === 0} className="rounded-xl border border-border px-3 py-2 text-xs disabled:opacity-30">Siguiente</button>
       </div>
 

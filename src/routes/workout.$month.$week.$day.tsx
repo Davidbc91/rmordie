@@ -10,7 +10,7 @@ import {
   findDay,
 } from "@/lib/store";
 import { formatKg } from "@/lib/rm-matcher";
-import { ChevronLeft, CheckCheck, Share2 } from "lucide-react";
+import { ChevronLeft, CheckCheck, MoreHorizontal, Share2, Undo2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -59,6 +59,7 @@ function WorkoutPage() {
   const [celebrate, setCelebrate] = useState<{ data: PrCelebrationData; outcome: PrOutcome } | null>(null);
   const [review, setReview] = useState<WorkoutReview | null>(null);
   const [sharingCard, setSharingCard] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     setActiveWorkout({ month, week: weekN, day, label: `${month} · S${weekN} · ${day}` });
@@ -74,6 +75,11 @@ function WorkoutPage() {
 
   const { month: mo, day: d } = findDay(planning.data, month, weekN, day);
   if (!mo || !d) return <AppShell><p className="text-sm text-muted-foreground">Día no encontrado.</p></AppShell>;
+
+  const isBlockDone = (key: string) => results.some((r) => r.block_key === key) || dayWods.some((r) => r.block_key === key);
+  const doneCount = d.blocks.filter((b) => isBlockDone(b.key)).length;
+  // Se abre solo el primer bloque pendiente; los hechos quedan cerrados con su resumen.
+  const firstPendingKey = d.blocks.find((b) => !isBlockDone(b.key))?.key ?? null;
 
   function celebrationFor(out: PrOutcome): PrCelebrationData {
     return {
@@ -305,46 +311,73 @@ function WorkoutPage() {
           onShare={shareCelebrated}
         />
       )}
-      <Link
-        to="/calendar"
-        className="pressable mb-4 inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
-      >
-        <ChevronLeft className="h-3.5 w-3.5" /> Calendario
-      </Link>
-
-      <header className="glass glass-sheen rise rise-1 mb-4 p-5">
-        <p className="eyebrow">{mo.label} · Semana {weekN}</p>
-        <div className="mt-3 flex items-end justify-between gap-4">
-          <h1 className="display-lg min-w-0 truncate">{d.key}</h1>
-          <div className="shrink-0 text-right">
-            <div className="metric gold-text">{d.blocks.length}</div>
-            <p className="eyebrow mt-1.5">Bloques</p>
+      <div className="mb-2 flex items-center justify-between">
+        <Link
+          to="/calendar"
+          className="flex min-h-11 items-center gap-1 text-[15px] text-muted-foreground hover:text-foreground"
+        >
+          <ChevronLeft className="h-[18px] w-[18px]" /> Plan
+        </Link>
+        {!d.isRest && (
+          <div className="relative">
+            <button
+              type="button"
+              aria-label="Más opciones"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((v) => !v)}
+              className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.06] text-foreground"
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+            {menuOpen && (
+              <>
+                <button type="button" aria-label="Cerrar menú" className="fixed inset-0 z-40 cursor-default" onClick={() => setMenuOpen(false)} />
+                <div role="menu" className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[#141412] shadow-2xl">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => { setMenuOpen(false); void shareToday(); }}
+                    disabled={sharingCard}
+                    className="flex min-h-12 w-full items-center gap-3 px-4 text-left text-[15px] disabled:opacity-50"
+                  >
+                    <Share2 className="h-4 w-4 text-muted-foreground" />
+                    {sharingCard ? "Generando imagen…" : "Compartir imagen del entreno"}
+                  </button>
+                  {(results.length > 0 || dayWods.length > 0) && (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setMenuOpen(false); void unmarkWorkout(); }}
+                      disabled={deleteWorkoutResults.isPending || deleteWodResult.isPending}
+                      className="flex min-h-12 w-full items-center gap-3 border-t border-white/10 px-4 text-left text-[15px] text-red-300 disabled:opacity-50"
+                    >
+                      <Undo2 className="h-4 w-4" />
+                      {deleteWorkoutResults.isPending || deleteWodResult.isPending ? "Desmarcando…" : "Desmarcar entreno"}
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
+        )}
+      </div>
+
+      <header className="rise rise-1 mb-4 space-y-2.5 px-1">
+        <p className="text-[13px] tracking-[0.12em] text-muted-foreground">{mo.label.toUpperCase()} · SEMANA {weekN}</p>
+        <div className="flex items-end justify-between gap-4">
+          <h1 className="display-lg min-w-0 truncate gold-text">{d.key}</h1>
+          {!d.isRest && (
+            <p className="shrink-0 text-right text-[13px] text-muted-foreground">
+              <span className="text-2xl font-bold tabular text-foreground">{doneCount}</span>/{d.blocks.length} hechos
+            </p>
+          )}
         </div>
+        {!d.isRest && d.blocks.length > 0 && (
+          <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.09]" aria-hidden>
+            <div className="h-full rounded-full bg-[color:var(--gold)] transition-[width] duration-500" style={{ width: `${(doneCount / d.blocks.length) * 100}%` }} />
+          </div>
+        )}
       </header>
-
-      {!d.isRest && (
-        <button
-          type="button"
-          onClick={shareToday}
-          disabled={sharingCard}
-          className="pressable mb-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/8 text-sm font-semibold disabled:opacity-50"
-        >
-          <Share2 className="h-4 w-4" />
-          {sharingCard ? "Generando imagen…" : "Compartir imagen del entreno"}
-        </button>
-      )}
-
-      {(results.length > 0 || dayWods.length > 0) && (
-        <button
-          type="button"
-          onClick={unmarkWorkout}
-          disabled={deleteWorkoutResults.isPending || deleteWodResult.isPending}
-          className="pressable mb-4 flex min-h-[48px] w-full items-center justify-center rounded-[var(--r-lg)] border border-red-400/25 bg-red-500/5 text-sm font-semibold text-red-300 disabled:opacity-50"
-        >
-          {deleteWorkoutResults.isPending || deleteWodResult.isPending ? "Desmarcando entreno…" : "Desmarcar entreno realizado por error"}
-        </button>
-      )}
 
       {d.isRest && (
         <div className="glass glass-sheen p-6 text-center">
@@ -352,18 +385,7 @@ function WorkoutPage() {
         </div>
       )}
 
-      {d.blocks.length > 0 && (
-        <button
-          onClick={saveAll}
-          disabled={savingAll}
-          className="pressable gold-gradient mb-4 flex min-h-[54px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] text-[15px] font-semibold disabled:opacity-45"
-        >
-          <CheckCheck className="h-[18px] w-[18px]" />
-          {savingAll ? "Guardando entreno…" : "Guardar entreno completo"}
-        </button>
-      )}
-
-      <div className="space-y-4">
+      <div className="space-y-3">
         {d.blocks.map((b) => {
           const existing = results.find((r) => r.block_key === b.key);
           const existingWod = dayWods.find((r) => r.block_key === b.key) ?? null;
@@ -374,6 +396,7 @@ function WorkoutPage() {
               content={b.content}
               existing={existing}
               existingWod={existingWod}
+              defaultOpen={b.key === firstPendingKey}
               settings={settings}
               register={(fn) => { formsRef.current[b.key] = fn; }}
               registerPr={(fn) => { prRef.current[b.key] = fn; }}
@@ -389,6 +412,20 @@ function WorkoutPage() {
           );
         })}
       </div>
+
+      {d.blocks.length > 0 && (
+        <button
+          onClick={saveAll}
+          disabled={savingAll}
+          className="pressable gold-gradient mt-5 flex min-h-[60px] w-full flex-col items-center justify-center rounded-[18px] disabled:opacity-45"
+        >
+          <span className="flex items-center gap-2 text-[17px] font-bold">
+            <CheckCheck className="h-[18px] w-[18px]" />
+            {savingAll ? "Guardando entreno…" : "Guardar entreno completo"}
+          </span>
+          {!savingAll && <span className="text-xs font-medium opacity-75">{doneCount}/{d.blocks.length} bloques registrados</span>}
+        </button>
+      )}
     </AppShell>
   );
 }

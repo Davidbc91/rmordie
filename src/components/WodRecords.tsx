@@ -448,11 +448,7 @@ export function WodScoreFields({
   const isRounds = type === "amrap" || type === "emom";
   return (
     <div className="space-y-3">
-      <label className="flex items-center gap-2 text-xs text-muted-foreground">
-        <input type="checkbox" checked={cap} onChange={(e) => setCap(e.target.checked)} />
-        No terminado (Time Cap / DNF)
-      </label>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         {(isTime || cap) && (
           <SmallField label={cap ? "Tiempo alcanzado" : "Tiempo (mm:ss)"} value={time} onChange={setTime} placeholder="9:42" />
         )}
@@ -465,6 +461,10 @@ export function WodScoreFields({
         {type === "max_calories" && <SmallField label="Calorías" value={reps} onChange={setReps} placeholder="120" />}
         {type === "max_distance" && <SmallField label="Metros" value={reps} onChange={setReps} placeholder="1200" />}
       </div>
+      <label className="flex min-h-11 items-center gap-2.5 text-sm text-foreground/85">
+        <input type="checkbox" className="h-5 w-5 accent-[color:var(--gold)]" checked={cap} onChange={(e) => setCap(e.target.checked)} />
+        No terminé dentro del time cap
+      </label>
     </div>
   );
 }
@@ -472,13 +472,13 @@ export function WodScoreFields({
 function SmallField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="mb-1.5 block text-[13px] text-muted-foreground">{label}</span>
       <input
         value={value}
         inputMode="numeric"
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular outline-none focus:border-foreground/40"
+        className="min-h-[52px] w-full rounded-[14px] border border-white/[0.14] bg-white/[0.06] px-3.5 text-xl font-semibold tabular outline-none placeholder:text-sm placeholder:font-normal placeholder:text-muted-foreground/70 focus:border-[color:var(--gold)]/60"
       />
     </label>
   );

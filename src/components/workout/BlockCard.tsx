@@ -10,18 +10,21 @@ import {
 } from "@/lib/rm-matcher";
 import { resolveMovementId } from "@/lib/dictionary/resolve";
 import { movements } from "@/lib/dictionary/catalog";
-import { Sparkles, Check, Timer, Trophy } from "lucide-react";
+import { Check, ChevronDown, Trophy } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadDraft, saveDraft } from "@/lib/active-workout";
 import {
+  compareScores,
   detectWod,
+  formatDelta,
   formatScore,
   parseClockInput,
+  scoreValue,
   SCALE_LABEL,
   WOD_TYPE_LABEL,
   type WodScale,
 } from "@/lib/wod";
-import { type WodResult, type WodSaveInput, type PrOutcome } from "@/lib/wod-store";
+import { useWodResults, type WodResult, type WodSaveInput, type PrOutcome } from "@/lib/wod-store";
 import { WodScoreFields } from "@/components/WodRecords";
 import { suggestNextLoad, estimateOneRm, parseTime, formatTime } from "./loads";
 import { PercentAssistant } from "./PercentAssistant";
@@ -40,9 +43,9 @@ export type BlockPayload = {
 export const SCALES: WodScale[] = ["rx", "scaled", "custom"];
 
 export function BlockCard({
-  blockKey, content, existing, existingWod, settings, contextIds, register, registerPr, registerWod, persistWod, onWodSaved,
+  blockKey, content, existing, existingWod, settings, contextIds, register, registerPr, registerWod, persistWod, onWodSaved, defaultOpen = false,
 }: {
-  blockKey: string; content: string;
+  blockKey: string; content: string; defaultOpen?: boolean;
   existing: import("@/lib/store").WorkoutResult | undefined;
   existingWod: WodResult | null;
   settings: import("@/lib/store").AppSettings | undefined;
@@ -61,7 +64,9 @@ export function BlockCard({
   const [time, setTime] = useState<string>(existing?.time_seconds ? formatTime(existing.time_seconds) : "");
   const [rpe, setRpe] = useState<string>(existing?.rpe?.toString() ?? "");
   const [notes, setNotes] = useState<string>(existing?.notes ?? "");
-  const [open, setOpen] = useState<boolean>(!!existing || /^[A-D]$/.test(blockKey));
+  const [open, setOpen] = useState<boolean>(defaultOpen);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [title, secondLine] = useMemo(() => firstLines(content), [content]);
   const loadedRef = useRef(false);
 
   const wod = useMemo(() => detectWod(content), [content]);
@@ -142,6 +147,35 @@ export function BlockCard({
   );
 
 
+  const { data: wodHistory = [] } = useWodResults();
+  const bestForScale = useMemo(() => {
+    if (!wod) return null;
+    const ranked = wodHistory.filter(
+      (r) => r.wod_slug === wod.slug && r.scale === wodScale && r.id !== existingWod?.id && scoreValue(r) != null,
+    );
+    if (!ranked.length) return null;
+    return ranked.reduce((best, cur) => ((compareScores(wod.type, cur, best) ?? 0) > 0 ? cur : best));
+  }, [wod, wodHistory, wodScale, existingWod?.id]);
+
+  // Aviso en vivo si el resultado escrito mejora tu marca (no guarda nada).
+  const livePr = useMemo(() => {
+    if (!wod || !bestForScale || wodCap) return null;
+    const n = (v: string) => (v.trim() !== "" && Number.isFinite(Number(v)) ? Number(v) : null);
+    const current = {
+      wod_type: wod.type,
+      status: "completed",
+      time_seconds: parseClockInput(wodTime),
+      rounds: n(wodRounds),
+      reps: wod.type === "max_calories" || wod.type === "max_distance" ? null : n(wodReps),
+      calories: wod.type === "max_calories" ? n(wodReps) : null,
+      distance: wod.type === "max_distance" ? n(wodReps) : null,
+    };
+    const cmp = compareScores(wod.type, current, bestForScale);
+    if (cmp == null || cmp <= 0) return null;
+    const delta = formatDelta(wod.type, current, bestForScale);
+    return `${formatScore(current)} sería nuevo PR${delta ? ` (${delta})` : ""}`;
+  }, [wod, bestForScale, wodCap, wodTime, wodRounds, wodReps]);
+
   function payload(): BlockPayload {
     const w = weight.replace(",", ".").trim();
     return {
@@ -197,220 +231,196 @@ export function BlockCard({
     return true;
   }
 
+  const done = !!existing || !!existingWod;
+  const summary = done ? blockSummary(existing, existingWod) : null;
+  const subtitle = summary ?? (wod ? `${WOD_TYPE_LABEL[wod.type]}${secondLine ? ` · ${secondLine}` : ""}` : secondLine);
+  const showNotes = notesOpen || notes.trim() !== "";
+
   return (
-    <div className="glass glass-sheen">
+    <div className={`glass glass-sheen ${open ? "border-[color:var(--gold)]/35" : ""}`}>
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex min-h-[56px] w-full cursor-pointer items-center justify-between gap-3 p-5 text-left"
+        className="flex min-h-[68px] w-full cursor-pointer items-center gap-3 px-4 py-3 text-left"
       >
-        <div className="flex items-center gap-3">
-          <span className="grid h-9 min-w-9 place-items-center rounded-[12px] border border-[rgba(216,180,107,0.32)] bg-[rgba(216,180,107,0.12)] px-2 text-xs font-bold uppercase tracking-wide text-gold">
+        {done ? (
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-[color:var(--gold)] text-[color:var(--gold-foreground)]" aria-label={`Bloque ${blockKey} registrado`}>
+            <Check className="h-[18px] w-[18px]" strokeWidth={3} />
+          </span>
+        ) : (
+          <span className={`grid h-9 min-w-9 shrink-0 place-items-center rounded-[12px] border px-2 text-sm font-bold uppercase ${open ? "border-[color:var(--gold)]/40 text-gold" : "border-white/15 text-muted-foreground"}`}>
             {blockKey}
           </span>
-          {existing && <Check className="h-4 w-4 text-gold" />}
-          {wod && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
-              <Timer className="h-3 w-3" /> {WOD_TYPE_LABEL[wod.type]}
-            </span>
-          )}
-          {existingWod?.is_pr && <Trophy className="h-4 w-4" />}
-        </div>
-        {pcts.length > 0 && (
-          <div className="flex items-center gap-1 text-[11px] text-gold">
-            <Sparkles className="h-3 w-3" />
-            {pcts.map((p) => `${p}%`).join(" · ")}
-          </div>
         )}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[15px] font-semibold">{done ? `${blockKey} · ${title}` : title}</span>
+          {subtitle && <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">{subtitle}</span>}
+        </span>
+        {existingWod?.is_pr && <Trophy className="h-4 w-4 shrink-0 text-gold" />}
+        {wod && !done && (
+          <span className="shrink-0 rounded-full border border-white/15 px-2.5 py-1 text-xs font-semibold text-foreground/85">
+            {WOD_TYPE_LABEL[wod.type]}
+          </span>
+        )}
+        <ChevronDown className={`h-[18px] w-[18px] shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-      <div className="border-t border-border/60 px-5 pb-5 pt-4">
-        <LinkedText text={content} className="opacity-90" />
+      <div className="space-y-4 px-4 pb-4">
+        <LinkedText text={content} className="text-[15px] leading-relaxed text-foreground/85" />
 
-        {detected && (
-          <div className="glass-quiet mt-4 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">RM detectado</p>
-                <p className="mt-1 text-lg font-semibold">{detected.exercise}</p>
-              </div>
-              <div className="text-right">
-                <p className="metric gold-text">{formatKg(detected.weight)}</p>
-                <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">kg · {detected.rep_max}RM</p>
-              </div>
-            </div>
-            {targetLoads.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setWeight(String(targetLoads[0].suggested))}
-                className="pressable mt-3 flex w-full items-center justify-between rounded-xl border border-[rgba(216,180,107,0.28)] bg-[rgba(216,180,107,0.08)] px-3.5 py-2.5 text-left"
-              >
-                <span className="text-xs text-muted-foreground">Objetivo {targetLoads[0].pct}%</span>
-                <span className="text-sm font-bold text-gold">Usar {formatKg(targetLoads[0].suggested)} kg</span>
-              </button>
-            )}
-          </div>
-        )}
-
-        {estimatedOneRm != null && detected && (
-          <div className="glass-quiet mt-4 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">1RM estimado</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {formatKg(Number(weight.replace(",", ".")))} kg × {reps} reps · fórmula Epley
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="metric gold-text">{formatKg(estimatedOneRm)}</p>
-                <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">kg · estimado</p>
-              </div>
-            </div>
-            <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-              Es una referencia calculada, no un 1RM confirmado. Puedes usarla como referencia para futuras cargas.
-            </p>
-          </div>
-        )}
-
-        {pcts.length > 0 && settings && (
-          <PercentAssistant percentages={pcts} settings={settings} record={detected} />
-        )}
-
-        {wod && (
-          <div className="glass-quiet mt-5 p-4">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">
-                Resultado WOD · {wod.name}
+        {/* WOD: marca, escala y resultado */}
+        {wod ? (
+          <>
+            {bestForScale && (
+              <p className="text-[13px] text-muted-foreground">
+                Tu mejor marca {SCALE_LABEL[wodScale]}:{" "}
+                <span className="font-semibold text-gold-soft">{formatScore(bestForScale)}</span>
+                {" · "}{new Date(bestForScale.performed_on).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
               </p>
-              {existingWod && (
-                <span className="text-[11px] text-muted-foreground">{formatScore(existingWod)}</span>
-              )}
-            </div>
+            )}
             {wod.timeCapSeconds && (
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Time cap detectado: {formatTime(wod.timeCapSeconds)}
-              </p>
+              <p className="text-[13px] text-muted-foreground">Time cap: {formatTime(wod.timeCapSeconds)}</p>
             )}
-            <div className="mt-3 flex gap-2">
+            <div role="group" aria-label="Escala" className="grid grid-cols-3 gap-1.5 rounded-[14px] bg-white/[0.05] p-1">
               {SCALES.map((s) => (
                 <button
                   key={s}
                   type="button"
+                  aria-pressed={wodScale === s}
                   onClick={() => setWodScale(s)}
-                  className={`flex-1 rounded-xl border px-2 py-1.5 text-[11px] font-semibold transition ${
-                    wodScale === s ? "gold-gradient border-transparent" : "border-border text-muted-foreground"
+                  className={`min-h-10 rounded-[10px] text-sm transition ${
+                    wodScale === s ? "bg-[color:var(--gold)] font-bold text-[color:var(--gold-foreground)]" : "text-foreground/80"
                   }`}
                 >
                   {SCALE_LABEL[s]}
                 </button>
               ))}
             </div>
-            <div className="mt-3">
-              <WodScoreFields
-                type={wod.type}
-                cap={wodCap}
-                setCap={setWodCap}
-                time={wodTime}
-                setTime={setWodTime}
-                rounds={wodRounds}
-                setRounds={setWodRounds}
-                reps={wodReps}
-                setReps={setWodReps}
-              />
+            <WodScoreFields
+              type={wod.type}
+              cap={wodCap}
+              setCap={setWodCap}
+              time={wodTime}
+              setTime={setWodTime}
+              rounds={wodRounds}
+              setRounds={setWodRounds}
+              reps={wodReps}
+              setReps={setWodReps}
+            />
+            <div className="grid grid-cols-2 gap-2.5">
+              <Field label="RPE" value={rpe} onChange={setRpe} type="number" placeholder="1–10" />
             </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              Se guardará al guardar el entrenamiento completo.
-            </p>
-          </div>
-        )}
+            {livePr && <p className="text-[13px] font-medium text-gold">{livePr}</p>}
+          </>
+        ) : (
+          <>
+            {/* Fuerza: una sola tarjeta con la carga de hoy */}
+            {detected && (
+              <div className="space-y-2.5 rounded-[16px] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/[0.09] p-3.5">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
+                  <span>Tu {detected.rep_max}RM: <span className="font-semibold text-foreground">{formatKg(detected.weight)} kg</span></span>
+                  {targetLoads.length > 0 && (
+                    <span>
+                      {targetLoads.map((l, i) => (
+                        <span key={l.pct}>{i > 0 && " · "}{l.pct} % → <span className="font-semibold text-foreground">{formatKg(l.suggested)} kg</span></span>
+                      ))}
+                    </span>
+                  )}
+                </div>
+                {targetLoads.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setWeight(String(targetLoads[0].suggested))}
+                    className="pressable flex min-h-12 w-full items-center justify-center rounded-[14px] bg-[color:var(--gold)] text-base font-bold text-[color:var(--gold-foreground)]"
+                  >
+                    Usar {formatKg(targetLoads[0].suggested)} kg
+                  </button>
+                )}
+                {nextLoad && (
+                  <p className="text-[13px] text-muted-foreground">
+                    Próxima vez: <span className="font-semibold text-foreground">{formatKg(nextLoad.weight)} kg</span> ({nextLoad.reason})
+                  </p>
+                )}
+                {loadCompare && (
+                  <p className="text-[13px] text-muted-foreground">
+                    {LOAD_STATUS_LABEL[loadCompare.status]}
+                    {loadCompare.status !== "met" && ` · ${loadCompare.diff > 0 ? "+" : "−"}${formatKg(Math.abs(loadCompare.diff))} kg sobre el objetivo`}
+                  </p>
+                )}
+                {estimatedOneRm != null && Number(reps) > 1 && (
+                  <p className="text-[13px] text-muted-foreground">1RM estimado con esto: <span className="font-semibold text-foreground">{formatKg(estimatedOneRm)} kg</span></p>
+                )}
+              </div>
+            )}
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <Field label="Carga realizada (kg)" value={weight} onChange={setWeight} type="number" placeholder={targetHint} />
-          <Field label="Series" value={sets} onChange={setSets} type="number" />
-          <Field label="Reps" value={reps} onChange={setReps} type="number" />
-          <Field label="Tiempo (mm:ss)" value={time} onChange={setTime} placeholder="3:45" />
-          <Field label="RPE" value={rpe} onChange={setRpe} type="number" placeholder="1-10" />
-        </div>
+            {!detected && pcts.length > 0 && settings && (
+              <PercentAssistant percentages={pcts} settings={settings} record={detected} />
+            )}
 
-        {nextLoad && detected && (
-          <div className="glass-quiet mt-3 flex items-center justify-between gap-3 rounded-[var(--r-md)] border border-[color:var(--glass-border)] px-3.5 py-3">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Próxima carga sugerida</p>
-              <p className="mt-1 text-sm font-semibold">{formatKg(nextLoad.weight)} kg</p>
-              <p className="text-[10px] text-muted-foreground">{nextLoad.reason} · basada en RPE</p>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Field label="Carga (kg)" value={weight} onChange={setWeight} type="number" placeholder={targetHint} highlight={!!detected} />
+              <Field label="RPE" value={rpe} onChange={setRpe} type="number" placeholder="1–10" />
+              <Field label="Series" value={sets} onChange={setSets} type="number" />
+              <Field label="Reps" value={reps} onChange={setReps} type="number" />
+              {!detected && pcts.length === 0 && (
+                <Field label="Tiempo (mm:ss)" value={time} onChange={setTime} placeholder="3:45" />
+              )}
             </div>
-            <button
-              type="button"
-              onClick={() => setWeight(String(nextLoad.weight))}
-              className="pressable rounded-xl border border-[rgba(216,180,107,0.3)] bg-[rgba(216,180,107,0.08)] px-3 py-2 text-xs font-semibold text-gold"
-            >
-              Usar próxima
-            </button>
-          </div>
+          </>
         )}
 
-        {loadCompare && (
-          <div
-            className={`mt-3 flex items-center justify-between gap-3 rounded-[var(--r-md)] border px-3.5 py-2.5 ${
-              loadCompare.status === "met"
-                ? "border-[rgba(216,180,107,0.45)] bg-[rgba(216,180,107,0.1)]"
-                : loadCompare.status === "above"
-                  ? "border-[rgba(235,214,166,0.35)] bg-[rgba(235,214,166,0.06)]"
-                  : "border-[color:var(--glass-border)] bg-[color:var(--glass-bg)]"
-            }`}
-          >
-            <span className="text-[11px] text-muted-foreground tabular">
-              Objetivo {formatKg(targetLoads[0].suggested)} kg · Realizado {formatKg(actualLoad ?? 0)} kg
-            </span>
-            <span
-              className={`shrink-0 text-[11px] font-bold uppercase tracking-[0.14em] ${
-                loadCompare.status === "met"
-                  ? "text-gold"
-                  : loadCompare.status === "above"
-                    ? "text-gold-soft"
-                    : "text-muted-foreground"
-              }`}
-            >
-              {LOAD_STATUS_LABEL[loadCompare.status]}
-              <span className="ml-1.5 font-medium normal-case tracking-normal opacity-70">
-                {loadCompare.status === "met" ? "" : `${loadCompare.diff > 0 ? "+" : "−"}${formatKg(Math.abs(loadCompare.diff))} kg`}
-              </span>
-
-            </span>
-          </div>
+        {showNotes ? (
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Notas, escala, sensaciones…"
+            rows={2}
+            autoFocus={notesOpen && notes === ""}
+            className="w-full rounded-[14px] border border-[color:var(--glass-border)] bg-white/[0.06] px-3.5 py-3 text-[15px] outline-none transition focus:border-[color:var(--gold)]/55"
+          />
+        ) : (
+          <button type="button" onClick={() => setNotesOpen(true)} className="min-h-11 text-sm font-medium text-gold">
+            + Añadir nota
+          </button>
         )}
-
-        <textarea
-
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Notas, escala, sensaciones…"
-          rows={2}
-          className="mt-3 w-full rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] outline-none transition focus:border-[rgba(216,180,107,0.55)]"
-        />
-
-
       </div>
       )}
     </div>
   );
 }
 
-export function Field({ label, value, onChange, type = "text", placeholder }: {
-  label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string;
+function firstLines(content: string): [string, string] {
+  const lines = content.split("\n").map((l) => l.trim()).filter(Boolean);
+  return [lines[0] ?? "Bloque", lines[1] ?? ""];
+}
+
+function blockSummary(existing: import("@/lib/store").WorkoutResult | undefined, existingWod: WodResult | null): string {
+  if (existingWod) return `${formatScore(existingWod)} · ${SCALE_LABEL[existingWod.scale as WodScale] ?? existingWod.scale}`;
+  if (!existing) return "";
+  const parts: string[] = [];
+  if (existing.weight != null) parts.push(`${formatKg(Number(existing.weight))} kg`);
+  if (existing.sets != null && existing.reps != null) parts.push(`${existing.sets}×${existing.reps}`);
+  else if (existing.reps != null) parts.push(`${existing.reps} reps`);
+  if (existing.time_seconds != null) parts.push(formatTime(existing.time_seconds));
+  if (existing.rpe != null) parts.push(`RPE ${existing.rpe}`);
+  return parts.length ? parts.join(" · ") : "Registrado";
+}
+
+export function Field({ label, value, onChange, type = "text", placeholder, highlight }: {
+  label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; highlight?: boolean;
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="mb-1.5 block text-[13px] text-muted-foreground">{label}</span>
       <input
         type={type === "number" ? "text" : type}
         inputMode={type === "number" ? "decimal" : undefined}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="tap w-full rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] tabular outline-none transition focus:border-[rgba(216,180,107,0.55)]"
+        className={`tap min-h-[52px] w-full rounded-[14px] border bg-white/[0.06] px-3.5 text-xl font-semibold tabular outline-none transition placeholder:text-sm placeholder:font-normal placeholder:text-muted-foreground/70 focus:border-[color:var(--gold)]/60 ${highlight ? "border-[color:var(--gold)]/45" : "border-white/[0.14]"}`}
       />
     </label>
   );

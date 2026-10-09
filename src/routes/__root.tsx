@@ -14,6 +14,7 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { PinGate } from "@/components/ui/gate";
+import { APPLE_TOUCH_ICON_DATA_URI } from "@/lib/app-icon";
 import { AppShell } from "@/components/AppShell";
 import { SplashScreen } from "@/components/ui/splash";
 import { startSyncEngine } from "@/lib/offline/sync";
@@ -82,13 +83,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" },
-      // "?v=" obliga al iPhone a pedir de nuevo el icono si guardó una versión
-      // anterior o un fallo. Súbelo cuando cambie el logo.
       { rel: "icon", href: "/icon-192.png?v=3", type: "image/png" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=3" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=3", sizes: "180x180" },
-      { rel: "apple-touch-icon-precomposed", href: "/apple-touch-icon-precomposed.png?v=3" },
-      { rel: "manifest", href: "/manifest.json?v=3" },
+      // El iPhone no descarga el icono desde el servidor de Lovable (pone una
+      // letra), así que va incrustado en la página. Probado en iPhone.
+      { rel: "apple-touch-icon", href: APPLE_TOUCH_ICON_DATA_URI, sizes: "180x180" },
+      { rel: "manifest", href: "/manifest.json?v=4" },
     ],
 
   }),

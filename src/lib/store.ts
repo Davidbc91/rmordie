@@ -400,7 +400,8 @@ async function rekeyFutureYearResults(uid: string, planning: Planning) {
   for (const table of ["workout_results", "wod_results", "exercise_log"] as const) {
     try {
       const { data } = await supabase.from(table).select("month_key").eq("user_id", uid);
-      const oldKeys = [...new Set((data ?? []).map((r: { month_key: string | null }) => r.month_key).filter((k): k is string => !!k))];
+      const rows = (data ?? []) as Array<{ month_key: string | null }>;
+      const oldKeys: string[] = Array.from(new Set<string>(rows.map((r) => r.month_key ?? "").filter((k) => k !== "")));
       for (const oldKey of oldKeys) {
         if (newKeys.includes(oldKey)) continue;
         const parts = split(oldKey);

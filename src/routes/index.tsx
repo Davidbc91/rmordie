@@ -14,6 +14,7 @@ import {
   sessionProgress,
 } from "@/lib/session-progress";
 import { Moon } from "lucide-react";
+import { buildPlanDateIndex, findMonthIndexForDate, isoKey } from "@/lib/plan-dates";
 
 
 
@@ -74,26 +75,22 @@ function Home() {
 
   const blockMap = useMemo(() => completedBlockMap(results), [results]);
 
+  // Hoy según las fechas reales del plan (año incluido), no solo por el nombre del mes.
   const todayPlan = useMemo(() => {
     if (!planning) return null;
-    const now = new Date();
-    const month = planning.data.months.find((m) => m.key.toUpperCase().includes(MONTH_ABBR[now.getMonth()]));
-    if (!month) return null;
-    const weekday = normalizeDayKey(WEEKDAY_KEYS[now.getDay()]);
-    const weekOfMonth = Math.ceil((now.getDate() + ((new Date(now.getFullYear(), now.getMonth(), 1).getDay() + 6) % 7)) / 7);
-    const week = month.weeks.find((item) => item.index === weekOfMonth) ?? month.weeks.find((item) => item.days.some((d) => normalizeDayKey(d.key) === weekday));
-    const day = week?.days.find((item) => normalizeDayKey(item.key) === weekday);
-    if (!week || !day) return null;
-    return { month, week, day, progress: sessionProgress(day, month.key, week.index, blockMap) };
+    const hit = buildPlanDateIndex(planning.data.months).get(isoKey(new Date()));
+    if (!hit) return null;
+    const week = hit.month.weeks.find((w) => w.index === hit.week);
+    if (!week) return null;
+    return { month: hit.month, week, day: hit.day, progress: sessionProgress(hit.day, hit.month.key, hit.week, blockMap) };
   }, [planning, blockMap]);
 
   const next = useMemo(() => {
     if (!planning) return null;
     const months = planning.data.months;
     const now = new Date();
-    const cur = MONTH_ABBR[now.getMonth()];
-    const currentMonth = months.find((m) => m.key.toUpperCase().includes(cur));
-    const startIdx = Math.max(0, months.findIndex((m) => m.key.toUpperCase().includes(cur)));
+    const startIdx = Math.max(0, findMonthIndexForDate(months, now));
+    const currentMonth = months[startIdx];
     const order = [...months.slice(startIdx), ...months.slice(0, startIdx)];
     const pick = (() => {
       for (const m of order) {

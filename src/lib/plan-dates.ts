@@ -127,3 +127,20 @@ export function buildPlanDateIndex(months: Month[]) {
 
   return index;
 }
+
+/**
+ * Mes del plan que corresponde a una fecha: primero por mes Y año; si el plan
+ * no indica año, por el nombre del mes. -1 si no hay ninguno.
+ */
+export function findMonthIndexForDate(months: Month[], date: Date = new Date()): number {
+  const exact = months.findIndex((m) => {
+    const parsed = parseMonthDate(m);
+    return !!parsed && parsed.year === date.getFullYear() && parsed.monthIndex === date.getMonth();
+  });
+  if (exact >= 0) return exact;
+  return months.findIndex((m) => {
+    const text = `${m.key} ${m.label}`;
+    const hasYear = /(?:19|20)\d{2}/.test(text);
+    return !hasYear && parseMonthDate(m)?.monthIndex === date.getMonth();
+  });
+}

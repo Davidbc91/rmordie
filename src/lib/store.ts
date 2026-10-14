@@ -376,6 +376,44 @@ export function useClearAllPlanning() {
   });
 }
 
+/**
+ * Si una importación anterior puso los meses un año por delante (p. ej.
+ * «12. OCT 2027» cuando era octubre de 2026), los entrenos ya registrados
+ * quedaron con esa clave. Al importar la versión corregida se pasan a la
+ * clave nueva del mismo mes («12. OCT 2026»). Solo se corrigen claves con un
+ * año POSTERIOR al de la nueva planificación, nunca temporadas pasadas.
+ */
+async function rekeyFutureYearResults(uid: string, planning: Planning) {
+  const split = (key: string) => {
+    const m = key.trim().match(/^(.*\S)\s+((?:19|20)\d{2})$/);
+    return m ? { prefix: m[1].toUpperCase(), year: Number(m[2]) } : null;
+  };
+  const newKeys = planning.months.map((m) => m.key);
+  const byPrefix = new Map<string, { key: string; year: number }[]>();
+  for (const key of newKeys) {
+    const parts = split(key);
+    if (!parts) continue;
+    byPrefix.set(parts.prefix, [...(byPrefix.get(parts.prefix) ?? []), { key, year: parts.year }]);
+  }
+  if (!byPrefix.size) return;
+
+  for (const table of ["workout_results", "wod_results", "exercise_log"] as const) {
+    try {
+      const { data } = await supabase.from(table).select("month_key").eq("user_id", uid);
+      const oldKeys = [...new Set((data ?? []).map((r: { month_key: string | null }) => r.month_key).filter((k): k is string => !!k))];
+      for (const oldKey of oldKeys) {
+        if (newKeys.includes(oldKey)) continue;
+        const parts = split(oldKey);
+        const matches = parts ? byPrefix.get(parts.prefix) ?? [] : [];
+        if (!parts || matches.length !== 1 || matches[0].year >= parts.year) continue;
+        await supabase.from(table).update({ month_key: matches[0].key } as never).eq("user_id", uid).eq("month_key", oldKey);
+      }
+    } catch {
+      // Si no se puede corregir ahora, la planificación ya está guardada igualmente.
+    }
+  }
+}
+
 export function useSavePlanning() {
   const qc = useQueryClient();
   return useMutation({
@@ -405,6 +443,7 @@ export function useSavePlanning() {
       if (error) throw error;
       if (inserted) {
         await cacheSet(cacheKeys.planning(uid), inserted as unknown as PlanningRow);
+        await rekeyFutureYearResults(uid, input.planning);
       }
       return inserted as unknown as PlanningRow;
     },
@@ -412,8 +451,8 @@ export function useSavePlanning() {
       if (saved) {
         qc.setQueryData(["planning", getCurrentUserId()], saved);
       }
-      qc.invalidateQueries({ queryKey: ["planning"] });
-      qc.invalidateQueries({ queryKey: ["planning_versions"] });
+      // También resultados: pueden haber cambiado de clave de mes al corregir el año.
+      qc.invalidateQueries();
     },
   });
 }

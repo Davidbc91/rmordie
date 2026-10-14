@@ -216,18 +216,44 @@ function buildTeamVaderSheetMetas(wb: XLSX.WorkBook): TeamVaderSheetMeta[] {
 
   if (!sheets.length) return [];
 
-  const startYear = inferWorkbookStartYear(wb);
+  const startYear = pickSeasonStartYear(
+    sheets.map((sheet) => sheet.month),
+    inferWorkbookStartYear(wb),
+    new Date(),
+  );
+  const years = seasonYears(sheets.map((sheet) => sheet.month), startYear);
+  return sheets.map((sheet, index) => ({
+    ...sheet,
+    year: years[index],
+    label: `${TEXT_MONTH_LABELS[sheet.month - 1]} ${years[index]}`,
+  }));
+}
+
+/** Año de cada mes de la temporada: sube un año cada vez que el mes «vuelve atrás» (DIC → ENE). */
+export function seasonYears(months: number[], startYear: number): number[] {
   let year = startYear;
-  let previousMonth = sheets[0].month;
-  return sheets.map((sheet, index) => {
-    if (index > 0 && sheet.month < previousMonth) year += 1;
-    previousMonth = sheet.month;
-    return {
-      ...sheet,
-      year,
-      label: `${TEXT_MONTH_LABELS[sheet.month - 1]} ${year}`,
-    };
+  return months.map((month, index) => {
+    if (index > 0 && month < months[index - 1]) year += 1;
+    return year;
   });
+}
+
+/**
+ * Las hojas solo dicen el mes («1. NOV» … «12. OCT»), no el año. El año que
+ * aparece escrito en el libro puede ser el de cualquier mes de la temporada,
+ * así que se elige el año de inicio para que la temporada incluya el mes en
+ * que se importa (normalmente se importa la planificación que se está usando).
+ * Ejemplo: NOV→OCT importada en octubre de 2026 = NOV 2025 … OCT 2026.
+ */
+export function pickSeasonStartYear(months: number[], hintYear: number, today: Date): number {
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const covers = (start: number) =>
+    seasonYears(months, start).some((year, i) => year === currentYear && months[i] === currentMonth);
+  for (const candidate of [hintYear, hintYear - 1, hintYear + 1]) {
+    if (covers(candidate)) return candidate;
+  }
+  return hintYear;
 }
 
 

@@ -6,6 +6,7 @@ import type { Month } from "@/lib/excel-parser";
 import { completedBlockMap, isSessionCompleted, sessionProgress } from "@/lib/session-progress";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { addDays, buildPlanDateIndex, isoKey, parseMonthDate, type PlannedDay } from "@/lib/plan-dates";
+import { findMonthIndexForDate as findPlanMonthIndex } from "@/lib/plan-dates";
 
 
 const CALENDAR_MONTH_KEY = "malitos_calendar_month_key";
@@ -20,10 +21,7 @@ function getCurrentMonthAbbr() {
 }
 
 function findMonthIndexForDate(months: Month[]) {
-  const current = getCurrentMonthAbbr();
-  const idx = months.findIndex((m) =>
-    m.key.toUpperCase().includes(current)
-  );
+  const idx = findPlanMonthIndex(months, new Date());
   return idx >= 0 ? idx : 0;
 }
 

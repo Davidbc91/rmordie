@@ -26,7 +26,7 @@ export function LinkedText({ text, className }: { text: string; className?: stri
       {parts.map((part, i) => {
         if (i % 2 === 1) {
           const href = part.startsWith("http") ? part : `https://${part}`;
-          const Icon = isVideo(href) ? Play : ExternalLink;
+          const video = isVideo(href);
           return (
             <a
               key={i}
@@ -34,9 +34,14 @@ export function LinkedText({ text, className }: { text: string; className?: stri
               target="_blank"
               rel="noopener noreferrer"
               title={href}
-              className="mr-1 inline-flex max-w-full items-center gap-1 rounded-full border border-current/25 px-2 py-0.5 align-middle text-[12px] font-medium underline-offset-2 hover:underline"
+              className={
+                video
+                  ? // Vídeos en rojo (como YouTube) para no confundirlos con los ejercicios.
+                    "mx-0.5 inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-[#FF5A4E]/45 bg-[#FF5A4E]/15 px-2.5 align-middle text-[13px] font-semibold text-[#FF8A80] no-underline hover:bg-[#FF5A4E]/25"
+                  : "mx-0.5 inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-sky-300/35 bg-sky-400/10 px-2.5 align-middle text-[13px] font-medium text-sky-200 no-underline hover:bg-sky-400/20"
+              }
             >
-              <Icon className="h-3 w-3 shrink-0" />
+              {video ? <Play className="h-3.5 w-3.5 shrink-0" fill="currentColor" /> : <ExternalLink className="h-3.5 w-3.5 shrink-0" />}
               <span className="truncate">{label(href)}</span>
             </a>
           );

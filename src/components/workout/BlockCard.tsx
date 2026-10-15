@@ -231,6 +231,11 @@ export function BlockCard({
     return true;
   }
 
+  // Un bloque con un ejercicio con RM o con % es de fuerza aunque sea un EMOM/E2MOM
+  // («E2MOM 10: 5 Back Squat (70%)»): se muestran la carga de hoy y sus campos.
+  // El resultado de WOD solo se pide si no es un EMOM de fuerza.
+  const showStrength = !wod || !!detected || pcts.length > 0;
+  const showWodScore = !!wod && !(wod.type === "emom" && (!!detected || pcts.length > 0));
   const done = !!existing || !!existingWod;
   const summary = done ? blockSummary(existing, existingWod) : null;
   const subtitle = summary ?? (wod ? `${WOD_TYPE_LABEL[wod.type]}${secondLine ? ` · ${secondLine}` : ""}` : secondLine);
@@ -271,7 +276,7 @@ export function BlockCard({
         <LinkedText text={content} className="text-[15px] leading-relaxed text-foreground/85" />
 
         {/* WOD: marca, escala y resultado */}
-        {wod ? (
+        {showWodScore && wod && (
           <>
             {bestForScale && (
               <p className="text-[13px] text-muted-foreground">
@@ -309,12 +314,16 @@ export function BlockCard({
               reps={wodReps}
               setReps={setWodReps}
             />
-            <div className="grid grid-cols-2 gap-2.5">
-              <Field label="RPE" value={rpe} onChange={setRpe} type="number" placeholder="1–10" />
-            </div>
+            {!showStrength && (
+              <div className="grid grid-cols-2 gap-2.5">
+                <Field label="RPE" value={rpe} onChange={setRpe} type="number" placeholder="1–10" />
+              </div>
+            )}
             {livePr && <p className="text-[13px] font-medium text-gold">{livePr}</p>}
           </>
-        ) : (
+        )}
+
+        {showStrength && (
           <>
             {/* Fuerza: una sola tarjeta con la carga de hoy */}
             {detected && (

@@ -391,8 +391,8 @@ async function rekeyFutureYearResults(uid: string, planning: Planning) {
   const newKeys = planning.months.map((m) => m.key);
   const byPrefix = new Map<string, { key: string; year: number }[]>();
   for (const key of newKeys) {
-    const parts = split(key);
-    if (!parts) continue;
+    // Clave sin año («12. OCT»): cuenta como el año en curso.
+    const parts = split(key) ?? { prefix: key.trim().toUpperCase(), year: new Date().getFullYear() };
     byPrefix.set(parts.prefix, [...(byPrefix.get(parts.prefix) ?? []), { key, year: parts.year }]);
   }
   if (!byPrefix.size) return;

@@ -36,6 +36,13 @@
       "when": 1791505897163,
       "tag": "0004_cerrar_lectura_security_config",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792055356741,
+      "tag": "0005_mover_resultados_oct_2027",
+      "breakpoints": true
     }
   ]
 }

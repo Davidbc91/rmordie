@@ -159,10 +159,9 @@ export function PinGate({ children }: { children: ReactNode }) {
       />
       <div className="relative w-full max-w-sm">
         <div className="rise rise-1 mb-10 flex flex-col items-center text-center">
-          <div className="font-bold leading-none tracking-tight" style={{ fontSize: "60px", letterSpacing: "-0.06em", color: "var(--foreground)" }}>
-            RM
+          <div className="leading-none" style={{ fontFamily: "var(--font-editorial)", fontWeight: 900, fontSize: "72px", color: "var(--foreground)" }}>
+            RM <span className="text-gold">OR</span> DIE
           </div>
-          <div className="mt-2 text-xs uppercase text-white/70" style={{ letterSpacing: "0.42em" }}>OR DIE</div>
           <div className="rule-fade mt-6 w-24" />
           {subtitle && <p className="mt-6 text-sm text-muted-foreground">{subtitle}</p>}
         </div>

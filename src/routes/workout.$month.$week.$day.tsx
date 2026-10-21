@@ -419,7 +419,7 @@ function WorkoutPage() {
           disabled={savingAll}
           className="pressable gold-gradient mt-5 flex min-h-[60px] w-full flex-col items-center justify-center rounded-[18px] disabled:opacity-45"
         >
-          <span className="flex items-center gap-2 text-[17px] font-bold">
+          <span className="cta-display flex items-center gap-2">
             <CheckCheck className="h-[18px] w-[18px]" />
             {savingAll ? "Guardando entreno…" : "Guardar entreno completo"}
           </span>

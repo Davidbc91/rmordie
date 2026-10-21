@@ -378,7 +378,7 @@ function Home() {
               <Link
                 to="/workout/$month/$week/$day"
                 params={{ month: next.monthKey, week: String(next.week), day: next.dayKey }}
-                className="pressable gold-gradient mt-4 flex min-h-[58px] w-full items-center justify-center gap-2 rounded-[var(--r-lg)] text-base font-semibold"
+                className="pressable gold-gradient cta-display mt-4 flex min-h-[58px] w-full items-center justify-center gap-2.5 rounded-[var(--r-lg)]"
               >
                 <Play className="h-4 w-4" fill="currentColor" />{" "}
                 {next.progress.state === "in_progress" ? "Continuar entreno" : "Empezar entreno"}

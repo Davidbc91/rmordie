@@ -35,7 +35,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+  --font-display: "Manrope", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
   --shadow-gold: 0 10px 30px -12px rgba(184, 255, 61, 0.28);
   --shadow-elevated: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
 }
@@ -411,7 +411,7 @@
 }
 
 .cinematic-title {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-editorial);
   font-weight: 500;
   letter-spacing: -0.045em;
 }
@@ -423,7 +423,7 @@
   text-transform: uppercase;
 }
 .cinematic-number {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-editorial);
   font-weight: 500;
   letter-spacing: -.055em;
 }
@@ -558,8 +558,8 @@
 
 /* RM OR DIE typography system */
 :root, .dark {
-  --font-display: "Avenir Next", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-  --font-editorial: "Avenir Next Condensed", "Arial Narrow", "Helvetica Neue", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --font-display: "Manrope", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --font-editorial: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
 }
 
 body {
@@ -711,11 +711,6 @@ body {
   letter-spacing: .16em;
 }
 
-.display-xl,
-.display-lg,
-.cinematic-number {
-  font-family: Georgia, "Times New Roman", serif;
-}
 
 .gold-gradient {
   background-image: linear-gradient(135deg, #E9D9B5 0%, #C8B38A 52%, #A28C66 100%);
@@ -756,4 +751,44 @@ body {
   .display-xl {
     font-size: clamp(3.2rem, 20vw, 5.2rem);
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * Tipografía «Box de Chicago»: Big Shoulders Display para títulos, el día y
+ * todas las cifras; Manrope para el texto. Una sola fuente de cada tipo en
+ * toda la app (antes se mezclaban Avenir, Georgia e Inter).
+ * Big Shoulders ya es estrecha: no necesita el tracking negativo de antes.
+ * ------------------------------------------------------------------------- */
+body {
+  letter-spacing: 0;
+  font-feature-settings: normal;
+}
+h1, h2, h3, h4 { letter-spacing: -0.01em; }
+
+.day-display,
+.display-xl,
+.display-lg,
+.metric,
+.cinematic-number,
+.cinematic-title {
+  font-family: var(--font-editorial);
+  font-stretch: normal;
+  letter-spacing: 0.005em;
+  font-weight: 800;
+}
+.day-display {
+  font-weight: 900;
+  line-height: 0.8;
+  font-size: clamp(3.75rem, 20vw, 5.75rem);
+}
+.metric { font-size: 2.1rem; line-height: 1; }
+.cinematic-number { font-size: 2.6rem; line-height: 0.95; }
+
+/* Botón principal (Empezar entreno, Guardar entreno completo) */
+.cta-display {
+  font-family: var(--font-editorial);
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }

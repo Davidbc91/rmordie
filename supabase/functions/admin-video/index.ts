@@ -13,6 +13,8 @@ type Body = {
   profile_id?: string;
   pin_hash?: string;
   movement_id?: string;
+  status?: string;
+  notes?: string;
   title?: string;
   youtube_url?: string;
   storage_path?: string;

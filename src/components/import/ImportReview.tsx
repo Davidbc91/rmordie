@@ -70,7 +70,7 @@ export function ImportReview({
           {diagnostics && (
             <div className="mt-3 rounded-2xl border border-[color:var(--glass-border)] bg-white/[0.025] p-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Calidad de lectura</span>
+                <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Calidad de lectura</span>
                 <span className={diagnostics.level === "high" ? "text-emerald-300" : diagnostics.level === "medium" ? "text-gold" : "text-red-300"}>
                   {Math.round(diagnostics.confidence * 100)}%
                 </span>
@@ -81,19 +81,19 @@ export function ImportReview({
                   style={{ width: `${Math.round(diagnostics.confidence * 100)}%` }}
                 />
               </div>
-              <div className="mt-2 text-[10px] text-muted-foreground">
+              <div className="mt-2 text-xs text-muted-foreground">
                 {diagnostics.daysDetected} días · {diagnostics.weeksDetected} semanas · {diagnostics.rows} registros
                 {diagnostics.datedRows > 0 ? ` · ${diagnostics.datedRows} con fecha` : ""}
               </div>
               {diagnostics.warnings.length > 0 && (
-                <div className="mt-2 space-y-1 text-[10px] text-gold">
+                <div className="mt-2 space-y-1 text-xs text-gold">
                   {diagnostics.warnings.map((warning) => <div key={warning}>• {warning}</div>)}
                 </div>
               )}
             </div>
           )}
 
-          <div className="mt-2 text-[11px] text-muted-foreground">
+          <div className="mt-2 text-xs text-muted-foreground">
             {parsed.layout ? (
               <>
                 Estructura detectada: <span className="text-foreground">{parsed.layout}</span>
@@ -109,7 +109,7 @@ export function ImportReview({
             )}
           </div>
           {parsed.unmapped.length > 0 && (
-            <div className="mt-2 text-[11px] text-gold">
+            <div className="mt-2 text-xs text-gold">
               Sin identificar: {parsed.unmapped.join(", ")}. Puedes rellenarlos a mano abajo.
             </div>
           )}
@@ -143,11 +143,11 @@ export function ImportReview({
                     <GlassBadge tone={issues.length ? "gold" : "neutral"}>
                       {r.day || "SIN DÍA"}
                     </GlassBadge>
-                    <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
                       Semana {r.week} · {r.block || "Sin bloque"}
                     </span>
                   </div>
-                  <span className="text-[11px] text-muted-foreground">fila {r.sourceRow}</span>
+                  <span className="text-xs text-muted-foreground">fila {r.sourceRow}</span>
                 </div>
 
                 <div className="mt-2 text-sm">
@@ -186,7 +186,7 @@ export function ImportReview({
                     <button
                       key={d}
                       onClick={() => patch(r.id, { day: d })}
-                      className={`tap rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.12em] ${d === r.day ? "gold-gradient" : "glass"}`}
+                      className={`tap rounded-full px-3 text-xs font-semibold uppercase tracking-[0.12em] ${d === r.day ? "gold-gradient" : "glass"}`}
                     >
                       {d.slice(0, 3)}
                     </button>

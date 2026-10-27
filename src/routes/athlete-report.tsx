@@ -122,7 +122,7 @@ function AthleteReport() {
       ));
     } else add("Sin registros de composición corporal.");
 
-    section("Recovery y bienestar");
+    section("Recuperación y bienestar");
     row("Sueño", recovery.sleep != null ? `${fmtNum(recovery.sleep)} h` : "—");
     row("Energía", recovery.energy != null ? fmtNum(recovery.energy) : "—");
     row("Fatiga", recovery.fatigue != null ? fmtNum(recovery.fatigue) : "—");
@@ -201,7 +201,7 @@ function AthleteReport() {
 
       <div className="no-print sticky top-0 z-50 flex items-center justify-between border-b bg-white/95 px-4 py-3 backdrop-blur">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-500">RM OR DIE</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-500">RM OR DIE</p>
           <p className="text-sm font-semibold">Informe para entrenador</p>
         </div>
         <div className="flex gap-2">
@@ -224,7 +224,7 @@ function AthleteReport() {
         <header className="border-b-2 border-black pb-6">
           <div className="flex items-start justify-between gap-6">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-neutral-500">RM OR DIE · ATHLETE REPORT</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-500">RM OR DIE · INFORME DEL ATLETA</p>
               <h1 className="mt-3 text-4xl font-bold tracking-tight">{profile?.display_name || "Atleta"}</h1>
               <p className="mt-2 text-sm text-neutral-600">
                 Informe generado el {new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })}
@@ -300,7 +300,7 @@ function AthleteReport() {
           ) : <Empty />}
         </Section>
 
-        <Section title="Recovery y bienestar">
+        <Section title="Recuperación y bienestar">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             <Kpi label="Sueño" value={recovery.sleep != null ? `${fmtNum(recovery.sleep)} h` : "—"} />
             <Kpi label="Energía" value={recovery.energy != null ? fmtNum(recovery.energy) : "—"} />
@@ -368,12 +368,12 @@ function AthleteReport() {
           <div className="min-h-[130px] rounded-xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-500">
             Espacio reservado para observaciones, prioridades técnicas y objetivos del siguiente bloque.
           </div>
-          <p className="mt-4 text-[10px] leading-relaxed text-neutral-500">
+          <p className="mt-4 text-xs leading-relaxed text-neutral-500">
             Este informe se genera con los datos registrados en RM OR DIE. Los 1RM mostrados como actuales son los registros confirmados guardados en la aplicación. Los datos de entrenamiento reflejan las sesiones que has registrado.
           </p>
         </Section>
 
-        <footer className="mt-8 border-t pt-4 text-[10px] text-neutral-400">
+        <footer className="mt-8 border-t pt-4 text-xs text-neutral-400">
           RM OR DIE · Informe de atleta · {planning?.source_filename ? `Plan activo: ${planning.source_filename}` : "Sin plan activo"}
         </footer>
       </div>
@@ -468,7 +468,7 @@ function Section({ title, children, className = "" }: { title: string; children:
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-neutral-500">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">{label}</p>
       <p className="mt-1 text-lg font-bold tabular-nums">{value}</p>
     </div>
   );

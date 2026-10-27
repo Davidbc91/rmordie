@@ -276,7 +276,7 @@ function AdminVideosPage() {
           <div className="grid h-12 w-12 place-items-center rounded-2xl border border-[rgba(200,169,107,.24)] bg-white/[.035] text-[var(--gold)]">
             <KeyRound className="h-5 w-5" />
           </div>
-          <span className="cinematic-label mt-6 block">ADMIN ACCESS</span>
+          <span className="cinematic-label mt-6 block">ACCESO DE ADMINISTRADOR</span>
           <h1 className="cinematic-title mt-2">Gestión de vídeos</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Introduce el PIN de tu perfil BC para gestionar los vídeos del diccionario.
@@ -310,7 +310,7 @@ function AdminVideosPage() {
     <PageShell>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <span className="cinematic-label">ADMIN / MOVEMENT VIDEOS</span>
+          <span className="cinematic-label">ADMIN · VÍDEOS DE MOVIMIENTOS</span>
           <h1 className="cinematic-title mt-2">Vídeos</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             180 movimientos · asociación por ID estable.
@@ -446,7 +446,7 @@ function AdminVideosPage() {
                   <h2 className="mt-1 text-base font-semibold">{movement.name}</h2>
                   <p className="text-xs text-muted-foreground">{movement.nameEs}</p>
                 </div>
-                <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[.14em] ${video ? "border-[rgba(200,169,107,.28)] text-[var(--gold)]" : "border-white/10 text-muted-foreground"}`}>
+                <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[.14em] ${video ? "border-[rgba(200,169,107,.28)] text-[var(--gold)]" : "border-white/10 text-muted-foreground"}`}>
                   {video ? video.source_type : hasCatalogVideo ? "catálogo" : "sin vídeo"}
                 </span>
               </div>
@@ -461,10 +461,10 @@ function AdminVideosPage() {
                   </span>
                   <div className="flex gap-1.5">
                     {reviewStatus !== "verified" && (
-                      <button type="button" onClick={() => void setReview(movement.id, "verified")} disabled={isBusy} className="rounded-xl border border-white/10 px-2.5 py-1.5 text-[11px] font-semibold">✓ Verificado</button>
+                      <button type="button" onClick={() => void setReview(movement.id, "verified")} disabled={isBusy} className="rounded-xl border border-white/10 px-2.5 py-1.5 text-xs font-semibold">✓ Verificado</button>
                     )}
                     {reviewStatus !== "needs_review" && (
-                      <button type="button" onClick={() => void setReview(movement.id, "needs_review")} disabled={isBusy} className="rounded-xl border border-white/10 px-2.5 py-1.5 text-[11px] font-semibold">Revisar</button>
+                      <button type="button" onClick={() => void setReview(movement.id, "needs_review")} disabled={isBusy} className="rounded-xl border border-white/10 px-2.5 py-1.5 text-xs font-semibold">Revisar</button>
                     )}
                   </div>
                 </div>
@@ -571,7 +571,7 @@ function AdminStat({ label, value }: { label: string; value: number }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[.18em] text-muted-foreground">{label}</span>
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[.18em] text-muted-foreground">{label}</span>
       <span className="[&_input]:min-h-11 [&_input]:w-full [&_input]:rounded-xl [&_input]:border [&_input]:border-white/10 [&_input]:bg-black/20 [&_input]:px-3 [&_input]:text-sm [&_input]:outline-none [&_textarea]:w-full [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-white/10 [&_textarea]:bg-black/20 [&_textarea]:px-3 [&_textarea]:py-3 [&_textarea]:text-sm [&_textarea]:outline-none [&_select]:min-h-11 [&_select]:w-full [&_select]:rounded-xl [&_select]:border [&_select]:border-white/10 [&_select]:bg-black/20 [&_select]:px-3 [&_select]:text-sm [&_select]:outline-none">
         {children}
       </span>

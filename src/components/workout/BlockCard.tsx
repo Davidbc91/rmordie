@@ -29,6 +29,9 @@ import { WodScoreFields } from "@/components/WodRecords";
 import { suggestNextLoad, estimateOneRm, parseTime, formatTime } from "./loads";
 import { PercentAssistant } from "./PercentAssistant";
 
+/** Nuevo 1RM de fuerza detectado al guardar un bloque. */
+export type StrengthPr = { exercise: string; weight: number; previous: number | null };
+
 export type BlockPayload = {
   block_key: string;
   status: "completed";
@@ -50,7 +53,7 @@ export function BlockCard({
   existingWod: WodResult | null;
   settings: import("@/lib/store").AppSettings | undefined;
   register: (fn: () => BlockPayload) => void;
-  registerPr: (fn: () => Promise<boolean>) => void;
+  registerPr: (fn: () => Promise<StrengthPr | null>) => void;
   registerWod: (fn: () => WodSaveInput | null) => void;
   persistWod: () => Promise<PrOutcome | null>;
   onWodSaved: (out: PrOutcome) => void;
@@ -218,17 +221,17 @@ export function BlockCard({
     registerWod(wodPayload);
   });
 
-  async function maybeSaveStrengthPr(): Promise<boolean> {
+  async function maybeSaveStrengthPr(): Promise<StrengthPr | null> {
     const w = Number(weight.replace(",", ".").trim());
     const r = Number(reps);
-    if (!detected || !Number.isFinite(w) || w <= 0 || r !== 1) return false;
+    if (!detected || !Number.isFinite(w) || w <= 0 || r !== 1) return null;
     const movementId = resolveMovementId(detected.exercise);
     const movement = movementId ? movements.find((item) => item.id === movementId) : null;
-    if (!movement?.rm) return false;
+    if (!movement?.rm) return null;
     const current = records.find((record) => (record.rep_max ?? 1) === 1 && resolveMovementId(record.exercise) === movement.id);
-    if (current && w <= Number(current.weight)) return false;
+    if (current && w <= Number(current.weight)) return null;
     await upsertRecord.mutateAsync({ exercise: movement.name, weight: w, rep_max: 1 });
-    return true;
+    return { exercise: movement.name, weight: w, previous: current ? Number(current.weight) : null };
   }
 
   // Un bloque con un ejercicio con RM o con % es de fuerza aunque sea un EMOM/E2MOM

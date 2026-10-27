@@ -40,7 +40,7 @@ export function Avatar({ profile, size = 38 }: { profile?: SocialProfile | null;
       {profile?.avatar_url ? (
         <img src={profile.avatar_url} alt={profile.username} className="h-full w-full object-cover" />
       ) : (
-        <span className="text-[11px] font-semibold tracking-wide text-white/70">{initials}</span>
+        <span className="text-xs font-semibold tracking-wide text-white/70">{initials}</span>
       )}
     </span>
   );
@@ -50,8 +50,8 @@ function DataBlock({ post }: { post: Post }) {
   const d = post.data || {};
   if (post.kind === "pr") {
     return (
-      <div className="mt-3 rounded-[18px] p-4" style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}>
-        <p className="text-[10px] uppercase tracking-[0.3em]" style={{ color: "#6F6F6F" }}>
+      <div className="mt-3 rounded-[18px] p-4" style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}>
+        <p className="text-xs uppercase tracking-[0.3em]" style={{ color: "#6F6F6F" }}>
           {d.rep_max ? `${d.rep_max}RM` : "PR"}
         </p>
         <p className="mt-2 text-sm font-semibold uppercase tracking-[0.1em]">{d.exercise ?? "Ejercicio"}</p>
@@ -72,14 +72,14 @@ function DataBlock({ post }: { post: Post }) {
       <div className="mt-3 rounded-[18px] border p-4" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.04)" }}>
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm font-semibold">{d.name || d.benchmark || "WOD"}</p>
-          <span className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]" style={{ background: "#1C1C1C" }}>
+          <span className="rounded-full px-2 py-0.5 text-xs uppercase tracking-[0.16em]" style={{ background: "#1C1C1C" }}>
             {d.scale || "RX"}
           </span>
         </div>
         {d.description && <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">{d.description}</p>}
         <div className="mt-3 flex gap-5">
           {d.time_seconds != null && <Stat label="Tiempo" value={fmtTime(Number(d.time_seconds))} />}
-          {d.score && <Stat label="Score" value={String(d.score)} />}
+          {d.score && <Stat label="Resultado" value={String(d.score)} />}
           {d.rpe != null && <Stat label="RPE" value={String(d.rpe)} />}
         </div>
       </div>
@@ -103,13 +103,13 @@ function DataBlock({ post }: { post: Post }) {
         <div className="border-b px-4 pb-3 pt-4" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.28em] text-gold/80">RM / OR DIE · SESSION</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold/80">RM OR DIE · SESIÓN</p>
               <p className="mt-1 truncate text-base font-semibold">
                 {d.day ? `${d.month ?? ""} · S${d.week ?? ""} · ${d.day}` : (d.title ?? "Entreno completado")}
               </p>
             </div>
             {Number(d.prs) > 0 && (
-              <span className="shrink-0 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em]" style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}>
+              <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-[0.16em]" style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}>
                 {d.prs} PR{Number(d.prs) === 1 ? "" : "s"}
               </span>
             )}
@@ -127,23 +127,23 @@ function DataBlock({ post }: { post: Post }) {
 
         {wods.length > 0 && (
           <div className="space-y-2 p-3">
-            <p className="px-1 text-[9px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">WOD · RESULTADO</p>
+            <p className="px-1 text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">WOD · RESULTADO</p>
             {wods.slice(0, 3).map((w: any, i: number) => (
               <div key={i} className="flex items-center justify-between gap-3 rounded-[14px] border px-3 py-2.5" style={{ borderColor: "rgba(255,255,255,0.07)", background: "rgba(0,0,0,0.16)" }}>
                 <div className="min-w-0">
                   <p className="truncate text-xs font-semibold">{w.name || "WOD"}</p>
-                  <p className="mt-0.5 text-[10px] text-muted-foreground">{w.type ?? "WOD"} · {w.scale ?? "RX"}{w.isPr ? " · PR" : ""}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{w.type ?? "WOD"} · {w.scale ?? "RX"}{w.isPr ? " · PR" : ""}</p>
                 </div>
                 <span className="shrink-0 text-sm font-semibold tabular text-gold">{w.result ?? "—"}</span>
               </div>
             ))}
-            {wods.length > 3 && <p className="px-1 text-[10px] text-muted-foreground">+{wods.length - 3} WODs más</p>}
+            {wods.length > 3 && <p className="px-1 text-xs text-muted-foreground">+{wods.length - 3} WODs más</p>}
           </div>
         )}
 
         {loads.length > 0 && (
           <details className="border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-            <summary className="cursor-pointer px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            <summary className="cursor-pointer px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Ver cargas · {loads.length} bloques
             </summary>
             <div className="space-y-1.5 px-3 pb-3">
@@ -189,7 +189,7 @@ function DataBlock({ post }: { post: Post }) {
 function WorkoutMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-black/15 px-3 py-3.5">
-      <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
       <p className="mt-1 text-lg font-semibold tabular">{value}</p>
     </div>
   );
@@ -198,7 +198,7 @@ function WorkoutMetric({ label, value }: { label: string; value: string }) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+      <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
       <p className="mt-0.5 text-lg font-semibold tabular">{value}</p>
     </div>
   );
@@ -243,7 +243,7 @@ export function PostCard({ post }: { post: Post }) {
           <Avatar profile={post.author} />
           <span className="min-w-0">
             <span className="block truncate text-sm font-semibold">{post.author?.display_name || post.author?.username || "Atleta"}</span>
-            <span className="block truncate text-[11px] text-muted-foreground">
+            <span className="block truncate text-xs text-muted-foreground">
               {KIND_LABEL[post.kind]} · {timeAgo(post.created_at)}
               {post.author?.box_name ? ` · ${post.author.box_name}` : ""}
             </span>
@@ -332,7 +332,7 @@ function Comments({ post }: { post: Post }) {
           <div key={c.id} className="flex gap-2.5">
             <Avatar profile={c.author} size={28} />
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {c.author?.username ?? "atleta"} · {timeAgo(c.created_at)}
               </p>
               <p className="text-sm">{c.content}</p>
@@ -363,7 +363,7 @@ function Comments({ post }: { post: Post }) {
             className="flex-1 rounded-[14px] border bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground/40"
             style={{ borderColor: "rgba(255,255,255,0.09)" }}
           />
-          <button type="submit" aria-label="Enviar" className="pressable rounded-full p-2.5" style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}>
+          <button type="submit" aria-label="Enviar" className="pressable rounded-full p-2.5" style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}>
             <Send className="h-4 w-4" />
           </button>
         </form>

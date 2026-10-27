@@ -236,7 +236,7 @@ function ChatPage() {
                   className={`flex flex-col ${mine ? "items-end" : "items-start"}`}
                 >
                   {showName && !mine && (
-                    <span className="mb-0.5 px-2 text-[11px] font-semibold gold-text">
+                    <span className="mb-0.5 px-2 text-xs font-semibold gold-text">
                       {m.user_name}
                     </span>
                   )}
@@ -252,7 +252,7 @@ function ChatPage() {
                   >
                     <span className="whitespace-pre-wrap">{m.content}</span>
                     <span
-                      className={`ml-2 align-baseline text-[10px] tabular ${
+                      className={`ml-2 align-baseline text-xs tabular ${
                         mine ? "opacity-70" : "text-muted-foreground"
                       }`}
                     >

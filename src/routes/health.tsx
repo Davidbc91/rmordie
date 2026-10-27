@@ -11,7 +11,7 @@ function HealthPage() {
   return (
     <AppShell>
       <header>
-        <p className="cinematic-label">HEALTH DATA</p>
+        <p className="cinematic-label">DATOS DE SALUD</p>
         <h1 className="cinematic-title mt-3">Salud<span className="gold-text">.</span></h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
           Centraliza tus datos de recuperación y actividad para futuras funciones de Training Intelligence.

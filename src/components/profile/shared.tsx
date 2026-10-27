@@ -27,7 +27,7 @@ export function Stat({ label, value, sub }: { label: string; value: string; sub?
 export function Empty({ text = "Aún no hay suficientes datos." }: { text?: string }) {
   return (
     <div className="rounded-[22px] border border-dashed border-border p-6 text-center">
-      <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Not enough data</p>
+      <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Aún no hay datos suficientes</p>
       <p className="mt-2 text-sm text-muted-foreground">{text}</p>
     </div>
   );
@@ -127,9 +127,9 @@ export function Row({ label, value }: { label: string; value: string }) {
 export function ReportList({ title, items }: { title: string; items: string[] }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>{title}</p>
+      <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "var(--muted-foreground)" }}>{title}</p>
       {items.length === 0 ? (
-        <p className="mt-2 text-sm" style={{ color: "#6F6F6F" }}>Not enough data</p>
+        <p className="mt-2 text-sm" style={{ color: "var(--muted-foreground)" }}>Aún no hay datos suficientes</p>
       ) : (
         <ul className="mt-2 space-y-1 text-sm">
           {items.map((t) => (

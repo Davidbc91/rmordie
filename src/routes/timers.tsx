@@ -67,7 +67,7 @@ function TimersPage() {
         <header className="space-y-2">
           <div className="flex items-center gap-2">
             <TimerIcon className="h-6 w-6" style={{ color: "var(--gold)" }} />
-            <h1 className="text-2xl font-semibold">Temporizador</h1>
+            <h1 className="page-title" style={{ fontSize: "2rem" }}>Temporizador</h1>
           </div>
           <p className="text-sm text-muted-foreground">
             Elige el formato de tu WOD.
@@ -88,7 +88,7 @@ function TimersPage() {
                 }}
               >
                 <div className="text-sm font-semibold" style={{ color: active ? "var(--gold)" : "inherit" }}>{m.label}</div>
-                <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">{m.desc}</div>
+                <div className="text-xs text-muted-foreground leading-tight mt-0.5">{m.desc}</div>
               </button>
             );
           })}
@@ -322,7 +322,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Duración total: {Math.floor((minutes * emomInterval) / 60)}:{String((minutes * emomInterval) % 60).padStart(2, "0")}
             </p>
           </>
@@ -341,7 +341,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
           <p className="text-sm text-muted-foreground">Sin configuración. Pulsa play para empezar.</p>
         )}
         {(running || elapsed > 0) && (
-          <p className="text-[11px] text-muted-foreground">Editar reinicia el temporizador.</p>
+          <p className="text-xs text-muted-foreground">Editar reinicia el temporizador.</p>
         )}
       </div>
 

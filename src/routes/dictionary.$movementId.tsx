@@ -87,7 +87,7 @@ function MovementPage() {
               className="flex gap-3 rounded-xl border border-border/70 p-3"
             >
               <span
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[rgba(216,180,107,0.3)] text-xs font-semibold tabular text-[var(--gold)]"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[rgba(200,179,138,0.3)] text-xs font-semibold tabular text-[var(--gold)]"
                 aria-hidden="true"
               >
                 {String(index + 1).padStart(2, "0")}
@@ -129,7 +129,7 @@ function MovementPage() {
                 <Link
                   to="/dictionary/$movementId"
                   params={{ movementId: item.id }}
-                  className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-border px-3 py-2 text-sm transition hover:border-[rgba(216,180,107,0.45)] hover:text-[var(--gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+                  className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-border px-3 py-2 text-sm transition hover:border-[rgba(200,179,138,0.45)] hover:text-[var(--gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
                 >
                   <span className="min-w-0 truncate">{item.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">{item.nameEs}</span>
@@ -148,7 +148,7 @@ function MovementBadge({ children, gold = false }: { children: string; gold?: bo
     <span
       className={`max-w-full break-words rounded-full border px-2.5 py-1 text-xs ${
         gold
-          ? "border-[rgba(216,180,107,0.4)] text-[var(--gold)]"
+          ? "border-[rgba(200,179,138,0.4)] text-[var(--gold)]"
           : "border-border text-muted-foreground"
       }`}
     >
@@ -230,15 +230,15 @@ function MovementRmCard({ movement, online }: { movement: Movement; online: bool
           <Link
             to="/records"
             search={{ tab: "strength" }}
-            className="inline-flex min-h-11 items-center rounded-xl border border-[rgba(216,180,107,0.4)] px-4 text-sm text-[var(--gold)] transition hover:bg-[rgba(216,180,107,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+            className="inline-flex min-h-11 items-center rounded-xl border border-[rgba(200,179,138,0.4)] px-4 text-sm text-[var(--gold)] transition hover:bg-[rgba(200,179,138,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
           >
             Ir a Mis RM
           </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-4 rounded-2xl border border-[rgba(216,180,107,0.3)] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 rounded-2xl border border-[rgba(200,179,138,0.3)] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
               Tu RM actual · {record.rep_max ?? 1}RM
             </p>
             <p className="mt-1 text-2xl font-semibold tabular text-[var(--gold)]">
@@ -258,7 +258,7 @@ function MovementRmCard({ movement, online }: { movement: Movement; online: bool
                 exercise: record.exercise,
                 repMax: record.rep_max ?? 1,
               }}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-4 text-sm transition hover:border-[rgba(216,180,107,0.45)] hover:text-[var(--gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-4 text-sm transition hover:border-[rgba(200,179,138,0.45)] hover:text-[var(--gold)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]"
             >
               Ver historial
             </Link>

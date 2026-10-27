@@ -54,7 +54,7 @@ function DictionaryPage() {
     });
   }, [query, category, equipment, level, allMovements]);
   const selectClass =
-    "min-w-0 rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3 py-2.5 text-sm text-foreground outline-none focus:border-[rgba(216,180,107,0.55)]";
+    "min-w-0 rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3 py-2.5 text-sm text-foreground outline-none focus:border-[rgba(200,179,138,0.55)]";
   const levels: MovementLevel[] = ["Beginner", "Intermediate", "Advanced"];
   const categories = useMemo(() => Array.from(new Set([...MOVEMENT_CATEGORIES, ...customMovements.map((m) => m.category)])).sort(), [customMovements]);
   const equipmentOptions = useMemo(() => Array.from(new Set([...MOVEMENT_EQUIPMENT, ...customMovements.flatMap((m) => m.equipment)])).sort(), [customMovements]);
@@ -68,7 +68,7 @@ function DictionaryPage() {
           <header className="space-y-2">
             <div className="flex items-center gap-2">
               <BookOpen className="h-6 w-6" style={{ color: "var(--gold)" }} />
-              <h1 className="text-2xl font-semibold">DICCIONARIO</h1>
+              <h1 className="page-title">Diccionario</h1>
             </div>
             <p className="text-sm text-muted-foreground">
               Movimientos utilizados en CrossFit, con técnica y variantes.
@@ -81,7 +81,7 @@ function DictionaryPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar movimiento…"
-                className="min-h-11 w-full rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] py-3 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-[rgba(216,180,107,0.55)]"
+                className="min-h-11 w-full rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] py-3 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-[rgba(200,179,138,0.55)]"
               />
               {query && (
                 <button
@@ -152,18 +152,18 @@ function DictionaryPage() {
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    <span className="rounded-full border border-border px-2 py-1 text-[10px]">
+                    <span className="rounded-full border border-border px-2 py-1 text-xs">
                       {m.category}
                     </span>
-                    <span className="rounded-full border border-border px-2 py-1 text-[10px]">
+                    <span className="rounded-full border border-border px-2 py-1 text-xs">
                       {m.level}
                     </span>
                     {m.id.startsWith("custom-") && (
-                      <span className="rounded-full border border-[rgba(216,180,107,0.35)] px-2 py-1 text-[10px] text-[var(--gold)]">Personalizado</span>
+                      <span className="rounded-full border border-[rgba(200,179,138,0.35)] px-2 py-1 text-xs text-[var(--gold)]">Personalizado</span>
                     )}
                     {m.rm && (
                       <span
-                        className="rounded-full border border-[rgba(216,180,107,0.35)] px-2 py-1 text-[10px]"
+                        className="rounded-full border border-[rgba(200,179,138,0.35)] px-2 py-1 text-xs"
                         style={{ color: "var(--gold)" }}
                       >
                         RM

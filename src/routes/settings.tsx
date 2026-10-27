@@ -85,7 +85,7 @@ function SettingsPage() {
 
   return (
     <AppShell>
-      <h1 className="text-2xl font-semibold tracking-tight">Ajustes</h1>
+      <h1 className="page-title">Ajustes</h1>
       {me && (
         <p className="mt-1 text-sm text-muted-foreground">
           Perfil activo: <span className="text-foreground font-medium">{me.name}</span>
@@ -97,15 +97,21 @@ function SettingsPage() {
         <p className="mt-1 text-xs text-muted-foreground">Para redondear el peso del asistente de %.</p>
         {settingsLoading && <p className="mt-2 text-xs text-muted-foreground">Cargando tu material guardado…</p>}
         {settingsError && !s && <p role="alert" className="mt-2 text-xs text-destructive">No se pudo cargar tu material. Inténtalo de nuevo antes de guardar.</p>}
-        <label className="mt-4 block">
-          <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">Barras (kg)</span>
-          <input value={bars} onChange={(e) => { setBarsEdited(true); setBars(e.target.value); }} disabled={!s} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular outline-none focus:border-gold disabled:opacity-50" />
-        </label>
-        <label className="mt-3 block">
-          <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">Discos por lado (kg)</span>
-          <input value={plates} onChange={(e) => { setPlatesEdited(true); setPlates(e.target.value); }} disabled={!s} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular outline-none focus:border-gold disabled:opacity-50" />
-        </label>
-        <button onClick={saveGym} disabled={!s || save.isPending} className="mt-4 rounded-xl gold-gradient px-4 py-2 text-sm font-semibold disabled:opacity-50" style={{ color: "var(--gold-foreground)" }}>{save.isPending ? "Guardando…" : "Guardar"}</button>
+        <WeightChips
+          label="Barras (kg)"
+          options={[10, 15, 20]}
+          value={bars}
+          disabled={!s}
+          onChange={(v) => { setBarsEdited(true); setBars(v); }}
+        />
+        <WeightChips
+          label="Discos que tienes (kg)"
+          options={[25, 20, 15, 10, 5, 2.5, 1.25]}
+          value={plates}
+          disabled={!s}
+          onChange={(v) => { setPlatesEdited(true); setPlates(v); }}
+        />
+        <button onClick={saveGym} disabled={!s || save.isPending} className="mt-5 min-h-12 w-full rounded-xl gold-gradient px-4 text-sm font-semibold disabled:opacity-50" style={{ color: "var(--gold-foreground)" }}>{save.isPending ? "Guardando…" : "Guardar"}</button>
       </section>
 
       <NotificationSettings />
@@ -115,12 +121,12 @@ function SettingsPage() {
       <section className="mt-4 card-elevated p-5">
         <h2 className="text-sm font-semibold">Perfil y seguridad</h2>
         <label className="mt-3 block">
-          <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">PIN actual</span>
+          <span className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">PIN actual</span>
           <input type="password" inputMode="numeric" autoComplete="current-password" value={currentPin} onChange={(e) => setCurrentPin(e.target.value.replace(/[^0-9]/g, ""))} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular tracking-widest outline-none focus:border-gold" />
           <span className="mt-1 block text-xs text-muted-foreground">Necesario para cambiar el PIN o eliminar el perfil.</span>
         </label>
         <label className="mt-3 block">
-          <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">PIN nuevo</span>
+          <span className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">PIN nuevo</span>
           <input type="password" inputMode="numeric" autoComplete="new-password" value={pin} onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular tracking-widest outline-none focus:border-gold" />
         </label>
         <div className="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
@@ -130,5 +136,38 @@ function SettingsPage() {
         </div>
       </section>
     </AppShell>
+  );
+}
+
+/** Botones para marcar las barras o discos que tienes, en vez de escribir una lista. */
+function WeightChips({ label, options, value, disabled, onChange }: { label: string; options: number[]; value: string; disabled?: boolean; onChange: (v: string) => void }) {
+  const selected = value.split(",").map((x) => Number(x.trim())).filter((n) => n > 0);
+  const all = Array.from(new Set([...options, ...selected])).sort((a, b) => b - a);
+  const fmt = (n: number) => String(n).replace(".", ",");
+  function toggle(n: number) {
+    const next = selected.includes(n) ? selected.filter((x) => x !== n) : [...selected, n];
+    onChange(next.sort((a, b) => b - a).join(", "));
+  }
+  return (
+    <div className="mt-4">
+      <span className="mb-2 block text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
+      <div className="flex flex-wrap gap-2">
+        {all.map((n) => {
+          const on = selected.includes(n);
+          return (
+            <button
+              key={n}
+              type="button"
+              aria-pressed={on}
+              disabled={disabled}
+              onClick={() => toggle(n)}
+              className={`min-h-11 min-w-14 rounded-full border px-4 text-[15px] font-semibold tabular transition-colors disabled:opacity-50 ${on ? "border-transparent bg-[color:var(--gold)] text-[color:var(--gold-foreground)]" : "border-white/15 bg-white/[0.04] text-muted-foreground"}`}
+            >
+              {fmt(n)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

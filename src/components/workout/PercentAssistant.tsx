@@ -16,12 +16,12 @@ export function PercentAssistant({ percentages, settings, record }: {
   if (record) {
     const loads = loadsForPercentages(record.weight, percentages);
     return (
-      <div className="mt-4 rounded-[var(--r-md)] border border-[rgba(216,180,107,0.3)] bg-[rgba(216,180,107,0.06)] p-4">
+      <div className="mt-4 rounded-[var(--r-md)] border border-[rgba(200,179,138,0.3)] bg-[rgba(200,179,138,0.06)] p-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs font-medium text-gold">
             <Sparkles className="h-3.5 w-3.5" /> Cargas según tu RM
           </div>
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {record.exercise} · RM {formatKg(record.weight)} kg
           </span>
         </div>
@@ -40,11 +40,11 @@ export function PercentAssistant({ percentages, settings, record }: {
   }
 
   return (
-    <div className="mt-4 rounded-[var(--r-md)] border border-[rgba(216,180,107,0.3)] bg-[rgba(216,180,107,0.06)] p-4">
+    <div className="mt-4 rounded-[var(--r-md)] border border-[rgba(200,179,138,0.3)] bg-[rgba(200,179,138,0.06)] p-4">
       <div className="flex items-center gap-2 text-xs font-medium text-gold">
         <Sparkles className="h-3.5 w-3.5" /> Asistente de %
       </div>
-      <p className="mt-1.5 text-[11px] text-muted-foreground">RM no disponible para este ejercicio</p>
+      <p className="mt-1.5 text-xs text-muted-foreground">RM no disponible para este ejercicio</p>
       <div className="mt-3 flex items-center gap-2">
         <input
           type="text"
@@ -52,7 +52,7 @@ export function PercentAssistant({ percentages, settings, record }: {
           placeholder="Tu 1RM (kg)"
           value={oneRm}
           onChange={(e) => setOneRm(e.target.value)}
-          className="tap w-32 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] text-foreground tabular outline-none placeholder:text-muted-foreground/70 focus:border-[rgba(216,180,107,0.55)]"
+          className="tap w-32 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] text-foreground tabular outline-none placeholder:text-muted-foreground/70 focus:border-[rgba(200,179,138,0.55)]"
         />
         <span className="text-xs text-muted-foreground">→ peso recomendado, redondeado a tus discos</span>
       </div>

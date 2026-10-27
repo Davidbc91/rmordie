@@ -53,7 +53,7 @@ function RecordsPage() {
   return (
     <div className="page-enter">
       <header className="rise rise-1 mb-3 flex min-h-12 items-center justify-between gap-3">
-        <h1 className="text-[40px] font-extrabold leading-none tracking-tight" style={{ fontFamily: "var(--font-editorial)" }}>Récords</h1>
+        <h1 className="page-title">Récords</h1>
         {category === "strength" && (
           <button
             type="button"

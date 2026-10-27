@@ -210,7 +210,7 @@ function WodDetailModal({ summary, onClose }: { summary: WodSummary; onClose: ()
       >
         <div className="mb-5 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+            <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
               {WOD_TYPE_LABEL[summary.type]} · Evolución
             </p>
             <h2 className="mt-1.5 truncate text-xl font-semibold tracking-tight">{summary.name}</h2>
@@ -239,7 +239,7 @@ function WodDetailModal({ summary, onClose }: { summary: WodSummary; onClose: ()
 
         {chartData.length >= 2 && (
           <div className="mb-5 rounded-2xl border border-border p-4">
-            <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Progresión</p>
+            <p className="mb-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">Progresión</p>
             <div className="h-40 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
@@ -278,7 +278,7 @@ function WodDetailModal({ summary, onClose }: { summary: WodSummary; onClose: ()
           {history.map((r) => (
             <li key={r.id} className="rounded-2xl border border-border p-3.5">
               <div className="flex items-center justify-between gap-3">
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   {new Date(r.performed_on).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })}
                   {r.month_key ? ` · ${r.month_key} S${r.week} ${r.day_key}` : " · Manual"}
                 </div>
@@ -296,9 +296,9 @@ function WodDetailModal({ summary, onClose }: { summary: WodSummary; onClose: ()
               </div>
               <div className="mt-2 flex items-center gap-2 text-sm">
                 <span className="font-semibold tabular">{formatScore(r)}</span>
-                <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold">{SCALE_LABEL[r.scale]}</span>
+                <span className="rounded-full border border-border px-2 py-0.5 text-xs font-semibold">{SCALE_LABEL[r.scale]}</span>
                 {r.is_pr && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide">
                     <Trophy className="h-3 w-3" /> PR
                   </span>
                 )}
@@ -315,7 +315,7 @@ function WodDetailModal({ summary, onClose }: { summary: WodSummary; onClose: ()
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-border p-3 text-center">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
       <p className="mt-1 text-sm font-semibold tabular">{value}</p>
     </div>
   );
@@ -378,7 +378,7 @@ function ManualWodForm({ onClose }: { onClose: () => void }) {
               key={t}
               type="button"
               onClick={() => setType(t)}
-              className={`rounded-xl border px-3 py-1.5 text-[11px] font-semibold transition ${
+              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                 type === t ? "gold-gradient border-transparent" : "border-border text-muted-foreground"
               }`}
             >

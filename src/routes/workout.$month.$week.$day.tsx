@@ -32,7 +32,7 @@ import { getCurrentUserId } from "@/lib/pin-gate";
 import { downloadSessionReport } from "@/lib/session-report";
 import { renderWorkoutCard, shareOrDownloadCard } from "@/lib/share-card";
 import { WorkoutReview, WorkoutReviewCard } from "@/components/workout/WorkoutReviewCard";
-import { BlockPayload, BlockCard } from "@/components/workout/BlockCard";
+import { BlockPayload, BlockCard, type StrengthPr } from "@/components/workout/BlockCard";
 
 export const Route = createFileRoute("/workout/$month/$week/$day")({
   head: () => ({ meta: [{ title: "Entrenamiento — RMORDIE" }] }),
@@ -56,7 +56,8 @@ function WorkoutPage() {
   const createPost = useCreatePost();
   const { data: wellnessLogs = [] } = useWellnessLogs();
   const formsRef = useRef<Record<string, () => BlockPayload>>({});
-  const prRef = useRef<Record<string, () => Promise<boolean>>>({});
+  const prRef = useRef<Record<string, () => Promise<StrengthPr | null>>>({});
+  const [strengthCelebration, setStrengthCelebration] = useState<PrCelebrationData | null>(null);
   const wodRef = useRef<Record<string, () => WodSaveInput | null>>({});
   const [savingAll, setSavingAll] = useState(false);
   const [celebrate, setCelebrate] = useState<{ data: PrCelebrationData; outcome: PrOutcome } | null>(null);
@@ -136,6 +137,7 @@ function WorkoutPage() {
     setSavingAll(true);
     try {
       const prs: PrOutcome[] = [];
+      const strengthPrs: StrengthPr[] = [];
       const wodOutcomes: PrOutcome[] = [];
       const payloads: BlockPayload[] = [];
       for (const [blockKey, get] of entries) {
@@ -143,7 +145,7 @@ function WorkoutPage() {
         payloads.push(block);
         await save.mutateAsync({ month_key: month, week: weekN, day_key: day, ...block });
         const strengthPr = await prRef.current[blockKey]?.();
-        if (strengthPr) toast.success(`Nuevo 1RM: ${formatKg(Number(block.weight))} kg`);
+        if (strengthPr) strengthPrs.push(strengthPr);
         const out = await persistWod(blockKey);
         if (out) {
           wodOutcomes.push(out);
@@ -190,7 +192,7 @@ function WorkoutPage() {
         volume,
         avgRpe,
         blocks: payloads.length,
-        prs: prs.filter((p) => p.kind === "pr").length,
+        prs: prs.filter((p) => p.kind === "pr").length + strengthPrs.length,
         estimatedBest: null,
         recovery,
         recommendation,
@@ -209,6 +211,16 @@ function WorkoutPage() {
       toast.success("Entreno completo guardado");
       const first = prs.find((p) => p.kind === "pr") ?? prs[0];
       if (first) setCelebrate({ data: celebrationFor(first), outcome: first });
+      else if (strengthPrs.length) {
+        const best = strengthPrs[0];
+        setStrengthCelebration({
+          exercise: best.exercise,
+          weight: best.weight,
+          repMax: 1,
+          delta: best.previous != null ? Math.round((best.weight - best.previous) * 100) / 100 : null,
+          subtitle: strengthPrs.length > 1 ? `1RM · y ${strengthPrs.length - 1} récord${strengthPrs.length > 2 ? "s" : ""} más` : undefined,
+        });
+      }
     } catch {
       toast.error("No se pudo guardar el entreno");
     } finally {
@@ -302,6 +314,9 @@ function WorkoutPage() {
       />
       )}
 
+      {strengthCelebration && (
+        <PrCelebration data={strengthCelebration} onClose={() => setStrengthCelebration(null)} />
+      )}
       {celebrate && (
         <PrCelebration
           data={celebrate.data}

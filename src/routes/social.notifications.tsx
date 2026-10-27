@@ -60,7 +60,7 @@ function NotificationsPage() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm">{n.message ?? "Nueva actividad"}</p>
-              <p className="text-[11px] text-muted-foreground">{timeAgo(n.created_at)}</p>
+              <p className="text-xs text-muted-foreground">{timeAgo(n.created_at)}</p>
             </div>
           </div>
         ))}

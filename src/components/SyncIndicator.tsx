@@ -33,17 +33,17 @@ export function SyncIndicator() {
   } else if (syncing > 0) {
     icon = <RefreshCw className="h-3 w-3 animate-spin" />;
     label = "Sincronizando…";
-    tone = "rgba(216,180,107,0.14)";
+    tone = "rgba(200,179,138,0.14)";
     visible = true;
   } else if (conflict > 0) {
     icon = <AlertTriangle className="h-3 w-3" />;
     label = `${conflict} cambio${conflict > 1 ? "s" : ""} por revisar`;
-    tone = "rgba(216,180,107,0.14)";
+    tone = "rgba(200,179,138,0.14)";
     visible = true;
   } else if (pending + error > 0) {
     icon = <RefreshCw className="h-3 w-3" />;
     label = `${pending + error} cambio${pending + error > 1 ? "s" : ""} por enviar`;
-    tone = "rgba(216,180,107,0.10)";
+    tone = "rgba(200,179,138,0.10)";
     visible = true;
   } else if (justSynced) {
     visible = true;
@@ -52,9 +52,9 @@ export function SyncIndicator() {
   if (!visible) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[86px] z-40 flex justify-center px-4">
+    <div className="pointer-events-none fixed inset-x-0 z-40 flex justify-center px-4" style={{ top: "calc(env(safe-area-inset-top) + 8px)" }}>
       <span
-        className="glass animate-fade flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold text-muted-foreground"
+        className="glass animate-fade flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground"
         style={{ background: tone }}
         role="status"
       >

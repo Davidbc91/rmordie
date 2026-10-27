@@ -78,7 +78,7 @@ function PublicProfile() {
           <button
             onClick={() => toggleFollow.mutate({ targetId: profile.user_id, following })}
             className="pressable mt-5 w-full rounded-[18px] py-3 text-sm font-semibold"
-            style={following ? { background: "rgba(255,255,255,0.07)", color: "var(--foreground)" } : { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}
+            style={following ? { background: "rgba(255,255,255,0.07)", color: "var(--foreground)" } : { background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}
           >
             {following ? "Siguiendo" : "Seguir"}
           </button>
@@ -104,7 +104,7 @@ function PublicProfile() {
                 key={t}
                 onClick={() => setTab(t)}
                 className="rounded-full px-3.5 py-2 text-xs"
-                style={tab === t ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
+                style={tab === t ? { background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
               >
                 {t === "posts" ? "Publicaciones" : "PRs"}
               </button>
@@ -124,7 +124,7 @@ function PublicProfile() {
                 <div key={`${r.exercise}-${r.rep_max}`} className="flex items-center justify-between rounded-[18px] border p-4" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{r.exercise}</p>
-                    <p className="text-[11px] text-muted-foreground">{r.rep_max}RM</p>
+                    <p className="text-xs text-muted-foreground">{r.rep_max}RM</p>
                   </div>
                   <p className="text-lg font-semibold tabular">
                     {r.weight}
@@ -147,7 +147,7 @@ function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <p className="text-lg font-semibold tabular">{value}</p>
-      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+      <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
     </div>
   );
 }

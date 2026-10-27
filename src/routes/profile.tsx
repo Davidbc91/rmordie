@@ -159,7 +159,7 @@ function ProfilePage() {
       >
         <ChevronLeft className="h-[18px] w-[18px]" /> Perfil
       </button>
-      <h1 className="rise rise-1 mb-4 text-[40px] font-extrabold leading-none tracking-tight" style={{ fontFamily: "var(--font-editorial)" }}>{current.label}</h1>
+      <h1 className="page-title rise rise-1 mb-4">{current.label}</h1>
 
       {section === "profile" && <ProfileForm />}
       {section === "body" && <BodySection />}

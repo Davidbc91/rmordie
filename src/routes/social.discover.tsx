@@ -79,7 +79,7 @@ function Discover() {
                       <Avatar profile={p} size={44} />
                     </div>
                     <p className="mt-2 truncate text-xs font-semibold">{p.display_name || p.username}</p>
-                    <p className="truncate text-[10px] text-muted-foreground">{p.box_name || `@${p.username}`}</p>
+                    <p className="truncate text-xs text-muted-foreground">{p.box_name || `@${p.username}`}</p>
                   </Link>
                 ))}
               </div>
@@ -138,7 +138,7 @@ function AthleteRow({ p }: { p: SocialProfile }) {
       <Avatar profile={p} />
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold">{p.display_name || p.username}</p>
-        <p className="truncate text-[11px] text-muted-foreground">@{p.username}{p.box_name ? ` · ${p.box_name}` : ""}</p>
+        <p className="truncate text-xs text-muted-foreground">@{p.username}{p.box_name ? ` · ${p.box_name}` : ""}</p>
       </div>
     </Link>
   );

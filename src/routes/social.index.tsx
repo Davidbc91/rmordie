@@ -39,11 +39,11 @@ function SocialFeed() {
     <>
       <header className="rise rise-1 mb-6">
         <p className="eyebrow">Comunidad</p>
-        <h1 className="mt-3 text-[2.2rem] font-semibold leading-[0.95] tracking-tight">Social</h1>
+        <h1 className="page-title mt-3">Social</h1>
         <div className="mt-5 flex gap-2">
           <IconLink to="/social/discover" label="Descubrir" icon={<Compass className="h-4 w-4" />} />
           <IconLink to="/social/notifications" label="Avisos" icon={<Bell className="h-4 w-4" />} badge={unread} />
-          <IconLink to="/social/board" label="PR Board" icon={<Trophy className="h-4 w-4" />} />
+          <IconLink to="/social/board" label="Tablón de récords" icon={<Trophy className="h-4 w-4" />} />
           <IconLink to="/social/settings" label="Perfil" icon={<Settings2 className="h-4 w-4" />} />
         </div>
         <div className="rule-fade mt-6" />
@@ -61,7 +61,7 @@ function SocialFeed() {
             key={t.id}
             onClick={() => setTab(t.id)}
             className="shrink-0 min-h-11 rounded-full px-3.5 py-2 text-xs"
-            style={tab === t.id ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
+            style={tab === t.id ? { background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
           >
             {t.id === "saved" ? <Bookmark className="mr-1 inline h-3 w-3" /> : null}
             {t.label}
@@ -70,7 +70,7 @@ function SocialFeed() {
       </div>
 
       <div className="space-y-3">
-        {isLoading && <p className="text-sm text-muted-foreground">Cargando feed…</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">Cargando publicaciones…</p>}
         {!isLoading && list.length === 0 && (
           <p className="rounded-[20px] border p-6 text-center text-sm text-muted-foreground" style={{ borderColor: "#1C1C1C" }}>
             Todavía no hay publicaciones aquí.
@@ -85,7 +85,7 @@ function SocialFeed() {
         aria-label="Crear publicación"
         onClick={() => setComposing(true)}
         className="pressable fixed right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full"
-        style={{ bottom: "calc(max(env(safe-area-inset-bottom), 12px) + 92px)", background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}
+        style={{ bottom: "calc(max(env(safe-area-inset-bottom), 12px) + 92px)", background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}
       >
         <Plus className="h-6 w-6" />
       </button>
@@ -99,13 +99,13 @@ function IconLink({ to, label, icon, badge }: { to: string; label: string; icon:
   return (
     <Link
       to={to}
-      className="pressable relative flex flex-1 flex-col items-center gap-1.5 rounded-[16px] border py-3 text-[10px] uppercase tracking-[0.14em]"
+      className="pressable relative flex flex-1 flex-col items-center gap-1.5 rounded-[16px] border py-3 text-xs uppercase tracking-[0.14em]"
       style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}
     >
       {icon}
       {label}
       {!!badge && (
-        <span className="absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px]" style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}>
+        <span className="absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs" style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}>
           {badge}
         </span>
       )}

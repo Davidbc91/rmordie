@@ -37,11 +37,11 @@ export function PasswordSettings() {
         Opcional. Úsala para entrar en la app instalada en la pantalla de inicio del iPhone (botón «Tengo contraseña»).
       </p>
       <label className="mt-3 block">
-        <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">Contraseña nueva</span>
+        <span className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Contraseña nueva</span>
         <input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
       </label>
       <label className="mt-3 block">
-        <span className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">Repite la contraseña</span>
+        <span className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Repite la contraseña</span>
         <input type="password" autoComplete="new-password" value={password2} onChange={(e) => setPassword2(e.target.value)} className={inputCls} />
       </label>
       <button onClick={save} disabled={busy} className="mt-4 rounded-xl bg-surface-2 px-4 py-2 text-sm font-medium disabled:opacity-50">

@@ -277,7 +277,7 @@ function PlanBuilderPage() {
               <button
                 key={d}
                 onClick={() => setDayKey(d)}
-                className={`tap rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.12em] ${d === day?.key ? "gold-gradient" : "glass"}`}
+                className={`tap rounded-full px-3 text-xs font-semibold uppercase tracking-[0.12em] ${d === day?.key ? "gold-gradient" : "glass"}`}
               >
                 {d.slice(0, 3)}{count ? ` ${count}` : ""}
               </button>

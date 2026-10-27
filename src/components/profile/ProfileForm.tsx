@@ -79,7 +79,7 @@ export function ProfileForm() {
           <button
             onClick={() => fileRef.current?.click()}
             className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[24px]"
-            style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}
+            style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}
           >
             {form.avatar_url ? (
               <img src={form.avatar_url} alt="Foto de perfil" className="h-full w-full object-cover" />

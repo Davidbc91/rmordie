@@ -56,15 +56,15 @@ export function PrCelebration({
         style={{ animation: "pr-pop 420ms cubic-bezier(0.22,1,0.36,1)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-gold">
-          {data.matched ? "Matched PR" : "New PR"}
+        <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-gold">
+          {data.matched ? "Igualas tu récord" : "Nuevo récord"}
         </p>
         <p className="mt-3 text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">{data.exercise}</p>
-        <p className="gold-text mt-2 text-[52px] font-semibold leading-none tabular tracking-tight">
+        <p className="gold-text mt-2 leading-none tabular" style={{ fontFamily: "var(--font-editorial)", fontWeight: 900, fontSize: "64px" }}>
           {value}
           {isWeight && <span className="text-lg"> kg</span>}
         </p>
-        {!!sub && <p className="mt-2 text-xs text-muted-foreground">{sub}</p>}
+        {!!sub && <p className="mt-2 text-sm text-muted-foreground">{sub}</p>}
 
         {hasActions && (
           <div className="mt-6 space-y-2">
@@ -86,7 +86,7 @@ export function PrCelebration({
             )}
             <button
               onClick={onClose}
-              className="w-full py-2.5 text-xs uppercase tracking-[0.18em] text-muted-foreground"
+              className="min-h-11 w-full text-sm uppercase tracking-[0.18em] text-muted-foreground"
             >
               Cerrar
             </button>

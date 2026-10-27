@@ -60,7 +60,7 @@ type ButtonVariant = "primary" | "glass" | "ghost" | "gold";
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
     "bg-foreground text-[color:var(--primary-foreground)] border border-transparent shadow-[0_16px_34px_-22px_rgba(0,0,0,0.9)]",
-  gold: "gold-gradient border border-[rgba(216,180,107,0.5)] shadow-[0_16px_34px_-20px_rgba(216,180,107,0.45)]",
+  gold: "gold-gradient border border-[rgba(200,179,138,0.5)] shadow-[0_16px_34px_-20px_rgba(200,179,138,0.45)]",
   glass:
     "glass glass-sheen text-foreground hover:border-[color:var(--glass-border-strong)]",
   ghost: "border border-transparent text-muted-foreground hover:text-foreground",
@@ -105,9 +105,9 @@ export function GlassBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]",
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.16em]",
         tone === "neutral" && "border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] text-muted-foreground",
-        tone === "gold" && "border border-[rgba(216,180,107,0.38)] bg-[rgba(216,180,107,0.10)] text-gold",
+        tone === "gold" && "border border-[rgba(200,179,138,0.38)] bg-[rgba(200,179,138,0.10)] text-gold",
         tone === "solid" && "bg-foreground text-[color:var(--primary-foreground)]",
         className,
       )}
@@ -127,7 +127,7 @@ export const GlassInput = React.forwardRef<
       <input
         ref={ref}
         className={cn(
-          "tap w-full rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] tabular text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-[rgba(216,180,107,0.55)] focus:bg-[color:var(--glass-bg-2)]",
+          "tap w-full rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] tabular text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-[rgba(200,179,138,0.55)] focus:bg-[color:var(--glass-bg-2)]",
           className,
         )}
         {...rest}
@@ -146,7 +146,7 @@ export const GlassTextarea = React.forwardRef<
       <textarea
         ref={ref}
         className={cn(
-          "w-full rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-[rgba(216,180,107,0.55)]",
+          "w-full rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3.5 py-3 text-[15px] text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-[rgba(200,179,138,0.55)]",
           className,
         )}
         {...rest}

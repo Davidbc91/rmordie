@@ -82,7 +82,7 @@ function SocialSettings() {
         <Text label="Avatar (URL)" value={form.avatar_url} onChange={(v) => setForm({ ...form, avatar_url: v })} className="col-span-2" />
       </div>
       <label className="mt-2 block">
-        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Bio</span>
+        <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Bio</span>
         <textarea
           rows={3}
           value={form.bio}
@@ -103,7 +103,7 @@ function SocialSettings() {
         onClick={submit}
         disabled={save.isPending}
         className="pressable mt-6 w-full rounded-[18px] py-3.5 text-sm font-semibold"
-        style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}
+        style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}
       >
         Guardar perfil
       </button>
@@ -123,7 +123,7 @@ function Moderation() {
         {reports.map((r) => (
           <div key={r.id} className="rounded-[18px] border p-4" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}>
             <p className="text-sm font-semibold">{r.reason}</p>
-            <p className="text-[11px] text-muted-foreground">{timeAgo(r.created_at)} · {r.status}</p>
+            <p className="text-xs text-muted-foreground">{timeAgo(r.created_at)} · {r.status}</p>
             {r.detail && <p className="mt-1 text-xs text-muted-foreground">{r.detail}</p>}
             {r.post_id && (
               <div className="mt-3 flex gap-2">
@@ -154,7 +154,7 @@ function Moderation() {
 function Text({ label, value, onChange, className = "" }: { label: string; value: string; onChange: (v: string) => void; className?: string }) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
+      <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}

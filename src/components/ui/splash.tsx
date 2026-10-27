@@ -42,7 +42,7 @@ export function SplashScreen({ children }: { children: ReactNode }) {
               className="splash-logo h-40 w-40 rounded-[28px] object-cover"
             />
             <div
-              className="splash-sub mt-6 text-[11px] uppercase"
+              className="splash-sub mt-6 text-xs uppercase"
               style={{ letterSpacing: "0.45em", color: "rgba(255,255,255,0.7)" }}
             >
               RM OR DIE

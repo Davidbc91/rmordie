@@ -570,25 +570,56 @@ function PinLock({ profileId, onUnlocked }: { profileId: string; onUnlocked: () 
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3">
-      <input
-        autoFocus
-        type="password"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        placeholder="PIN"
-        aria-label="PIN"
-        value={pin}
-        onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))}
-        className={pinCls}
-      />
+    <form onSubmit={submit} className="space-y-4">
+      <PinPad value={pin} onChange={(v) => { setPin(v); if (error) setError(null); }} disabled={busy} />
       {error && <p role="alert" className="text-center text-sm text-destructive">{error}</p>}
       <button type="submit" disabled={busy || pin.length < 4} className={primaryCls} style={{ color: "var(--gold-foreground)" }}>
         {busy ? "Comprobando…" : "Entrar"}
       </button>
-      <button type="button" onClick={async () => { await signOut(); window.location.reload(); }} className={secondaryCls}>
+      <button
+        type="button"
+        onClick={async () => { await signOut(); window.location.reload(); }}
+        className="mx-auto block min-h-11 px-3 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+      >
         Cerrar sesión
       </button>
     </form>
   );
 }
+
+/**
+ * Teclado numérico grande para el PIN. También acepta el teclado físico.
+ * Los PIN pueden tener de 4 a 8 cifras, así que no entra solo: se pulsa «Entrar».
+ */
+function PinPad({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const press = (d: string) => { if (!disabled && value.length < 8) onChange(value + d); };
+  const back = () => { if (!disabled) onChange(value.slice(0, -1)); };
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (/^[0-9]$/.test(e.key)) press(e.key);
+      else if (e.key === "Backspace") back();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+  const dots = Math.max(4, value.length);
+  const keyCls = "pressable grid h-16 place-items-center rounded-[18px] border border-white/[0.08] bg-white/[0.05] text-[28px] font-bold active:bg-white/[0.12] disabled:opacity-40";
+  return (
+    <div>
+      <div className="mb-5 flex justify-center gap-3" aria-label={`PIN: ${value.length} cifras escritas`} role="status">
+        {Array.from({ length: dots }).map((_, i) => (
+          <span key={i} className={`h-3.5 w-3.5 rounded-full ${i < value.length ? "bg-[color:var(--gold)]" : "border border-white/25"}`} />
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-2.5" style={{ fontFamily: "var(--font-editorial)" }}>
+        {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
+          <button key={d} type="button" disabled={disabled} onClick={() => press(d)} className={keyCls}>{d}</button>
+        ))}
+        <span />
+        <button type="button" disabled={disabled} onClick={() => press("0")} className={keyCls}>0</button>
+        <button type="button" disabled={disabled || !value} onClick={back} aria-label="Borrar" className={keyCls + " text-base font-semibold"} style={{ fontFamily: "var(--font-display)" }}>Borrar</button>
+      </div>
+    </div>
+  );
+}
+

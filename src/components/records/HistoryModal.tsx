@@ -102,33 +102,33 @@ export function HistoryModal({ record, onClose }: { record: PersonalRecord; onCl
         </div>
 
         <div className="glass-quiet mb-4 rounded-[20px] border-white/[.11] bg-white/[.045] p-4">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Tendencia</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Tendencia</p>
           <p className="mt-1.5 text-sm font-semibold">{trend.text}</p>
         </div>
 
         <div className="mb-5 grid grid-cols-2 gap-2.5">
           <div className="glass-quiet rounded-[20px] border-white/[.10] bg-white/[.04] p-4">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">RM actual</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">RM actual</p>
             <p className="mt-1.5 text-3xl font-semibold tracking-tight tabular text-[var(--gold)]">
               {formatKg(Number(record.weight))} kg
             </p>
           </div>
           <div className="glass-quiet rounded-[20px] p-4">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Mejor marca</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Mejor marca</p>
             <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular">{formatKg(bestEver)} kg</p>
           </div>
           <div className="rounded-2xl border border-border p-3.5">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">1RM estimado máx.</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">1RM estimado máx.</p>
             <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular">{bestEstimated != null ? `${formatKg(bestEstimated)} kg` : "—"}</p>
           </div>
           <div className="rounded-2xl border border-border p-3.5">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Última carga</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Última carga</p>
             <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular">
               {lastLoad ? `${formatKg(Number(lastLoad.weight))} kg` : "—"}
             </p>
           </div>
           <div className="rounded-2xl border border-border p-3.5">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Veces realizado</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Veces realizado</p>
             <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular">{performed.length}</p>
           </div>
         </div>
@@ -158,7 +158,7 @@ export function HistoryModal({ record, onClose }: { record: PersonalRecord; onCl
                 return (
                   <li key={h.id} className="rounded-2xl border border-border p-3.5">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         {dateStr} · {timeStr}
                       </div>
                       {diff != null && diff !== 0 && (

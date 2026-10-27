@@ -19,10 +19,10 @@ export function WorkoutReviewCard({ review, onClose, onDownload, onShare, sharin
       <div className="cinematic-card-strong max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-[28px] p-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] sm:max-h-[90vh] sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <span className="cinematic-label">POST-WORKOUT REVIEW</span>
+            <span className="cinematic-label">RESUMEN DEL ENTRENO</span>
             <h2 className="cinematic-title mt-2">Sesión completada</h2>
           </div>
-          <button type="button" onClick={onClose} className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-muted-foreground">Cerrar</button>
+          <button type="button" onClick={onClose} className="min-h-11 rounded-full border border-white/10 px-4 text-sm text-muted-foreground">Cerrar</button>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-2">

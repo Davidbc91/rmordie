@@ -118,7 +118,7 @@ export function GoalsSection({ records, results, metrics }: any) {
               </button>
             </div>
             <div className="mt-4 h-[6px] w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.10)" }}>
-              <div className="h-full rounded-full" style={{ width: `${pct ?? 0}%`, background: "linear-gradient(140deg,#EBD6A6,#D8B46B)" }} />
+              <div className="h-full rounded-full" style={{ width: `${pct ?? 0}%`, background: "linear-gradient(140deg,#E8DDC8,#C8B38A)" }} />
             </div>
             <p className="mt-2 text-[13px]" style={{ color: "#6F6F6F" }}>
               {pct != null ? `${pct}% completado` : "Sin datos suficientes"}

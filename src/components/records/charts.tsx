@@ -71,10 +71,10 @@ export function EvolutionChart({
   return (
     <div className="glass-quiet mb-5 rounded-[20px] border-white/[.11] bg-white/[.045] p-4">
       <div className="mb-3 flex items-baseline justify-between">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
           Evolución
         </p>
-        <p className="text-[11px] text-muted-foreground tabular">
+        <p className="text-xs text-muted-foreground tabular">
           <span className="font-semibold text-foreground">{max} kg</span> máx · {min} kg mín
         </p>
       </div>

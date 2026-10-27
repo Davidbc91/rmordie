@@ -92,7 +92,7 @@ export function BodySection() {
               className="whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-semibold transition"
               style={
                 metricKey === f.key
-                  ? { background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }
+                  ? { background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }
                   : { background: "#F1F1F1", color: "#6F6F6F" }
               }
             >

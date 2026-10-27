@@ -139,7 +139,7 @@ function CalendarPage() {
         </button>
         <div className="min-w-0 text-center">
           <p className="eyebrow">PLANIFICACIÓN</p>
-          <h1 className="mt-1 truncate text-xl font-semibold tracking-tight">{month.label} {parseMonthDate(month)?.year ?? ""}</h1>
+          <h1 className="page-title mt-1 truncate" style={{ fontSize: "2rem" }}>{month.label} {parseMonthDate(month)?.year ?? ""}</h1>
         </div>
         <button onClick={goNext} className="tap pressable grid h-11 w-11 place-items-center rounded-[14px] text-muted-foreground hover:text-foreground disabled:opacity-25" disabled={idx === months.length - 1} aria-label="Mes siguiente">
           <ChevronRight className="h-5 w-5" />
@@ -149,17 +149,17 @@ function CalendarPage() {
       <div className="mt-3 flex items-center justify-between gap-3">
         <button
           onClick={() => setIdx(findMonthIndexForDate(months))}
-          className="pressable inline-flex min-h-[40px] items-center gap-2 rounded-full border border-[rgba(216,180,107,0.35)] bg-[rgba(216,180,107,0.10)] px-4 text-xs font-semibold text-gold"
+          className="pressable inline-flex min-h-[40px] items-center gap-2 rounded-full border border-[rgba(200,179,138,0.35)] bg-[rgba(200,179,138,0.10)] px-4 text-xs font-semibold text-gold"
         >
           <Calendar className="h-3.5 w-3.5" />
           Ir a hoy
         </button>
-        <span className="text-[10px] text-muted-foreground/70">Desliza para cambiar</span>
+        <span className="text-xs text-muted-foreground/70">Desliza para cambiar</span>
       </div>
 
       <div className="mt-5 grid grid-cols-7 gap-1.5 px-1">
         {weekdayLabels.map((label) => (
-          <div key={label} className="text-center text-[9px] font-bold tracking-[0.12em] text-muted-foreground/65">
+          <div key={label} className="text-center text-[11px] font-bold tracking-[0.12em] text-muted-foreground/65">
             {label}
           </div>
         ))}
@@ -184,7 +184,7 @@ function CalendarPage() {
               <div className="mb-1.5 flex items-center justify-between px-1">
                 <span className="eyebrow">{planWeek ? `SEMANA ${planWeek}` : "CALENDARIO"}</span>
                 {trainDays.length > 0 && (
-                  <span className="text-[10px] font-semibold tabular text-muted-foreground">
+                  <span className="text-xs font-semibold tabular text-muted-foreground">
                     {doneCount}/{trainDays.length}
                   </span>
                 )}
@@ -223,8 +223,8 @@ function CalendarPage() {
                             : d
                               ? "glass glass-sheen"
                               : "glass-quiet opacity-45",
-                        done ? "border-[rgba(216,180,107,0.48)] bg-[rgba(216,180,107,0.10)]" : "",
-                        isToday ? "ring-1 ring-[rgba(216,180,107,0.9)]" : "",
+                        done ? "border-[rgba(200,179,138,0.48)] bg-[rgba(200,179,138,0.10)]" : "",
+                        isToday ? "ring-1 ring-[rgba(200,179,138,0.9)]" : "",
                       ].join(" ")}
                     >
                       <div className="flex items-start justify-between gap-1">
@@ -239,7 +239,7 @@ function CalendarPage() {
                           ) : d.isRest ? (
                             <Moon className="h-3.5 w-3.5 text-muted-foreground/65" strokeWidth={1.8} />
                           ) : partial ? (
-                            <span className="text-[8px] font-bold tabular text-gold">{prog?.done}/{prog?.total}</span>
+                            <span className="text-[11px] font-bold tabular text-gold">{prog?.done}/{prog?.total}</span>
                           ) : (
                             <Circle className="h-3.5 w-3.5 text-muted-foreground/35" strokeWidth={1.8} />
                           )
@@ -248,16 +248,16 @@ function CalendarPage() {
 
                       {inMonth && (
                         <>
-                          <p className={`mt-0.5 text-[8px] font-semibold uppercase tracking-[0.08em] ${isToday ? "text-gold" : "text-muted-foreground/60"}`}>
+                          <p className={`mt-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] ${isToday ? "text-gold" : "text-muted-foreground/60"}`}>
                             {dateLabel(date)}
                           </p>
 
-                          <p className="mt-2 line-clamp-3 text-[10px] font-semibold leading-[1.25] text-foreground/90">
+                          <p className="mt-2 line-clamp-3 text-xs font-semibold leading-[1.25] text-foreground/90">
                             {headline}
                           </p>
 
                           {d && !d.isRest && (
-                            <p className="mt-1 text-[8px] text-muted-foreground/65">
+                            <p className="mt-1 text-[11px] text-muted-foreground/65">
                               {prog?.done ?? 0}/{prog?.total ?? 0} bloques
                             </p>
                           )}
@@ -289,7 +289,7 @@ function CalendarPage() {
               <div className="mt-2 h-[2px] w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
                 <div
                   className="h-full rounded-full transition-[width] duration-700"
-                  style={{ width: `${pct}%`, background: "linear-gradient(90deg,#EBD6A6,#D8B46B)" }}
+                  style={{ width: `${pct}%`, background: "linear-gradient(90deg,#E8DDC8,#C8B38A)" }}
                 />
               </div>
             </section>

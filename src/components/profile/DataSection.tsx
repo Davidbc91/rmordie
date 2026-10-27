@@ -52,7 +52,7 @@ export function DataSection() {
           target="_blank"
           rel="noreferrer"
           className="mt-5 flex w-full items-center justify-center rounded-[18px] py-3 text-sm font-semibold"
-          style={{ background: "linear-gradient(140deg,#EBD6A6,#D8B46B)", color: "#0A0A0B" }}
+          style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}
         >
           Generar informe para entrenador (PDF)
         </a>

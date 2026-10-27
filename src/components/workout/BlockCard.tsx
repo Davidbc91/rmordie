@@ -1,5 +1,6 @@
 import { LinkedText } from "@/components/LinkedText";
-import { usePersonalRecords, useUpsertPersonalRecord } from "@/lib/store";
+import { usePersonalRecords, useUpsertPersonalRecord, useAllResults, usePlanning } from "@/lib/store";
+import { buildBlockMovementIndex, findLastTime, mainMovementId } from "@/lib/last-time";
 import { extractPercentages, extractSetsReps, extractRestSeconds } from "@/lib/plates";
 import { LoadStepper, CountStepper, RpeChips, PlateLine, RestTimer } from "./QuickLog";
 import {
@@ -121,6 +122,15 @@ export function BlockCard({
   const restSeconds = useMemo(() => extractRestSeconds(content), [content]);
   const plateCfg = settings ? { bars: settings.bar_weights, plates: settings.plate_weights } : undefined;
   const detected = useMemo(() => detectExercise(content, records), [content, records]);
+  const { data: allResults = [] } = useAllResults();
+  const { data: planningData } = usePlanning();
+  const blockIndex = useMemo(() => buildBlockMovementIndex(planningData?.data.months ?? []), [planningData]);
+  const lastTime = useMemo(
+    () => findLastTime(mainMovementId(content, detected?.exercise), allResults, blockIndex, contextIds),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [content, detected?.exercise, allResults, blockIndex, contextIds.month_key, contextIds.week, contextIds.day_key],
+  );
+  const lastNext = lastTime && lastTime.result.rpe != null ? suggestNextLoad(Number(lastTime.result.weight), Number(lastTime.result.rpe)) : null;
   const targetLoads = useMemo(
     () => (detected ? loadsForPercentages(detected.weight, pcts) : []),
     [detected, pcts],
@@ -433,6 +443,57 @@ export function BlockCard({
 
             {!detected && pcts.length > 0 && settings && (
               <PercentAssistant percentages={pcts} settings={settings} record={detected} />
+            )}
+
+            {lastTime && (
+              <div className="space-y-2 rounded-[16px] border border-white/[0.1] bg-white/[0.04] p-3.5">
+                <p className="text-[13px] text-muted-foreground">
+                  La última vez
+                  {lastTime.result.updated_at ? ` · ${new Date(lastTime.result.updated_at).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}` : ""}:{" "}
+                  <span className="font-semibold text-foreground">
+                    {[
+                      `${formatKg(Number(lastTime.result.weight))} kg`,
+                      lastTime.result.sets != null && lastTime.result.reps != null ? `${lastTime.result.sets}×${lastTime.result.reps}` : lastTime.result.reps != null ? `${lastTime.result.reps} reps` : null,
+                      lastTime.result.rpe != null ? `RPE ${formatKg(Number(lastTime.result.rpe))}` : null,
+                    ].filter(Boolean).join(" · ")}
+                  </span>
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWeight(String(lastTime.result.weight));
+                      if (lastTime.result.sets != null) setSets(String(lastTime.result.sets));
+                      if (lastTime.result.reps != null) setReps(String(lastTime.result.reps));
+                    }}
+                    className="pressable min-h-11 flex-1 rounded-[12px] border border-white/15 bg-white/[0.06] px-3 text-sm font-bold"
+                  >
+                    Repetir lo de la última vez
+                  </button>
+                  {lastNext && lastNext.weight !== Number(lastTime.result.weight) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWeight(String(lastNext.weight));
+                        if (lastTime.result.sets != null) setSets(String(lastTime.result.sets));
+                        if (lastTime.result.reps != null) setReps(String(lastTime.result.reps));
+                      }}
+                      className="pressable min-h-11 flex-1 rounded-[12px] bg-[color:var(--gold)]/16 px-3 text-sm font-bold text-[color:var(--gold-soft)]"
+                    >
+                      {lastNext.weight > Number(lastTime.result.weight) ? "Subir" : "Bajar"} a {formatKg(lastNext.weight)} kg
+                    </button>
+                  )}
+                </div>
+                {lastNext && (
+                  <p className="text-xs text-muted-foreground">
+                    {lastNext.weight > Number(lastTime.result.weight)
+                      ? `Con RPE ${formatKg(Number(lastTime.result.rpe))} te sobró margen: prueba un poco más.`
+                      : lastNext.weight < Number(lastTime.result.weight)
+                        ? `Con RPE ${formatKg(Number(lastTime.result.rpe))} fue al límite: mejor bajar un poco.`
+                        : `Con RPE ${formatKg(Number(lastTime.result.rpe))} fue exigente: repite el peso.`}
+                  </p>
+                )}
+              </div>
             )}
 
             <div>

@@ -11,7 +11,7 @@ import {
 } from "@/lib/rm-matcher";
 import { resolveMovementId } from "@/lib/dictionary/resolve";
 import { movements } from "@/lib/dictionary/catalog";
-import { Check, ChevronDown, Trophy } from "lucide-react";
+import { Check, ChevronDown, Trophy, Timer as TimerIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadDraft, saveDraft } from "@/lib/active-workout";
 import {
@@ -29,6 +29,8 @@ import { useWodResults, type WodResult, type WodSaveInput, type PrOutcome } from
 import { WodScoreFields } from "@/components/WodRecords";
 import { suggestNextLoad, estimateOneRm, parseTime, formatTime } from "./loads";
 import { PercentAssistant } from "./PercentAssistant";
+import { WodTimer, type WodTimerResult } from "./WodTimer";
+import { timerConfigFor } from "@/lib/wod-timer";
 
 /** Nuevo 1RM de fuerza detectado al guardar un bloque. */
 export type StrengthPr = { exercise: string; weight: number; previous: number | null };
@@ -74,6 +76,8 @@ export function BlockCard({
   const loadedRef = useRef(false);
 
   const wod = useMemo(() => detectWod(content), [content]);
+  const timerConfig = useMemo(() => timerConfigFor(content), [content]);
+  const [timerOpen, setTimerOpen] = useState(false);
   const [wodScale, setWodScale] = useState<WodScale>((existingWod?.scale as WodScale) ?? "rx");
   const [wodCap, setWodCap] = useState<boolean>(existingWod?.status === "cap");
   const [wodTime, setWodTime] = useState<string>(existingWod?.time_seconds ? formatTime(existingWod.time_seconds) : "");
@@ -177,6 +181,36 @@ export function BlockCard({
     return `${formatScore(current)} sería nuevo PR${delta ? ` (${delta})` : ""}`;
   }, [wod, bestForScale, wodCap, wodTime, wodRounds, wodReps]);
 
+  // Récord con el resultado que sale del timer (no guarda nada).
+  function timerPrCheck(r: WodTimerResult): string | null {
+    if (!wod || !bestForScale || r.kind === "none") return null;
+    if (r.kind === "time" && r.cap) return null;
+    const current = {
+      wod_type: wod.type,
+      status: "completed",
+      time_seconds: r.kind === "time" ? r.seconds : null,
+      rounds: r.kind === "rounds" ? r.rounds : null,
+      reps: r.kind === "rounds" ? r.reps : null,
+      calories: null,
+      distance: null,
+    };
+    const cmp = compareScores(wod.type, current, bestForScale);
+    if (cmp == null || cmp <= 0) return null;
+    return `${formatScore(current)} sería nuevo PR · antes ${formatScore(bestForScale)}`;
+  }
+
+  function applyTimer(r: WodTimerResult) {
+    if (r.kind === "rounds") {
+      setWodRounds(String(r.rounds));
+      setWodReps(r.reps > 0 ? String(r.reps) : "");
+    } else if (r.kind === "time") {
+      setWodCap(r.cap);
+      setWodTime(r.cap ? "" : formatTime(r.seconds));
+    }
+    setTimerOpen(false);
+    setOpen(true);
+  }
+
   function payload(): BlockPayload {
     const w = weight.replace(",", ".").trim();
     return {
@@ -275,6 +309,32 @@ export function BlockCard({
       {open && (
       <div className="space-y-4 px-4 pb-4">
         <LinkedText text={content} className="text-[15px] leading-relaxed text-foreground/85" />
+
+        {timerConfig && (
+          <div>
+            <button
+              type="button"
+              onClick={() => setTimerOpen(true)}
+              className="pressable gold-gradient flex min-h-16 w-full items-center justify-center gap-2.5 rounded-[16px]"
+            >
+              <TimerIcon className="h-6 w-6" strokeWidth={2.2} />
+              <span className="flex flex-col items-start leading-none">
+                <span className="cta-display" style={{ fontSize: "1.6rem" }}>INICIAR TIMER</span>
+                <span className="mt-0.5 text-[13px] font-bold">{timerConfig.label}</span>
+              </span>
+            </button>
+            <p className="mt-1.5 text-center text-[13px] text-muted-foreground">Ya viene configurado del plan · 10 s de cuenta atrás</p>
+          </div>
+        )}
+        {timerOpen && timerConfig && (
+          <WodTimer
+            config={timerConfig}
+            title={`${blockKey} · ${title}`}
+            onClose={() => setTimerOpen(false)}
+            onApply={applyTimer}
+            prCheck={timerPrCheck}
+          />
+        )}
 
         {/* WOD: marca, escala y resultado */}
         {showWodScore && wod && (

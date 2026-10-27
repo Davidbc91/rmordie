@@ -22,7 +22,7 @@ const MODES: { id: Mode; label: string; desc: string }[] = [
   { id: "emom", label: "EMOM", desc: "Cada minuto en el minuto" },
   { id: "fortime", label: "For Time", desc: "Cuenta atrás con cap" },
   { id: "tabata", label: "Tabata", desc: "20s trabajo / 10s descanso" },
-  { id: "intervals", label: "Intervals", desc: "Trabajo/descanso custom" },
+  { id: "intervals", label: "Intervalos", desc: "Trabajo/descanso custom" },
   { id: "countdown", label: "Cuenta atrás", desc: "Un solo bloque" },
   { id: "stopwatch", label: "Cronómetro", desc: "Tiempo libre ascendente" },
 ];
@@ -363,8 +363,9 @@ function TimerRunner({ mode }: { mode: Mode }) {
         </div>
         <div className="text-xs uppercase tracking-widest text-muted-foreground">{sub}</div>
         <div
-          className="mt-2 font-mono text-7xl font-bold tabular-nums"
+          className="mt-2 text-8xl font-black tabular-nums"
           style={{
+            fontFamily: "var(--font-editorial)",
             color: phase === "done" ? "var(--gold)" : phase === "rest" ? "var(--muted-foreground)" : "inherit",
           }}
         >
@@ -409,11 +410,12 @@ function TimerRunner({ mode }: { mode: Mode }) {
             />
           </div>
           <div
-            className="font-mono font-bold tabular-nums leading-none text-center px-4 max-w-full"
+            className="font-black tabular-nums leading-none text-center px-4 max-w-full"
             style={{
-              fontSize: "min(28vw, 55vh)",
+              fontFamily: "var(--font-editorial)",
+              fontSize: "min(38vw, 55vh)",
               color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#B8B8B8" : "#fff",
-              letterSpacing: "-0.03em",
+              letterSpacing: "0.01em",
             }}
           >
             {display}

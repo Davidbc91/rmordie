@@ -43,6 +43,13 @@
       "when": 1792055356741,
       "tag": "0005_mover_resultados_oct_2027",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793102884708,
+      "tag": "0006_videos_solo_miembros",
+      "breakpoints": true
     }
   ]
 }

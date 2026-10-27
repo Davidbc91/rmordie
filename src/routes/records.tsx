@@ -9,6 +9,8 @@ type RecordsSearch = {
   wod?: string;
   exercise?: string;
   repMax?: number;
+  /** Ejercicio abierto en la pantalla de progresión. */
+  ver?: string;
 };
 
 export const Route = createFileRoute("/records")({
@@ -17,6 +19,7 @@ export const Route = createFileRoute("/records")({
     wod: typeof search.wod === "string" ? search.wod : undefined,
     exercise: typeof search.exercise === "string" ? search.exercise : undefined,
     repMax: [1, 3, 5, 10].includes(Number(search.repMax)) ? Number(search.repMax) : undefined,
+    ver: typeof search.ver === "string" && search.ver ? search.ver : undefined,
   }),
   head: () => ({
     meta: [
@@ -50,8 +53,21 @@ function RecordsPage() {
     [navigate],
   );
 
+  const openView = useCallback(
+    (exercise: string) => {
+      navigate({ search: (previous) => ({ ...previous, tab: "strength", ver: exercise }) });
+      window.scrollTo({ top: 0 });
+    },
+    [navigate],
+  );
+  const closeView = useCallback(() => {
+    navigate({ search: (previous) => ({ ...previous, ver: undefined }), replace: true });
+  }, [navigate]);
+  const viewing = category === "strength" && !!search.ver;
+
   return (
     <div className="page-enter">
+      {!viewing && (<>
       <header className="rise rise-1 mb-3 flex min-h-12 items-center justify-between gap-3">
         <h1 className="page-title">Récords</h1>
         {category === "strength" && (
@@ -84,6 +100,7 @@ function RecordsPage() {
           </button>
         ))}
       </div>
+      </>)}
 
       {category === "wods" ? (
         <WodRecords focusSlug={search.wod} />
@@ -94,6 +111,9 @@ function RecordsPage() {
           clearFocus={clearFocus}
           showAdd={showAdd}
           setShowAdd={setShowAdd}
+          viewExercise={search.ver}
+          openView={openView}
+          closeView={closeView}
         />
       )}
     </div>

@@ -737,6 +737,25 @@ export type PersonalRecordHistory = {
   changed_at: string;
 };
 
+/** Todo el historial de récords del usuario (para tendencias y gráficos). */
+export function useAllPersonalRecordHistory() {
+  const uid = getCurrentUserId();
+  return useQuery({
+    queryKey: ["personal_record_history", uid, "all"],
+    enabled: !!uid,
+    queryFn: async (): Promise<PersonalRecordHistory[]> =>
+      offlineRead(cacheKeys.recordHistory(uid!, "*", null), async () => {
+        const { data, error } = await (supabase as any)
+          .from("personal_record_history")
+          .select("*")
+          .eq("user_id", uid!)
+          .order("changed_at", { ascending: true });
+        if (error) throw error;
+        return (data ?? []) as PersonalRecordHistory[];
+      }),
+  });
+}
+
 export function usePersonalRecordHistory(exercise: string | null, repMax?: number) {
   const uid = getCurrentUserId();
   return useQuery({

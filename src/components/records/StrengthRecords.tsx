@@ -5,9 +5,12 @@ import {
   useDeletePersonalRecord,
   usePlanning,
   useAllResults,
+  useAllPersonalRecordHistory,
   type PersonalRecord,
 } from "@/lib/store";
-import { Trophy, Pencil, Trash2, Check, X, Search } from "lucide-react";
+import { blockContentIndex, historyFor, sessionsFor, trendFor } from "@/lib/progression-chart";
+import { ProgressionView, TrendSpark } from "./ProgressionView";
+import { Trophy, Search, ChevronRight } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { PrCelebration, type PrCelebrationData } from "@/components/PrCelebration";
@@ -15,8 +18,6 @@ import { formatKg, normalizeExerciseName, sameExercise } from "@/lib/rm-matcher"
 import { MovementDictionaryLink } from "@/components/MovementDictionaryLink";
 import { resolveMovement, resolveMovementId } from "@/lib/dictionary/resolve";
 import { ProgressionRecommendations } from "./progression";
-import { Sparkline } from "./charts";
-import { HistoryModal } from "./HistoryModal";
 import { PageSkeleton } from "@/components/PageSkeleton";
 
 export const REP_MAXES = [1, 3, 5, 10] as const;
@@ -77,10 +78,16 @@ export function StrengthRecords({
   clearFocus,
   showAdd,
   setShowAdd,
+  viewExercise,
+  openView,
+  closeView,
 }: {
   focusExercise?: string;
   focusRepMax?: number;
   clearFocus: () => void;
+  viewExercise?: string;
+  openView: (exercise: string) => void;
+  closeView: () => void;
   showAdd: boolean;
   setShowAdd: (v: boolean | ((prev: boolean) => boolean)) => void;
 }) {
@@ -91,16 +98,12 @@ export function StrengthRecords({
   const update = useUpdatePersonalRecord();
   const del = useDeletePersonalRecord();
 
+  const { data: allHistory = [] } = useAllPersonalRecordHistory();
   const [search, setSearch] = useState("");
-  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [newExercise, setNewExercise] = useState("");
   const [newWeight, setNewWeight] = useState("");
   const [newRepMax, setNewRepMax] = useState<number>(1);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editExercise, setEditExercise] = useState("");
-  const [editWeight, setEditWeight] = useState("");
-  const [detailFor, setDetailFor] = useState<PersonalRecord | null>(null);
   const [celebrate, setCelebrate] = useState<PrCelebrationData | null>(null);
 
   useEffect(() => {
@@ -112,12 +115,9 @@ export function StrengthRecords({
         : sameExercise(item.exercise, focusExercise);
       return matchesMovement && (item.rep_max ?? 1) === (focusRepMax ?? 1);
     });
-    if (record) {
-      setExpandedKey(groupKey(record.exercise));
-      setDetailFor(record);
-    }
     clearFocus();
-  }, [clearFocus, focusExercise, focusRepMax, isLoading, records]);
+    if (record) openView(record.exercise);
+  }, [clearFocus, openView, focusExercise, focusRepMax, isLoading, records]);
 
   // Una fila por ejercicio: el 1RM (o el RM más bajo que haya) y el resto debajo.
   const groups = useMemo(() => {
@@ -143,6 +143,33 @@ export function StrengthRecords({
       .filter((g) => !q || normalizeExerciseName(g.name).includes(q))
       .sort((a, b) => a.name.localeCompare(b.name, "es"));
   }, [records, search]);
+
+  // Entrenos y tendencia de cada ejercicio (últimos 3 meses)
+  const blocks = useMemo(() => blockContentIndex(planning?.data.months ?? []), [planning]);
+  const progress = useMemo(() => {
+    const map = new Map<string, { sessions: ReturnType<typeof sessionsFor>; trend: ReturnType<typeof trendFor>; spark: number[] }>();
+    const start = Date.now() - 90 * 86400000;
+    for (const g of groups) {
+      const rm = g.primary.rep_max ?? 1;
+      const sessions = sessionsFor(g.primary.exercise, results, blocks);
+      const hist = historyFor(g.primary.exercise, rm, allHistory);
+      const trend = trendFor(Number(g.primary.weight), hist, sessions, 90);
+      const est = rm === 1 ? sessions.filter((x) => x.est != null && new Date(x.date).getTime() >= start).map((x) => x.est!) : [];
+      const spark = est.length >= 2 ? est : hist.map((h) => Number(h.new_weight));
+      map.set(g.key, { sessions, trend, spark });
+    }
+    return map;
+  }, [groups, results, blocks, allHistory]);
+  const summary = useMemo(() => {
+    const start = Date.now() - 90 * 86400000;
+    let up = 0, flat = 0;
+    for (const v of progress.values()) {
+      if (v.trend.kind === "up") up++;
+      else if (v.trend.kind === "stable" || v.trend.kind === "down") flat++;
+    }
+    const prs = allHistory.filter((h) => new Date(h.changed_at).getTime() >= start && (h.previous_weight == null || Number(h.new_weight) > Number(h.previous_weight))).length;
+    return { up, flat, prs };
+  }, [progress, allHistory]);
 
   const existingNames = new Set(
     records.filter((r) => (r.rep_max ?? 1) === newRepMax).map((r) => normalizeExerciseName(r.exercise)),
@@ -183,17 +210,10 @@ export function StrengthRecords({
     }
   }
 
-  function startEdit(r: PersonalRecord) {
-    setEditingId(r.id);
-    setEditExercise(r.exercise);
-    setEditWeight(String(r.weight));
-  }
-
-  async function saveEdit(id: string) {
-    const ex = editExercise.trim();
-    const w = Number(editWeight);
-    if (!ex) return toast.error("Nombre requerido");
-    if (!Number.isFinite(w) || w <= 0) return toast.error("Peso inválido");
+  async function saveEdit(id: string, exercise: string, w: number): Promise<boolean> {
+    const ex = exercise.trim();
+    if (!ex) { toast.error("Nombre requerido"); return false; }
+    if (!Number.isFinite(w) || w <= 0) { toast.error("Peso inválido"); return false; }
     try {
       const prevRec = records.find((r) => r.id === id);
       await update.mutateAsync({ id, exercise: ex, weight: w });
@@ -205,21 +225,51 @@ export function StrengthRecords({
           repMax: prevRec.rep_max ?? 1,
         });
       }
-      setEditingId(null);
+      if (prevRec && ex !== prevRec.exercise) openView(ex);
       toast.success("Actualizado");
+      return true;
     } catch (err: any) {
       toast.error(err?.message ?? "Error");
+      return false;
     }
   }
 
-  async function handleDelete(r: PersonalRecord) {
-    if (!window.confirm(`¿Eliminar el ${r.rep_max ?? 1}RM de "${r.exercise}"?`)) return;
+  async function handleDelete(r: PersonalRecord): Promise<boolean> {
+    if (!window.confirm(`¿Eliminar el ${r.rep_max ?? 1}RM de "${r.exercise}"?`)) return false;
     try {
       await del.mutateAsync(r.id);
       toast.success("Eliminado");
+      return true;
     } catch (err: any) {
       toast.error(err?.message ?? "Error");
+      return false;
     }
+  }
+
+  const viewGroup = viewExercise ? groups.find((g) => g.key === groupKey(viewExercise)) ?? null : null;
+  if (viewExercise && !isLoading) {
+    if (!viewGroup) {
+      return (
+        <div className="py-10 text-center text-sm text-muted-foreground">
+          No hay récords de «{viewExercise}».{" "}
+          <button type="button" onClick={closeView} className="font-bold text-gold">Volver</button>
+        </div>
+      );
+    }
+    return (
+      <>
+        {celebrate && <PrCelebration data={celebrate} onClose={() => setCelebrate(null)} />}
+        <ProgressionView
+          key={viewGroup.key}
+          records={viewGroup.records}
+          allHistory={allHistory}
+          sessions={progress.get(viewGroup.key)?.sessions ?? []}
+          onBack={closeView}
+          onSaveEdit={saveEdit}
+          onDelete={handleDelete}
+        />
+      </>
+    );
   }
 
   return (
@@ -339,6 +389,16 @@ export function StrengthRecords({
         </div>
       ) : (
         <>
+          {(summary.up > 0 || summary.flat > 0 || summary.prs > 0) && (
+            <div className="mb-3 rounded-[18px] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/[0.08] px-4 py-3.5">
+              <p className="text-[13px] font-bold tracking-[0.12em] text-gold">ÚLTIMOS 3 MESES</p>
+              <div className="mt-1.5 flex gap-5">
+                <SummaryStat value={summary.up} label={summary.up === 1 ? "ejercicio subiendo" : "ejercicios subiendo"} />
+                <SummaryStat value={summary.flat} label={summary.flat === 1 ? "estancado" : "estancados"} />
+                <SummaryStat value={summary.prs} label={summary.prs === 1 ? "récord nuevo" : "récords nuevos"} />
+              </div>
+            </div>
+          )}
           <label className="mb-3 flex min-h-12 items-center gap-2.5 rounded-[14px] border border-white/10 bg-white/[0.06] px-3.5 text-muted-foreground">
             <Search className="h-[18px] w-[18px] shrink-0" />
             <input
@@ -355,97 +415,33 @@ export function StrengthRecords({
           ) : (
             <ul className="rise rise-3 overflow-hidden rounded-[20px] border border-white/[0.09] bg-white/[0.045]">
               {groups.map((g) => {
-                const expanded = expandedKey === g.key;
+                const pr = progress.get(g.key);
+                const tone = pr?.trend.kind === "up" ? "text-[#8FD19E]" : pr?.trend.kind === "down" ? "text-red-300" : "text-muted-foreground";
                 return (
                   <li key={g.key} className="border-b border-white/[0.07] last:border-b-0">
                     <button
                       type="button"
-                      aria-expanded={expanded}
-                      onClick={() => setExpandedKey(expanded ? null : g.key)}
-                      className="flex min-h-[76px] w-full items-center gap-3 px-4 py-2.5 text-left"
+                      onClick={() => openView(g.name)}
+                      className="flex min-h-[76px] w-full items-center gap-3 px-4 py-2.5 text-left active:bg-white/[0.04]"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-base font-semibold">{g.name}</span>
-                        <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">{g.others}</span>
+                        <span className="block truncate text-base font-bold">{g.name}</span>
+                        <span className={`mt-0.5 block truncate text-[13px] font-semibold ${tone}`}>{pr?.trend.short ?? g.others}</span>
                       </span>
-                      <Sparkline exercise={g.primary.exercise} repMax={g.primary.rep_max ?? 1} />
-                      <span className="min-w-[64px] shrink-0 text-right">
-                        <span className="metric block leading-none gold-text">{formatKg(Number(g.primary.weight))}</span>
-                        <span className="mt-1 block text-xs text-muted-foreground">kg · {g.primary.rep_max ?? 1}RM</span>
+                      <TrendSpark values={pr?.spark ?? []} up={pr?.trend.kind === "up"} />
+                      <span className="min-w-[60px] shrink-0 text-right">
+                        <span className="block text-[30px] font-black leading-none tabular" style={{ fontFamily: "var(--font-editorial)" }}>{formatKg(Number(g.primary.weight))}</span>
+                        <span className="mt-0.5 block text-xs text-muted-foreground">kg · {g.primary.rep_max ?? 1}RM</span>
                       </span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                     </button>
-
-                    {expanded && (
-                      <div className="space-y-2 px-4 pb-4">
-                        {g.records.map((r) => (
-                          <div key={r.id} className="rounded-[14px] bg-white/[0.04] p-3">
-                            {editingId === r.id ? (
-                              <div className="space-y-2">
-                                <input
-                                  value={editExercise}
-                                  onChange={(e) => setEditExercise(e.target.value)}
-                                  maxLength={60}
-                                  aria-label="Nombre del ejercicio"
-                                  className="min-h-11 w-full rounded-xl border border-white/[0.14] bg-white/[0.06] px-3 text-[15px] outline-none focus:border-[color:var(--gold)]/60"
-                                />
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="number"
-                                    inputMode="decimal"
-                                    step="0.5"
-                                    min="0"
-                                    value={editWeight}
-                                    onChange={(e) => setEditWeight(e.target.value)}
-                                    aria-label="Peso en kg"
-                                    className="min-h-11 flex-1 rounded-xl border border-white/[0.14] bg-white/[0.06] px-3 text-lg font-semibold tabular outline-none focus:border-[color:var(--gold)]/60"
-                                  />
-                                  <span className="text-sm text-muted-foreground">kg</span>
-                                  <button onClick={() => saveEdit(r.id)} className="gold-gradient grid h-11 w-11 place-items-center rounded-[12px]" aria-label="Guardar">
-                                    <Check className="h-4 w-4" />
-                                  </button>
-                                  <button onClick={() => setEditingId(null)} className="grid h-11 w-11 place-items-center rounded-[12px] border border-border" aria-label="Cancelar">
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="flex items-baseline justify-between gap-3">
-                                  <span className="text-[15px] font-semibold">{r.rep_max ?? 1}RM · {formatKg(Number(r.weight))} kg</span>
-                                  <span className="text-[13px] text-muted-foreground">{shortDate(r.updated_at)}</span>
-                                </div>
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                  <button onClick={() => setDetailFor(r)} className="min-h-10 rounded-xl border border-white/[0.14] px-3.5 text-sm font-medium">
-                                    Historial
-                                  </button>
-                                  <button onClick={() => startEdit(r)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/[0.14] px-3.5 text-sm">
-                                    <Pencil className="h-3.5 w-3.5" strokeWidth={1.8} /> Editar
-                                  </button>
-                                  <button onClick={() => handleDelete(r)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3.5 text-sm text-muted-foreground hover:text-destructive">
-                                    <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} /> Borrar
-                                  </button>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        ))}
-                        {g.hasDictionary && (
-                          <div className="pt-1 text-sm">
-                            <MovementDictionaryLink exerciseName={g.primary.exercise}>Ver en el diccionario</MovementDictionaryLink>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </li>
                 );
               })}
             </ul>
           )}
-          <p className="mt-3 px-1 text-[13px] text-muted-foreground">Toca un ejercicio para ver su historial, editarlo o borrarlo.</p>
+          <p className="mt-3 px-1 text-[13px] text-muted-foreground">Toca un ejercicio para ver su gráfico de progresión.</p>
         </>
-      )}
-      {detailFor && (
-        <HistoryModal record={detailFor} onClose={() => setDetailFor(null)} />
       )}
     </>
   );
@@ -453,4 +449,13 @@ export function StrengthRecords({
 
 function shortDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+}
+
+function SummaryStat({ value, label }: { value: number; label: string }) {
+  return (
+    <span>
+      <span className="block text-[34px] font-black leading-none tabular" style={{ fontFamily: "var(--font-editorial)" }}>{value}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
+    </span>
+  );
 }

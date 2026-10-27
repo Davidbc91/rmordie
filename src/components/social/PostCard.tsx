@@ -35,12 +35,12 @@ export function Avatar({ profile, size = 38 }: { profile?: SocialProfile | null;
   return (
     <span
       className="flex shrink-0 items-center justify-center overflow-hidden rounded-full"
-      style={{ width: size, height: size, background: "#1C1C1C", border: "1px solid #262626" }}
+      style={{ width: size, height: size, background: "rgba(200,179,138,0.15)" }}
     >
       {profile?.avatar_url ? (
         <img src={profile.avatar_url} alt={profile.username} className="h-full w-full object-cover" />
       ) : (
-        <span className="text-xs font-semibold tracking-wide text-white/70">{initials}</span>
+        <span className="font-extrabold text-[color:var(--gold-soft)]" style={{ fontFamily: "var(--font-editorial)", fontSize: Math.round(size * 0.45) }}>{initials}</span>
       )}
     </span>
   );
@@ -49,20 +49,17 @@ export function Avatar({ profile, size = 38 }: { profile?: SocialProfile | null;
 function DataBlock({ post }: { post: Post }) {
   const d = post.data || {};
   if (post.kind === "pr") {
+    const delta = d.previous_weight != null ? Number(d.weight) - Number(d.previous_weight) : null;
     return (
-      <div className="mt-3 rounded-[18px] p-4" style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}>
-        <p className="text-xs uppercase tracking-[0.3em]" style={{ color: "#6F6F6F" }}>
-          {d.rep_max ? `${d.rep_max}RM` : "PR"}
-        </p>
-        <p className="mt-2 text-sm font-semibold uppercase tracking-[0.1em]">{d.exercise ?? "Ejercicio"}</p>
-        <p className="mt-1 text-[44px] font-semibold leading-none tabular tracking-tight">
+      <div className="mt-3 rounded-[18px] px-[18px] py-4" style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0B0A08" }}>
+        <p className="text-[13px] font-extrabold tracking-[0.14em]">NUEVO RÉCORD · {d.rep_max ? `${d.rep_max}RM` : "PR"}</p>
+        <p className="mt-1 text-base font-bold">{d.exercise ?? "Ejercicio"}</p>
+        <p className="text-[72px] font-black leading-[0.9] tabular" style={{ fontFamily: "var(--font-editorial)" }}>
           {d.weight}
-          <span className="text-base"> kg</span>
+          <span className="text-[26px]"> KG</span>
         </p>
-        {d.previous_weight != null && (
-          <p className="mt-2 text-xs" style={{ color: "#6F6F6F" }}>
-            Anterior {d.previous_weight} kg · +{Number(d.weight) - Number(d.previous_weight)} kg
-          </p>
+        {delta != null && delta > 0 && (
+          <p className="text-[13px] font-semibold opacity-75">+{delta} kg sobre el anterior ({d.previous_weight} kg)</p>
         )}
       </div>
     );
@@ -71,12 +68,12 @@ function DataBlock({ post }: { post: Post }) {
     return (
       <div className="mt-3 rounded-[18px] border p-4" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.04)" }}>
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-semibold">{d.name || d.benchmark || "WOD"}</p>
-          <span className="rounded-full px-2 py-0.5 text-xs uppercase tracking-[0.16em]" style={{ background: "#1C1C1C" }}>
+          <p className="text-base font-bold">{d.name || d.benchmark || "WOD"}</p>
+          <span className="rounded-full bg-white/[0.08] px-2.5 py-1 text-xs font-bold uppercase">
             {d.scale || "RX"}
           </span>
         </div>
-        {d.description && <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">{d.description}</p>}
+        {d.description && <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{d.description}</p>}
         <div className="mt-3 flex gap-5">
           {d.time_seconds != null && <Stat label="Tiempo" value={fmtTime(Number(d.time_seconds))} />}
           {d.score && <Stat label="Resultado" value={String(d.score)} />}
@@ -101,11 +98,13 @@ function DataBlock({ post }: { post: Post }) {
         }}
       >
         <div className="border-b px-4 pb-3 pt-4" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-end justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold/80">RM OR DIE · SESIÓN</p>
-              <p className="mt-1 truncate text-base font-semibold">
-                {d.day ? `${d.month ?? ""} · S${d.week ?? ""} · ${d.day}` : (d.title ?? "Entreno completado")}
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-gold">
+                {d.day ? `${String(d.month ?? "").replace(/^\d+\.\s*/, "")} · SEMANA ${d.week ?? ""}` : "ENTRENO"}
+              </p>
+              <p className="truncate text-[40px] font-black uppercase leading-[0.9] text-[color:var(--gold-soft)]" style={{ fontFamily: "var(--font-editorial)" }}>
+                {d.day ?? (d.title ?? "Completado")}
               </p>
             </div>
             {Number(d.prs) > 0 && (
@@ -117,24 +116,22 @@ function DataBlock({ post }: { post: Post }) {
         </div>
 
         {hasSummary && (
-          <div className="grid grid-cols-2 gap-px border-b" style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.06)" }}>
-            <WorkoutMetric label="Volumen" value={d.volume != null ? `${Math.round(Number(d.volume)).toLocaleString("es-ES")} kg` : "—"} />
-            <WorkoutMetric label="RPE medio" value={d.avg_rpe != null ? Number(d.avg_rpe).toFixed(1) : "—"} />
-            <WorkoutMetric label="Bloques" value={d.blocks != null ? String(d.blocks) : "—"} />
-            <WorkoutMetric label="WODs" value={String(wods.length)} />
+          <div className="grid grid-cols-3 border-b px-1.5 py-3 text-center" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+            <WorkoutMetric label="kg de volumen" value={d.volume != null ? Math.round(Number(d.volume)).toLocaleString("es-ES") : "—"} />
+            <WorkoutMetric label="RPE medio" value={d.avg_rpe != null ? Number(d.avg_rpe).toFixed(1).replace(".", ",") : "—"} />
+            <WorkoutMetric label="bloques" value={d.blocks != null ? String(d.blocks) : "—"} />
           </div>
         )}
 
         {wods.length > 0 && (
           <div className="space-y-2 p-3">
-            <p className="px-1 text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">WOD · RESULTADO</p>
             {wods.slice(0, 3).map((w: any, i: number) => (
               <div key={i} className="flex items-center justify-between gap-3 rounded-[14px] border px-3 py-2.5" style={{ borderColor: "rgba(255,255,255,0.07)", background: "rgba(0,0,0,0.16)" }}>
                 <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold">{w.name || "WOD"}</p>
+                  <p className="truncate text-sm font-semibold">{w.name || "WOD"}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">{w.type ?? "WOD"} · {w.scale ?? "RX"}{w.isPr ? " · PR" : ""}</p>
                 </div>
-                <span className="shrink-0 text-sm font-semibold tabular text-gold">{w.result ?? "—"}</span>
+                <span className="shrink-0 text-[15px] font-bold tabular text-[color:var(--gold-soft)]">{w.result ?? "—"}</span>
               </div>
             ))}
             {wods.length > 3 && <p className="px-1 text-xs text-muted-foreground">+{wods.length - 3} WODs más</p>}
@@ -143,14 +140,14 @@ function DataBlock({ post }: { post: Post }) {
 
         {loads.length > 0 && (
           <details className="border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-            <summary className="cursor-pointer px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            <summary className="flex min-h-11 cursor-pointer items-center px-4 text-sm font-semibold text-muted-foreground">
               Ver cargas · {loads.length} bloques
             </summary>
             <div className="space-y-1.5 px-3 pb-3">
               {loads.slice(0, 8).map((load: any, i: number) => (
                 <div key={i} className="flex items-center justify-between gap-3 rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.035)" }}>
-                  <span className="min-w-0 truncate text-xs">{load.block ?? `Bloque ${i + 1}`}</span>
-                  <span className="shrink-0 text-xs font-semibold tabular">
+                  <span className="min-w-0 truncate text-sm">{load.block ?? `Bloque ${i + 1}`}</span>
+                  <span className="shrink-0 text-sm font-semibold tabular">
                     {load.weight != null ? `${load.weight} kg` : "Sin carga"}{load.reps != null ? ` · ${load.reps} reps` : ""}{load.rpe != null ? ` · RPE ${load.rpe}` : ""}
                   </span>
                 </div>
@@ -188,9 +185,9 @@ function DataBlock({ post }: { post: Post }) {
 
 function WorkoutMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-black/15 px-3 py-3.5">
-      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-semibold tabular">{value}</p>
+    <div>
+      <p className="text-[28px] font-extrabold leading-none tabular" style={{ fontFamily: "var(--font-editorial)" }}>{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
@@ -198,8 +195,8 @@ function WorkoutMetric({ label, value }: { label: string; value: string }) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-lg font-semibold tabular">{value}</p>
+      <p className="text-[13px] text-muted-foreground">{label}</p>
+      <p className="text-[28px] font-extrabold leading-none tabular" style={{ fontFamily: "var(--font-editorial)" }}>{value}</p>
     </div>
   );
 }
@@ -240,25 +237,25 @@ export function PostCard({ post }: { post: Post }) {
     <article className="rise relative overflow-hidden rounded-[22px] border p-4" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}>
       <header className="flex items-center gap-3">
         <Link to="/social/u/$username" params={{ username: post.author?.username ?? "" }} className="flex min-w-0 flex-1 items-center gap-3">
-          <Avatar profile={post.author} />
+          <Avatar profile={post.author} size={40} />
           <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold">{post.author?.display_name || post.author?.username || "Atleta"}</span>
-            <span className="block truncate text-xs text-muted-foreground">
+            <span className="block truncate text-[15px] font-bold">{post.author?.display_name || post.author?.username || "Atleta"}</span>
+            <span className="block truncate text-[13px] text-muted-foreground">
               {KIND_LABEL[post.kind]} · {timeAgo(post.created_at)}
               {post.author?.box_name ? ` · ${post.author.box_name}` : ""}
             </span>
           </span>
         </Link>
-        <button aria-label="Opciones" onClick={() => setMenu((v) => !v)} className="pressable rounded-full p-2 text-muted-foreground">
-          <MoreHorizontal className="h-4 w-4" />
+        <button aria-label="Opciones" onClick={() => setMenu((v) => !v)} className="pressable grid h-11 w-11 place-items-center rounded-full text-muted-foreground">
+          <MoreHorizontal className="h-5 w-5" />
         </button>
       </header>
 
       {menu && (
-        <div className="absolute right-3 top-14 z-20 w-52 overflow-hidden rounded-[16px] border text-sm" style={{ borderColor: "rgba(255,255,255,0.09)", background: "#161616" }}>
+        <div className="absolute right-3 top-14 z-20 w-52 overflow-hidden rounded-[16px] border text-[15px]" style={{ borderColor: "rgba(255,255,255,0.1)", background: "#141412" }}>
           {mine ? (
             <button
-              className="flex w-full items-center gap-2 px-4 py-3 text-left"
+              className="flex min-h-12 w-full items-center gap-2 px-4 text-left"
               onClick={() => { setMenu(false); del.mutate(post.id, { onSuccess: () => toast.success("Publicación eliminada") }); }}
             >
               <Trash2 className="h-4 w-4" /> Eliminar
@@ -266,13 +263,13 @@ export function PostCard({ post }: { post: Post }) {
           ) : (
             <>
               <button
-                className="flex w-full items-center gap-2 px-4 py-3 text-left"
+                className="flex min-h-12 w-full items-center gap-2 px-4 text-left"
                 onClick={() => { setMenu(false); report.mutate({ post_id: post.id, reason: "inapropiado" }, { onSuccess: () => toast.success("Reporte enviado") }); }}
               >
                 <Flag className="h-4 w-4" /> Reportar
               </button>
               <button
-                className="flex w-full items-center gap-2 px-4 py-3 text-left"
+                className="flex min-h-12 w-full items-center gap-2 px-4 text-left"
                 onClick={() => { setMenu(false); block.mutate({ targetId: post.user_id, blocked: false }, { onSuccess: () => toast.success("Usuario bloqueado") }); }}
               >
                 <Ban className="h-4 w-4" /> Bloquear
@@ -297,10 +294,11 @@ export function PostCard({ post }: { post: Post }) {
         </div>
       )}
 
-      <footer className="mt-4 flex items-center gap-1 text-xs text-muted-foreground">
-        <ActionBtn active={liked} onClick={() => toggleLike.mutate({ post, liked })} icon={<Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />} value={post.likes_count} label="Me gusta" />
-        <ActionBtn onClick={() => setOpenComments((v) => !v)} icon={<MessageCircle className="h-4 w-4" />} value={post.comments_count} label="Comentarios" />
-        <ActionBtn active={saved} onClick={() => toggleSave.mutate({ postId: post.id, saved })} icon={<Bookmark className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />} value={post.saves_count} label="Guardar" />
+      <footer className="mt-3 flex items-center gap-1.5 text-sm">
+        <ActionBtn active={liked} onClick={() => toggleLike.mutate({ post, liked })} icon={<Heart className={`h-[18px] w-[18px] ${liked ? "fill-current" : ""}`} />} value={post.likes_count} label="Me gusta" />
+        <ActionBtn onClick={() => setOpenComments((v) => !v)} icon={<MessageCircle className="h-[18px] w-[18px]" />} value={post.comments_count} label="Comentarios" text="Comentar" />
+        <span className="flex-1" />
+        <ActionBtn active={saved} onClick={() => toggleSave.mutate({ postId: post.id, saved })} icon={<Bookmark className={`h-[18px] w-[18px] ${saved ? "fill-current" : ""}`} />} value={post.saves_count} label="Guardar" />
       </footer>
 
       {openComments && <Comments post={post} />}
@@ -308,11 +306,17 @@ export function PostCard({ post }: { post: Post }) {
   );
 }
 
-function ActionBtn({ icon, value, onClick, active, label }: { icon: React.ReactNode; value: number; onClick: () => void; active?: boolean; label: string }) {
+function ActionBtn({ icon, value, onClick, active, label, text }: { icon: React.ReactNode; value: number; onClick: () => void; active?: boolean; label: string; text?: string }) {
   return (
-    <button aria-label={label} onClick={onClick} className="pressable flex items-center gap-1.5 rounded-full px-3 py-2" style={{ color: active ? "var(--gold)" : undefined }}>
+    <button
+      aria-label={label}
+      aria-pressed={active}
+      onClick={onClick}
+      className={`pressable flex min-h-11 items-center gap-1.5 rounded-[12px] px-3 font-semibold ${active ? "bg-[color:var(--gold)]/14 text-[color:var(--gold-soft)]" : "bg-white/[0.06] text-foreground/90"}`}
+    >
       {icon}
-      <span className="tabular">{value}</span>
+      {text && <span>{text}</span>}
+      {value > 0 && <span className="tabular">{text ? `· ${value}` : value}</span>}
     </button>
   );
 }
@@ -326,25 +330,25 @@ function Comments({ post }: { post: Post }) {
   const allowed = post.author?.allow_comments !== false;
 
   return (
-    <div className="mt-4 border-t pt-4" style={{ borderColor: "#1C1C1C" }}>
+    <div className="mt-4 border-t pt-4" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
       <div className="space-y-3">
         {comments.map((c) => (
           <div key={c.id} className="flex gap-2.5">
             <Avatar profile={c.author} size={28} />
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[13px] text-muted-foreground">
                 {c.author?.username ?? "atleta"} · {timeAgo(c.created_at)}
               </p>
-              <p className="text-sm">{c.content}</p>
+              <p className="text-[15px]">{c.content}</p>
             </div>
             {c.user_id === uid && (
-              <button aria-label="Eliminar comentario" onClick={() => del.mutate({ id: c.id, postId: post.id })} className="pressable p-1 text-muted-foreground">
+              <button aria-label="Eliminar comentario" onClick={() => del.mutate({ id: c.id, postId: post.id })} className="pressable grid h-11 w-11 place-items-center text-muted-foreground">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
         ))}
-        {comments.length === 0 && <p className="text-xs text-muted-foreground">Sé el primero en comentar.</p>}
+        {comments.length === 0 && <p className="text-sm text-muted-foreground">Sé el primero en comentar.</p>}
       </div>
 
       {allowed && (
@@ -360,10 +364,10 @@ function Comments({ post }: { post: Post }) {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Añade un comentario"
-            className="flex-1 rounded-[14px] border bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground/40"
+            className="min-h-12 flex-1 rounded-[14px] border bg-white/[0.05] px-3.5 text-base outline-none focus:border-[color:var(--gold)]/60"
             style={{ borderColor: "rgba(255,255,255,0.09)" }}
           />
-          <button type="submit" aria-label="Enviar" className="pressable rounded-full p-2.5" style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}>
+          <button type="submit" aria-label="Enviar comentario" className="pressable gold-gradient grid h-12 w-12 place-items-center rounded-full">
             <Send className="h-4 w-4" />
           </button>
         </form>

@@ -37,33 +37,34 @@ function SocialFeed() {
 
   return (
     <>
-      <header className="rise rise-1 mb-6">
-        <p className="eyebrow">Comunidad</p>
-        <h1 className="page-title mt-3">Social</h1>
-        <div className="mt-5 flex gap-2">
-          <IconLink to="/social/discover" label="Descubrir" icon={<Compass className="h-4 w-4" />} />
-          <IconLink to="/social/notifications" label="Avisos" icon={<Bell className="h-4 w-4" />} badge={unread} />
-          <IconLink to="/social/board" label="Tablón de récords" icon={<Trophy className="h-4 w-4" />} />
-          <IconLink to="/social/settings" label="Perfil" icon={<Settings2 className="h-4 w-4" />} />
+      <header className="rise rise-1 mb-4 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="eyebrow">Comunidad</p>
+          <h1 className="page-title mt-1">Social</h1>
         </div>
-        <div className="rule-fade mt-6" />
+        <div className="flex shrink-0 gap-1.5">
+          <IconLink to="/social/discover" label="Descubrir atletas" icon={<Compass className="h-5 w-5" />} />
+          <IconLink to="/social/notifications" label="Avisos" icon={<Bell className="h-5 w-5" />} badge={unread} />
+          <IconLink to="/social/board" label="Tablón de récords" icon={<Trophy className="h-5 w-5" />} />
+          <IconLink to="/social/settings" label="Tu perfil social" icon={<Settings2 className="h-5 w-5" />} />
+        </div>
       </header>
 
       {!profile && (
-        <Link to="/social/settings" className="rise rise-2 mb-5 block rounded-[20px] border p-4 text-sm" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}>
+        <Link to="/social/settings" className="rise rise-2 mb-4 block rounded-[18px] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/8 p-4 text-[15px]">
           Crea tu perfil social para publicar y seguir a otros atletas →
         </Link>
       )}
 
-      <div className="no-scrollbar mb-4 flex gap-2 overflow-x-auto">
+      <div role="tablist" aria-label="Publicaciones" className="mb-4 flex gap-1 rounded-[14px] bg-white/[0.06] p-1">
         {TABS.map((t) => (
           <button
             key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
-            className="shrink-0 min-h-11 rounded-full px-3.5 py-2 text-xs"
-            style={tab === t.id ? { background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
+            className={`min-h-10 min-w-0 flex-1 truncate rounded-[10px] px-1 text-sm ${tab === t.id ? "bg-[color:var(--gold)] font-bold text-[color:var(--gold-foreground)]" : "font-semibold text-muted-foreground"}`}
           >
-            {t.id === "saved" ? <Bookmark className="mr-1 inline h-3 w-3" /> : null}
             {t.label}
           </button>
         ))}
@@ -72,7 +73,7 @@ function SocialFeed() {
       <div className="space-y-3">
         {isLoading && <p className="text-sm text-muted-foreground">Cargando publicaciones…</p>}
         {!isLoading && list.length === 0 && (
-          <p className="rounded-[20px] border p-6 text-center text-sm text-muted-foreground" style={{ borderColor: "#1C1C1C" }}>
+          <p className="rounded-[20px] bg-white/[0.04] p-6 text-center text-[15px] text-muted-foreground">
             Todavía no hay publicaciones aquí.
           </p>
         )}
@@ -84,10 +85,10 @@ function SocialFeed() {
       <button
         aria-label="Crear publicación"
         onClick={() => setComposing(true)}
-        className="pressable fixed right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full"
-        style={{ bottom: "calc(max(env(safe-area-inset-bottom), 12px) + 92px)", background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}
+        className="pressable gold-gradient fixed right-4 z-40 flex h-14 items-center gap-1.5 rounded-full px-5 text-[22px] font-extrabold"
+        style={{ bottom: "calc(max(env(safe-area-inset-bottom), 12px) + 92px)", fontFamily: "var(--font-editorial)", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}
       >
-        <Plus className="h-6 w-6" />
+        <Plus className="h-5 w-5" strokeWidth={3} /> PUBLICAR
       </button>
 
       {composing && <Composer onClose={() => setComposing(false)} />}
@@ -99,14 +100,13 @@ function IconLink({ to, label, icon, badge }: { to: string; label: string; icon:
   return (
     <Link
       to={to}
-      className="pressable relative flex flex-1 flex-col items-center gap-1.5 rounded-[16px] border py-3 text-xs uppercase tracking-[0.14em]"
-      style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.045)" }}
+      aria-label={badge ? `${label}, ${badge} sin leer` : label}
+      className="pressable relative grid h-11 w-11 place-items-center rounded-full bg-white/[0.06]"
     >
       {icon}
-      {label}
       {!!badge && (
-        <span className="absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs" style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}>
-          {badge}
+        <span aria-hidden className="gold-gradient absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full px-1 text-[11px] font-extrabold">
+          {badge > 9 ? "9+" : badge}
         </span>
       )}
     </Link>

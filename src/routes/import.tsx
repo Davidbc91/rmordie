@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useState } from "react";
+import { ArrowDown, ArrowUp, ChevronDown, Plus } from "lucide-react";
 import { parsePlanningFromArrayBuffer, type Planning } from "@/lib/excel-parser";
 import { importPlanningFile, type ImportEngineResult } from "@/lib/import-engine";
 import { ImportReview } from "@/components/import/ImportReview";
@@ -31,6 +32,8 @@ function ImportPage() {
   const [busy, setBusy] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
   const [review, setReview] = useState<{ result: ImportEngineResult; filename: string } | null>(null);
+  const [sorting, setSorting] = useState(false);
+  const [allMonths, setAllMonths] = useState(false);
 
   /** Excel con el formato anual propio: se guarda directamente (solo cambia la programación). */
   async function saveNativePlanning(planning: Planning, filename: string) {
@@ -100,8 +103,8 @@ function ImportPage() {
   if (review) {
     return (
       <AppShell>
-        <h1 className="text-2xl font-semibold tracking-tight">Revisar importación</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="page-title">Revisar importación</h1>
+        <p className="mt-2 text-[15px] text-muted-foreground">
           Comprueba cada fila. <span className="gold-text">Nada se guarda hasta que confirmes y lo anterior se conserva.</span>
         </p>
         <ImportReview
@@ -117,203 +120,86 @@ function ImportPage() {
     );
   }
 
+  const errMsg = (e: unknown, fallback: string) => (e as { message?: string })?.message ?? fallback;
+
+  async function moveMonth(index: number, dir: -1 | 1) {
+    if (!current) return;
+    const keys = current.data.months.map((m) => m.key);
+    const j = index + dir;
+    if (j < 0 || j >= keys.length) return;
+    [keys[index], keys[j]] = [keys[j], keys[index]];
+    try {
+      await reorderMonths.mutateAsync({ planningId: current.id, monthKeys: keys });
+    } catch (e) {
+      toast.error(errMsg(e, "No se pudo cambiar el orden."));
+    }
+  }
+
+  async function removeMonth(monthKey: string, label: string) {
+    if (!current) return;
+    if (!window.confirm('¿Quitar el mes "' + label + '" de esta planificación? Tus entrenos registrados no se borran.')) return;
+    try {
+      await deleteMonth.mutateAsync({ planningId: current.id, monthKey });
+      toast.success("Mes quitado: " + label);
+    } catch (e) {
+      toast.error(errMsg(e, "No se pudo quitar el mes."));
+    }
+  }
+
+  async function removeVersion(id: string, label: string) {
+    if (!window.confirm('¿Eliminar "' + label + '"? Se borra esa versión guardada, nunca tus resultados de entrenamiento.')) return;
+    try {
+      await deletePlanning.mutateAsync(id);
+      toast.success("Versión eliminada.");
+    } catch (e) {
+      toast.error(errMsg(e, "No se pudo eliminar la versión."));
+    }
+  }
+
+  async function clearAll() {
+    const confirmed = window.confirm(
+      "¿Eliminar TODA la planificación?\n\nSe borrarán meses y versiones de planificación. Se conservan entrenamientos, pesos, RM, marcas, progreso, tiempos y notas."
+    );
+    if (!confirmed) return;
+    try {
+      await clearPlanning.mutateAsync();
+      toast.success("Planificación eliminada. Tus datos y progreso siguen intactos.");
+    } catch (e) {
+      toast.error(errMsg(e, "No se pudo limpiar la planificación."));
+    }
+  }
+
+  const months = current?.data.months ?? [];
+  const shownMonths = sorting || allMonths ? months : months.slice(0, 3);
+  const otherVersions = visiblePlanningVersions.filter((v) => v.id !== current?.id);
+  const fmtDate = (d: string) => new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+
   return (
     <AppShell>
-      <h1 className="text-2xl font-semibold tracking-tight">Planificación</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Sube tu planificación en Excel, CSV, TXT, PDF o foto. Solo cambia la programación; <span className="gold-text">tus pesos, PR, tiempos y notas nunca se borran.</span>
-      </p>
+      <p className="eyebrow">Tu programación</p>
+      <h1 className="page-title mt-1">Planificación</h1>
 
-      {current && current.data.months.length > 0 && (
-        <div className="mt-6 card-elevated p-4">
-          <div className="flex items-center gap-2 text-sm">
-            <CheckCircle2 className="h-4 w-4 text-gold" />
-            <span>Planificación activa v{current.version}</span>
-          </div>
-          <div className="mt-1 text-xs text-muted-foreground">
-            {current.source_filename ?? "Sin nombre"} · {current.data.months.length} meses · importada {new Date(current.imported_at).toLocaleDateString("es-ES")}
-          </div>
-        </div>
-      )}
-
-      {current && current.data.months.length > 0 && (
-        <section className="mt-4">
-          <div className="rounded-2xl border border-red-400/25 bg-red-400/[0.07] p-4">
-            <div className="flex items-center gap-3">
-              <Trash2 className="h-5 w-5 shrink-0 text-red-300" />
-              <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-semibold">Limpiar planificación</h2>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Borra meses y versiones de planificación sin borrar entrenamientos, RMs, marcas, pesos, progreso ni notas.
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="mt-3 w-full rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-xs font-bold text-red-200 active:scale-[0.99] disabled:opacity-40"
-              disabled={clearPlanning.isPending}
-              onClick={async () => {
-                const confirmed = window.confirm(
-                  "¿Eliminar TODA la planificación?\n\nSe borrarán meses y versiones de planificación. Se conservarán entrenamientos realizados, pesos, RMs, marcas, progreso, tiempos, notas y datos del atleta.\n\nEsta acción no elimina ningún registro de entrenamiento."
-                );
-                if (!confirmed) return;
-                try {
-                  await clearPlanning.mutateAsync();
-                  toast.success("Planificación eliminada. Tus datos y progreso siguen intactos.");
-                } catch (e) {
-                  toast.error((e as { message?: string })?.message ?? "No se pudo limpiar la planificación.");
-                }
-              }}
-            >
-              {clearPlanning.isPending ? "LIMPIANDO…" : "ELIMINAR TODA LA PLANIFICACIÓN"}
-            </button>
-          </div>
-        </section>
-      )}
-
-
-      {current && (
-        <section className="mt-6">
-          <div className="mb-2 flex items-end justify-between gap-3">
-            <div>
-              <p className="eyebrow">Gestionar planificación activa</p>
-              <h2 className="mt-1 text-lg font-semibold">Meses importados</h2>
-            <p className="mt-1 text-xs text-muted-foreground">Usa ↑ y ↓ para colocarlos en el orden que quieras. Ese orden será el de tu calendario.</p>
-            </div>
-            <span className="text-xs text-muted-foreground">{current.data.months.length} meses</span>
-          </div>
-          <div className="space-y-2">
-            {current.data.months.map((month, index) => (
-              <div key={month.key} className="glass flex items-center gap-3 px-3 py-3">
-                <div className="flex shrink-0 flex-col gap-1">
-                  <button
-                    type="button"
-                    aria-label={"Mover " + month.label + " arriba"}
-                    disabled={index === 0 || reorderMonths.isPending}
-                    className="grid h-7 w-7 place-items-center rounded-lg border border-[color:var(--glass-border)] bg-white/[0.03] text-xs text-muted-foreground disabled:opacity-20"
-                    onClick={async () => {
-                      const keys = current.data.months.map((m) => m.key);
-                      [keys[index - 1], keys[index]] = [keys[index], keys[index - 1]];
-                      try {
-                        await reorderMonths.mutateAsync({ planningId: current.id, monthKeys: keys });
-                      } catch (e) {
-                        toast.error((e as { message?: string })?.message ?? "No se pudo cambiar el orden.");
-                      }
-                    }}
-                  >↑</button>
-                  <button
-                    type="button"
-                    aria-label={"Mover " + month.label + " abajo"}
-                    disabled={index === current.data.months.length - 1 || reorderMonths.isPending}
-                    className="grid h-7 w-7 place-items-center rounded-lg border border-[color:var(--glass-border)] bg-white/[0.03] text-xs text-muted-foreground disabled:opacity-20"
-                    onClick={async () => {
-                      const keys = current.data.months.map((m) => m.key);
-                      [keys[index], keys[index + 1]] = [keys[index + 1], keys[index]];
-                      try {
-                        await reorderMonths.mutateAsync({ planningId: current.id, monthKeys: keys });
-                      } catch (e) {
-                        toast.error((e as { message?: string })?.message ?? "No se pudo cambiar el orden.");
-                      }
-                    }}
-                  >↓</button>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold tabular text-gold">{index + 1}</span>
-                    <div className="text-sm font-semibold truncate">{month.label}</div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">{month.key} · {month.weeks.length} semanas</div>
-                </div>
-                <button
-                  type="button"
-                  className="pressable rounded-full border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs font-semibold text-red-300 disabled:opacity-40"
-                  disabled={current.data.months.length <= 1 || deleteMonth.isPending || reorderMonths.isPending}
-                  onClick={async () => {
-                    if (!window.confirm('¿Eliminar el mes "' + month.label + '" de esta planificación? Los registros de entrenamiento no se borrarán.')) return;
-                    try {
-                      await deleteMonth.mutateAsync({ planningId: current.id, monthKey: month.key });
-                      toast.success("Mes eliminado: " + month.label);
-                    } catch (e) {
-                      toast.error((e as { message?: string })?.message ?? "No se pudo eliminar el mes.");
-                    }
-                  }}
-                >
-                  Eliminar
-                </button>
-              </div>
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Eliminar un mes solo modifica la planificación. Tus entrenamientos registrados, pesos, PR y notas se conservan.
+      {current && months.length > 0 && (
+        <section className="mt-4 rounded-[22px] border border-[color:var(--gold)]/35 bg-[color:var(--gold)]/[0.07] p-4">
+          <p className="flex items-center gap-2 text-[13px] font-bold tracking-[0.1em] text-gold">
+            <CheckCircle2 className="h-4 w-4" /> ACTIVA · VERSIÓN {current.version}
           </p>
+          <p className="mt-1.5 truncate text-[17px] font-bold">{current.source_filename ?? "Sin nombre"}</p>
+          <p className="text-sm text-muted-foreground">{months.length} meses · importada el {fmtDate(current.imported_at)}</p>
         </section>
       )}
 
-      {visiblePlanningVersions.length > 0 && (
-        <section className="mt-7">
-          <div className="mb-2">
-            <p className="eyebrow">Historial</p>
-            <h2 className="mt-1 text-lg font-semibold">Otras planificaciones</h2>
-          </div>
-          <div className="space-y-2">
-            {visiblePlanningVersions.map((version) => {
-              const active = version.id === current?.id;
-              return (
-                <div key={version.id} className="glass flex items-center gap-3 px-4 py-3.5">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold truncate">
-                      {version.source_filename ?? ("Planificación v" + version.version)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      v{version.version} · {version.data.months.length} meses · {new Date(version.imported_at).toLocaleDateString("es-ES")}
-                      {active ? " · ACTIVA" : ""}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="pressable rounded-full border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs font-semibold text-red-300"
-                    disabled={deletePlanning.isPending}
-                    onClick={async () => {
-                      const label = version.source_filename ?? ("planificación v" + version.version);
-                      if (!window.confirm('¿Eliminar "' + label + '" por completo? Esta acción elimina esa versión guardada, pero no tus resultados de entrenamiento.')) return;
-                      try {
-                        await deletePlanning.mutateAsync(version.id);
-                        toast.success("Planificación eliminada.");
-                      } catch (e) {
-                        toast.error((e as { message?: string })?.message ?? "No se pudo eliminar la planificación.");
-                      }
-                    }}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      <button
-        onClick={() => navigate({ to: "/plan-builder" })}
-        className="tap mt-6 w-full rounded-[var(--r-md)] gold-gradient px-4 text-sm font-semibold"
-      >
-        + CREAR PLANIFICACIÓN
-      </button>
-
-      <label className="mt-3 flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-border bg-surface p-10 text-center transition hover:border-gold/50">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl gold-gradient">
-          {busy && ocrProgress > 0
-            ? <ImageIcon className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} />
-            : <Upload className="h-5 w-5" style={{ color: "var(--gold-foreground)" }} />}
-        </div>
-        <div>
-          <div className="text-sm font-medium">
-            {busy
-              ? (ocrProgress > 0 ? `Reconociendo texto… ${Math.round(ocrProgress * 100)}%` : "Leyendo…")
-              : (current ? "Actualizar planificación" : "Subir planificación")}
-          </div>
-          <div className="mt-1 text-xs text-muted-foreground">Excel, CSV, TXT, PDF o foto (JPG, PNG, WEBP)</div>
-        </div>
+      <label className={`mt-3.5 flex cursor-pointer flex-col items-center gap-2.5 rounded-[22px] border-2 border-dashed border-[color:var(--gold)]/45 px-4 py-7 text-center transition hover:border-[color:var(--gold)]/70 ${busy ? "opacity-80" : ""}`}>
+        <span className="gold-gradient grid h-14 w-14 place-items-center rounded-[18px]">
+          {busy && ocrProgress > 0 ? <ImageIcon className="h-6 w-6" /> : <Upload className="h-6 w-6" strokeWidth={2.2} />}
+        </span>
+        <span className="text-[26px] font-extrabold uppercase leading-none" style={{ fontFamily: "var(--font-editorial)" }}>
+          {busy
+            ? (ocrProgress > 0 ? `Leyendo la foto… ${Math.round(ocrProgress * 100)}%` : "Leyendo…")
+            : current ? "Subir nueva planificación" : "Subir planificación"}
+        </span>
+        <span className="text-sm text-muted-foreground">Excel, PDF, CSV, texto o foto de la pizarra</span>
+        <span className="text-[13px] text-foreground/85">Tus pesos, récords, tiempos y notas nunca se borran.</span>
         <input
           type="file"
           accept=".xlsx,.xls,.csv,.txt,.pdf,.jpg,.jpeg,.png,.webp,text/plain,text/csv,application/pdf,image/jpeg,image/png,image/webp"
@@ -326,6 +212,93 @@ function ImportPage() {
           className="hidden"
         />
       </label>
+
+      <button
+        type="button"
+        onClick={() => navigate({ to: "/plan-builder" })}
+        className="pressable mt-2.5 flex min-h-[52px] w-full items-center justify-center gap-1.5 rounded-[16px] bg-white/[0.06] text-[15px] font-bold"
+      >
+        <Plus className="h-4 w-4" /> Crear una planificación a mano
+      </button>
+
+      {current && months.length > 0 && (
+        <section className="mt-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-extrabold">Meses</h2>
+            <button type="button" onClick={() => setSorting((v) => !v)} className="min-h-11 px-1 text-sm font-bold text-gold">
+              {sorting ? "Hecho" : "Ordenar"}
+            </button>
+          </div>
+          <div className="overflow-hidden rounded-[18px] bg-white/[0.045]">
+            {shownMonths.map((month, index) => (
+              <div key={month.key} className="flex min-h-14 items-center gap-3 border-b border-white/[0.06] px-3.5 last:border-b-0">
+                <span className="w-7 text-[22px] font-extrabold text-gold" style={{ fontFamily: "var(--font-editorial)" }}>{index + 1}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-semibold">{month.label}</span>
+                  {sorting && <span className="block text-xs text-muted-foreground">{month.weeks.length} semanas</span>}
+                </span>
+                {sorting ? (
+                  <span className="flex shrink-0 items-center gap-1">
+                    <button type="button" aria-label={"Subir " + month.label} disabled={index === 0 || reorderMonths.isPending} onClick={() => moveMonth(index, -1)} className="grid h-11 w-11 place-items-center rounded-[12px] bg-white/[0.06] disabled:opacity-25"><ArrowUp className="h-4 w-4" /></button>
+                    <button type="button" aria-label={"Bajar " + month.label} disabled={index === months.length - 1 || reorderMonths.isPending} onClick={() => moveMonth(index, 1)} className="grid h-11 w-11 place-items-center rounded-[12px] bg-white/[0.06] disabled:opacity-25"><ArrowDown className="h-4 w-4" /></button>
+                    <button type="button" aria-label={"Quitar " + month.label} disabled={months.length <= 1 || deleteMonth.isPending} onClick={() => removeMonth(month.key, month.label)} className="grid h-11 w-11 place-items-center rounded-[12px] text-red-300 disabled:opacity-25"><Trash2 className="h-4 w-4" /></button>
+                  </span>
+                ) : (
+                  <span className="shrink-0 text-[13px] text-muted-foreground">{month.weeks.length} semanas</span>
+                )}
+              </div>
+            ))}
+            {!sorting && months.length > 3 && (
+              <button type="button" onClick={() => setAllMonths((v) => !v)} className="flex min-h-12 w-full items-center justify-center gap-1.5 text-sm text-muted-foreground">
+                {allMonths ? "Ver menos" : `Ver los ${months.length} meses`}
+                <ChevronDown className={`h-4 w-4 transition-transform ${allMonths ? "rotate-180" : ""}`} />
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+            {sorting ? "El orden de aquí es el de tu calendario. Quitar un mes no borra tus entrenos." : "Con «Ordenar» puedes mover o quitar meses."}
+          </p>
+        </section>
+      )}
+
+      {otherVersions.length > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-2 text-lg font-extrabold">Versiones anteriores</h2>
+          <div className="overflow-hidden rounded-[18px] bg-white/[0.045]">
+            {otherVersions.map((version) => {
+              const label = version.source_filename ?? ("Planificación v" + version.version);
+              return (
+                <div key={version.id} className="flex min-h-[60px] items-center gap-3 border-b border-white/[0.06] px-3.5 last:border-b-0">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-semibold">{label}</span>
+                    <span className="text-[13px] text-muted-foreground">v{version.version} · {version.data.months.length} meses · {fmtDate(version.imported_at)}</span>
+                  </span>
+                  <button type="button" disabled={deletePlanning.isPending} onClick={() => removeVersion(version.id, label)} className="min-h-11 shrink-0 px-2 text-sm font-semibold text-muted-foreground hover:text-red-300">
+                    Eliminar
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {current && months.length > 0 && (
+        <details className="mt-7 rounded-[18px] border border-red-400/25 px-3.5">
+          <summary className="flex min-h-[52px] cursor-pointer items-center text-[15px] font-bold text-red-200">Zona de borrado</summary>
+          <p className="text-[13px] leading-relaxed text-muted-foreground">
+            Borra todos los meses y versiones de planificación. Nunca borra tus entrenos, pesos, RM, marcas, progreso ni notas.
+          </p>
+          <button
+            type="button"
+            disabled={clearPlanning.isPending}
+            onClick={clearAll}
+            className="mb-3.5 mt-3 min-h-12 w-full rounded-[14px] border border-red-400/30 bg-red-400/10 text-sm font-bold text-red-200 disabled:opacity-40"
+          >
+            {clearPlanning.isPending ? "Borrando…" : "Eliminar toda la planificación"}
+          </button>
+        </details>
+      )}
     </AppShell>
   );
 }

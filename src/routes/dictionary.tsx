@@ -1,8 +1,10 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { Search, BookOpen, ChevronRight, Dumbbell, X } from "lucide-react";
+import { Search, ChevronRight, X, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { GlassCard } from "@/components/glass";
+import { usePlanning } from "@/lib/store";
+import { buildPlanDateIndex, isoKey } from "@/lib/plan-dates";
+import { resolveMovements } from "@/lib/dictionary/resolve";
 import { MOVEMENT_CATEGORIES, MOVEMENT_EQUIPMENT, movements } from "@/lib/dictionary/catalog";
 import { useCustomMovements } from "@/lib/dictionary/custom";
 import type { MovementLevel } from "@/lib/dictionary/types";
@@ -22,6 +24,8 @@ function DictionaryPage() {
   const [category, setCategory] = useState("");
   const [equipment, setEquipment] = useState("");
   const [level, setLevel] = useState("");
+  const [moreFilters, setMoreFilters] = useState(false);
+  const { data: planning } = usePlanning();
   const { data: customMovements = [] } = useCustomMovements();
   const allMovements = useMemo(() => [...movements, ...customMovements], [customMovements]);
   const showingMovement = useRouterState({
@@ -54,129 +58,149 @@ function DictionaryPage() {
     });
   }, [query, category, equipment, level, allMovements]);
   const selectClass =
-    "min-w-0 rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] px-3 py-2.5 text-sm text-foreground outline-none focus:border-[rgba(200,179,138,0.55)]";
+    "min-h-12 min-w-0 rounded-[14px] border border-white/[0.14] bg-white/[0.06] px-3 text-[15px] text-foreground outline-none focus:border-[color:var(--gold)]/60";
   const levels: MovementLevel[] = ["Beginner", "Intermediate", "Advanced"];
   const categories = useMemo(() => Array.from(new Set([...MOVEMENT_CATEGORIES, ...customMovements.map((m) => m.category)])).sort(), [customMovements]);
   const equipmentOptions = useMemo(() => Array.from(new Set([...MOVEMENT_EQUIPMENT, ...customMovements.flatMap((m) => m.equipment)])).sort(), [customMovements]);
+
+  // Movimientos del entreno de hoy (según el plan)
+  const todayMovements = useMemo(() => {
+    const months = planning?.data.months ?? [];
+    if (!months.length) return [];
+    const today = buildPlanDateIndex(months).get(isoKey(new Date()));
+    if (!today || today.day.isRest) return [];
+    const ids: string[] = [];
+    for (const b of today.day.blocks) {
+      if (!/^[A-D]$/.test(b.key)) continue;
+      for (const m of resolveMovements(b.content)) if (!ids.includes(m.movementId)) ids.push(m.movementId);
+    }
+    return ids.map((id) => allMovements.find((m) => m.id === id)).filter((m): m is (typeof allMovements)[number] => !!m).slice(0, 6);
+  }, [planning, allMovements]);
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, typeof filtered>();
+    for (const m of filtered) {
+      const list = map.get(m.category) ?? [];
+      list.push(m);
+      map.set(m.category, list);
+    }
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0], "es"));
+  }, [filtered]);
+
+  const searching = !!query.trim() || !!category || !!equipment || !!level;
+  const extraFilters = (equipment ? 1 : 0) + (level ? 1 : 0);
 
   return (
     <AppShell>
       {showingMovement ? (
         <Outlet />
       ) : (
-        <div className="space-y-6">
-          <header className="space-y-2">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-6 w-6" style={{ color: "var(--gold)" }} />
-              <h1 className="page-title">Diccionario</h1>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Movimientos utilizados en CrossFit, con técnica y variantes.
-            </p>
+        <div className="space-y-4">
+          <header>
+            <p className="eyebrow">Movimientos CrossFit</p>
+            <h1 className="page-title mt-1">Diccionario</h1>
           </header>
-          <div className="space-y-3">
-            <label className="relative block">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar movimiento…"
-                className="min-h-11 w-full rounded-xl border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)] py-3 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus:border-[rgba(200,179,138,0.55)]"
-              />
-              {query && (
+
+          <label className="flex min-h-[52px] items-center gap-2.5 rounded-[16px] border border-white/[0.12] bg-white/[0.06] px-3.5 focus-within:border-[color:var(--gold)]/60">
+            <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <span className="sr-only">Buscar movimiento</span>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Busca: snatch, dominada, t2b…"
+              className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
+            />
+            {query && (
+              <button type="button" onClick={() => setQuery("")} className="grid h-11 w-11 shrink-0 place-items-center text-muted-foreground" aria-label="Limpiar búsqueda">
+                <X className="h-5 w-5" />
+              </button>
+            )}
+          </label>
+
+          <div role="group" aria-label="Categoría" className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
+            {["", ...categories].map((c) => {
+              const on = category === c;
+              return (
                 <button
-                  onClick={() => setQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  aria-label="Limpiar búsqueda"
+                  key={c || "todos"}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setCategory(c)}
+                  className={`min-h-10 shrink-0 rounded-full px-3.5 text-sm ${on ? "bg-[color:var(--gold)] font-bold text-[color:var(--gold-foreground)]" : "bg-white/[0.06] font-medium"}`}
                 >
-                  <X className="h-4 w-4" />
+                  {c || "Todos"}
                 </button>
-              )}
-            </label>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <select
-                aria-label="Filtrar por categoría"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className={selectClass}
-              >
-                <option value="">Todas las categorías</option>
-                {categories.map((x) => (
-                  <option key={x}>{x}</option>
-                ))}
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between text-[13px] text-muted-foreground">
+            <span>{filtered.length} movimientos</span>
+            <button type="button" aria-expanded={moreFilters} onClick={() => setMoreFilters((v) => !v)} className="flex min-h-11 items-center gap-1.5 font-bold text-gold">
+              <SlidersHorizontal className="h-4 w-4" /> Más filtros{extraFilters ? ` (${extraFilters})` : ""}
+            </button>
+          </div>
+          {moreFilters && (
+            <div className="grid grid-cols-2 gap-2">
+              <select aria-label="Filtrar por equipamiento" value={equipment} onChange={(e) => setEquipment(e.target.value)} className={selectClass}>
+                <option value="">Todo el material</option>
+                {equipmentOptions.map((x) => <option key={x}>{x}</option>)}
               </select>
-              <select
-                aria-label="Filtrar por equipamiento"
-                value={equipment}
-                onChange={(e) => setEquipment(e.target.value)}
-                className={selectClass}
-              >
-                <option value="">Todo el equipamiento</option>
-                {equipmentOptions.map((x) => (
-                  <option key={x}>{x}</option>
-                ))}
-              </select>
-              <select
-                aria-label="Filtrar por nivel"
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className={selectClass}
-              >
+              <select aria-label="Filtrar por nivel" value={level} onChange={(e) => setLevel(e.target.value)} className={selectClass}>
                 <option value="">Todos los niveles</option>
-                {levels.map((x) => (
-                  <option key={x}>{x}</option>
-                ))}
+                {levels.map((x) => <option key={x} value={x}>{LEVEL_LABEL[x].text}</option>)}
               </select>
             </div>
-          </div>
-          <p className="eyebrow">{filtered.length} movimientos</p>
-          <div className="grid gap-2.5 sm:grid-cols-2">
-            {filtered.map((m) => (
-              <Link
-                key={m.id}
-                to="/dictionary/$movementId"
-                params={{ movementId: m.id }}
-                className="block text-left"
-              >
-                <GlassCard className="pressable p-4">
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)]">
-                      <Dumbbell className="h-4 w-4" style={{ color: "var(--gold)" }} />
-                    </span>
+          )}
+
+          {!searching && todayMovements.length > 0 && (
+            <section>
+              <p className="mb-1.5 px-1 text-[13px] font-bold tracking-[0.12em] text-gold">EN TU ENTRENO DE HOY</p>
+              <div className="grid grid-cols-2 gap-2">
+                {todayMovements.map((m) => (
+                  <Link key={m.id} to="/dictionary/$movementId" params={{ movementId: m.id }} className="pressable min-h-16 rounded-[16px] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/[0.09] px-3 py-2.5">
+                    <span className="block truncate text-[15px] font-bold">{m.name}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{m.nameEs}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {grouped.map(([cat, list]) => (
+            <section key={cat}>
+              <p className="mb-1.5 px-1 text-[13px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{cat}</p>
+              <div className="overflow-hidden rounded-[18px] bg-white/[0.045]">
+                {list.map((m) => (
+                  <Link
+                    key={m.id}
+                    to="/dictionary/$movementId"
+                    params={{ movementId: m.id }}
+                    className="flex min-h-16 items-center gap-3 border-b border-white/[0.06] px-3.5 py-2 last:border-b-0 active:bg-white/[0.04]"
+                  >
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold">{m.name}</span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {m.nameEs}
+                      <span className="flex items-center gap-1.5">
+                        <span className="truncate text-base font-bold">{m.name}</span>
+                        {m.rm && <span className="shrink-0 rounded-full border border-[color:var(--gold)]/40 px-1.5 text-[11px] font-bold text-gold">RM</span>}
+                        {m.id.startsWith("custom-") && <span className="shrink-0 rounded-full border border-[color:var(--gold)]/40 px-1.5 text-[11px] font-bold text-gold">Tuyo</span>}
+                      </span>
+                      <span className="block truncate text-[13px] text-muted-foreground">
+                        {m.nameEs}{m.equipment[0] ? ` · ${m.equipment[0]}` : ""}
                       </span>
                     </span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    <span className="rounded-full border border-border px-2 py-1 text-xs">
-                      {m.category}
+                    <span className="shrink-0 text-xs text-muted-foreground" aria-label={`Nivel ${LEVEL_LABEL[m.level]?.text ?? m.level}`}>
+                      <span className="text-gold">{LEVEL_LABEL[m.level]?.dots ?? ""}</span> {LEVEL_LABEL[m.level]?.text ?? m.level}
                     </span>
-                    <span className="rounded-full border border-border px-2 py-1 text-xs">
-                      {m.level}
-                    </span>
-                    {m.id.startsWith("custom-") && (
-                      <span className="rounded-full border border-[rgba(200,179,138,0.35)] px-2 py-1 text-xs text-[var(--gold)]">Personalizado</span>
-                    )}
-                    {m.rm && (
-                      <span
-                        className="rounded-full border border-[rgba(200,179,138,0.35)] px-2 py-1 text-xs"
-                        style={{ color: "var(--gold)" }}
-                      >
-                        RM
-                      </span>
-                    )}
-                  </div>
-                </GlassCard>
-              </Link>
-            ))}
-          </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ))}
+
           {filtered.length === 0 && (
-            <p className="rounded-2xl border border-border p-6 text-center text-sm text-muted-foreground">
-              No se encontraron movimientos con esos filtros.
+            <p className="rounded-[18px] bg-white/[0.04] p-6 text-center text-[15px] text-muted-foreground">
+              No hay movimientos con esa búsqueda.
             </p>
           )}
         </div>
@@ -184,3 +208,9 @@ function DictionaryPage() {
     </AppShell>
   );
 }
+
+const LEVEL_LABEL: Record<string, { dots: string; text: string }> = {
+  Beginner: { dots: "●", text: "Básico" },
+  Intermediate: { dots: "●●", text: "Medio" },
+  Advanced: { dots: "●●●", text: "Avanzado" },
+};

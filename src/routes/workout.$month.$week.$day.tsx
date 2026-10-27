@@ -7,8 +7,10 @@ import {
   useSaveResult,
   useDeleteWorkoutResults,
   useSettings,
+  usePersonalRecords,
   findDay,
 } from "@/lib/store";
+import { RmCalculator } from "@/components/workout/RmCalculator";
 import { formatKg } from "@/lib/rm-matcher";
 import { ChevronLeft, CheckCheck, MoreHorizontal, Share2, Undo2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -46,6 +48,7 @@ function WorkoutPage() {
   const { data: results = [] } = useDayResults(month, weekN, day);
   const { data: wodResults = [] } = useWodResults();
   const { data: settings } = useSettings();
+  const { data: personalRecords = [] } = usePersonalRecords();
   const save = useSaveResult();
   const deleteWorkoutResults = useDeleteWorkoutResults();
   const saveWod = useSaveWodResult();
@@ -384,6 +387,8 @@ function WorkoutPage() {
           <p className="text-sm text-muted-foreground">Día de descanso y movilidad</p>
         </div>
       )}
+
+      {!d.isRest && d.blocks.length > 0 && <RmCalculator records={personalRecords} settings={settings} />}
 
       <div className="space-y-3">
         {d.blocks.map((b) => {

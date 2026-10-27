@@ -53,11 +53,21 @@ export function roundToPlates(target: number, cfg: PlateConfig = DEFAULT): numbe
 // Supports decimals like "82.5%".
 export function extractPercentages(content: string): number[] {
   const out: number[] = [];
-  const re = /(\d{2,3}(?:\.\d+)?)\s*%/g;
-  let m;
-  while ((m = re.exec(content))) {
-    const p = Number(m[1]);
+  const add = (raw: string | undefined) => {
+    if (!raw) return;
+    const p = Number(raw.replace(",", "."));
     if (p >= 30 && p <= 110) out.push(p);
+  };
+  // «70%», «72,5 %»
+  const pct = /(\d{2,3}(?:[.,]\d+)?)\s*%/g;
+  let m: RegExpExecArray | null;
+  while ((m = pct.exec(content))) add(m[1]);
+  // En la planificación «@» también es porcentaje del RM: «5x3 @75», «@ 70-75».
+  // No cuenta si es una carga («@60kg») ni un RPE/RIR («@RPE8»).
+  const at = /@\s*(\d{2,3}(?:[.,]\d+)?)(?:\s*(?:-|–|\/|a)\s*(\d{2,3}(?:[.,]\d+)?))?(?!\s*(?:[.,]\d)?\s*(?:kg|kgs|lb|lbs|k\b))/gi;
+  while ((m = at.exec(content))) {
+    add(m[1]);
+    add(m[2]);
   }
   return Array.from(new Set(out));
 }

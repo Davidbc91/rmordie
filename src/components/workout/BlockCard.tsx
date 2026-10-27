@@ -1,6 +1,7 @@
 import { LinkedText } from "@/components/LinkedText";
 import { usePersonalRecords, useUpsertPersonalRecord } from "@/lib/store";
-import { extractPercentages } from "@/lib/plates";
+import { extractPercentages, extractSetsReps, extractRestSeconds } from "@/lib/plates";
+import { LoadStepper, CountStepper, RpeChips, PlateLine, RestTimer } from "./QuickLog";
 import {
   detectExercise,
   loadsForPercentages,
@@ -112,17 +113,14 @@ export function BlockCard({
   }, [weight, sets, reps, time, rpe, notes, open, wodScale, wodCap, wodTime, wodRounds, wodReps, blockKey]);
 
   const pcts = extractPercentages(content);
+  const planSetsReps = useMemo(() => extractSetsReps(content), [content]);
+  const restSeconds = useMemo(() => extractRestSeconds(content), [content]);
+  const plateCfg = settings ? { bars: settings.bar_weights, plates: settings.plate_weights } : undefined;
   const detected = useMemo(() => detectExercise(content, records), [content, records]);
   const targetLoads = useMemo(
     () => (detected ? loadsForPercentages(detected.weight, pcts) : []),
     [detected, pcts],
   );
-  const targetHint =
-    targetLoads.length > 0
-      ? `Objetivo: ${targetLoads.map((l) => `${l.suggested} kg`).join(" · ")}`
-      : detected
-        ? `RM: ${formatKg(detected.weight)} kg`
-        : undefined;
 
   // Carga realizada vs carga objetivo: indicador calculado, sin escribir nada.
   const actualLoad = useMemo(() => {
@@ -317,11 +315,7 @@ export function BlockCard({
               reps={wodReps}
               setReps={setWodReps}
             />
-            {!showStrength && (
-              <div className="grid grid-cols-2 gap-2.5">
-                <Field label="RPE" value={rpe} onChange={setRpe} type="number" placeholder="1–10" />
-              </div>
-            )}
+            {!showStrength && <RpeChips value={rpe} onChange={setRpe} />}
             {livePr && <p className="text-[13px] font-medium text-gold">{livePr}</p>}
           </>
         )}
@@ -344,11 +338,21 @@ export function BlockCard({
                 {targetLoads.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => setWeight(String(targetLoads[0].suggested))}
-                    className="pressable flex min-h-12 w-full items-center justify-center rounded-[14px] bg-[color:var(--gold)] text-base font-bold text-[color:var(--gold-foreground)]"
+                    onClick={() => {
+                      setWeight(String(targetLoads[0].suggested));
+                      if (planSetsReps) {
+                        setSets(String(planSetsReps.sets));
+                        setReps(String(planSetsReps.reps));
+                      }
+                    }}
+                    className="pressable cta-display flex min-h-[52px] w-full items-center justify-center rounded-[14px] bg-[color:var(--gold)] text-[color:var(--gold-foreground)]"
+                    style={{ fontSize: "1.5rem" }}
                   >
-                    Usar {formatKg(targetLoads[0].suggested)} kg
+                    USAR {formatKg(targetLoads[0].suggested)} KG{planSetsReps ? ` · ${planSetsReps.sets}×${planSetsReps.reps}` : ""}
                   </button>
+                )}
+                {targetLoads.length > 0 && planSetsReps && (
+                  <p className="text-[13px] text-muted-foreground">Rellena carga, series y reps del plan de una vez.</p>
                 )}
                 {nextLoad && (
                   <p className="text-[13px] text-muted-foreground">
@@ -371,15 +375,26 @@ export function BlockCard({
               <PercentAssistant percentages={pcts} settings={settings} record={detected} />
             )}
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <Field label="Carga (kg)" value={weight} onChange={setWeight} type="number" placeholder={targetHint} highlight={!!detected} />
-              <Field label="RPE" value={rpe} onChange={setRpe} type="number" placeholder="1–10" />
-              <Field label="Series" value={sets} onChange={setSets} type="number" />
-              <Field label="Reps" value={reps} onChange={setReps} type="number" />
-              {!detected && pcts.length === 0 && (
-                <Field label="Tiempo (mm:ss)" value={time} onChange={setTime} placeholder="3:45" />
-              )}
+            <div>
+              <LoadStepper
+                value={weight}
+                onChange={setWeight}
+                highlight={!!detected}
+                placeholder={targetLoads.length > 0 ? `${formatKg(targetLoads[0].suggested)} objetivo` : undefined}
+              />
+              <PlateLine total={actualLoad} cfg={plateCfg} />
             </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <CountStepper label="Series" value={sets} onChange={setSets} />
+              <CountStepper label="Reps" value={reps} onChange={setReps} />
+            </div>
+            <RpeChips value={rpe} onChange={setRpe} />
+            {!detected && pcts.length === 0 && (
+              <div className="grid grid-cols-2 gap-2.5">
+                <Field label="Tiempo (mm:ss)" value={time} onChange={setTime} placeholder="3:45" />
+              </div>
+            )}
+            {(restSeconds != null || detected || pcts.length > 0) && <RestTimer seconds={restSeconds ?? 120} />}
           </>
         )}
 

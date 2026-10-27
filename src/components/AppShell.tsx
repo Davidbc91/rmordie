@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User, Play, X, Users, MoreHorizontal, ChevronRight, BookOpen, Film, FileText, HeartPulse, LogOut, ChevronDown,
+  Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User, Play, X, Users, ChevronRight, BookOpen, Film, FileText, HeartPulse, LogOut,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -11,20 +11,32 @@ import { getCurrentUserId, signOut } from "@/lib/pin-gate";
 import { isVideoAdmin } from "@/lib/admin-videos";
 import { useProfiles } from "@/lib/store";
 
+// El Temporizador va en el centro, destacado.
 const tabs = [
   { to: "/", label: "Inicio", icon: Home },
   { to: "/calendar", label: "Plan", icon: Calendar },
-  { to: "/records", label: "RM", icon: Trophy },
+  { to: "/timers", label: "Timer", icon: Timer, center: true },
+  { to: "/records", label: "Récords", icon: Trophy },
   { to: "/social", label: "Social", icon: Users },
 ];
 
-const moreLinks = [
-  { to: "/dictionary", label: "Diccionario", hint: "Movimientos CrossFit", icon: BookOpen },
-  { to: "/timers", label: "Temporizadores", hint: "AMRAP · EMOM · Tabata", icon: Timer },
+// Todo lo que antes estaba en «Más» vive ahora en el menú del perfil (círculo de arriba a la derecha).
+const profileLinks = [
+  { to: "/profile", label: "Mi perfil y progreso", hint: "Progreso y datos del atleta", icon: User },
   { to: "/chat", label: "Chat", hint: "Conversación del box", icon: MessageCircle },
+  { to: "/dictionary", label: "Diccionario de movimientos", hint: "Movimientos CrossFit", icon: BookOpen },
   { to: "/import", label: "Importar planificación", hint: "Excel, PDF o foto", icon: Upload },
-  { to: "/settings", label: "Ajustes", hint: "Discos, barras y perfil", icon: Settings },
+  { to: "/athlete-report", label: "Informe para entrenador", hint: "Generar informe completo", icon: FileText },
+  { to: "/health", label: "Salud", hint: "Datos de recuperación", icon: HeartPulse },
+  { to: "/settings", label: "Ajustes", hint: "Discos, barras y contraseña", icon: Settings },
 ];
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
 
 type AppShellProps = { children: React.ReactNode; hideBottomNav?: boolean };
 
@@ -42,61 +54,50 @@ const ResumeWorkout = memo(function ResumeWorkout({ active, onDismiss }: { activ
   );
 });
 
-const BottomNavigation = memo(function BottomNavigation({ pathname, keyboardOpen, moreOpen, moreActive, chatUnread, onToggleMore }: { pathname: string; keyboardOpen: boolean; moreOpen: boolean; moreActive: boolean; chatUnread: number; onToggleMore: () => void }) {
+const BottomNavigation = memo(function BottomNavigation({ pathname, keyboardOpen }: { pathname: string; keyboardOpen: boolean }) {
   return (
     <nav aria-hidden={keyboardOpen} aria-label="Navegación principal" data-main-navigation className={"pointer-events-none fixed inset-x-0 bottom-0 px-0 transition-opacity duration-150 " + (keyboardOpen ? "pointer-events-none opacity-0" : "opacity-100")} style={{ zIndex: 50, bottom: "max(env(safe-area-inset-bottom), 12px)", transform: "translateZ(0)" }}>
-      <div className="pointer-events-auto mx-auto w-[calc(100vw-32px)] max-w-[360px] overflow-hidden rounded-[26px] border" style={{ background: "linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.045) 45%, rgba(200,179,138,.055)), rgba(10,10,12,.58)", borderColor: "rgba(255,255,255,0.22)", backdropFilter: "blur(24px) saturate(165%)", WebkitBackdropFilter: "blur(24px) saturate(165%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(0,0,0,.28), inset 0 0 42px rgba(255,255,255,.025), 0 18px 55px -22px rgba(0,0,0,.98), 0 8px 28px -16px rgba(200,179,138,.18)" }}>
-        <div className="relative flex items-stretch gap-1 px-2 pt-2">
-          <span aria-hidden className="pointer-events-none absolute inset-x-10 top-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent)" }} />
+      <div className="pointer-events-auto mx-auto w-[calc(100vw-32px)] max-w-[380px] rounded-[26px] border" style={{ background: "rgba(14,14,13,.92)", borderColor: "rgba(255,255,255,0.14)", backdropFilter: "blur(24px) saturate(160%)", WebkitBackdropFilter: "blur(24px) saturate(160%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 18px 55px -22px rgba(0,0,0,.98)" }}>
+        <div className="relative flex items-stretch gap-0.5 px-1.5 pt-1.5">
           {tabs.map((t) => {
             const isActive = pathname === t.to || (t.to !== "/" && pathname.startsWith(t.to));
             const Icon = t.icon;
-            return <Link key={t.to} to={t.to} className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2" style={{ color: isActive ? "var(--gold)" : "var(--muted-foreground)" }}>
-              <span aria-hidden className="absolute inset-0 rounded-[18px] transition-all duration-300" style={{ background: "linear-gradient(145deg, rgba(255,255,255,.105), rgba(200,179,138,.075) 55%, rgba(255,255,255,.018))", opacity: isActive ? 1 : 0, boxShadow: isActive ? "inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 18px rgba(200,179,138,.035), 0 0 22px -14px rgba(200,179,138,.75)" : "none" }} />
-              <Icon className="relative h-[19px] w-[19px]" strokeWidth={isActive ? 2.1 : 1.6} />
-              <span className="relative text-xs font-semibold" style={{ letterSpacing: "0.02em", opacity: isActive ? 1 : 0.82 }}>{t.label}</span>
+            if (t.center) {
+              return <Link key={t.to} to={t.to} aria-label="Temporizador" className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-end gap-[3px] pb-2">
+                <span className="gold-gradient -mt-6 grid h-[54px] w-[54px] place-items-center rounded-full" style={{ boxShadow: "0 10px 26px -8px rgba(0,0,0,.9), 0 0 0 4px rgba(8,8,7,.9)" }}>
+                  <Icon className="h-6 w-6" strokeWidth={2.2} style={{ color: "var(--gold-foreground)" }} />
+                </span>
+                <span className="text-xs font-bold" style={{ color: "var(--gold-soft)" }}>{t.label}</span>
+              </Link>;
+            }
+            return <Link key={t.to} to={t.to} className="pressable relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2" style={{ color: isActive ? "var(--gold)" : "var(--muted-foreground)" }}>
+              <span aria-hidden className="absolute inset-0 rounded-[18px] transition-opacity duration-300" style={{ background: "rgba(200,179,138,.10)", opacity: isActive ? 1 : 0 }} />
+              <Icon className="relative h-[20px] w-[20px]" strokeWidth={isActive ? 2.1 : 1.7} />
+              <span className="relative text-xs font-semibold">{t.label}</span>
             </Link>;
           })}
-          <button onClick={onToggleMore} aria-label="Más secciones" className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2" style={{ color: moreActive || moreOpen ? "var(--gold)" : "var(--muted-foreground)" }}>
-            <span aria-hidden className="absolute inset-0 rounded-[18px] transition-all duration-300" style={{ background: "linear-gradient(145deg, rgba(255,255,255,.105), rgba(200,179,138,.075))", opacity: moreActive || moreOpen ? 1 : 0, boxShadow: moreActive || moreOpen ? "inset 0 1px 0 rgba(255,255,255,.18), 0 0 22px -14px rgba(200,179,138,.75)" : "none" }} />
-            <MoreHorizontal className="relative h-[19px] w-[19px]" strokeWidth={moreActive || moreOpen ? 2.1 : 1.6} />
-            {chatUnread > 0 && <span aria-hidden className="absolute right-[24%] top-[4px] grid h-4 min-w-4 place-items-center rounded-full px-1 text-xs font-bold gold-gradient" style={{ color: "var(--gold-foreground)" }}>{chatUnread > 9 ? "9+" : chatUnread}</span>}
-            <span className="relative text-xs font-semibold" style={{ letterSpacing: "0.02em", opacity: moreActive || moreOpen ? 1 : 0.82 }}>Más</span>
-          </button>
         </div>
       </div>
     </nav>
   );
 });
 
-const ProfileOverlay = memo(function ProfileOverlay({ name, onClose, onSignOut }: { name: string; onClose: () => void; onSignOut: () => void }) {
-  const items = [
-    { to: "/profile", label: "Mi perfil", hint: "Progreso y datos del atleta", icon: User },
-    { to: "/athlete-report", label: "Informe para entrenador", hint: "Generar informe completo", icon: FileText },
-    { to: "/health", label: "Salud", hint: "Datos de recuperación", icon: HeartPulse },
-    { to: "/settings", label: "Ajustes", hint: "Discos, barras y configuración", icon: Settings },
-  ];
-  return (
-    <div className="fixed inset-0" style={{ zIndex: 60 }}>
-      <button aria-label="Cerrar perfil" onClick={onClose} className="absolute inset-0 bg-black/55 backdrop-blur-[5px]" />
-      <div className="glass-elevated glass-sheen animate-fade absolute left-4 right-4 top-[calc(env(safe-area-inset-top)+4.75rem)] mx-auto max-w-sm rounded-[26px] p-3">
-        <div className="mb-2 rounded-[18px] border border-white/8 bg-white/[0.025] px-3 py-3"><p className="eyebrow">Perfil activo</p><p className="mt-1 text-base font-semibold">{name}</p></div>
-        <div className="space-y-1.5">
-          {items.map((item) => { const Icon = item.icon; return <Link key={item.to} to={item.to as any} className="pressable flex items-center gap-3 rounded-[16px] bg-white/[0.035] px-3 py-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)]"><Icon className="h-4 w-4" strokeWidth={1.7} /></span><span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{item.label}</span><span className="block truncate text-xs text-muted-foreground">{item.hint}</span></span><ChevronRight className="h-4 w-4 text-muted-foreground" /></Link>; })}
-          <button type="button" onClick={onSignOut} className="pressable mt-1 flex w-full items-center gap-3 rounded-[16px] bg-white/[0.025] px-3 py-3 text-left"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] border border-red-400/15 bg-red-400/5"><LogOut className="h-4 w-4 text-red-300" /></span><span className="text-sm font-semibold text-red-200">Cerrar sesión</span></button>
-        </div>
-      </div>
-    </div>
-  );
-});
-
-const MoreOverlay = memo(function MoreOverlay({ pathname, links, chatUnread, onClose }: { pathname: string; links: typeof moreLinks; chatUnread: number; onClose: () => void }) {
+const ProfileOverlay = memo(function ProfileOverlay({ name, links, chatUnread, onClose, onSignOut }: { name: string; links: typeof profileLinks; chatUnread: number; onClose: () => void; onSignOut: () => void }) {
   return (
     <div className="fixed inset-0 flex items-end" style={{ zIndex: 60 }}>
-      <button aria-label="Cerrar menú" onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-[6px]" />
-      <div className="glass-elevated glass-sheen animate-fade relative mx-3 mb-[96px] max-w-2xl flex-1 rounded-[28px] p-3 sm:mx-auto"><p className="eyebrow px-2 pb-2 pt-1">Más</p><div className="space-y-1.5">
-        {links.map((l) => { const Icon = l.icon; const isActive = pathname.startsWith(l.to); return <Link key={l.to} to={l.to as any} className="pressable flex items-center gap-3.5 rounded-[var(--r-md)] px-3 py-3" style={{ background: isActive ? "rgba(200,179,138,0.09)" : "rgba(255,255,255,0.035)" }}><span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg)]"><Icon className="h-[18px] w-[18px]" strokeWidth={1.7} /></span><span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{l.label}</span><span className="block truncate text-xs text-muted-foreground">{l.hint}</span></span>{l.to === "/chat" && chatUnread > 0 && <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1.5 text-xs font-bold gold-gradient" style={{ color: "var(--gold-foreground)" }}>{chatUnread > 99 ? "99+" : chatUnread}</span>}<ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" /></Link>; })}
-      </div></div>
+      <button aria-label="Cerrar menú del perfil" onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-[6px]" />
+      <div role="dialog" aria-label="Menú del perfil" className="animate-fade relative mx-auto max-h-[85dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[#141412] px-4 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
+        <div aria-hidden className="mx-auto mb-3 h-[5px] w-10 rounded-full bg-white/20" />
+        <div className="mb-3 flex items-center gap-3 px-1">
+          <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full border border-[color:var(--gold)]/50 bg-[color:var(--gold)]/12 text-[22px] font-extrabold text-[color:var(--gold-soft)]" style={{ fontFamily: "var(--font-editorial)" }}>{initials(name)}</span>
+          <span className="min-w-0 flex-1"><span className="block truncate text-[17px] font-bold">{name}</span><span className="block text-[13px] text-muted-foreground">Perfil activo</span></span>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="tap grid place-items-center rounded-full text-muted-foreground"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="space-y-1.5">
+          {links.map((item) => { const Icon = item.icon; return <Link key={item.to} to={item.to as any} className="pressable flex min-h-[56px] items-center gap-3 rounded-[16px] bg-white/[0.05] px-3"><Icon className="h-[19px] w-[19px] shrink-0 text-muted-foreground" strokeWidth={1.8} /><span className="min-w-0 flex-1 text-[15px] font-semibold">{item.label}</span>{item.to === "/chat" && chatUnread > 0 && <span className="grid h-6 min-w-6 shrink-0 place-items-center rounded-full px-1.5 text-xs font-bold gold-gradient" style={{ color: "var(--gold-foreground)" }}>{chatUnread > 99 ? "99+" : chatUnread}</span>}<ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" /></Link>; })}
+        </div>
+        <button type="button" onClick={onSignOut} className="mt-2 flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-muted-foreground"><LogOut className="h-4 w-4" />Cerrar sesión</button>
+      </div>
     </div>
   );
 });
@@ -104,7 +105,6 @@ const MoreOverlay = memo(function MoreOverlay({ pathname, links, chatUnread, onC
 export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [active, setActive] = useState<ActiveWorkout | null>(null);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const keyboardOpen = hideBottomNav;
   const chatUnread = useChatUnread(!pathname.startsWith("/chat"));
@@ -118,8 +118,8 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
     enabled: !!currentProfileId,
     staleTime: 5 * 60 * 1000,
   });
-  const visibleMoreLinks = useMemo(
-    () => isAdmin ? [...moreLinks, { to: "/admin/videos", label: "Administración", hint: "Gestionar vídeos", icon: Film }] : moreLinks,
+  const visibleProfileLinks = useMemo(
+    () => isAdmin ? [...profileLinks, { to: "/admin/videos", label: "Administración de vídeos", hint: "Gestionar vídeos", icon: Film }] : profileLinks,
     [isAdmin],
   );
 
@@ -134,17 +134,14 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
     };
   }, []);
 
-  useEffect(() => { setMoreOpen(false); setProfileOpen(false); }, [pathname]);
+  useEffect(() => { setProfileOpen(false); }, [pathname]);
 
   const dismissActiveWorkout = useCallback(() => { clearActiveWorkout(); setActive(null); }, []);
   const closeProfile = useCallback(() => setProfileOpen(false), []);
   const signOutProfile = useCallback(async () => { setProfileOpen(false); await signOut(); window.location.assign("/"); }, []);
-  const closeMore = useCallback(() => setMoreOpen(false), []);
-  const toggleMore = useCallback(() => setMoreOpen((v) => !v), []);
 
   const activePath = active ? `/workout/${active.month}/${active.week}/${active.day}` : null;
   const showResume = !!active && pathname !== activePath;
-  const moreActive = visibleMoreLinks.some((l) => pathname.startsWith(l.to));
 
   return (
     <div className={"grain relative min-h-[100dvh] overflow-x-hidden " + (keyboardOpen ? "pb-0" : "pb-[calc(88px+env(safe-area-inset-bottom))]")}>
@@ -166,28 +163,28 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
         }}
       >
         <header className="mb-5 flex items-center justify-between">
+          <span className="text-[24px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>RM <span className="text-gold">OR</span> DIE</span>
+          <SyncIndicator />
           <button
             type="button"
             onClick={() => setProfileOpen((v) => !v)}
             aria-expanded={profileOpen}
-            aria-label="Abrir menú de perfil"
-            className="pressable flex min-h-11 items-center gap-2 rounded-full px-1 text-left"
+            aria-label="Abrir tu perfil y el menú"
+            className="pressable relative grid h-11 w-11 place-items-center rounded-full border-[1.5px] border-[color:var(--gold)] bg-[color:var(--gold)]/12 text-[19px] font-extrabold text-[color:var(--gold-soft)]"
+            style={{ fontFamily: "var(--font-editorial)" }}
           >
-            <span className="text-[22px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>RM <span className="text-gold">OR</span> DIE</span>
-            <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${profileOpen ? "rotate-180" : ""}`} />
+            {initials(currentProfile?.name ?? "Atleta")}
+            {chatUnread > 0 && <span aria-label={`${chatUnread} mensajes sin leer`} className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold gold-gradient" style={{ color: "var(--gold-foreground)", fontFamily: "var(--font-display)" }}>{chatUnread > 9 ? "9+" : chatUnread}</span>}
           </button>
-          <SyncIndicator />
         </header>
         {children}
       </main>
 
       {showResume && active && <ResumeWorkout active={active} onDismiss={dismissActiveWorkout} />}
 
-      {profileOpen && <ProfileOverlay name={currentProfile?.name ?? "Atleta"} onClose={closeProfile} onSignOut={signOutProfile} />}
+      {profileOpen && <ProfileOverlay name={currentProfile?.name ?? "Atleta"} links={visibleProfileLinks as typeof profileLinks} chatUnread={chatUnread} onClose={closeProfile} onSignOut={signOutProfile} />}
 
-      {moreOpen && <MoreOverlay pathname={pathname} links={visibleMoreLinks as typeof moreLinks} chatUnread={chatUnread} onClose={closeMore} />}
-
-      <BottomNavigation pathname={pathname} keyboardOpen={keyboardOpen} moreOpen={moreOpen} moreActive={moreActive} chatUnread={chatUnread} onToggleMore={toggleMore} />
+      <BottomNavigation pathname={pathname} keyboardOpen={keyboardOpen} />
     </div>
   );
 }

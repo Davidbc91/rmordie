@@ -10,6 +10,31 @@ import { findMonthIndexForDate as findPlanMonthIndex } from "@/lib/plan-dates";
 
 
 const CALENDAR_MONTH_KEY = "malitos_calendar_month_key";
+const CALENDAR_VIEW_KEY = "rmordie_calendar_view";
+type CalendarView = "semana" | "mes";
+
+function readView(): CalendarView {
+  try {
+    return window.localStorage.getItem(CALENDAR_VIEW_KEY) === "mes" ? "mes" : "semana";
+  } catch {
+    return "semana";
+  }
+}
+
+function mondayOf(date: Date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return addDays(d, -((d.getDay() + 6) % 7));
+}
+
+function dayHeadline(d: PlannedDay["day"] | undefined) {
+  if (!d) return "Sin plan";
+  if (d.isRest) return "Descanso";
+  return (
+    d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ??
+    d.blocks[0]?.content.split("\n")[0] ??
+    "Entreno"
+  );
+}
 
 const MONTH_ABBR: Record<number, string> = {
   0: "ENE", 1: "FEB", 2: "MAR", 3: "ABR", 4: "MAY", 5: "JUN",
@@ -72,6 +97,13 @@ function CalendarPage() {
   const { data: planning, isLoading } = usePlanning();
   const { data: results = [] } = useAllResults();
   const [idx, setIdx] = useState(0);
+  const [view, setView] = useState<CalendarView>("semana");
+  const [weekStart, setWeekStart] = useState<Date>(() => mondayOf(new Date()));
+  useEffect(() => { setView(readView()); }, []);
+  const changeView = useCallback((v: CalendarView) => {
+    setView(v);
+    try { window.localStorage.setItem(CALENDAR_VIEW_KEY, v); } catch { /* sin almacenamiento */ }
+  }, []);
   const initialized = useRef(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
@@ -104,8 +136,9 @@ function CalendarPage() {
     const dy = e.changedTouches[0].clientY - start.y;
     touchStart.current = null;
     if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
-    if (dx > 0) goPrev(); else goNext();
-  }, [goPrev, goNext]);
+    if (view === "semana") setWeekStart((w) => addDays(w, dx > 0 ? -7 : 7));
+    else if (dx > 0) goPrev(); else goNext();
+  }, [goPrev, goNext, view]);
 
   const blockMap = useMemo(() => completedBlockMap(results), [results]);
   // Debe calcularse antes de cualquier return: si un hook se ejecuta solo
@@ -131,8 +164,42 @@ function CalendarPage() {
     ? buildCalendarWeeks(parsedMonth.year, parsedMonth.monthIndex)
     : [];
 
+  const viewSwitch = (
+    <div role="group" aria-label="Vista del calendario" className="flex shrink-0 gap-1 rounded-[14px] bg-white/[0.06] p-1">
+      {(["semana", "mes"] as const).map((v) => (
+        <button
+          key={v}
+          type="button"
+          aria-pressed={view === v}
+          onClick={() => changeView(v)}
+          className={`min-h-10 rounded-[10px] px-3.5 text-sm font-bold ${view === v ? "bg-[color:var(--gold)] text-[color:var(--gold-foreground)]" : "text-muted-foreground"}`}
+        >
+          {v === "semana" ? "Semana" : "Mes"}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (view === "semana") {
+    return (
+      <div className="page-enter select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <WeekView
+          weekStart={weekStart}
+          planIndex={planIndex}
+          blockMap={blockMap}
+          today={today}
+          viewSwitch={viewSwitch}
+          onPrev={() => setWeekStart((w) => addDays(w, -7))}
+          onNext={() => setWeekStart((w) => addDays(w, 7))}
+          onToday={() => setWeekStart(mondayOf(new Date()))}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="page-enter select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <div className="mb-3 flex justify-end">{viewSwitch}</div>
       <div className="glass glass-sheen rise rise-1 flex items-center justify-between gap-2 p-2.5">
         <button onClick={goPrev} className="tap pressable grid h-11 w-11 place-items-center rounded-[14px] text-muted-foreground hover:text-foreground disabled:opacity-25" disabled={idx === 0} aria-label="Mes anterior">
           <ChevronLeft className="h-5 w-5" />
@@ -204,13 +271,7 @@ function CalendarPage() {
                   const done = prog?.state === "completed";
                   const partial = prog?.state === "in_progress";
                   const isToday = isSameDate(date, today);
-                  const headline = !d
-                    ? "SIN PLAN"
-                    : d.isRest
-                      ? "DESCANSO"
-                      : (d.blocks.find((b) => /^[A-D]$/.test(b.key))?.content.split("\n")[0] ??
-                        d.blocks[0]?.content.split("\n")[0] ??
-                        "Entreno");
+                  const headline = dayHeadline(d);
 
                   const cell = (
                     <div
@@ -296,6 +357,118 @@ function CalendarPage() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+const WEEKDAY_SHORT = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
+
+/** Vista por defecto en el móvil: la semana como lista, un día por fila. */
+function WeekView({
+  weekStart, planIndex, blockMap, today, viewSwitch, onPrev, onNext, onToday,
+}: {
+  weekStart: Date;
+  planIndex: Map<string, PlannedDay>;
+  blockMap: ReturnType<typeof completedBlockMap>;
+  today: Date;
+  viewSwitch: React.ReactNode;
+  onPrev: () => void;
+  onNext: () => void;
+  onToday: () => void;
+}) {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const planned = days.map((date) => planIndex.get(isoKey(date)));
+  const train = planned.filter((p): p is PlannedDay => !!p && !p.day.isRest);
+  const done = train.filter((p) => isSessionCompleted(p.day, p.month.key, p.week, blockMap)).length;
+  const planWeek = planned.find((p) => !!p)?.week ?? null;
+  const mid = addDays(weekStart, 3);
+  const monthName = new Intl.DateTimeFormat("es-ES", { month: "long" }).format(mid).toUpperCase();
+  const fmt = (d: Date) => new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short" }).format(d).replace(".", "");
+  const isCurrentWeek = isSameDate(weekStart, mondayOf(today));
+
+  return (
+    <div>
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="eyebrow">PLANIFICACIÓN · {mid.getFullYear()}</p>
+          <h1 className="page-title mt-1 truncate">{monthName}</h1>
+        </div>
+        {viewSwitch}
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-2">
+        <button type="button" onClick={onPrev} aria-label="Semana anterior" className="pressable grid h-11 w-11 place-items-center rounded-full bg-white/[0.06]">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div className="min-w-0 text-center">
+          <p className="text-base font-bold">{planWeek ? `Semana ${planWeek}` : "Semana"}</p>
+          <p className="text-[13px] text-muted-foreground">
+            {fmt(days[0])} – {fmt(days[6])}{train.length > 0 ? ` · ${done} de ${train.length} hechos` : ""}
+          </p>
+        </div>
+        <button type="button" onClick={onNext} aria-label="Semana siguiente" className="pressable grid h-11 w-11 place-items-center rounded-full bg-white/[0.06]">
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+
+      {!isCurrentWeek && (
+        <div className="mt-3 flex justify-center">
+          <button type="button" onClick={onToday} className="pressable inline-flex min-h-11 items-center gap-2 rounded-full border border-[color:var(--gold)]/35 bg-[color:var(--gold)]/10 px-4 text-sm font-semibold text-gold">
+            <Calendar className="h-4 w-4" /> Ir a esta semana
+          </button>
+        </div>
+      )}
+
+      <div className="mt-4 space-y-2">
+        {days.map((date, i) => {
+          const p = planned[i];
+          const isToday = isSameDate(date, today);
+          const prog = p ? sessionProgress(p.day, p.month.key, p.week, blockMap) : null;
+          const isDone = prog?.state === "completed";
+          const partial = prog?.state === "in_progress";
+          const rest = !p || p.day.isRest;
+          const dateBox = (
+            <span className="w-12 shrink-0 text-center">
+              <span className={`block text-[30px] font-extrabold leading-none ${isToday ? "text-[color:var(--gold-soft)]" : isDone ? "text-muted-foreground" : ""}`} style={{ fontFamily: "var(--font-editorial)" }}>{date.getDate()}</span>
+              <span className={`text-xs ${isToday ? "font-bold text-gold" : "text-muted-foreground"}`}>{isToday ? "HOY" : WEEKDAY_SHORT[i]}</span>
+            </span>
+          );
+          if (rest) {
+            return (
+              <div key={i} className="flex min-h-14 items-center gap-3.5 px-3.5 text-muted-foreground">
+                {dateBox}
+                <span className="flex-1 text-[15px]">{p ? "Descanso" : "Sin plan"}</span>
+                {p && <Moon className="h-4 w-4" strokeWidth={1.8} />}
+              </div>
+            );
+          }
+          return (
+            <Link
+              key={i}
+              to="/workout/$month/$week/$day"
+              params={{ month: p.month.key, week: String(p.week), day: p.day.key }}
+              className={`pressable flex min-h-[72px] items-center gap-3.5 rounded-[18px] px-3.5 ${isToday ? "border-[1.5px] border-[color:var(--gold)] bg-[color:var(--gold)]/8" : "bg-white/[0.045]"}`}
+            >
+              {dateBox}
+              <span className="min-w-0 flex-1">
+                <span className={`block truncate text-[15px] ${isToday ? "font-bold" : "font-semibold"}`}>{dayHeadline(p.day)}</span>
+                <span className={`block text-[13px] ${isToday ? "text-gold" : "text-muted-foreground"}`}>
+                  {isDone ? `${prog?.total ?? 0}/${prog?.total ?? 0} bloques` : partial ? `${prog?.done}/${prog?.total} bloques · sigue` : `${prog?.total ?? p.day.blocks.length} bloques`}
+                </span>
+              </span>
+              {isDone ? (
+                <span aria-label="Hecho" className="gold-gradient grid h-7 w-7 shrink-0 place-items-center rounded-full"><Check className="h-4 w-4" strokeWidth={3} /></span>
+              ) : partial ? (
+                <span aria-label="A medias" className="h-7 w-7 shrink-0 rounded-full border-2 border-[color:var(--gold)]" style={{ background: "linear-gradient(90deg, var(--gold) 50%, transparent 50%)" }} />
+              ) : (
+                <span aria-label="Pendiente" className="h-7 w-7 shrink-0 rounded-full border-2 border-white/25" />
+              )}
+            </Link>
+          );
+        })}
+      </div>
+
+      <p className="mt-4 text-center text-[13px] text-muted-foreground">Desliza a los lados para cambiar de semana</p>
     </div>
   );
 }

@@ -28,6 +28,8 @@ export type Month = {
 export type Planning = {
   months: Month[];
   importedAt: string;
+  /** Plan creado con el planificador: su estado editable (ver lib/plan-builder). */
+  builder?: unknown;
 };
 
 const DAY_ORDER = ["LUNES", "MARTES", "MIERCOLES", "MIÉRCOLES", "JUEVES", "VIERNES", "SABADO", "SÁBADO", "DOMINGO"];

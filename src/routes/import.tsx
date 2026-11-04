@@ -186,6 +186,13 @@ function ImportPage() {
           </p>
           <p className="mt-1.5 truncate text-[17px] font-bold">{current.source_filename ?? "Sin nombre"}</p>
           <p className="text-sm text-muted-foreground">{months.length} meses · importada el {fmtDate(current.imported_at)}</p>
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/plan-builder" })}
+            className="pressable mt-3 flex min-h-12 w-full items-center justify-center rounded-[14px] bg-white/[0.08] text-[15px] font-bold"
+          >
+            Editar el plan
+          </button>
         </section>
       )}
 
@@ -215,7 +222,7 @@ function ImportPage() {
 
       <button
         type="button"
-        onClick={() => navigate({ to: "/plan-builder" })}
+        onClick={() => navigate({ to: "/plan-builder", search: { nuevo: true } })}
         className="pressable mt-2.5 flex min-h-[52px] w-full items-center justify-center gap-1.5 rounded-[16px] bg-white/[0.06] text-[15px] font-bold"
       >
         <Plus className="h-4 w-4" /> Crear una planificación a mano

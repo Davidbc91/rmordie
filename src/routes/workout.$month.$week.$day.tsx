@@ -12,7 +12,7 @@ import {
 } from "@/lib/store";
 import { RmCalculator } from "@/components/workout/RmCalculator";
 import { formatKg } from "@/lib/rm-matcher";
-import { ChevronLeft, CheckCheck, MoreHorizontal, Share2, Undo2 } from "lucide-react";
+import { ChevronLeft, CheckCheck, MoreHorizontal, Pencil, Share2, Undo2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -336,7 +336,7 @@ function WorkoutPage() {
         >
           <ChevronLeft className="h-[18px] w-[18px]" /> Plan
         </Link>
-        {!d.isRest && (
+        {(
           <div className="relative">
             <button
               type="button"
@@ -354,13 +354,22 @@ function WorkoutPage() {
                   <button
                     type="button"
                     role="menuitem"
+                    onClick={() => { setMenuOpen(false); navigate({ to: "/plan-builder", search: { m: month, w: weekN, d: day } }); }}
+                    className="flex min-h-12 w-full items-center gap-3 px-4 text-left text-[15px]"
+                  >
+                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                    Editar este día del plan
+                  </button>
+                  {!d.isRest && <button
+                    type="button"
+                    role="menuitem"
                     onClick={() => { setMenuOpen(false); void shareToday(); }}
                     disabled={sharingCard}
                     className="flex min-h-12 w-full items-center gap-3 px-4 text-left text-[15px] disabled:opacity-50"
                   >
                     <Share2 className="h-4 w-4 text-muted-foreground" />
                     {sharingCard ? "Generando imagen…" : "Compartir imagen del entreno"}
-                  </button>
+                  </button>}
                   {(results.length > 0 || dayWods.length > 0) && (
                     <button
                       type="button"

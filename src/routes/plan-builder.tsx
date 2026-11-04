@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { RawPlanEditor } from "@/components/plan/RawPlanEditor";
+import type { Planning } from "@/lib/excel-parser";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Copy, Minus, MoreHorizontal, Plus, Trash2 } from "lucide-react";
@@ -38,8 +40,16 @@ export const Route = createFileRoute("/plan-builder")({
       { name: "description", content: "Crea tu planificación de CrossFit a mano: eliges fechas, rellenas cada día por bloques y copias semanas." },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): PlanBuilderSearch => ({
+    m: typeof search.m === "string" ? search.m : undefined,
+    w: search.w != null && Number.isFinite(Number(search.w)) ? Number(search.w) : undefined,
+    d: typeof search.d === "string" ? search.d : undefined,
+    nuevo: search.nuevo === true || search.nuevo === "true" || search.nuevo === 1 ? true : undefined,
+  }),
   component: PlanBuilderPage,
 });
+
+type PlanBuilderSearch = { m?: string; w?: number; d?: string; nuevo?: boolean };
 
 const DRAFT_KEY = "rmordie_plan_builder_draft";
 const font = { fontFamily: "var(--font-editorial)" } as const;
@@ -79,7 +89,13 @@ function PlanBuilderPage() {
   const { data: current, isLoading } = usePlanning();
   const save = useSavePlanning();
   const myUid = getCurrentUserId();
-  const ownBuilder = current && current.user_id === myUid ? readBuilder(current.data.builder) : null;
+  const search = Route.useSearch();
+  const own = current && current.user_id === myUid ? current : null;
+  const ownBuilder = own ? readBuilder(own.data.builder) : null;
+  const focus = search.m && search.w != null && search.d ? { monthKey: search.m, week: search.w, dayKey: search.d } : null;
+  // Plan subido (Excel, PDF…) propio: se edita en modo «plan subido» salvo que pidas uno nuevo
+  const [createNew, setCreateNew] = useState(!!search.nuevo);
+  const rawMode = !!own && !ownBuilder && own.data.months.length > 0 && !createNew;
 
   const [plan, setPlan] = useState<PlanState | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -96,6 +112,13 @@ function PlanBuilderPage() {
       setDirty(true);
     } else if (ownBuilder) {
       setPlan(ownBuilder);
+      // «Editar este día» desde el entreno: abre ese día directamente
+      if (focus && own) {
+        const date = own.data.months.find((m) => m.key === focus.monthKey)?.weeks.find((w) => w.index === focus.week)?.days.find((d) => d.key === focus.dayKey)?.date;
+        ownBuilder.weeks.forEach((wk, wi) => wk.forEach((d, di) => {
+          if (d.date === date) { setWeekIdx(wi); setDayIdx(di); }
+        }));
+      }
     }
     setInitialized(true);
   }, [initialized, isLoading, ownBuilder]);
@@ -115,9 +138,27 @@ function PlanBuilderPage() {
       writeDraft(null);
       setDirty(false);
       toast.success("Plan guardado. Ya está en tu calendario.");
-      navigate({ to: "/calendar" });
+      backAfterSave();
     } catch (e) {
       toast.error(`No se pudo guardar: ${(e as { message?: string })?.message ?? "error desconocido"}`);
+    }
+  }
+
+  function backAfterSave() {
+    if (focus) navigate({ to: "/workout/$month/$week/$day", params: { month: focus.monthKey, week: String(focus.week), day: focus.dayKey } });
+    else navigate({ to: "/calendar" });
+  }
+
+  async function saveRaw(planning: Planning): Promise<boolean> {
+    if (!own) return false;
+    try {
+      await save.mutateAsync({ planning, filename: own.source_filename ?? "Planificación" });
+      toast.success("Cambios guardados. Tus registros siguen en su sitio.");
+      backAfterSave();
+      return true;
+    } catch (e) {
+      toast.error(`No se pudo guardar: ${(e as { message?: string })?.message ?? "error desconocido"}`);
+      return false;
     }
   }
 
@@ -134,12 +175,29 @@ function PlanBuilderPage() {
     );
   }
 
+  if (!plan && rawMode && own) {
+    return (
+      <AppShell>
+        <RawPlanEditor
+          planningId={own.id}
+          data={own.data}
+          name={own.source_filename ?? "Mi planificación"}
+          saving={save.isPending}
+          focus={focus}
+          onSave={saveRaw}
+          onExit={() => (focus ? backAfterSave() : navigate({ to: "/import" }))}
+          onCreateNew={() => setCreateNew(true)}
+        />
+      </AppShell>
+    );
+  }
+
   if (!plan) {
     return (
       <AppShell>
         <StartScreen
           hasActive={!!current && current.data.months.length > 0}
-          onBack={() => navigate({ to: "/import" })}
+          onBack={() => (createNew ? setCreateNew(false) : navigate({ to: "/import" }))}
           onCreate={(p) => {
             change(p);
             setWeekIdx(0);

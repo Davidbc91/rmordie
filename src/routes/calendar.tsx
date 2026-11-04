@@ -238,14 +238,22 @@ function CalendarPage() {
           onPrev={() => setWeekStart((w) => addDays(w, -7))}
           onNext={() => setWeekStart((w) => addDays(w, 7))}
           onToday={() => setWeekStart(mondayOf(new Date()))}
-          move={canMove ? {
+          move={{
             active: moveMode,
             selected: selectedIso,
-            onToggle: () => { setMoveMode((v) => !v); setSelectedIso(null); },
+            onToggle: () => {
+              if (!canMove) {
+                toast.error(planning.user_id
+                  ? "Este plan es de otro atleta: solo puedes mover días de tu propio plan."
+                  : "Este es el plan compartido del box y no se puede mover. Súbelo o créalo como tuyo en Plan → Importar y podrás moverlo.", { duration: 8000 });
+                return;
+              }
+              setMoveMode((v) => !v); setSelectedIso(null);
+            },
             onPick: pickDay,
             onDrop: dropDay,
             onShift: () => setShiftOpen(true),
-          } : null}
+          }}
         />
         {shiftOpen && planning && (
           <ShiftSheet
@@ -266,7 +274,16 @@ function CalendarPage() {
 
   return (
     <div className="page-enter select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <div className="mb-3 flex justify-end">{viewSwitch}</div>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => { changeView("semana"); if (canMove) setMoveMode(true); else toast.error("Solo puedes mover días de tu propio plan."); }}
+          className="inline-flex min-h-11 items-center gap-2 rounded-[14px] bg-white/[0.06] px-3.5 text-sm font-bold"
+        >
+          <Move className="h-4 w-4" /> Mover días
+        </button>
+        {viewSwitch}
+      </div>
       <div className="glass glass-sheen rise rise-1 flex items-center justify-between gap-2 p-2.5">
         <button onClick={goPrev} className="tap pressable grid h-11 w-11 place-items-center rounded-[14px] text-muted-foreground hover:text-foreground disabled:opacity-25" disabled={idx === 0} aria-label="Mes anterior">
           <ChevronLeft className="h-5 w-5" />

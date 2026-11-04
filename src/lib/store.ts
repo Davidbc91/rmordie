@@ -222,12 +222,15 @@ export function useUpdatePlanningData() {
   return useMutation({
     mutationFn: async ({ planningId, data }: { planningId: string; data: Planning }) => {
       if (!uid) throw new Error("No hay perfil activo");
-      const { error } = await supabase
+      const { data: rows, error } = await supabase
         .from("planning")
         .update({ data: data as unknown as never })
         .eq("id", planningId)
-        .eq("user_id", uid);
+        .eq("user_id", uid)
+        .select("id");
       if (error) throw error;
+      // Sin filas = la base de datos no ha dejado guardar (plan de otro o sin permiso)
+      if (!rows || rows.length === 0) throw new Error("No se ha guardado: este plan no está a tu nombre o tu sesión no tiene permiso. Vuelve a entrar y prueba otra vez.");
     },
     onMutate: async ({ planningId, data }) => {
       // Se ve al instante; si falla, se recarga lo que hay en el servidor

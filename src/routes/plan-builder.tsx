@@ -439,7 +439,7 @@ function WeekView({
           const dateBox = (
             <span className="w-11 shrink-0 text-center">
               <span className="block text-[28px] font-extrabold leading-none" style={font}>{date?.getDate()}</span>
-              <span className="text-xs text-muted-foreground">{DAY_SHORT[i]}</span>
+              <span className="text-xs text-muted-foreground">{DAY_SHORT[date ? (date.getDay() + 6) % 7 : i]}</span>
             </span>
           );
           if (d.rest) {

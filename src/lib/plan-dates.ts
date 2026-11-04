@@ -144,3 +144,12 @@ export function findMonthIndexForDate(months: Month[], date: Date = new Date()):
     return !hasYear && parseMonthDate(m)?.monthIndex === date.getMonth();
   });
 }
+
+const WEEKDAY_NAMES = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
+
+/** Día de la semana real ("LUNES") de una fecha ISO, para que no dependa de la clave del día. */
+export function weekdayOf(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return "";
+  return WEEKDAY_NAMES[new Date(y, m - 1, d).getDay()];
+}

@@ -1,7 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { usePlanning, useAllResults } from "@/lib/store";
+import { usePlanning, useAllResults, useUpdatePlanningData } from "@/lib/store";
+import { getCurrentUserId } from "@/lib/pin-gate";
+import { dayRefFor, moveDay, shiftDays } from "@/lib/plan-move";
+import { toast } from "sonner";
+import type { Planning } from "@/lib/excel-parser";
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Check, Circle, Moon, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Circle, Moon, Calendar, GripVertical, Minus, Plus, Move } from "lucide-react";
 import type { Month } from "@/lib/excel-parser";
 import { completedBlockMap, isSessionCompleted, sessionProgress } from "@/lib/session-progress";
 import { PageSkeleton } from "@/components/PageSkeleton";
@@ -95,6 +99,47 @@ function isSameDate(a: Date, b: Date) {
 
 function CalendarPage() {
   const { data: planning, isLoading } = usePlanning();
+  const updatePlan = useUpdatePlanningData();
+  const canMove = !!planning && planning.user_id === getCurrentUserId();
+  const [moveMode, setMoveMode] = useState(false);
+  const [selectedIso, setSelectedIso] = useState<string | null>(null);
+  const [shiftOpen, setShiftOpen] = useState(false);
+
+  const applyPlan = useCallback((next: Planning, message: string) => {
+    if (!planning) return;
+    const prev = planning.data;
+    updatePlan.mutate(
+      { planningId: planning.id, data: next },
+      { onError: (e) => toast.error((e as { message?: string })?.message ?? "No se pudo mover") },
+    );
+    toast.success(message, {
+      action: { label: "Deshacer", onClick: () => updatePlan.mutate({ planningId: planning.id, data: prev }) },
+      duration: 6000,
+    });
+  }, [planning, updatePlan]);
+
+  const pickDay = useCallback((iso: string) => {
+    if (!planning) return;
+    if (!selectedIso) {
+      if (!dayRefFor(planning.data, iso)) return toast("Ese día no tiene nada del plan. Elige un día con entreno o descanso.");
+      setSelectedIso(iso);
+      return;
+    }
+    if (iso === selectedIso) return setSelectedIso(null);
+    const ref = dayRefFor(planning.data, selectedIso);
+    setSelectedIso(null);
+    if (!ref) return;
+    const fmtD = (x: string) => new Date(`${x}T12:00:00`).toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
+    applyPlan(moveDay(planning.data, ref, iso), `Movido del ${fmtD(selectedIso)} al ${fmtD(iso)}`);
+  }, [planning, selectedIso, applyPlan]);
+
+  const dropDay = useCallback((fromIso: string, toIso: string) => {
+    if (!planning || fromIso === toIso) return;
+    const ref = dayRefFor(planning.data, fromIso);
+    if (!ref) return;
+    const fmtD = (x: string) => new Date(`${x}T12:00:00`).toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
+    applyPlan(moveDay(planning.data, ref, toIso), `Movido del ${fmtD(fromIso)} al ${fmtD(toIso)}`);
+  }, [planning, applyPlan]);
   const { data: results = [] } = useAllResults();
   const [idx, setIdx] = useState(0);
   const [view, setView] = useState<CalendarView>("semana");
@@ -126,6 +171,7 @@ function CalendarPage() {
   const goNext = useCallback(() => setIdx((i) => Math.min(months.length - 1, i + 1)), [months.length]);
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
+    if (moveMode) { touchStart.current = null; return; }
     touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   }, []);
 
@@ -138,7 +184,7 @@ function CalendarPage() {
     if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
     if (view === "semana") setWeekStart((w) => addDays(w, dx > 0 ? -7 : 7));
     else if (dx > 0) goPrev(); else goNext();
-  }, [goPrev, goNext, view]);
+  }, [goPrev, goNext, view, moveMode]);
 
   const blockMap = useMemo(() => completedBlockMap(results), [results]);
   // Debe calcularse antes de cualquier return: si un hook se ejecuta solo
@@ -192,7 +238,28 @@ function CalendarPage() {
           onPrev={() => setWeekStart((w) => addDays(w, -7))}
           onNext={() => setWeekStart((w) => addDays(w, 7))}
           onToday={() => setWeekStart(mondayOf(new Date()))}
+          move={canMove ? {
+            active: moveMode,
+            selected: selectedIso,
+            onToggle: () => { setMoveMode((v) => !v); setSelectedIso(null); },
+            onPick: pickDay,
+            onDrop: dropDay,
+            onShift: () => setShiftOpen(true),
+          } : null}
         />
+        {shiftOpen && planning && (
+          <ShiftSheet
+            planning={planning.data}
+            fromIso={selectedIso}
+            onClose={() => setShiftOpen(false)}
+            onApply={(days, fromIso) => {
+              setShiftOpen(false);
+              setSelectedIso(null);
+              const n = Math.abs(days);
+              applyPlan(shiftDays(planning.data, days, fromIso ?? undefined), `${fromIso ? "Desde ese día, el plan" : "Todo el plan"} se ${days > 0 ? "retrasa" : "adelanta"} ${n} día${n === 1 ? "" : "s"}`);
+            }}
+          />
+        )}
       </div>
     );
   }
@@ -364,9 +431,19 @@ function CalendarPage() {
 const WEEKDAY_SHORT = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
 
 /** Vista por defecto en el móvil: la semana como lista, un día por fila. */
+type MoveProps = {
+  active: boolean;
+  selected: string | null;
+  onToggle: () => void;
+  onPick: (iso: string) => void;
+  onDrop: (fromIso: string, toIso: string) => void;
+  onShift: () => void;
+};
+
 function WeekView({
-  weekStart, planIndex, blockMap, today, viewSwitch, onPrev, onNext, onToday,
+  weekStart, planIndex, blockMap, today, viewSwitch, onPrev, onNext, onToday, move,
 }: {
+  move: MoveProps | null;
   weekStart: Date;
   planIndex: Map<string, PlannedDay>;
   blockMap: ReturnType<typeof completedBlockMap>;
@@ -385,6 +462,13 @@ function WeekView({
   const monthName = new Intl.DateTimeFormat("es-ES", { month: "long" }).format(mid).toUpperCase();
   const fmt = (d: Date) => new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short" }).format(d).replace(".", "");
   const isCurrentWeek = isSameDate(weekStart, mondayOf(today));
+  const moving = !!move?.active;
+  const [drag, setDrag] = useState<{ from: string; over: string | null } | null>(null);
+
+  function overAt(x: number, y: number) {
+    const el = document.elementFromPoint(x, y) as HTMLElement | null;
+    return el?.closest<HTMLElement>("[data-date]")?.dataset.date ?? null;
+  }
 
   return (
     <div>
@@ -411,6 +495,31 @@ function WeekView({
         </button>
       </div>
 
+      {move && (
+        <div className={`mt-3 rounded-[16px] ${moving ? "border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/[0.08] p-3" : ""}`}>
+          {moving ? (
+            <>
+              <p className="text-sm font-bold">
+                {move.selected ? "Ahora toca el día al que lo quieres llevar" : "Arrastra un día con ⋮⋮ o tócalo para elegirlo"}
+              </p>
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
+                {move.selected ? "Puedes cambiar de semana con las flechas. Si allí hay otro día, se intercambian." : "Tus registros van con el día: no se pierde nada."}
+              </p>
+              <div className="mt-2.5 flex gap-2">
+                <button type="button" onClick={move.onShift} className="min-h-11 flex-1 rounded-[12px] bg-white/[0.08] text-sm font-bold">
+                  {move.selected ? "Mover desde este día…" : "Mover todo el plan…"}
+                </button>
+                <button type="button" onClick={move.onToggle} className="gold-gradient min-h-11 rounded-[12px] px-4 text-sm font-extrabold">Hecho</button>
+              </div>
+            </>
+          ) : (
+            <button type="button" onClick={move.onToggle} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-white/[0.06] text-sm font-bold">
+              <Move className="h-4 w-4" /> Mover días del plan
+            </button>
+          )}
+        </div>
+      )}
+
       {!isCurrentWeek && (
         <div className="mt-3 flex justify-center">
           <button type="button" onClick={onToday} className="pressable inline-flex min-h-11 items-center gap-2 rounded-full border border-[color:var(--gold)]/35 bg-[color:var(--gold)]/10 px-4 text-sm font-semibold text-gold">
@@ -420,7 +529,45 @@ function WeekView({
       )}
 
       <div className="mt-4 space-y-2">
-        {days.map((date, i) => {
+        {moving && days.map((date, i) => {
+          const iso = isoKey(date);
+          const p = planned[i];
+          const rest = !p || p.day.isRest;
+          const isSel = move?.selected === iso || drag?.from === iso;
+          const isOver = !!drag && drag.over === iso && drag.from !== iso;
+          return (
+            <div
+              key={iso}
+              data-date={iso}
+              className={`flex min-h-16 items-center gap-3 rounded-[18px] px-3 transition-colors ${isSel ? "bg-[color:var(--gold)]/20 ring-2 ring-[color:var(--gold)]" : isOver ? "bg-white/[0.12] ring-2 ring-white/40" : rest ? "border border-dashed border-white/12" : "bg-white/[0.045]"}`}
+            >
+              <button type="button" onClick={() => move?.onPick(iso)} className="flex min-h-16 min-w-0 flex-1 items-center gap-3 text-left">
+                <span className="w-11 shrink-0 text-center">
+                  <span className="block text-[26px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>{date.getDate()}</span>
+                  <span className="text-xs text-muted-foreground">{WEEKDAY_SHORT[i]}</span>
+                </span>
+                <span className={`min-w-0 flex-1 truncate text-[15px] ${rest ? "text-muted-foreground" : "font-semibold"}`}>
+                  {p ? (p.day.isRest ? "Descanso" : dayHeadline(p.day)) : "Sin plan"}
+                </span>
+              </button>
+              {p && (
+                <span
+                  role="button"
+                  aria-label={`Arrastrar el día ${date.getDate()}`}
+                  className="grid h-12 w-10 shrink-0 cursor-grab place-items-center text-muted-foreground"
+                  style={{ touchAction: "none" }}
+                  onPointerDown={(e) => { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); setDrag({ from: iso, over: iso }); }}
+                  onPointerMove={(e) => { if (drag) setDrag({ from: drag.from, over: overAt(e.clientX, e.clientY) }); }}
+                  onPointerUp={(e) => { const to = overAt(e.clientX, e.clientY); const from = drag?.from; setDrag(null); if (from && to && to !== from) move?.onDrop(from, to); }}
+                  onPointerCancel={() => setDrag(null)}
+                >
+                  <GripVertical className="h-5 w-5" />
+                </span>
+              )}
+            </div>
+          );
+        })}
+        {!moving && days.map((date, i) => {
           const p = planned[i];
           const isToday = isSameDate(date, today);
           const prog = p ? sessionProgress(p.day, p.month.key, p.week, blockMap) : null;
@@ -469,6 +616,82 @@ function WeekView({
       </div>
 
       <p className="mt-4 text-center text-[13px] text-muted-foreground">Desliza a los lados para cambiar de semana</p>
+    </div>
+  );
+}
+
+function ShiftSheet({
+  planning, fromIso, onClose, onApply,
+}: {
+  planning: Planning;
+  fromIso: string | null;
+  onClose: () => void;
+  onApply: (days: number, fromIso: string | null) => void;
+}) {
+  const [scope, setScope] = useState<"todo" | "desde">(fromIso ? "desde" : "todo");
+  const [days, setDays] = useState(7);
+  const partial = scope === "desde" && !!fromIso;
+  const firstIso = useMemo(() => {
+    const keys = [...buildPlanDateIndex(planning.months).keys()].sort();
+    return partial ? keys.find((k) => k >= fromIso!) ?? null : keys[0] ?? null;
+  }, [planning, partial, fromIso]);
+  const fmtD = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+  const target = firstIso ? isoKey(addDays(new Date(`${firstIso}T12:00:00`), days)) : null;
+  const min = partial ? 1 : -60;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end bg-black/60" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-label="Mover el plan"
+        className="w-full rounded-t-[24px] bg-[#151412] border-t border-white/10 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-[28px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>MOVER EL PLAN</h2>
+        {fromIso && (
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {(["desde", "todo"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => { setScope(s); if (s === "desde" && days < 1) setDays(1); }}
+                className={`min-h-12 rounded-[12px] text-sm font-bold ${scope === s ? "gold-gradient" : "bg-white/[0.06]"}`}
+              >
+                {s === "desde" ? "Desde este día" : "Todo el plan"}
+              </button>
+            ))}
+          </div>
+        )}
+        <p className="mt-4 text-[13px] text-muted-foreground">
+          {days >= 0 ? "Retrasar" : "Adelantar"} {Math.abs(days)} día{Math.abs(days) === 1 ? "" : "s"}
+        </p>
+        <div className="mt-1.5 flex h-14 items-center justify-between rounded-[14px] border border-white/15 bg-white/[0.06] px-2">
+          <button type="button" aria-label="Un día menos" onClick={() => setDays((d) => Math.max(min, d - 1))} className="grid h-12 w-12 place-items-center"><Minus className="h-5 w-5" /></button>
+          <span className="text-[32px] font-extrabold" style={{ fontFamily: "var(--font-editorial)" }}>{days > 0 ? `+${days}` : days}</span>
+          <button type="button" aria-label="Un día más" onClick={() => setDays((d) => Math.min(60, d + 1))} className="grid h-12 w-12 place-items-center"><Plus className="h-5 w-5" /></button>
+        </div>
+        <div className="mt-2 flex gap-2">
+          {[1, 7, 14].map((n) => (
+            <button key={n} type="button" onClick={() => setDays(n)} className="min-h-10 flex-1 rounded-[10px] bg-white/[0.06] text-[13px] font-bold">
+              +{n === 1 ? "1 día" : `${n / 7} sem`}
+            </button>
+          ))}
+          {!partial && (
+            <button type="button" onClick={() => setDays(-7)} className="min-h-10 flex-1 rounded-[10px] bg-white/[0.06] text-[13px] font-bold">−1 sem</button>
+          )}
+        </div>
+        {firstIso && target && days !== 0 && (
+          <p className="mt-4 text-sm">
+            {partial ? "El día elegido" : "El primer día"} pasa del <b>{fmtD(firstIso)}</b> al <b className="text-[color:var(--gold)]">{fmtD(target)}</b>
+            {partial ? ", y todo lo que viene después se mueve igual." : ", y todo lo demás se mueve igual."}
+          </p>
+        )}
+        <p className="mt-1 text-[13px] text-muted-foreground">Tus registros siguen con cada entreno.</p>
+        <div className="mt-5 flex gap-2">
+          <button type="button" onClick={onClose} className="min-h-12 flex-1 rounded-[14px] bg-white/[0.08] font-bold">Cancelar</button>
+          <button type="button" disabled={days === 0} onClick={() => onApply(days, partial ? fromIso : null)} className="gold-gradient min-h-12 flex-[2] rounded-[14px] font-extrabold disabled:opacity-40">Mover</button>
+        </div>
+      </div>
     </div>
   );
 }

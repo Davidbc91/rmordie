@@ -14,7 +14,7 @@ import {
   sessionProgress,
 } from "@/lib/session-progress";
 import { Moon } from "lucide-react";
-import { buildPlanDateIndex, findMonthIndexForDate, isoKey } from "@/lib/plan-dates";
+import { buildPlanDateIndex, findMonthIndexForDate, isoKey, weekdayOf } from "@/lib/plan-dates";
 
 
 
@@ -93,6 +93,16 @@ function Home() {
     const currentMonth = months[startIdx];
     const order = [...months.slice(startIdx), ...months.slice(0, startIdx)];
     const pick = (() => {
+      // Con fechas: el siguiente por orden de calendario (aunque se hayan movido días)
+      const todayIso = isoKey(now);
+      const byDate = [...buildPlanDateIndex(months).entries()].sort(([a], [b]) => a.localeCompare(b));
+      for (const [iso, pd] of byDate) {
+        if (iso < todayIso || pd.day.isRest) continue;
+        if (sessionProgress(pd.day, pd.month.key, pd.week, blockMap).state === "completed") continue;
+        const w = pd.month.weeks.find((x) => x.index === pd.week);
+        if (!w) continue;
+        return { m: pd.month, w, d: pd.day, isToday: iso === todayIso };
+      }
       for (const m of order) {
         const days = m.weeks.flatMap((w) => w.days.map((d) => ({ d, w })));
         const todayIndex = currentMonth && todayPlan?.month.key === m.key
@@ -135,6 +145,7 @@ function Home() {
       monthLabel: m.label,
       week: w.index,
       dayKey: d.key,
+      dayLabel: d.date ? weekdayOf(d.date) : d.key,
       headline,
       blocks: d.blocks.length,
       progress: prog,
@@ -313,7 +324,7 @@ function Home() {
 
               <div className="mt-5 flex items-end justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="day-display gold-text">{next.dayKey}</div>
+                  <div className="day-display gold-text">{next.dayLabel}</div>
                   <p className="mt-3 text-[13px] tracking-[0.12em] text-muted-foreground">{next.monthLabel} · SEMANA {next.week}</p>
                 </div>
                 <div className="shrink-0 text-right">

@@ -215,6 +215,36 @@ export function useReorderPlanningMonths() {
   });
 }
 
+/** Cambia el contenido del plan activo sin crear una versión nueva (mover días, etc.). */
+export function useUpdatePlanningData() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+  return useMutation({
+    mutationFn: async ({ planningId, data }: { planningId: string; data: Planning }) => {
+      if (!uid) throw new Error("No hay perfil activo");
+      const { error } = await supabase
+        .from("planning")
+        .update({ data: data as unknown as never })
+        .eq("id", planningId)
+        .eq("user_id", uid);
+      if (error) throw error;
+    },
+    onMutate: async ({ planningId, data }) => {
+      // Se ve al instante; si falla, se recarga lo que hay en el servidor
+      const key = ["planning", uid];
+      const prev = qc.getQueryData<PlanningRow>(key);
+      if (prev && prev.id === planningId) {
+        const next = { ...prev, data };
+        qc.setQueryData(key, next);
+        await cacheSet(cacheKeys.planning(uid), next);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["planning", uid] });
+    },
+  });
+}
+
 export function useDeletePlanningMonth() {
   const qc = useQueryClient();
   const uid = getCurrentUserId();

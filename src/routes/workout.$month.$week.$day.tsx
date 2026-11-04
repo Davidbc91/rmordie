@@ -1,3 +1,4 @@
+import { weekdayOf } from "@/lib/plan-dates";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageSkeleton } from "@/components/PageSkeleton";
@@ -240,7 +241,7 @@ function WorkoutPage() {
       }));
       const volume = loads.reduce((a, l) => a + (Number(l.weight) || 0) * (Number(l.sets) || 0) * (Number(l.reps) || 0), 0);
       const blob = await renderWorkoutCard({
-        title: d.key,
+        title: d.date ? weekdayOf(d.date) : d.key,
         subtitle: `${mo.label} · Semana ${weekN}`,
         date: new Date().toLocaleDateString("es-ES"),
         blocks: d.blocks.map((b) => ({ key: b.key, content: b.content })),
@@ -392,7 +393,7 @@ function WorkoutPage() {
       <header className="rise rise-1 mb-4 space-y-2.5 px-1">
         <p className="text-[13px] tracking-[0.12em] text-muted-foreground">{mo.label.toUpperCase()} · SEMANA {weekN}</p>
         <div className="flex items-end justify-between gap-4">
-          <h1 className="display-lg min-w-0 truncate gold-text">{d.key}</h1>
+          <h1 className="display-lg min-w-0 truncate gold-text">{d.date ? weekdayOf(d.date) : d.key}</h1>
           {!d.isRest && (
             <p className="shrink-0 text-right text-[13px] text-muted-foreground">
               <span className="text-2xl font-bold tabular text-foreground">{doneCount}</span>/{d.blocks.length} hechos

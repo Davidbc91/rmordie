@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Activación del lector de planificación
-- [ ] Confirmar LOVABLE_API_KEY registrado para Lovable AI
-- [ ] Desplegar plan-reader con verify_jwt = false sin modificar su código
-- [ ] Verificar respuesta de la función desplegada
+- [x] Confirmar LOVABLE_API_KEY registrado para Lovable AI
+- [x] Desplegar plan-reader con verify_jwt = false sin modificar su código
+- [x] Verificar respuesta de la función desplegada: 401 de la propia función sin sesión; lectura IA con sesión no comprobada
 
 ## Notificaciones push del chat (completado en código)
 - [x] Tabla push_subscriptions (solo dispositivos con permiso)

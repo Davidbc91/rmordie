@@ -1,5 +1,10 @@
 # Roadmap
 
+## Activación del lector de planificación
+- [ ] Confirmar LOVABLE_API_KEY registrado para Lovable AI
+- [ ] Desplegar plan-reader con verify_jwt = false sin modificar su código
+- [ ] Verificar respuesta de la función desplegada
+
 ## Notificaciones push del chat (completado en código)
 - [x] Tabla push_subscriptions (solo dispositivos con permiso)
 - [x] Claves VAPID como secretos

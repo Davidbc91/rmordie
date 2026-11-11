@@ -141,10 +141,11 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
   const signOutProfile = useCallback(async () => { setProfileOpen(false); await signOut(); window.location.assign("/"); }, []);
 
   const activePath = active ? `/workout/${active.month}/${active.week}/${active.day}` : null;
-  const showResume = !!active && pathname !== activePath;
+  // En el timer no: taparía el botón de empezar
+  const showResume = !!active && pathname !== activePath && !pathname.startsWith("/timers");
 
   return (
-    <div className={"grain relative min-h-[100dvh] overflow-x-hidden " + (keyboardOpen ? "pb-0" : "pb-[calc(88px+env(safe-area-inset-bottom))]")}>
+    <div className={"grain relative min-h-[100dvh] overflow-x-hidden " + (keyboardOpen ? "pb-0" : showResume ? "pb-[calc(168px+env(safe-area-inset-bottom))]" : "pb-[calc(88px+env(safe-area-inset-bottom))]")}>
       <div aria-hidden className="aura pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
       <div aria-hidden className="pointer-events-none absolute -left-32 top-28 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(200,179,138,.09),transparent_68%)] blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -right-36 top-[34rem] h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(150,160,180,.07),transparent_68%)] blur-3xl" />

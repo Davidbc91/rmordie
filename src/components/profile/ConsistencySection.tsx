@@ -1,12 +1,14 @@
 import { useMemo } from "react";
-import { windowStats, streaks, sessionDays, fmtNum } from "@/lib/analytics";
+import { windowStats, streaks, sessionDays, fmtNum, totalSessions, weeklyConsistency } from "@/lib/analytics";
 import { Card, Stat, Empty } from "./shared";
 
-export function ConsistencySection({ results, plannedDays, completedSessions, weeklyTarget }: any) {
+export function ConsistencySection({ results, plannedDays, completedSessions, weeklyTarget, targetIsDefault }: any) {
   const days = sessionDays(results);
   const s = streaks(results);
   const stats = windowStats(results, [], null);
   const completion = plannedDays ? Math.min(100, Math.round((completedSessions / plannedDays) * 100)) : null;
+  const constancy = weeklyConsistency(results, weeklyTarget);
+  const total = totalSessions(results);
 
   const grid = useMemo(() => {
     const set = new Set(days);
@@ -23,13 +25,25 @@ export function ConsistencySection({ results, plannedDays, completedSessions, we
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        <Stat label="Planificados" value={plannedDays ? String(plannedDays) : "—"} />
-        <Stat label="Completados" value={String(completedSessions)} />
-        <Stat label="Perdidos" value={plannedDays ? String(Math.max(0, plannedDays - completedSessions)) : "—"} />
-        <Stat label="Cumplimiento" value={completion != null ? `${completion}%` : "—"} />
+        <Stat label="Constancia (12 sem.)" value={`${constancy.pct}%`} />
+        <Stat label="Sesiones en total" value={String(total)} />
         <Stat label="Racha actual" value={`${s.current} d`} />
         <Stat label="Racha máxima" value={`${s.best} d`} />
       </div>
+      <p className="px-1 text-xs leading-relaxed" style={{ color: "#8A877F" }}>
+        Constancia = cuánto cumples tu objetivo de {weeklyTarget} sesiones por semana
+        {targetIsDefault ? " (sacado de tu plan; puedes fijarlo en tus datos)" : ""}. Sale de tus entrenos registrados:
+        cambiar o borrar la planificación no la toca, ni a la racha.
+      </p>
+      <Card>
+        <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>Plan actual</p>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <Stat label="Planificados" value={plannedDays ? String(plannedDays) : "—"} />
+          <Stat label="Completados" value={String(completedSessions)} />
+          <Stat label="Perdidos" value={plannedDays ? String(Math.max(0, plannedDays - completedSessions)) : "—"} />
+          <Stat label="Cumplimiento" value={completion != null ? `${completion}%` : "—"} />
+        </div>
+      </Card>
       <Card>
         <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
           Últimas 12 semanas

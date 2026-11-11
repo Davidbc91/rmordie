@@ -109,6 +109,74 @@ export function streaks(results: WorkoutResult[]): { current: number; best: numb
   return { current, best };
 }
 
+/** Sesiones completadas en total (todas las planificaciones, también las borradas). */
+export function totalSessions(results: WorkoutResult[]): number {
+  return new Set(results.filter((r) => r.status === "completed").map((r) => `${r.month_key}|${r.week}|${r.day_key}`)).size;
+}
+
+/** Entrenos por semana de la planificación actual (para el objetivo si no hay uno puesto). */
+export function plannedPerWeek(planning: Planning | null | undefined): number | null {
+  if (!planning) return null;
+  let weeks = 0;
+  let days = 0;
+  for (const m of planning.months)
+    for (const w of m.weeks) {
+      const n = w.days.filter((d) => !d.isRest).length;
+      if (n > 0) {
+        weeks++;
+        days += n;
+      }
+    }
+  return weeks ? Math.max(1, Math.round(days / weeks)) : null;
+}
+
+/**
+ * Constancia que no depende de la planificación: en las últimas `weeks` semanas
+ * (o desde tu primer entreno, si hace menos), qué parte de tu objetivo semanal
+ * has cumplido. Borrar o cambiar de plan no la toca: sale de tus registros.
+ */
+export function weeklyConsistency(
+  results: WorkoutResult[],
+  target: number,
+  weeks = 12,
+  now = new Date(),
+): { pct: number; weeks: { start: string; sessions: number }[] } {
+  const monday = (d: Date) => {
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+    return x;
+  };
+  const perDay = new Map<string, Set<string>>();
+  for (const r of results) {
+    if (r.status !== "completed") continue;
+    const k = dayStr(r.updated_at);
+    if (!perDay.has(k)) perDay.set(k, new Set());
+    perDay.get(k)!.add(`${r.month_key}|${r.week}|${r.day_key}`);
+  }
+  if (perDay.size === 0) return { pct: 0, weeks: [] };
+  const first = monday(new Date([...perDay.keys()].sort()[0]));
+  const thisWeek = monday(now);
+  const out: { start: string; sessions: number }[] = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const start = new Date(thisWeek);
+    start.setDate(start.getDate() - i * 7);
+    if (start < first) continue;
+    let n = 0;
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(start);
+      day.setDate(day.getDate() + d);
+      n += perDay.get(dayStr(new Date(day.getTime() - day.getTimezoneOffset() * 60000)))?.size ?? 0;
+    }
+    out.push({ start: dayStr(start), sessions: n });
+  }
+  // La semana en curso solo cuenta si ya la has cumplido (si no, aún estás a tiempo)
+  const done = out.filter((w, i) => i < out.length - 1 || w.sessions >= target);
+  if (!done.length) return { pct: 100, weeks: out };
+  const t = Math.max(1, target);
+  const pct = Math.round((done.reduce((a, w) => a + Math.min(1, w.sessions / t), 0) / done.length) * 100);
+  return { pct, weeks: out };
+}
+
 export function plannedTrainingDays(planning: Planning | null | undefined): number {
   if (!planning) return 0;
   let n = 0;

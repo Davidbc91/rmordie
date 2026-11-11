@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { usePlanning, useAllResults, usePersonalRecords } from "@/lib/store";
 import { useAthleteProfile, useBodyMetrics, useWellnessLogs, useAllPrHistory } from "@/lib/profile-store";
-import { RANGES, type RangeKey, plannedTrainingDays, streaks } from "@/lib/analytics";
+import { RANGES, type RangeKey, plannedTrainingDays, plannedPerWeek, streaks, totalSessions, weeklyConsistency } from "@/lib/analytics";
 import { planningCompletion } from "@/lib/session-progress";
 import { RangePicker } from "@/components/profile/shared";
 import { ProfileForm } from "@/components/profile/ProfileForm";
@@ -89,6 +89,10 @@ function ProfilePage() {
 
   const completion = planningCompletion(planning?.data, results);
   const streak = streaks(results).current;
+  // Constancia y sesiones salen de tus registros, no del plan: cambiar o borrar la planificación no las toca
+  const weeklyTarget = profile?.weekly_target ?? plannedPerWeek(planning?.data) ?? 4;
+  const constancy = weeklyConsistency(results, weeklyTarget);
+  const sessionsDone = totalSessions(results);
   const current = SECTIONS.find((s) => s.key === section);
   const initials = (profile?.display_name || "Atleta").trim().split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   const subtitle = [
@@ -120,8 +124,8 @@ function ProfilePage() {
         </header>
 
         <div className="rise rise-2 mb-2 grid grid-cols-3 gap-2">
-          <ProfileStat value={String(completion.completed)} label="Sesiones" onClick={() => setSection("progress")} />
-          <ProfileStat value={`${completion.pct} %`} label="Constancia" onClick={() => setSection("consistency")} />
+          <ProfileStat value={String(sessionsDone)} label="Sesiones" onClick={() => setSection("progress")} />
+          <ProfileStat value={`${constancy.pct} %`} label="Constancia" onClick={() => setSection("consistency")} />
           <ProfileStat value={String(streak)} label="Días de racha" accent onClick={() => setSection("consistency")} />
         </div>
 
@@ -199,7 +203,7 @@ function ProfilePage() {
         />
       )}
       {section === "consistency" && (
-        <ConsistencySection results={results} plannedDays={plannedTrainingDays(planning?.data)} completedSessions={planningCompletion(planning?.data, results).completed} weeklyTarget={profile?.weekly_target ?? null} />
+        <ConsistencySection results={results} plannedDays={plannedTrainingDays(planning?.data)} completedSessions={completion.completed} weeklyTarget={weeklyTarget} targetIsDefault={profile?.weekly_target == null} />
       )}
       {section === "recovery" && <RecoverySection logs={wellness} results={results} days={days} />}
       {section === "goals" && <GoalsSection records={records} results={results} metrics={metrics} />}

@@ -4,6 +4,7 @@
 - [x] Confirmar LOVABLE_API_KEY registrado para Lovable AI
 - [x] Desplegar plan-reader con verify_jwt = false sin modificar su código
 - [x] Verificar respuesta de la función desplegada: 401 de la propia función sin sesión; lectura IA con sesión no comprobada
+- [ ] Revisar diagnósticos y posibles errores de tipos en los tres archivos de importación indicados
 
 ## Notificaciones push del chat (completado en código)
 - [x] Tabla push_subscriptions (solo dispositivos con permiso)

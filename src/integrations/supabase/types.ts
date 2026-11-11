@@ -1282,6 +1282,7 @@ export type Database = {
           sets: number | null
           status: string
           time_seconds: number | null
+          trained_on: string | null
           updated_at: string
           user_id: string
           week: number
@@ -1300,6 +1301,7 @@ export type Database = {
           sets?: number | null
           status?: string
           time_seconds?: number | null
+          trained_on?: string | null
           updated_at?: string
           user_id: string
           week: number
@@ -1318,6 +1320,7 @@ export type Database = {
           sets?: number | null
           status?: string
           time_seconds?: number | null
+          trained_on?: string | null
           updated_at?: string
           user_id?: string
           week?: number

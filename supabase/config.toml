@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.strava]
 verify_jwt = false
+
+[functions.plan-reader]
+verify_jwt = false

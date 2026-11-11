@@ -5,9 +5,11 @@ import { ArrowDown, ArrowUp, ChevronDown, Plus } from "lucide-react";
 import { parsePlanningFromArrayBuffer, type Planning } from "@/lib/excel-parser";
 import { importPlanningFile, type ImportEngineResult } from "@/lib/import-engine";
 import { ImportReview } from "@/components/import/ImportReview";
+import { AiReview } from "@/components/import/AiReview";
+import { AiReaderUnavailable, defaultStart, extractChunks, readPlanWithAi, type AiReadResult } from "@/lib/ai-plan-reader";
 import { usePlanning, usePlanningVersions, useSavePlanning, useDeletePlanningMonth, useDeletePlanningVersion, useReorderPlanningMonths, useClearAllPlanning } from "@/lib/store";
 import { toast } from "sonner";
-import { Upload, CheckCircle2, Trash2, Image as ImageIcon } from "lucide-react";
+import { Upload, CheckCircle2, Trash2, Image as ImageIcon, ClipboardPaste, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/import")({
   head: () => ({
@@ -32,6 +34,11 @@ function ImportPage() {
   const [busy, setBusy] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
   const [review, setReview] = useState<{ result: ImportEngineResult; filename: string } | null>(null);
+  const [aiReview, setAiReview] = useState<{ result: AiReadResult; filename: string; files: File[]; pasted: string } | null>(null);
+  const [aiProgress, setAiProgress] = useState<{ done: number; total: number } | null>(null);
+  const [rereading, setRereading] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasted, setPasted] = useState("");
   const [sorting, setSorting] = useState(false);
   const [allMonths, setAllMonths] = useState(false);
 
@@ -62,6 +69,58 @@ function ImportPage() {
     navigate({ to: "/calendar" });
   }
 
+  /** Lector inteligente: entiende cualquier formato. Devuelve false si no está disponible. */
+  async function readSmart(files: File[], text: string, hint?: string): Promise<boolean> {
+    const filename = files.map((f) => f.name).join(", ") || "Texto pegado";
+    try {
+      setAiProgress({ done: 0, total: 1 });
+      const chunks = await extractChunks(files, text);
+      const result = await readPlanWithAi(chunks, {
+        filename,
+        hint,
+        onProgress: (done, total) => setAiProgress({ done, total }),
+      });
+      if (!result.sessions.length) {
+        toast.error("He leído el archivo, pero no encuentro entrenos. Prueba a decirme cómo está organizado en «Corrígelo con una frase».");
+      }
+      setAiReview({ result, filename, files, pasted: text });
+      return true;
+    } catch (e) {
+      if (e instanceof AiReaderUnavailable) {
+        console.warn("[import] lector inteligente no disponible:", e.message);
+        return false;
+      }
+      toast.error((e as { message?: string })?.message ?? "No pude leer el archivo.");
+      return true;
+    } finally {
+      setAiProgress(null);
+    }
+  }
+
+  async function onFiles(files: File[]) {
+    if (!files.length) return;
+    if (files.length === 1) return onFile(files[0]);
+    setBusy(true);
+    try {
+      const ok = await readSmart(files, "");
+      if (!ok) toast.error("Para leer varios archivos a la vez hace falta el lector inteligente, que ahora no está disponible. Súbelos de uno en uno.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onPaste() {
+    if (!pasted.trim()) return;
+    setBusy(true);
+    try {
+      const ok = await readSmart([], pasted);
+      if (ok) setPasteOpen(false);
+      else toast.error("El lector inteligente no está disponible ahora mismo.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function onFile(f: File) {
     setBusy(true);
     setOcrProgress(0);
@@ -81,8 +140,11 @@ function ImportPage() {
         }
       }
 
-      // 2) Cualquier otro formato (o un Excel libre): lectura automática y
-      //    revisión fila a fila antes de guardar.
+      // 2) Cualquier otro formato: lector inteligente (IA). Si no está
+      //    disponible, la lectura automática de siempre.
+      if (await readSmart([f], "")) return;
+
+      // 3) Lectura automática y revisión fila a fila antes de guardar.
       const result = await importPlanningFile(f, setOcrProgress);
       if (result.rows.length === 0) {
         toast.error("El archivo se ha leído, pero no contiene filas con datos.");
@@ -98,6 +160,37 @@ function ImportPage() {
       setBusy(false);
       setOcrProgress(0);
     }
+  }
+
+  if (aiReview) {
+    return (
+      <AppShell>
+        <h1 className="page-title">Revisar lectura</h1>
+        <p className="mt-2 text-[15px] text-muted-foreground">
+          {aiReview.filename} · <span className="gold-text">Nada se guarda hasta que confirmes.</span>
+        </p>
+        <AiReview
+          key={JSON.stringify(aiReview.result).length}
+          result={aiReview.result}
+          filename={aiReview.filename}
+          defaultStart={defaultStart()}
+          rereading={rereading}
+          onCancel={() => setAiReview(null)}
+          onSaved={(openEditor) => {
+            setAiReview(null);
+            navigate({ to: openEditor ? "/plan-builder" : "/calendar" });
+          }}
+          onReread={async (hint) => {
+            setRereading(true);
+            try {
+              await readSmart(aiReview.files, aiReview.pasted, hint);
+            } finally {
+              setRereading(false);
+            }
+          }}
+        />
+      </AppShell>
+    );
   }
 
   if (review) {
@@ -202,23 +295,56 @@ function ImportPage() {
         </span>
         <span className="text-[26px] font-extrabold uppercase leading-none" style={{ fontFamily: "var(--font-editorial)" }}>
           {busy
-            ? (ocrProgress > 0 ? `Leyendo la foto… ${Math.round(ocrProgress * 100)}%` : "Leyendo…")
+            ? aiProgress
+              ? (aiProgress.total > 1 ? `Leyendo… ${aiProgress.done}/${aiProgress.total}` : "Leyendo…")
+              : (ocrProgress > 0 ? `Leyendo la foto… ${Math.round(ocrProgress * 100)}%` : "Leyendo…")
             : current ? "Subir nueva planificación" : "Subir planificación"}
         </span>
-        <span className="text-sm text-muted-foreground">Excel, PDF, CSV, texto o foto de la pizarra</span>
+        <span className="text-sm text-muted-foreground">Cualquier formato: Excel, PDF, fotos (varias a la vez), CSV o texto</span>
+        <span className="flex items-center gap-1.5 text-[13px] text-gold"><Sparkles className="h-3.5 w-3.5" /> La lee la IA y la revisas antes de guardar</span>
         <span className="text-[13px] text-foreground/85">Tus pesos, récords, tiempos y notas nunca se borran.</span>
         <input
           type="file"
-          accept=".xlsx,.xls,.csv,.txt,.pdf,.jpg,.jpeg,.png,.webp,text/plain,text/csv,application/pdf,image/jpeg,image/png,image/webp"
+          accept=".xlsx,.xls,.xlsm,.ods,.csv,.tsv,.txt,.md,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,text/plain,text/csv,application/pdf,image/*"
+          multiple
           disabled={busy}
           onChange={(e) => {
-            const f = e.target.files?.[0];
+            const files = Array.from(e.target.files ?? []);
             e.target.value = "";
-            if (f) onFile(f);
+            onFiles(files);
           }}
           className="hidden"
         />
       </label>
+
+      {pasteOpen ? (
+        <section className="mt-2.5 rounded-[18px] bg-white/[0.045] p-3.5">
+          <p className="text-sm font-bold">Pega aquí tu planificación</p>
+          <p className="text-[13px] text-muted-foreground">Un mensaje de WhatsApp, un correo del coach, una web… tal cual.</p>
+          <textarea
+            value={pasted}
+            onChange={(e) => setPasted(e.target.value)}
+            rows={8}
+            autoFocus
+            placeholder={"LUNES 17\nA) Back Squat 5x5 @75%\nB) AMRAP 12'\n10 Wall Ball…"}
+            className="mt-2 w-full rounded-[14px] border border-white/15 bg-white/[0.06] p-3 text-base"
+          />
+          <div className="mt-2 flex gap-2">
+            <button type="button" onClick={() => setPasteOpen(false)} className="min-h-12 flex-1 rounded-[14px] bg-white/[0.08] font-bold">Cancelar</button>
+            <button type="button" disabled={!pasted.trim() || busy} onClick={onPaste} className="gold-gradient min-h-12 flex-[2] rounded-[14px] font-extrabold disabled:opacity-40">
+              {busy ? "Leyendo…" : "Leer planificación"}
+            </button>
+          </div>
+        </section>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setPasteOpen(true)}
+          className="pressable mt-2.5 flex min-h-[52px] w-full items-center justify-center gap-1.5 rounded-[16px] bg-white/[0.06] text-[15px] font-bold"
+        >
+          <ClipboardPaste className="h-4 w-4" /> Pegar texto
+        </button>
+      )}
 
       <button
         type="button"

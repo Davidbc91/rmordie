@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Minus, Plus, Volume2, VolumeX, X } from "lucide-react";
-import type { WodTimerConfig } from "@/lib/wod-timer";
+import { Minus, Plus, SlidersHorizontal, Volume2, VolumeX, X } from "lucide-react";
+import { timerLabel, type WodTimerConfig } from "@/lib/wod-timer";
 
 /** Lo que el timer deja apuntado en el bloque al terminar. */
 export type WodTimerResult =
@@ -64,7 +64,7 @@ function useWakeLock(active: boolean) {
   }, [active]);
 }
 
-type Phase = "prep" | "run" | "paused" | "done";
+type Phase = "setup" | "prep" | "run" | "paused" | "done";
 
 export function WodTimer({
   config, title, onClose, onApply, prCheck,
@@ -76,6 +76,7 @@ export function WodTimer({
   /** Texto si el resultado sería récord (o null). */
   prCheck?: (r: WodTimerResult) => string | null;
 }) {
+  const [cfg, setCfg] = useState<WodTimerConfig>(config);
   const [phase, setPhase] = useState<Phase>("prep");
   const [prepLeft, setPrepLeft] = useState(PREP);
   const [elapsed, setElapsed] = useState(0);
@@ -100,10 +101,10 @@ export function WodTimer({
   }, [unlock]);
 
   const total =
-    config.kind === "amrap" ? config.totalSec
-      : config.kind === "fortime" ? config.capSec
-        : config.kind === "emom" ? config.intervalSec * config.rounds
-          : (config.work + config.rest) * config.rounds;
+    cfg.kind === "amrap" ? cfg.totalSec
+      : cfg.kind === "fortime" ? cfg.capSec
+        : cfg.kind === "emom" ? cfg.intervalSec * cfg.rounds
+          : (cfg.work + cfg.rest) * cfg.rounds;
 
   // Cuenta atrás de preparación
   useEffect(() => {
@@ -146,22 +147,22 @@ export function WodTimer({
     const sec = Math.floor(elapsed);
     if (sec === lastSec.current) return;
     lastSec.current = sec;
-    if (config.kind === "emom") {
-      const inMin = sec % config.intervalSec;
-      const remain = config.intervalSec - inMin;
+    if (cfg.kind === "emom") {
+      const inMin = sec % cfg.intervalSec;
+      const remain = cfg.intervalSec - inMin;
       if (remain <= 3 && remain > 0) beep(880, 0.12);
       if (inMin === 0 && sec > 0) beep(1400, 0.25);
-    } else if (config.kind === "tabata") {
-      const cycle = config.work + config.rest;
+    } else if (cfg.kind === "tabata") {
+      const cycle = cfg.work + cfg.rest;
       const inCycle = sec % cycle;
       if (inCycle === 0 && sec > 0) beep(1400, 0.25);
-      else if (inCycle === config.work) beep(660, 0.2);
+      else if (inCycle === cfg.work) beep(660, 0.2);
     } else if (total != null) {
       const remain = total - sec;
       if (remain <= 3 && remain > 0) beep(880, 0.12);
     }
-    if (total != null && elapsed >= total) finish({ cap: config.kind === "fortime" });
-  }, [elapsed, phase, config, total, beep, finish]);
+    if (total != null && elapsed >= total) finish({ cap: cfg.kind === "fortime" });
+  }, [elapsed, phase, cfg, total, beep, finish]);
 
   const pause = () => {
     if (phase === "run") {
@@ -188,20 +189,20 @@ export function WodTimer({
   // ---------- Pantalla final ----------
   if (phase === "done") {
     const result: WodTimerResult =
-      config.kind === "amrap" ? { kind: "rounds", rounds, reps: extraReps }
-        : config.kind === "fortime" ? { kind: "time", seconds: Math.round(stoppedAt ?? elapsed), cap: capHit }
+      cfg.kind === "amrap" ? { kind: "rounds", rounds, reps: extraReps }
+        : cfg.kind === "fortime" ? { kind: "time", seconds: Math.round(stoppedAt ?? elapsed), cap: capHit }
           : { kind: "none" };
     const pr = result.kind !== "none" ? prCheck?.(result) ?? null : null;
     return createPortal(
       <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-[#050504] px-4" style={{ paddingTop: "max(env(safe-area-inset-top), 24px)", paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
         <div className="mt-6 text-center">
-          <p className="text-[22px] font-extrabold text-gold" style={font}>{config.label.toUpperCase()} · {capHit ? "CAP" : "TIEMPO"}</p>
+          <p className="text-[22px] font-extrabold text-gold" style={font}>{timerLabel(cfg).toUpperCase()} · {capHit ? "CAP" : "TIEMPO"}</p>
           <p className="text-[96px] font-black leading-[0.9] tabular" style={font}>
-            {config.kind === "fortime" ? clock(stoppedAt ?? elapsed) : "00:00"}
+            {cfg.kind === "fortime" ? clock(stoppedAt ?? elapsed) : "00:00"}
           </p>
         </div>
 
-        {config.kind === "amrap" && (
+        {cfg.kind === "amrap" && (
           <section className="mt-6 space-y-3.5 rounded-[24px] border border-white/10 bg-[#141412] p-4">
             <p className="text-[15px] font-bold">¿Cuánto has hecho?</p>
             <div className="grid grid-cols-2 gap-2.5">
@@ -211,7 +212,7 @@ export function WodTimer({
             {pr && <p className="rounded-[14px] bg-[color:var(--gold)]/12 px-3.5 py-3 text-sm font-bold text-[color:var(--gold-soft)]">{pr}</p>}
           </section>
         )}
-        {config.kind === "fortime" && (
+        {cfg.kind === "fortime" && (
           <section className="mt-6 space-y-2 rounded-[24px] border border-white/10 bg-[#141412] p-4">
             <p className="text-[15px]">{capHit ? "Se acabó el time cap: se apunta como no terminado dentro del cap." : "Se apunta el tiempo en el que paraste el reloj."}</p>
             {pr && <p className="rounded-[14px] bg-[color:var(--gold)]/12 px-3.5 py-3 text-sm font-bold text-[color:var(--gold-soft)]">{pr}</p>}
@@ -238,27 +239,27 @@ export function WodTimer({
   let caption = "";
   let progress = 0;
   let resting = false;
-  if (config.kind === "amrap") {
-    big = clock(config.totalSec - elapsed);
+  if (cfg.kind === "amrap") {
+    big = clock(cfg.totalSec - elapsed);
     caption = "QUEDAN";
-    progress = elapsed / config.totalSec;
-  } else if (config.kind === "fortime") {
+    progress = elapsed / cfg.totalSec;
+  } else if (cfg.kind === "fortime") {
     big = clock(elapsed);
-    caption = config.capSec ? `CAP ${clock(config.capSec)}` : "TIEMPO";
-    progress = config.capSec ? elapsed / config.capSec : 0;
-  } else if (config.kind === "emom") {
-    const idx = Math.floor(elapsed / config.intervalSec);
-    big = clock(config.intervalSec - (elapsed - idx * config.intervalSec));
-    caption = `RONDA ${Math.min(idx + 1, config.rounds)} DE ${config.rounds}`;
-    progress = (elapsed - idx * config.intervalSec) / config.intervalSec;
+    caption = cfg.capSec ? `CAP ${clock(cfg.capSec)}` : "TIEMPO";
+    progress = cfg.capSec ? elapsed / cfg.capSec : 0;
+  } else if (cfg.kind === "emom") {
+    const idx = Math.floor(elapsed / cfg.intervalSec);
+    big = clock(cfg.intervalSec - (elapsed - idx * cfg.intervalSec));
+    caption = `RONDA ${Math.min(idx + 1, cfg.rounds)} DE ${cfg.rounds}`;
+    progress = (elapsed - idx * cfg.intervalSec) / cfg.intervalSec;
   } else {
-    const cycle = config.work + config.rest;
+    const cycle = cfg.work + cfg.rest;
     const idx = Math.floor(elapsed / cycle);
     const inCycle = elapsed - idx * cycle;
-    resting = inCycle >= config.work;
-    big = clock(resting ? cycle - inCycle : config.work - inCycle);
-    caption = `${resting ? "DESCANSO" : "TRABAJO"} · ${Math.min(idx + 1, config.rounds)} DE ${config.rounds}`;
-    progress = resting ? (inCycle - config.work) / config.rest : inCycle / config.work;
+    resting = inCycle >= cfg.work;
+    big = clock(resting ? cycle - inCycle : cfg.work - inCycle);
+    caption = `${resting ? "DESCANSO" : "TRABAJO"} · ${Math.min(idx + 1, cfg.rounds)} DE ${cfg.rounds}`;
+    progress = resting ? (inCycle - cfg.work) / cfg.rest : inCycle / cfg.work;
   }
   if (phase === "prep") {
     big = String(prepLeft);
@@ -272,7 +273,7 @@ export function WodTimer({
       <div className="flex items-center justify-between">
         <button type="button" onClick={onClose} aria-label="Salir del timer" className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.08]"><X className="h-5 w-5" /></button>
         <div className="min-w-0 px-2 text-center">
-          <p className="text-[22px] font-extrabold text-gold" style={font}>{config.label.toUpperCase()}</p>
+          <p className="text-[22px] font-extrabold text-gold" style={font}>{timerLabel(cfg).toUpperCase()}</p>
           <p className="truncate text-xs text-muted-foreground">{title}</p>
         </div>
         <button type="button" onClick={() => setMuted((m) => !m)} aria-label={muted ? "Activar pitidos" : "Silenciar pitidos"} className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.08]">
@@ -280,7 +281,7 @@ export function WodTimer({
         </button>
       </div>
 
-      <div className="mt-5 text-center">
+      <div className={`mt-5 text-center ${phase === "setup" ? "hidden" : ""}`}>
         <p className="text-[13px] tracking-[0.16em] text-muted-foreground">{caption}</p>
         <p className={`font-black leading-[0.9] tabular ${resting ? "text-muted-foreground" : ""}`} style={{ ...font, fontSize: "min(38vw, 30vh)" }} role="timer">{big}</p>
         <div className="mx-auto mt-3 h-1.5 w-[80%] overflow-hidden rounded-full bg-white/10">
@@ -288,7 +289,29 @@ export function WodTimer({
         </div>
       </div>
 
-      {config.kind === "amrap" ? (
+      {phase === "prep" && (
+        <button
+          type="button"
+          onClick={() => { setPhase("setup"); setPrepLeft(PREP); }}
+          className="mx-auto mt-4 flex min-h-11 items-center gap-2 rounded-full bg-white/[0.08] px-4 text-sm font-bold"
+        >
+          <SlidersHorizontal className="h-4 w-4" /> Ajustar tiempos
+        </button>
+      )}
+
+      {phase === "setup" ? (
+        <div className="mt-5 flex flex-1 flex-col gap-3 overflow-y-auto">
+          <TimerSettings cfg={cfg} onChange={setCfg} />
+          <button
+            type="button"
+            onClick={() => { setPrepLeft(PREP); setPhase("prep"); }}
+            className="gold-gradient mt-auto min-h-14 rounded-[16px] text-2xl font-extrabold"
+            style={font}
+          >
+            EMPEZAR
+          </button>
+        </div>
+      ) : cfg.kind === "amrap" ? (
         <button
           type="button"
           onClick={addRound}
@@ -300,7 +323,7 @@ export function WodTimer({
           <span className="text-base font-bold">Toca en cualquier sitio: +1 ronda</span>
           {lastRound != null && <span className="text-[13px] text-muted-foreground">Última ronda: {clock(lastRound)}</span>}
         </button>
-      ) : config.kind === "fortime" ? (
+      ) : cfg.kind === "fortime" ? (
         <button
           type="button"
           onClick={() => finish()}
@@ -314,15 +337,15 @@ export function WodTimer({
         <div className="flex-1" />
       )}
 
-      <div className="mt-3.5 grid grid-cols-[1fr_1.4fr_1fr] gap-2.5">
-        {config.kind === "amrap" ? (
+      {phase !== "setup" && <div className="mt-3.5 grid grid-cols-[1fr_1.4fr_1fr] gap-2.5">
+        {cfg.kind === "amrap" ? (
           <button type="button" onClick={removeRound} disabled={rounds === 0} className="min-h-14 rounded-[16px] bg-white/[0.08] text-[15px] font-bold disabled:opacity-40">−1 ronda</button>
         ) : <span />}
         <button type="button" onClick={phase === "prep" ? onClose : pause} className="min-h-14 rounded-[16px] bg-[#F2F0EA] text-2xl font-extrabold text-[#0B0A08]" style={font}>
           {phase === "prep" ? "CANCELAR" : phase === "paused" ? "SEGUIR" : "PAUSA"}
         </button>
         <button type="button" onClick={() => finish()} disabled={phase === "prep"} className="min-h-14 rounded-[16px] bg-white/[0.08] text-[15px] font-bold disabled:opacity-40">Terminar</button>
-      </div>
+      </div>}
     </div>,
     document.body,
   );
@@ -336,6 +359,81 @@ function Counter({ label, value, onChange, gold }: { label: string; value: numbe
         <button type="button" aria-label={`${label}: uno menos`} onClick={() => onChange(Math.max(0, value - 1))} className="grid h-14 w-11 place-items-center"><Minus className="h-5 w-5" /></button>
         <span className={`text-[40px] font-black ${gold ? "text-[color:var(--gold-soft)]" : ""}`} style={font}>{value}</span>
         <button type="button" aria-label={`${label}: uno más`} onClick={() => onChange(value + 1)} className="grid h-14 w-11 place-items-center"><Plus className="h-5 w-5" /></button>
+      </div>
+    </div>
+  );
+}
+
+/** Ajustes del reloj: todo editable (tiempos, rondas, descansos). */
+function TimerSettings({ cfg, onChange }: { cfg: WodTimerConfig; onChange: (c: WodTimerConfig) => void }) {
+  if (cfg.kind === "tabata") {
+    return (
+      <>
+        <SecondsField label="Rondas" value={cfg.rounds} min={1} max={50} step={1} unit="" onChange={(rounds) => onChange({ ...cfg, rounds })} />
+        <SecondsField label="Trabajo" value={cfg.work} min={1} max={600} step={5} onChange={(work) => onChange({ ...cfg, work })} />
+        <SecondsField label="Descanso" value={cfg.rest} min={0} max={600} step={5} onChange={(rest) => onChange({ ...cfg, rest })} />
+        <div className="grid grid-cols-4 gap-1.5">
+          {[[20, 10], [30, 15], [40, 20], [45, 15]].map(([w, r]) => (
+            <button key={`${w}/${r}`} type="button" onClick={() => onChange({ ...cfg, work: w, rest: r })} className={`min-h-11 rounded-[12px] text-sm font-bold ${cfg.work === w && cfg.rest === r ? "gold-gradient" : "bg-white/[0.06]"}`}>{w}/{r}</button>
+          ))}
+        </div>
+        <p className="text-center text-[13px] text-muted-foreground">Total {clock((cfg.work + cfg.rest) * cfg.rounds)}</p>
+      </>
+    );
+  }
+  if (cfg.kind === "emom") {
+    return (
+      <>
+        <SecondsField label="Rondas" value={cfg.rounds} min={1} max={120} step={1} unit="" onChange={(rounds) => onChange({ ...cfg, rounds })} />
+        <SecondsField label="Cada" value={cfg.intervalSec} min={5} max={1200} step={15} onChange={(intervalSec) => onChange({ ...cfg, intervalSec })} />
+        <p className="text-center text-[13px] text-muted-foreground">Total {clock(cfg.intervalSec * cfg.rounds)}</p>
+      </>
+    );
+  }
+  if (cfg.kind === "amrap") {
+    return <SecondsField label="Minutos" value={Math.round(cfg.totalSec / 60)} min={1} max={180} step={1} unit="min" onChange={(m) => onChange({ ...cfg, totalSec: m * 60 })} />;
+  }
+  return (
+    <SecondsField
+      label="Time cap (0 = sin cap)"
+      value={cfg.capSec ? Math.round(cfg.capSec / 60) : 0}
+      min={0}
+      max={180}
+      step={1}
+      unit="min"
+      onChange={(m) => onChange({ ...cfg, capSec: m > 0 ? m * 60 : null })}
+    />
+  );
+}
+
+function SecondsField({
+  label, value, min, max, step, unit = "s", onChange,
+}: { label: string; value: number; min: number; max: number; step: number; unit?: string; onChange: (n: number) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const clamp = (n: number) => Math.max(min, Math.min(max, n));
+  return (
+    <div>
+      <span className="mb-1.5 block text-[13px] text-muted-foreground">{label}</span>
+      <div className="flex h-16 items-center justify-between rounded-[14px] border border-white/[0.14] bg-white/[0.06] px-1">
+        <button type="button" aria-label={`${label}: menos`} onClick={() => onChange(clamp(value - step))} className="grid h-14 w-12 place-items-center"><Minus className="h-5 w-5" /></button>
+        <span className="flex items-baseline gap-1">
+          <input
+            value={draft ?? String(value)}
+            inputMode="numeric"
+            aria-label={label}
+            onFocus={(e) => e.currentTarget.select()}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/[^0-9]/g, "");
+              setDraft(raw);
+              if (raw !== "") onChange(clamp(parseInt(raw, 10)));
+            }}
+            onBlur={() => setDraft(null)}
+            className="w-24 bg-transparent text-center text-[40px] font-black outline-none"
+            style={font}
+          />
+          {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
+        </span>
+        <button type="button" aria-label={`${label}: más`} onClick={() => onChange(clamp(value + step))} className="grid h-14 w-12 place-items-center"><Plus className="h-5 w-5" /></button>
       </div>
     </div>
   );

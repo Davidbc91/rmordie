@@ -21,7 +21,7 @@ const MODES: { id: Mode; label: string; desc: string }[] = [
   { id: "amrap", label: "AMRAP", desc: "Máximas rondas en tiempo" },
   { id: "emom", label: "EMOM", desc: "Cada minuto en el minuto" },
   { id: "fortime", label: "For Time", desc: "Cuenta atrás con cap" },
-  { id: "tabata", label: "Tabata", desc: "20s trabajo / 10s descanso" },
+  { id: "tabata", label: "Tabata", desc: "Trabajo y descanso a tu medida" },
   { id: "intervals", label: "Intervalos", desc: "Trabajo/descanso custom" },
   { id: "countdown", label: "Cuenta atrás", desc: "Un solo bloque" },
   { id: "stopwatch", label: "Cronómetro", desc: "Tiempo libre ascendente" },
@@ -332,9 +332,24 @@ function TimerRunner({ mode }: { mode: Mode }) {
         )}
         {(mode === "tabata" || mode === "intervals") && (
           <>
-            <NumberField label="Rondas" value={rounds} onChange={(n) => { reset(); setRounds(n); }} min={1} max={30} />
-            <NumberField label="Trabajo (s)" value={work} onChange={(n) => { reset(); setWork(n); }} min={5} max={600} step={5} disabled={mode === "tabata"} />
-            <NumberField label="Descanso (s)" value={rest} onChange={(n) => { reset(); setRest(n); }} min={0} max={600} step={5} disabled={mode === "tabata"} />
+            <NumberField label="Rondas" value={rounds} onChange={(n) => { reset(); setRounds(n); }} min={1} max={50} />
+            <NumberField label="Trabajo (s)" value={work} onChange={(n) => { reset(); setWork(n); }} min={1} max={600} step={5} />
+            <NumberField label="Descanso (s)" value={rest} onChange={(n) => { reset(); setRest(n); }} min={0} max={600} step={5} />
+            {mode === "tabata" && (
+              <div className="grid grid-cols-4 gap-1.5">
+                {[[20, 10], [30, 15], [40, 20], [45, 15]].map(([w, r]) => (
+                  <button
+                    key={`${w}/${r}`}
+                    type="button"
+                    onClick={() => { reset(); setWork(w); setRest(r); }}
+                    className={`min-h-11 rounded-[12px] text-sm font-bold ${work === w && rest === r ? "gold-gradient" : "bg-white/[0.06]"}`}
+                  >
+                    {w}/{r}
+                  </button>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">Total: {fmt((work + rest) * rounds)}</p>
           </>
         )}
         {mode === "stopwatch" && (
@@ -467,7 +482,7 @@ function NumberField({
           disabled={disabled}
           aria-label={`Restar ${step} a ${label}`}
           onClick={() => onChange(clamp(value - step))}
-          className="rounded-lg border p-2 disabled:opacity-40"
+          className="grid h-11 w-11 place-items-center rounded-lg border disabled:opacity-40"
           style={{ borderColor: "var(--border)" }}
         >
           <Minus className="h-4 w-4" />
@@ -483,7 +498,7 @@ function NumberField({
           }}
           onBlur={() => setDraft(null)}
           aria-label={label}
-          className="w-16 rounded-lg border bg-transparent px-2 py-2 text-center font-mono disabled:opacity-40"
+          className="h-11 w-16 rounded-lg border bg-transparent px-2 text-center font-mono text-base disabled:opacity-40"
           style={{ borderColor: "var(--border)" }}
           inputMode="numeric"
         />
@@ -491,7 +506,7 @@ function NumberField({
           disabled={disabled}
           aria-label={`Sumar ${step} a ${label}`}
           onClick={() => onChange(clamp(value + step))}
-          className="rounded-lg border p-2 disabled:opacity-40"
+          className="grid h-11 w-11 place-items-center rounded-lg border disabled:opacity-40"
           style={{ borderColor: "var(--border)" }}
         >
           <Plus className="h-4 w-4" />

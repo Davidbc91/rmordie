@@ -509,6 +509,8 @@ export type WorkoutResult = {
   scale: string | null;
   notes: string | null;
   updated_at: string;
+  /** Día real en que se completó (lo fija la base de datos y no cambia al editar). */
+  trained_on?: string | null;
 };
 
 export function useDayResults(monthKey: string, week: number, dayKey: string) {

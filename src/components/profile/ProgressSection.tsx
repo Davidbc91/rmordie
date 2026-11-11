@@ -3,6 +3,7 @@ import { Activity } from "lucide-react";
 import {
   windowStats,
   streaks,
+  trainedAt,
   exerciseStats,
   bodyChange,
   wellnessAverages,
@@ -29,7 +30,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       const volume = results
         .filter((r: any) => r.status === "completed")
         .filter((r: any) => {
-          const t = new Date(r.updated_at).getTime();
+          const t = new Date(trainedAt(r)).getTime();
           return t >= start && t < end;
         })
         .reduce(

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { windowStats, streaks, sessionDays, fmtNum, totalSessions, weeklyConsistency } from "@/lib/analytics";
+import { windowStats, streaks, sessionDays, fmtNum, totalSessions, weeklyConsistency, localDay } from "@/lib/analytics";
 import { Card, Stat, Empty } from "./shared";
 
 export function ConsistencySection({ results, plannedDays, completedSessions, weeklyTarget, targetIsDefault }: any) {
@@ -14,7 +14,7 @@ export function ConsistencySection({ results, plannedDays, completedSessions, we
     const set = new Set(days);
     const cells: { date: string; done: boolean }[] = [];
     for (let i = 83; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10);
+      const x = new Date(); x.setDate(x.getDate() - i); const d = localDay(x);
       cells.push({ date: d, done: set.has(d) });
     }
     return cells;

@@ -14,6 +14,21 @@ export const RANGES: { key: RangeKey; label: string; days: number | null }[] = [
 
 export const dayStr = (d: Date | string) => new Date(d).toISOString().slice(0, 10);
 
+/** Fecha local YYYY-MM-DD (sin el desfase de UTC). */
+export const localDay = (d: Date = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/**
+ * Cuándo se entrenó de verdad: el día en que se completó (trained_on), que no
+ * cambia si luego editas el entreno. Para registros antiguos, la última edición.
+ */
+export function trainedAt(r: WorkoutResult): string {
+  return r.trained_on ? `${r.trained_on}T12:00:00` : r.updated_at;
+}
+export function trainedDay(r: WorkoutResult): string {
+  return r.trained_on ?? localDay(new Date(r.updated_at));
+}
+
 export function volumeOf(r: WorkoutResult): number {
   const w = r.weight ?? 0;
   const sets = r.sets ?? 1;
@@ -52,12 +67,12 @@ export function windowStats(
   prev = false,
 ): WindowStats {
   const test = (d: string) => (prev ? inPrevRange(d, days) : inRange(d, days));
-  const rs = results.filter((r) => r.status === "completed" && test(r.updated_at));
+  const rs = results.filter((r) => r.status === "completed" && test(trainedAt(r)));
   const sessions = new Set(rs.map((r) => `${r.month_key}|${r.week}|${r.day_key}`)).size;
   const volume = rs.reduce((a, r) => a + volumeOf(r), 0);
   const rpes = rs.map((r) => r.rpe).filter((x): x is number => x != null);
   const secs = rs.reduce((a, r) => a + (r.time_seconds ?? 0), 0);
-  const weeksSpan = days ? days / 7 : Math.max(1, spanWeeks(rs.map((r) => r.updated_at)));
+  const weeksSpan = days ? days / 7 : Math.max(1, spanWeeks(rs.map(trainedAt)));
   const prs = history.filter((h) => test(h.changed_at)).length;
   return {
     blocks: rs.length,
@@ -79,33 +94,30 @@ function spanWeeks(dates: string[]): number {
 
 export function sessionDays(results: WorkoutResult[]): string[] {
   const set = new Set(
-    results.filter((r) => r.status === "completed").map((r) => dayStr(r.updated_at)),
+    results.filter((r) => r.status === "completed").map(trainedDay),
   );
   return Array.from(set).sort();
 }
 
-export function streaks(results: WorkoutResult[]): { current: number; best: number } {
+/**
+ * Racha: los días de descanso no la cortan. Solo se corta cuando pasan dos días
+ * seguidos sin entrenar. Se cuentan días de calendario (descansos incluidos)
+ * desde el primer entreno de la racha hasta el último.
+ */
+export function streaks(results: WorkoutResult[], now = new Date()): { current: number; best: number } {
   const days = sessionDays(results);
   if (days.length === 0) return { current: 0, best: 0 };
+  const t = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 864e5;
+  const MAX_GAP = 2; // un día sin entrenar entre medias sigue valiendo; dos, no
   let best = 1;
-  let run = 1;
+  let runStart = t(days[0]);
   for (let i = 1; i < days.length; i++) {
-    const diff = (new Date(days[i]).getTime() - new Date(days[i - 1]).getTime()) / 864e5;
-    run = diff <= 1.5 ? run + 1 : 1;
-    best = Math.max(best, run);
+    if (t(days[i]) - t(days[i - 1]) > MAX_GAP) runStart = t(days[i]);
+    best = Math.max(best, t(days[i]) - runStart + 1);
   }
-  const today = dayStr(new Date());
-  const yesterday = dayStr(new Date(Date.now() - 864e5));
-  const last = days[days.length - 1];
-  let current = 0;
-  if (last === today || last === yesterday) {
-    current = 1;
-    for (let i = days.length - 1; i > 0; i--) {
-      const diff = (new Date(days[i]).getTime() - new Date(days[i - 1]).getTime()) / 864e5;
-      if (diff <= 1.5) current++;
-      else break;
-    }
-  }
+  const last = t(days[days.length - 1]);
+  const today = t(localDay(now));
+  const current = today - last <= MAX_GAP ? last - runStart + 1 : 0;
   return { current, best };
 }
 
@@ -149,12 +161,12 @@ export function weeklyConsistency(
   const perDay = new Map<string, Set<string>>();
   for (const r of results) {
     if (r.status !== "completed") continue;
-    const k = dayStr(r.updated_at);
+    const k = trainedDay(r);
     if (!perDay.has(k)) perDay.set(k, new Set());
     perDay.get(k)!.add(`${r.month_key}|${r.week}|${r.day_key}`);
   }
   if (perDay.size === 0) return { pct: 0, weeks: [] };
-  const first = monday(new Date([...perDay.keys()].sort()[0]));
+  const first = monday(new Date(`${[...perDay.keys()].sort()[0]}T12:00:00`));
   const thisWeek = monday(now);
   const out: { start: string; sessions: number }[] = [];
   for (let i = weeks - 1; i >= 0; i--) {
@@ -165,7 +177,7 @@ export function weeklyConsistency(
     for (let d = 0; d < 7; d++) {
       const day = new Date(start);
       day.setDate(day.getDate() + d);
-      n += perDay.get(dayStr(new Date(day.getTime() - day.getTimezoneOffset() * 60000)))?.size ?? 0;
+      n += perDay.get(localDay(day))?.size ?? 0;
     }
     out.push({ start: dayStr(start), sessions: n });
   }
@@ -392,7 +404,7 @@ export function monthlyReport(
     const t = new Date(d);
     return t.getFullYear() === y && t.getMonth() === m;
   };
-  const rs = results.filter((r) => r.status === "completed" && inMonth(r.updated_at));
+  const rs = results.filter((r) => r.status === "completed" && inMonth(trainedAt(r)));
   const sessions = new Set(rs.map((r) => `${r.month_key}|${r.week}|${r.day_key}`)).size;
   const volume = rs.reduce((a, r) => a + volumeOf(r), 0);
   const rpes = rs.map((r) => r.rpe).filter((x): x is number => x != null);

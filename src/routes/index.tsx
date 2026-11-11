@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { usePlanning, useAllResults, usePersonalRecords, type WorkoutResult } from "@/lib/store";
 import { useAthleteProfile, useMilestones, useGoals, useAllPrHistory, useWellnessLogs } from "@/lib/profile-store";
-import { streaks, sessionDays, volumeOf, fmtKg, estimate1rm } from "@/lib/analytics";
+import { streaks, sessionDays, volumeOf, fmtKg, estimate1rm, trainedAt } from "@/lib/analytics";
 import { extractPercentages } from "@/lib/plates";
 import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
 import { GlassCard, GlassSection, GlassBadge } from "@/components/glass";
@@ -224,7 +224,7 @@ function Home() {
   const weekStats = useMemo(() => {
     if (!analyticsReady) return { sessions: 0, volume: 0, avgRpe: null as number | null };
     const cutoff = Date.now() - 7 * 864e5;
-    const recent = deferredResults.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
+    const recent = deferredResults.filter((r) => r.status === "completed" && new Date(trainedAt(r)).getTime() >= cutoff);
     const sessions = new Set(recent.map((r) => `${r.month_key}|${r.week}|${r.day_key}`)).size;
     const volume = recent.reduce((sum, r) => sum + (r.weight ?? 0) * (r.sets ?? 1) * (r.reps ?? 0), 0);
     const rpes = recent.map((r) => r.rpe).filter((x): x is number => x != null);
@@ -236,7 +236,7 @@ function Home() {
   const smartState = useMemo(() => {
     if (!analyticsReady) return { tone: "neutral", title: "Analizando tu rendimiento…", detail: "Cargando métricas de entrenamiento.", sessions: 0, volume: 0, avgRpe: null as number | null };
     const cutoff = Date.now() - 7 * 864e5;
-    const recent = results.filter((r) => r.status === "completed" && new Date(r.updated_at).getTime() >= cutoff);
+    const recent = results.filter((r) => r.status === "completed" && new Date(trainedAt(r)).getTime() >= cutoff);
     const rpes = recent.map((r) => r.rpe).filter((x): x is number => x != null);
     const avgRpe = rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null;
     const volume = recent.reduce((sum, r) => sum + volumeOf(r), 0);
@@ -257,7 +257,7 @@ function Home() {
     const weeks = Array.from({ length: 8 }, (_, i) => {
       const end = new Date(); end.setHours(23,59,59,999); end.setDate(end.getDate() - (7 - i) * 7);
       const start = new Date(end); start.setDate(end.getDate() - 6); start.setHours(0,0,0,0);
-      const rows = deferredResults.filter((r) => r.status === "completed" && new Date(r.updated_at) >= start && new Date(r.updated_at) <= end);
+      const rows = deferredResults.filter((r) => r.status === "completed" && new Date(trainedAt(r)) >= start && new Date(trainedAt(r)) <= end);
       const volume = rows.reduce((sum, r) => sum + volumeOf(r), 0);
       const rpes = rows.map((r) => r.rpe).filter((x): x is number => x != null);
       return { label: `S${i + 1}`, volume, rpe: rpes.length ? rpes.reduce((a,b) => a+b,0)/rpes.length : null };

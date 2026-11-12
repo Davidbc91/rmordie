@@ -2,6 +2,7 @@ import { LinkedText } from "@/components/LinkedText";
 import { usePersonalRecords, useUpsertPersonalRecord, useAllResults, usePlanning } from "@/lib/store";
 import { buildBlockMovementIndex, findLastTime, mainMovementId } from "@/lib/last-time";
 import { extractPercentages, extractSetsReps, extractRestSeconds } from "@/lib/plates";
+import { parsePlanLoads, type PlanLoad } from "@/lib/plan-loads";
 import { LoadStepper, CountStepper, RpeChips, PlateLine, RestTimer } from "./QuickLog";
 import {
   detectExercise,
@@ -131,10 +132,24 @@ export function BlockCard({
     [content, detected?.exercise, allResults, blockIndex, contextIds.month_key, contextIds.week, contextIds.day_key],
   );
   const lastNext = lastTime && lastTime.result.rpe != null ? suggestNextLoad(Number(lastTime.result.weight), Number(lastTime.result.rpe)) : null;
-  const targetLoads = useMemo(
-    () => (detected ? loadsForPercentages(detected.weight, pcts) : []),
-    [detected, pcts],
-  );
+  // Todas las «@» del bloque, línea a línea, cada una con su ejercicio y su RM
+  const planLoads = useMemo(() => parsePlanLoads(content, records, detected), [content, records, detected]);
+  const firstLoad = planLoads.find((l) => l.pcts.some((p) => p.kg != null)) ?? null;
+  const multiLoads =
+    planLoads.length > 1 ||
+    planLoads.some((l) => l.repMax !== 1 || l.estimated || l.fixedKg.length > 0 || l.rpe.length > 0 || l.rir.length > 0 || (detected && l.exercise && l.exercise !== detected.exercise));
+  const targetLoads = useMemo(() => {
+    if (firstLoad) return firstLoad.pcts.filter((p) => p.kg != null).map((p) => ({ pct: p.pct, exact: p.kg!, suggested: p.kg! }));
+    return detected ? loadsForPercentages(detected.weight, pcts) : [];
+  }, [firstLoad, detected, pcts]);
+  const targetSetsReps = firstLoad?.sets && firstLoad?.reps ? { sets: firstLoad.sets, reps: firstLoad.reps } : planSetsReps;
+  const applyLoad = (kg: number, l: PlanLoad) => {
+    setWeight(String(kg));
+    const sets = l.sets ?? planSetsReps?.sets;
+    const reps = l.reps ?? planSetsReps?.reps;
+    if (sets) setSets(String(sets));
+    if (reps) setReps(String(reps));
+  };
 
   // Carga realizada vs carga objetivo: indicador calculado, sin escribir nada.
   const actualLoad = useMemo(() => {
@@ -395,8 +410,11 @@ export function BlockCard({
             {/* Fuerza: una sola tarjeta con la carga de hoy */}
             {detected && (
               <div className="space-y-2.5 rounded-[16px] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/[0.09] p-3.5">
+                {multiLoads ? (
+                  <PlanLoadList loads={planLoads} onUse={applyLoad} />
+                ) : (
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
-                  <span>Tu {detected.rep_max}RM: <span className="font-semibold text-foreground">{formatKg(detected.weight)} kg</span></span>
+                  <span>Tu {firstLoad?.repMax ?? detected.rep_max}RM: <span className="font-semibold text-foreground">{formatKg(firstLoad?.rmWeight ?? detected.weight)} kg</span></span>
                   {targetLoads.length > 0 && (
                     <span>
                       {targetLoads.map((l, i) => (
@@ -405,23 +423,24 @@ export function BlockCard({
                     </span>
                   )}
                 </div>
+                )}
                 {targetLoads.length > 0 && (
                   <button
                     type="button"
                     onClick={() => {
                       setWeight(String(targetLoads[0].suggested));
-                      if (planSetsReps) {
-                        setSets(String(planSetsReps.sets));
-                        setReps(String(planSetsReps.reps));
+                      if (targetSetsReps) {
+                        setSets(String(targetSetsReps.sets));
+                        setReps(String(targetSetsReps.reps));
                       }
                     }}
                     className="pressable cta-display flex min-h-[52px] w-full items-center justify-center rounded-[14px] bg-[color:var(--gold)] text-[color:var(--gold-foreground)]"
                     style={{ fontSize: "1.5rem" }}
                   >
-                    USAR {formatKg(targetLoads[0].suggested)} KG{planSetsReps ? ` · ${planSetsReps.sets}×${planSetsReps.reps}` : ""}
+                    USAR {formatKg(targetLoads[0].suggested)} KG{targetSetsReps ? ` · ${targetSetsReps.sets}×${targetSetsReps.reps}` : ""}
                   </button>
                 )}
-                {targetLoads.length > 0 && planSetsReps && (
+                {targetLoads.length > 0 && targetSetsReps && !multiLoads && (
                   <p className="text-[13px] text-muted-foreground">Rellena carga, series y reps del plan de una vez.</p>
                 )}
                 {nextLoad && (
@@ -571,5 +590,59 @@ export function Field({ label, value, onChange, type = "text", placeholder, high
         className={`tap min-h-[52px] w-full rounded-[14px] border bg-white/[0.06] px-3.5 text-xl font-semibold tabular outline-none transition placeholder:text-sm placeholder:font-normal placeholder:text-muted-foreground/70 focus:border-[color:var(--gold)]/60 ${highlight ? "border-[color:var(--gold)]/45" : "border-white/[0.14]"}`}
       />
     </label>
+  );
+}
+
+/** Lista de todas las cargas del bloque: una fila por línea con «@». Tocar un peso lo apunta. */
+function PlanLoadList({ loads, onUse }: { loads: PlanLoad[]; onUse: (kg: number, l: PlanLoad) => void }) {
+  return (
+    <div className="space-y-2">
+      <p className="text-[13px] font-bold text-foreground">Cargas del plan</p>
+      {loads.map((l, i) => {
+        const prev = loads[i - 1];
+        const showHead = !prev || prev.exercise !== l.exercise || prev.repMax !== l.repMax;
+        return (
+          <div key={`${i}-${l.line}`} className="space-y-1.5">
+            {showHead && (
+              <p className="text-[13px] text-muted-foreground">
+                {l.exercise ?? "Ejercicio sin récord"}
+                {l.rmWeight != null && (
+                  <>
+                    {" · "}tu {l.repMax}RM <span className="font-semibold text-foreground">{formatKg(l.rmWeight)} kg</span>
+                    {l.estimated && <span> (estimado de tu {l.estimatedFrom}RM)</span>}
+                  </>
+                )}
+                {l.exercise && l.rmWeight == null && <span> · sin {l.repMax}RM guardado</span>}
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(l.sets && l.reps) ? <span className="mr-1 text-[13px] text-muted-foreground">{l.sets}×{l.reps}</span> : null}
+              {l.pcts.map((p) =>
+                p.kg != null ? (
+                  <button
+                    key={p.pct}
+                    type="button"
+                    onClick={() => onUse(p.kg!, l)}
+                    className="pressable min-h-10 rounded-[10px] bg-white/[0.08] px-2.5 text-[13px]"
+                  >
+                    {p.pct} % → <span className="font-bold text-foreground">{formatKg(p.kg)} kg</span>
+                  </button>
+                ) : (
+                  <span key={p.pct} className="min-h-10 rounded-[10px] border border-white/10 px-2.5 py-2 text-[13px] text-muted-foreground">{p.pct} %</span>
+                ),
+              )}
+              {l.fixedKg.map((kg) => (
+                <button key={`kg${kg}`} type="button" onClick={() => onUse(kg, l)} className="pressable min-h-10 rounded-[10px] bg-white/[0.08] px-2.5 text-[13px] font-bold">
+                  {formatKg(kg)} kg
+                </button>
+              ))}
+              {l.rpe.map((v) => <span key={`rpe${v}`} className="rounded-[10px] border border-white/10 px-2.5 py-2 text-[13px]">RPE {v}</span>)}
+              {l.rir.map((v) => <span key={`rir${v}`} className="rounded-[10px] border border-white/10 px-2.5 py-2 text-[13px]">RIR {v}</span>)}
+            </div>
+          </div>
+        );
+      })}
+      <p className="text-xs text-muted-foreground">Toca un peso para apuntarlo con sus series y reps.</p>
+    </div>
   );
 }

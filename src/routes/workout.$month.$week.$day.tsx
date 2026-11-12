@@ -64,6 +64,7 @@ function WorkoutPage() {
   const [celebrate, setCelebrate] = useState<{ data: PrCelebrationData; outcome: PrOutcome } | null>(null);
   const [review, setReview] = useState<WorkoutReview | null>(null);
   const [sharingCard, setSharingCard] = useState(false);
+  const [sharePick, setSharePick] = useState<string[] | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -229,11 +230,13 @@ function WorkoutPage() {
     }
   }
 
-  async function shareToday() {
+  async function shareToday(onlyKeys?: string[]) {
     if (!d || !mo) return;
+    const blocks = onlyKeys ? d.blocks.filter((b) => onlyKeys.includes(b.key)) : d.blocks;
+    if (!blocks.length) return;
     setSharingCard(true);
     try {
-      const loads = (results as any[]).map((r) => ({
+      const loads = (results as any[]).filter((r) => blocks.some((b) => b.key === r.block_key)).map((r) => ({
         block: r.block_key,
         weight: r.weight ?? null,
         sets: r.sets ?? null,
@@ -244,11 +247,12 @@ function WorkoutPage() {
         title: d.date ? weekdayOf(d.date) : d.key,
         subtitle: `${mo.label} · Semana ${weekN}`,
         date: new Date().toLocaleDateString("es-ES"),
-        blocks: d.blocks.map((b) => ({ key: b.key, content: b.content })),
+        blocks: blocks.map((b) => ({ key: b.key, content: b.content })),
         loads,
         volume,
       });
-      const outcome = await shareOrDownloadCard(blob, `entreno-${month}-s${weekN}-${day}.png`);
+      const suffix = blocks.length < d.blocks.length ? `-${blocks.map((b) => b.key).join("")}` : "";
+      const outcome = await shareOrDownloadCard(blob, `entreno-${month}-s${weekN}-${day}${suffix}.png`);
       toast.success(outcome === "shared" ? "Imagen del entreno compartida" : "Imagen del entreno descargada");
     } catch (e: any) {
       if (e?.name !== "AbortError") toast.error(e?.message ?? "No se pudo generar la imagen del entreno");
@@ -315,6 +319,61 @@ function WorkoutPage() {
       />
       )}
 
+      {sharePick && d && (
+        <div className="fixed inset-0 z-[60] flex items-end bg-black/60" onClick={() => setSharePick(null)}>
+          <div
+            role="dialog"
+            aria-label="Elegir bloques para compartir"
+            className="max-h-[85dvh] w-full overflow-y-auto rounded-t-[24px] border-t border-white/10 bg-[#151412] px-4 pt-5"
+            style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-[28px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>¿QUÉ COMPARTES?</h2>
+              <button
+                type="button"
+                onClick={() => setSharePick(sharePick.length === d.blocks.length ? [] : d.blocks.map((b) => b.key))}
+                className="min-h-11 shrink-0 px-2 text-sm font-bold text-gold"
+              >
+                {sharePick.length === d.blocks.length ? "Ninguno" : "Todos"}
+              </button>
+            </div>
+            <div className="mt-4 space-y-2">
+              {d.blocks.map((b) => {
+                const on = sharePick.includes(b.key);
+                const first = b.content.split("\n").map((l) => l.trim()).find(Boolean) ?? "";
+                return (
+                  <button
+                    key={b.key}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setSharePick(on ? sharePick.filter((k) => k !== b.key) : d.blocks.map((x) => x.key).filter((k) => k === b.key || sharePick.includes(k)))}
+                    className={`flex min-h-16 w-full items-center gap-3 rounded-[16px] px-3 text-left transition-colors ${on ? "bg-[color:var(--gold)]/12 ring-2 ring-[color:var(--gold)]" : "bg-white/[0.045]"}`}
+                  >
+                    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[10px] text-lg font-extrabold ${on ? "gold-gradient" : "bg-white/[0.08] text-muted-foreground"}`} style={{ fontFamily: "var(--font-editorial)" }}>{b.key}</span>
+                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{first}</span>
+                    <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border ${on ? "border-[color:var(--gold)] bg-[color:var(--gold)] text-[#0B0A08]" : "border-white/25"}`}>
+                      {on && <CheckCheck className="h-3.5 w-3.5" />}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-5 flex gap-2">
+              <button type="button" onClick={() => setSharePick(null)} className="min-h-12 flex-1 rounded-[14px] bg-white/[0.08] font-bold">Cancelar</button>
+              <button
+                type="button"
+                disabled={!sharePick.length || sharingCard}
+                onClick={() => { const keys = sharePick; setSharePick(null); void shareToday(keys); }}
+                className="gold-gradient min-h-12 flex-[2] rounded-[14px] font-extrabold disabled:opacity-40"
+              >
+                {sharePick.length === d.blocks.length ? "Compartir todo" : sharePick.length === 1 ? `Compartir bloque ${sharePick[0]}` : `Compartir ${sharePick.length} bloques`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {strengthCelebration && (
         <PrCelebration data={strengthCelebration} onClose={() => setStrengthCelebration(null)} />
       )}
@@ -364,12 +423,16 @@ function WorkoutPage() {
                   {!d.isRest && <button
                     type="button"
                     role="menuitem"
-                    onClick={() => { setMenuOpen(false); void shareToday(); }}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (d.blocks.length <= 1) void shareToday();
+                      else setSharePick(d.blocks.map((b) => b.key));
+                    }}
                     disabled={sharingCard}
                     className="flex min-h-12 w-full items-center gap-3 px-4 text-left text-[15px] disabled:opacity-50"
                   >
                     <Share2 className="h-4 w-4 text-muted-foreground" />
-                    {sharingCard ? "Generando imagen…" : "Compartir imagen del entreno"}
+                    {sharingCard ? "Generando imagen…" : "Compartir imagen…"}
                   </button>}
                   {(results.length > 0 || dayWods.length > 0) && (
                     <button

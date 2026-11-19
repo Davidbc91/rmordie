@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Minus, Plus, SlidersHorizontal, Volume2, VolumeX, X } from "lucide-react";
 import { timerLabel, type WodTimerConfig } from "@/lib/wod-timer";
+import { PickerField } from "@/components/ui/wheel-picker";
 
 /** Lo que el timer deja apuntado en el bloque al terminar. */
 export type WodTimerResult =
@@ -390,9 +391,9 @@ function TimerSettings({ cfg, onChange }: { cfg: WodTimerConfig; onChange: (c: W
   if (cfg.kind === "tabata") {
     return (
       <>
-        <SecondsField label="Rondas" value={cfg.rounds} min={1} max={50} step={1} unit="" onChange={(rounds) => onChange({ ...cfg, rounds })} />
-        <SecondsField label="Trabajo" value={cfg.work} min={1} max={600} step={5} onChange={(work) => onChange({ ...cfg, work })} />
-        <SecondsField label="Descanso" value={cfg.rest} min={0} max={600} step={5} onChange={(rest) => onChange({ ...cfg, rest })} />
+        <PickerField big label="Rondas" value={cfg.rounds} min={1} max={50} onChange={(rounds) => onChange({ ...cfg, rounds })} />
+        <PickerField big kind="duration" label="Trabajo" value={cfg.work} min={1} max={600} onChange={(work) => onChange({ ...cfg, work })} />
+        <PickerField big kind="duration" label="Descanso" value={cfg.rest} min={0} max={600} onChange={(rest) => onChange({ ...cfg, rest })} />
         <div className="grid grid-cols-4 gap-1.5">
           {[[20, 10], [30, 15], [40, 20], [45, 15]].map(([w, r]) => (
             <button key={`${w}/${r}`} type="button" onClick={() => onChange({ ...cfg, work: w, rest: r })} className={`min-h-11 rounded-[12px] text-sm font-bold ${cfg.work === w && cfg.rest === r ? "gold-gradient" : "bg-white/[0.06]"}`}>{w}/{r}</button>
@@ -405,23 +406,23 @@ function TimerSettings({ cfg, onChange }: { cfg: WodTimerConfig; onChange: (c: W
   if (cfg.kind === "emom") {
     return (
       <>
-        <SecondsField label="Rondas" value={cfg.rounds} min={1} max={120} step={1} unit="" onChange={(rounds) => onChange({ ...cfg, rounds })} />
-        <SecondsField label="Cada" value={cfg.intervalSec} min={5} max={1200} step={15} onChange={(intervalSec) => onChange({ ...cfg, intervalSec })} />
+        <PickerField big label="Rondas" value={cfg.rounds} min={1} max={120} onChange={(rounds) => onChange({ ...cfg, rounds })} />
+        <PickerField big kind="duration" label="Cada" value={cfg.intervalSec} min={5} max={1200} onChange={(intervalSec) => onChange({ ...cfg, intervalSec })} />
         <p className="text-center text-[13px] text-muted-foreground">Total {clock(cfg.intervalSec * cfg.rounds)}</p>
       </>
     );
   }
   if (cfg.kind === "amrap") {
-    return <SecondsField label="Minutos" value={Math.round(cfg.totalSec / 60)} min={1} max={180} step={1} unit="min" onChange={(m) => onChange({ ...cfg, totalSec: m * 60 })} />;
+    return <PickerField big label="Minutos" unit="min" value={Math.round(cfg.totalSec / 60)} min={1} max={180} onChange={(m) => onChange({ ...cfg, totalSec: m * 60 })} />;
   }
   return (
-    <SecondsField
+    <PickerField
+      big
       label="Time cap (0 = sin cap)"
+      unit="min"
       value={cfg.capSec ? Math.round(cfg.capSec / 60) : 0}
       min={0}
       max={180}
-      step={1}
-      unit="min"
       onChange={(m) => onChange({ ...cfg, capSec: m > 0 ? m * 60 : null })}
     />
   );

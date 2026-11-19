@@ -1,3 +1,4 @@
+import { PickerField } from "@/components/ui/wheel-picker";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useEffect, useRef, useState } from "react";
@@ -316,12 +317,12 @@ function TimerRunner({ mode }: { mode: Mode }) {
     <div className="space-y-4">
       <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
         {(mode === "amrap" || mode === "fortime") && (
-          <NumberField label="Minutos" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={120} />
+          <PickerField label="Minutos" unit="min" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={120} />
         )}
         {mode === "emom" && (
           <>
-            <NumberField label="Rondas" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={120} />
-            <NumberField label="Intervalo (s)" value={emomInterval} onChange={(n) => { reset(); setEmomInterval(n); }} min={5} max={600} step={5} />
+            <PickerField label="Rondas" value={minutes} onChange={(n) => { reset(); setMinutes(n); }} min={1} max={120} />
+            <PickerField kind="duration" label="Cada" value={emomInterval} onChange={(n) => { reset(); setEmomInterval(n); }} min={5} max={600} />
             <div className="flex flex-wrap gap-2">
               {[30, 60, 90, 120, 180].map((s) => (
                 <button
@@ -343,13 +344,13 @@ function TimerRunner({ mode }: { mode: Mode }) {
           </>
         )}
         {mode === "countdown" && (
-          <NumberField label="Segundos" value={countdownSec} onChange={(n) => { reset(); setCountdownSec(n); }} min={5} max={3600} step={5} />
+          <PickerField kind="duration" label="Tiempo" value={countdownSec} onChange={(n) => { reset(); setCountdownSec(n); }} min={1} max={3599} big />
         )}
         {(mode === "tabata" || mode === "intervals") && (
           <>
-            <NumberField label="Rondas" value={rounds} onChange={(n) => { reset(); setRounds(n); }} min={1} max={50} />
-            <NumberField label="Trabajo (s)" value={work} onChange={(n) => { reset(); setWork(n); }} min={1} max={600} step={5} />
-            <NumberField label="Descanso (s)" value={rest} onChange={(n) => { reset(); setRest(n); }} min={0} max={600} step={5} />
+            <PickerField label="Rondas" value={rounds} onChange={(n) => { reset(); setRounds(n); }} min={1} max={50} />
+            <PickerField kind="duration" label="Trabajo" value={work} onChange={(n) => { reset(); setWork(n); }} min={1} max={600} />
+            <PickerField kind="duration" label="Descanso" value={rest} onChange={(n) => { reset(); setRest(n); }} min={0} max={600} />
             {mode === "tabata" && (
               <div className="grid grid-cols-4 gap-1.5">
                 {[[20, 10], [30, 15], [40, 20], [45, 15]].map(([w, r]) => (

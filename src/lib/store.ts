@@ -130,9 +130,11 @@ export type PlanningRow = {
   data: Planning;
   is_active: boolean;
   imported_at: string;
+  /** Planificación a la que pertenece esta versión (se mantiene entre versiones). */
+  plan_key?: string | null;
 };
 
-export type PlanningShare = { owner_id: string; recipient_id: string; follow: boolean; created_at: string };
+export type PlanningShare = { owner_id: string; recipient_id: string; plan_key: string; follow: boolean; created_at: string };
 
 /** Planes que el administrador me ha compartido (vacío si la tabla aún no existe). */
 async function fetchSharesForMe(uid: string): Promise<PlanningShare[]> {
@@ -149,21 +151,27 @@ export function usePlanning() {
       offlineRead(cacheKeys.planning(uid), async () => {
         // La activa propia, la compartida sin dueño y la del administrador si
         // me la ha compartido y la sigo. Nunca las de todos los atletas.
+        // 1) la planificación que me han compartido y sigo (su última versión)
         const shares = uid ? await fetchSharesForMe(uid) : [];
-        const followed = shares.filter((sh) => sh.follow).map((sh) => sh.owner_id);
+        const followed = shares.find((sh) => sh.follow && sh.plan_key);
+        if (followed) {
+          const { data: sharedRows } = await (supabase as any)
+            .from("planning")
+            .select("*")
+            .eq("plan_key", followed.plan_key)
+            .eq("user_id", followed.owner_id)
+            .order("imported_at", { ascending: false })
+            .limit(1);
+          const sharedRow = (sharedRows ?? [])[0] as PlanningRow | undefined;
+          if (sharedRow) return sharedRow;
+        }
+        // 2) la mía activa, 3) la compartida sin dueño
         let query = supabase.from("planning").select("*").eq("is_active", true);
-        const owners = [uid, ...followed].filter(Boolean) as string[];
-        query = owners.length ? query.or(`user_id.in.(${owners.join(",")}),user_id.is.null`) : query.is("user_id", null);
-        const { data, error } = await query.order("imported_at", { ascending: false }).limit(8);
+        query = uid ? query.or(`user_id.eq.${uid},user_id.is.null`) : query.is("user_id", null);
+        const { data, error } = await query.order("imported_at", { ascending: false }).limit(4);
         if (error) throw error;
         const rows = (data ?? []) as unknown as PlanningRow[];
-        // 1) el plan compartido que sigo, 2) el mío, 3) el compartido sin dueño
-        return (
-          rows.find((r) => r.user_id && followed.includes(r.user_id)) ??
-          rows.find((r) => uid && r.user_id === uid) ??
-          rows.find((r) => r.user_id === null) ??
-          null
-        );
+        return rows.find((r) => uid && r.user_id === uid) ?? rows.find((r) => r.user_id === null) ?? null;
       }),
   });
 }
@@ -202,13 +210,21 @@ export function useFollowSharedPlan() {
   const qc = useQueryClient();
   const uid = getCurrentUserId();
   return useMutation({
-    mutationFn: async ({ ownerId, follow }: { ownerId: string; follow: boolean }) => {
+    /** planKey = la planificación a seguir; null = no seguir ninguna (usar la mía) */
+    mutationFn: async ({ planKey }: { planKey: string | null }) => {
       const { error } = await (supabase as any)
         .from("planning_shares")
-        .update({ follow })
-        .eq("owner_id", ownerId)
+        .update({ follow: false })
         .eq("recipient_id", uid!);
       if (error) throw error;
+      if (planKey) {
+        const { error: e2 } = await (supabase as any)
+          .from("planning_shares")
+          .update({ follow: true })
+          .eq("recipient_id", uid!)
+          .eq("plan_key", planKey);
+        if (e2) throw e2;
+      }
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["planning_shares_me", uid] });
@@ -236,13 +252,21 @@ export function useSetPlanningShares() {
   const qc = useQueryClient();
   const uid = getCurrentUserId();
   return useMutation({
-    mutationFn: async ({ recipientIds, previous }: { recipientIds: string[]; previous: string[] }) => {
+    mutationFn: async ({ planKey, recipientIds, previous }: { planKey: string; recipientIds: string[]; previous: string[] }) => {
       const add = recipientIds.filter((id) => !previous.includes(id));
       const remove = previous.filter((id) => !recipientIds.includes(id));
       if (add.length) {
+        // Si el atleta no sigue ya otra, sigue esta
+        const { data: existing } = await (supabase as any)
+          .from("planning_shares")
+          .select("recipient_id")
+          .eq("owner_id", uid!)
+          .eq("follow", true)
+          .in("recipient_id", add);
+        const alreadyFollowing = new Set(((existing ?? []) as { recipient_id: string }[]).map((r) => r.recipient_id));
         const { error } = await (supabase as any)
           .from("planning_shares")
-          .insert(add.map((recipient_id) => ({ owner_id: uid, recipient_id })));
+          .insert(add.map((recipient_id) => ({ owner_id: uid, recipient_id, plan_key: planKey, follow: !alreadyFollowing.has(recipient_id) })));
         if (error) throw error;
       }
       if (remove.length) {
@@ -250,11 +274,73 @@ export function useSetPlanningShares() {
           .from("planning_shares")
           .delete()
           .eq("owner_id", uid!)
+          .eq("plan_key", planKey)
           .in("recipient_id", remove);
         if (error) throw error;
       }
     },
     onSettled: () => qc.invalidateQueries({ queryKey: ["planning_shares_owner", uid] }),
+  });
+}
+
+export type PlanSummary = { plan_key: string; id: string; source_filename: string | null; imported_at: string; is_active: boolean; version: number; owner_id: string | null };
+
+/** Mis planificaciones: la última versión de cada una. */
+export function useMyPlans() {
+  const uid = getCurrentUserId();
+  return useQuery({
+    queryKey: ["my_plans", uid],
+    enabled: !!uid,
+    queryFn: async (): Promise<PlanSummary[]> => {
+      const { data, error } = await (supabase as any)
+        .from("planning")
+        .select("id, plan_key, source_filename, imported_at, is_active, version, user_id")
+        .eq("user_id", uid!)
+        .order("imported_at", { ascending: false });
+      if (error) throw error;
+      const seen = new Map<string, PlanSummary>();
+      for (const r of (data ?? []) as Array<PlanSummary & { user_id: string }>) {
+        const key = r.plan_key ?? r.id;
+        const prev = seen.get(key);
+        if (!prev) seen.set(key, { ...r, plan_key: key, owner_id: r.user_id });
+        else if (r.is_active) prev.is_active = true;
+      }
+      return [...seen.values()];
+    },
+  });
+}
+
+/** Nombres de las planificaciones que me han compartido. */
+export function useSharedPlanNames(planKeys: string[]) {
+  return useQuery({
+    queryKey: ["shared_plan_names", planKeys.join(",")],
+    enabled: planKeys.length > 0,
+    queryFn: async (): Promise<Record<string, string>> => {
+      const { data } = await (supabase as any)
+        .from("planning")
+        .select("plan_key, source_filename, imported_at")
+        .in("plan_key", planKeys)
+        .order("imported_at", { ascending: false });
+      const out: Record<string, string> = {};
+      for (const r of (data ?? []) as { plan_key: string; source_filename: string | null }[]) {
+        if (!(r.plan_key in out)) out[r.plan_key] = r.source_filename ?? "Planificación";
+      }
+      return out;
+    },
+  });
+}
+
+/** Usar otra de mis planificaciones en mi calendario. */
+export function useActivatePlan() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+  return useMutation({
+    mutationFn: async (planId: string) => {
+      await supabase.from("planning").update({ is_active: false }).eq("user_id", uid!).eq("is_active", true);
+      const { error } = await supabase.from("planning").update({ is_active: true }).eq("id", planId).eq("user_id", uid!);
+      if (error) throw error;
+    },
+    onSettled: () => qc.invalidateQueries(),
   });
 }
 
@@ -563,9 +649,18 @@ async function rekeyFutureYearResults(uid: string, planning: Planning) {
 export function useSavePlanning() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { planning: Planning; filename?: string }) => {
+    mutationFn: async (input: { planning: Planning; filename?: string; newPlan?: boolean }) => {
       const uid = getCurrentUserId();
       if (!uid) throw new Error("No hay perfil activo");
+      // La versión nueva sigue la planificación que estaba en uso (o empieza una aparte)
+      const { data: activeRow } = await (supabase as any)
+        .from("planning")
+        .select("plan_key")
+        .eq("user_id", uid)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      const planKey: string | null = input.newPlan ? crypto.randomUUID() : (activeRow?.plan_key ?? null);
       // only the athlete's own planning rows can be deactivated; shared ones are read-only
       await supabase.from("planning").update({ is_active: false }).eq("user_id", uid).eq("is_active", true);
       const { data: latest } = await supabase
@@ -575,17 +670,22 @@ export function useSavePlanning() {
         .limit(1)
         .maybeSingle();
       const nextVersion = ((latest?.version as number | undefined) ?? 0) + 1;
-      const { data: inserted, error } = await supabase
+      const row = {
+        user_id: uid,
+        version: nextVersion,
+        source_filename: input.filename ?? null,
+        data: input.planning as unknown as never,
+        is_active: true,
+      };
+      let { data: inserted, error } = await (supabase as any)
         .from("planning")
-        .insert({
-          user_id: uid,
-          version: nextVersion,
-          source_filename: input.filename ?? null,
-          data: input.planning as unknown as never,
-          is_active: true,
-        })
+        .insert(planKey ? { ...row, plan_key: planKey } : row)
         .select("*")
         .single();
+      // Base de datos sin la columna plan_key todavía: se guarda igual
+      if (error && planKey && /plan_key/i.test(`${error.message} ${error.details ?? ""}`)) {
+        ({ data: inserted, error } = await supabase.from("planning").insert(row).select("*").single());
+      }
       if (error) throw error;
       if (inserted) {
         await cacheSet(cacheKeys.planning(uid), inserted as unknown as PlanningRow);

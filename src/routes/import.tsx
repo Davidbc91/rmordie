@@ -6,7 +6,7 @@ import { parsePlanningFromArrayBuffer, type Planning } from "@/lib/excel-parser"
 import { importPlanningFile, type ImportEngineResult } from "@/lib/import-engine";
 import { ImportReview } from "@/components/import/ImportReview";
 import { AiReview } from "@/components/import/AiReview";
-import { ShareMyPlan, SharedPlanNotice } from "@/components/import/PlanSharing";
+import { MyPlans, SharedPlanNotice } from "@/components/import/PlanSharing";
 import { mergeMessage, mergePlanningKeepingHistory, resultKeySet } from "@/lib/plan-merge";
 import { AiReaderUnavailable, defaultStart, extractChunks, readPlanWithAi, type AiReadResult } from "@/lib/ai-plan-reader";
 import { useAllResults, useOwnPlanning, usePlanningVersions, useSavePlanning, useDeletePlanningMonth, useDeletePlanningVersion, useReorderPlanningMonths, useClearAllPlanning } from "@/lib/store";
@@ -42,16 +42,21 @@ function ImportPage() {
   const [rereading, setRereading] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasted, setPasted] = useState("");
+  // Subir como planificación aparte (no se junta con la que estás usando)
+  const [asNewPlan, setAsNewPlan] = useState(false);
   const [sorting, setSorting] = useState(false);
   const [allMonths, setAllMonths] = useState(false);
 
   /** Excel con el formato anual propio: se guarda directamente (solo cambia la programación). */
   async function saveNativePlanning(incoming: Planning, filename: string) {
     // No se borra nada de lo anterior: se juntan por fechas
-    const { planning, summary } = mergePlanningKeepingHistory(current?.data, incoming, resultKeySet(allResults));
+    const { planning, summary } = asNewPlan
+      ? { planning: incoming, summary: null }
+      : mergePlanningKeepingHistory(current?.data, incoming, resultKeySet(allResults));
     try {
-      await save.mutateAsync({ planning, filename });
-      if (current?.data.months.length) toast.success(`Programación añadida: ${mergeMessage(summary)}`);
+      await save.mutateAsync({ planning, filename, newPlan: asNewPlan });
+      if (asNewPlan) toast.success("Planificación nueva creada. La anterior sigue en «Mis planificaciones».");
+      else if (current?.data.months.length && summary) toast.success(`Programación añadida: ${mergeMessage(summary)}`);
     } catch (e) {
       const err = e as { message?: string; code?: string; details?: string; hint?: string };
       console.error("[import] error guardando la planificación:", err);
@@ -177,6 +182,7 @@ function ImportPage() {
         </p>
         <AiReview
           key={JSON.stringify(aiReview.result).length}
+          asNewPlan={asNewPlan}
           result={aiReview.result}
           filename={aiReview.filename}
           defaultStart={defaultStart()}
@@ -206,7 +212,7 @@ function ImportPage() {
         <p className="mt-2 text-[15px] text-muted-foreground">
           Comprueba cada fila. <span className="gold-text">Nada se guarda hasta que confirmes y lo anterior se conserva.</span>
         </p>
-        <ImportReview
+        <ImportReview asNewPlan={asNewPlan}
           result={review.result}
           filename={review.filename}
           onCancel={() => setReview(null)}
@@ -297,7 +303,23 @@ function ImportPage() {
         </section>
       )}
 
-      <ShareMyPlan />
+      <MyPlans />
+
+      {current && months.length > 0 && (
+        <div role="group" aria-label="Dónde va lo que subas" className="mt-4 grid grid-cols-2 gap-1 rounded-[14px] bg-white/[0.06] p-1">
+          {[false, true].map((v) => (
+            <button
+              key={String(v)}
+              type="button"
+              aria-pressed={asNewPlan === v}
+              onClick={() => setAsNewPlan(v)}
+              className={`min-h-11 rounded-[10px] px-2 text-[13px] font-bold ${asNewPlan === v ? "bg-[color:var(--gold)] text-[color:var(--gold-foreground)]" : "text-muted-foreground"}`}
+            >
+              {v ? "Planificación nueva" : "Añadir a la actual"}
+            </button>
+          ))}
+        </div>
+      )}
 
       <label className={`mt-3.5 flex cursor-pointer flex-col items-center gap-2.5 rounded-[22px] border-2 border-dashed border-[color:var(--gold)]/45 px-4 py-7 text-center transition hover:border-[color:var(--gold)]/70 ${busy ? "opacity-80" : ""}`}>
         <span className="gold-gradient grid h-14 w-14 place-items-center rounded-[18px]">

@@ -14,8 +14,9 @@ function fmtDay(iso: string) {
 }
 
 export function AiReview({
-  result, filename, defaultStart, onCancel, onSaved, onReread, rereading,
+  result, filename, defaultStart, onCancel, onSaved, onReread, rereading, asNewPlan = false,
 }: {
+  asNewPlan?: boolean;
   result: AiReadResult;
   filename: string;
   defaultStart: string;
@@ -48,10 +49,10 @@ export function AiReview({
       return;
     }
     const incoming = toPlanning(plan);
-    const merged = hasCurrent && keepOthers ? mergePlanningKeepingHistory(current!.data, incoming, resultKeySet(allResults)) : null;
+    const merged = hasCurrent && keepOthers && !asNewPlan ? mergePlanningKeepingHistory(current!.data, incoming, resultKeySet(allResults)) : null;
     const planning = merged?.planning ?? incoming;
     try {
-      await save.mutateAsync({ planning, filename: name.trim() || filename });
+      await save.mutateAsync({ planning, filename: name.trim() || filename, newPlan: asNewPlan });
     } catch (e) {
       toast.error(`No se pudo guardar: ${(e as { message?: string })?.message ?? "error desconocido"}`);
       return;
@@ -168,7 +169,7 @@ export function AiReview({
         </button>
       </details>
 
-      {hasCurrent && (
+      {hasCurrent && !asNewPlan && (
         <label className="flex min-h-12 items-start gap-3 text-sm">
           <input type="checkbox" checked={keepOthers} onChange={(e) => setKeepOthers(e.target.checked)} className="mt-1 h-5 w-5 accent-[color:var(--gold)]" />
           <span>

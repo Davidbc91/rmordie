@@ -17,7 +17,9 @@ export function ImportReview({
   filename,
   onCancel,
   onSaved,
+  asNewPlan = false,
 }: {
+  asNewPlan?: boolean;
   result: ImportEngineResult;
   filename: string;
   onCancel: () => void;
@@ -49,10 +51,12 @@ export function ImportReview({
       return;
     }
     const planning = buildPlanningFromRows(rows, { monthKey, monthLabel });
-    const { planning: mergedPlanning, summary } = mergePlanningKeepingHistory(current?.data, planning, resultKeySet(allResults));
+    const { planning: mergedPlanning, summary } = asNewPlan
+      ? { planning, summary: null }
+      : mergePlanningKeepingHistory(current?.data, planning, resultKeySet(allResults));
     try {
-      await save.mutateAsync({ planning: mergedPlanning, filename: filename || "Importación genérica" });
-      toast.success(current?.data.months.length ? `Programación añadida: ${mergeMessage(summary)}` : `Planificación importada: ${validCount} filas.`);
+      await save.mutateAsync({ planning: mergedPlanning, filename: filename || "Importación genérica", newPlan: asNewPlan });
+      toast.success(current?.data.months.length && summary ? `Programación añadida: ${mergeMessage(summary)}` : `Planificación importada: ${validCount} filas.`);
       onSaved();
     } catch (e) {
       const err = e as { message?: string };

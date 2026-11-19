@@ -143,7 +143,24 @@ function CalendarPage() {
   const { data: results = [] } = useAllResults();
   const [idx, setIdx] = useState(0);
   const [view, setView] = useState<CalendarView>("semana");
-  const [weekStart, setWeekStart] = useState<Date>(() => mondayOf(new Date()));
+  // La semana que estabas mirando se recuerda durante la sesión
+  const [weekStart, setWeekStartRaw] = useState<Date>(() => mondayOf(new Date()));
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("rmordie_calendar_week");
+      if (saved) {
+        const d = new Date(`${saved}T12:00:00`);
+        if (!Number.isNaN(d.getTime())) setWeekStartRaw(mondayOf(d));
+      }
+    } catch { /* sin almacenamiento */ }
+  }, []);
+  const setWeekStart = useCallback((next: Date | ((w: Date) => Date)) => {
+    setWeekStartRaw((w) => {
+      const d = typeof next === "function" ? next(w) : next;
+      try { sessionStorage.setItem("rmordie_calendar_week", isoKey(d)); } catch { /* sin almacenamiento */ }
+      return d;
+    });
+  }, []);
   useEffect(() => { setView(readView()); }, []);
   const changeView = useCallback((v: CalendarView) => {
     setView(v);

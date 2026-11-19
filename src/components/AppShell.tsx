@@ -1,4 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouter, useRouterState } from "@tanstack/react-router";
+import { consumePlanRestore, isPlanPath, lastPlanPlace, rememberPlanPlace, requestPlanRestore } from "@/lib/plan-return";
 import {
   Home, Calendar, Trophy, Timer, MessageCircle, Upload, Settings, User, Play, X, Users, ChevronRight, BookOpen, Film, FileText, HeartPulse, LogOut,
 } from "lucide-react";
@@ -55,12 +56,22 @@ const ResumeWorkout = memo(function ResumeWorkout({ active, onDismiss }: { activ
 });
 
 const BottomNavigation = memo(function BottomNavigation({ pathname, keyboardOpen }: { pathname: string; keyboardOpen: boolean }) {
+  const router = useRouter();
+  // «Plan» te devuelve a donde lo dejaste (si vienes de otra pestaña)
+  const openPlan = (e: React.MouseEvent) => {
+    if (isPlanPath(pathname)) return;
+    const last = lastPlanPlace();
+    if (!last || last.href === "/calendar") return;
+    e.preventDefault();
+    requestPlanRestore(last.scroll);
+    router.history.push(last.href);
+  };
   return (
     <nav aria-hidden={keyboardOpen} aria-label="Navegación principal" data-main-navigation className={"pointer-events-none fixed inset-x-0 bottom-0 px-0 transition-opacity duration-150 " + (keyboardOpen ? "pointer-events-none opacity-0" : "opacity-100")} style={{ zIndex: 50, bottom: "max(env(safe-area-inset-bottom), 12px)", transform: "translateZ(0)" }}>
       <div className="pointer-events-auto mx-auto w-[calc(100vw-32px)] max-w-[380px] rounded-[26px] border" style={{ background: "rgba(14,14,13,.92)", borderColor: "rgba(255,255,255,0.14)", backdropFilter: "blur(24px) saturate(160%)", WebkitBackdropFilter: "blur(24px) saturate(160%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 18px 55px -22px rgba(0,0,0,.98)" }}>
         <div className="relative flex items-stretch gap-0.5 px-1.5 pt-1.5">
           {tabs.map((t) => {
-            const isActive = pathname === t.to || (t.to !== "/" && pathname.startsWith(t.to));
+            const isActive = pathname === t.to || (t.to !== "/" && pathname.startsWith(t.to)) || (t.to === "/calendar" && isPlanPath(pathname));
             const Icon = t.icon;
             if (t.center) {
               return <Link key={t.to} to={t.to} aria-label="Temporizador" className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-end gap-[3px] pb-2">
@@ -70,7 +81,7 @@ const BottomNavigation = memo(function BottomNavigation({ pathname, keyboardOpen
                 <span className="text-xs font-bold" style={{ color: "var(--gold-soft)" }}>{t.label}</span>
               </Link>;
             }
-            return <Link key={t.to} to={t.to} className="pressable relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2" style={{ color: isActive ? "var(--gold)" : "var(--muted-foreground)" }}>
+            return <Link key={t.to} to={t.to} onClick={t.to === "/calendar" ? openPlan : undefined} className="pressable relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2" style={{ color: isActive ? "var(--gold)" : "var(--muted-foreground)" }}>
               <span aria-hidden className="absolute inset-0 rounded-[18px] transition-opacity duration-300" style={{ background: "rgba(200,179,138,.10)", opacity: isActive ? 1 : 0 }} />
               <Icon className="relative h-[20px] w-[20px]" strokeWidth={isActive ? 2.1 : 1.7} />
               <span className="relative text-xs font-semibold">{t.label}</span>
@@ -135,6 +146,20 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
   }, []);
 
   useEffect(() => { setProfileOpen(false); }, [pathname]);
+
+  // Recordar la última pantalla del plan y su posición
+  const href = useRouterState({ select: (s) => s.location.href });
+  useEffect(() => {
+    if (!isPlanPath(pathname)) return;
+    consumePlanRestore();
+    let y = window.scrollY;
+    let t = 0;
+    const save = () => rememberPlanPlace(href, y);
+    save();
+    const onScroll = () => { y = window.scrollY; window.clearTimeout(t); t = window.setTimeout(save, 150); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.clearTimeout(t); save(); window.removeEventListener("scroll", onScroll); };
+  }, [pathname, href]);
 
   const dismissActiveWorkout = useCallback(() => { clearActiveWorkout(); setActive(null); }, []);
   const closeProfile = useCallback(() => setProfileOpen(false), []);

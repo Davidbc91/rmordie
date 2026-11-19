@@ -294,7 +294,7 @@ export function WodTimer({
               RONDA {roundNow}<span className="text-white/40">/{roundTotal}</span>
             </p>
             <p className="mt-1 text-sm font-bold text-white/70">
-              {phase === "done" ? "¡Terminado!" : roundTotal === roundNow ? "Última ronda" : `Quedan ${roundTotal - roundNow} ${roundTotal - roundNow === 1 ? "ronda" : "rondas"}`}
+              {roundTotal === roundNow ? "Última ronda" : `Quedan ${roundTotal - roundNow} ${roundTotal - roundNow === 1 ? "ronda" : "rondas"}`}
             </p>
           </div>
         )}

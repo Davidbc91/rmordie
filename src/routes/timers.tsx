@@ -233,6 +233,21 @@ function TimerRunner({ mode }: { mode: Mode }) {
     }
   }
 
+  // Rondas: en qué ronda vas y cuántas quedan (Tabata, intervalos y EMOM);
+  // en AMRAP, For Time y cronómetro las cuentas tú tocando la pantalla.
+  let roundNow: number | null = null;
+  let roundTotal: number | null = null;
+  if (mode === "tabata" || mode === "intervals") {
+    const cycle = work + rest;
+    roundTotal = rounds;
+    roundNow = Math.min(rounds, Math.floor(elapsed / Math.max(1, cycle)) + 1);
+  } else if (mode === "emom") {
+    const iv = Math.max(5, emomInterval);
+    roundTotal = minutes;
+    roundNow = Math.min(minutes, Math.floor(elapsed / iv) + 1);
+  }
+  const countsRounds = mode === "amrap" || mode === "fortime" || mode === "stopwatch";
+
   const isPrep = prep != null;
   if (isPrep) {
     display = String(prep);
@@ -424,17 +439,64 @@ function TimerRunner({ mode }: { mode: Mode }) {
               }}
             />
           </div>
+          {!isPrep && (roundTotal != null || countsRounds) && (
+            <div className="mb-4 text-center" aria-live="polite">
+              {(phase === "work" || phase === "rest") && (
+                <div
+                  className="mx-auto mb-3 w-fit rounded-full px-4 py-1.5 text-sm font-extrabold tracking-[0.18em]"
+                  style={{ background: phase === "work" ? "var(--gold)" : "rgba(255,255,255,0.12)", color: phase === "work" ? "#0a0a0a" : "#fff" }}
+                >
+                  {phase === "work" ? "TRABAJO" : "DESCANSO"}
+                </div>
+              )}
+              {roundTotal != null && roundNow != null ? (
+                <>
+                  <div className="font-black leading-none tabular-nums" style={{ fontFamily: "var(--font-editorial)", fontSize: "min(16vw, 12vh)", color: "var(--gold)" }}>
+                    RONDA {roundNow}<span style={{ color: "rgba(255,255,255,0.45)" }}>/{roundTotal}</span>
+                  </div>
+                  <div className="mt-1 text-base font-bold" style={{ color: "rgba(255,255,255,0.7)" }}>
+                    {phase === "done" ? "¡Terminado!" : roundTotal - roundNow === 0 ? "Última ronda" : `Quedan ${roundTotal - roundNow} ${roundTotal - roundNow === 1 ? "ronda" : "rondas"}`}
+                  </div>
+                </>
+              ) : (
+                <div className="font-black leading-none tabular-nums" style={{ fontFamily: "var(--font-editorial)", fontSize: "min(14vw, 10vh)", color: "var(--gold)" }}>
+                  {rounds_done} {rounds_done === 1 ? "RONDA" : "RONDAS"}
+                </div>
+              )}
+            </div>
+          )}
           <div
             className="font-black tabular-nums leading-none text-center px-4 max-w-full"
             style={{
               fontFamily: "var(--font-editorial)",
-              fontSize: "min(38vw, 55vh)",
+              fontSize: roundTotal != null || countsRounds ? "min(32vw, 42vh)" : "min(38vw, 55vh)",
               color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#B8B8B8" : "#fff",
               letterSpacing: "0.01em",
             }}
           >
             {display}
           </div>
+          {countsRounds && !isPrep && phase !== "done" && (
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setRoundsDone((n) => Math.max(0, n - 1))}
+                aria-label="Quitar una ronda"
+                className="grid h-16 w-16 place-items-center rounded-2xl text-2xl font-black"
+                style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}
+              >
+                −
+              </button>
+              <button
+                type="button"
+                onClick={() => setRoundsDone((n) => n + 1)}
+                className="h-16 rounded-2xl px-8 text-2xl font-black"
+                style={{ background: "var(--gold)", color: "#0a0a0a", fontFamily: "var(--font-editorial)" }}
+              >
+                + RONDA
+              </button>
+            </div>
+          )}
           <div className="mt-8 flex items-center gap-3">
             <button
               onClick={toggle}

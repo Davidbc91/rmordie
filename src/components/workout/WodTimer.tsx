@@ -239,6 +239,8 @@ export function WodTimer({
   let caption = "";
   let progress = 0;
   let resting = false;
+  let roundNow: number | null = null;
+  let roundTotal: number | null = null;
   if (cfg.kind === "amrap") {
     big = clock(cfg.totalSec - elapsed);
     caption = "QUEDAN";
@@ -250,7 +252,9 @@ export function WodTimer({
   } else if (cfg.kind === "emom") {
     const idx = Math.floor(elapsed / cfg.intervalSec);
     big = clock(cfg.intervalSec - (elapsed - idx * cfg.intervalSec));
-    caption = `RONDA ${Math.min(idx + 1, cfg.rounds)} DE ${cfg.rounds}`;
+    caption = "QUEDAN EN ESTE MINUTO";
+    roundNow = Math.min(idx + 1, cfg.rounds);
+    roundTotal = cfg.rounds;
     progress = (elapsed - idx * cfg.intervalSec) / cfg.intervalSec;
   } else {
     const cycle = cfg.work + cfg.rest;
@@ -258,7 +262,9 @@ export function WodTimer({
     const inCycle = elapsed - idx * cycle;
     resting = inCycle >= cfg.work;
     big = clock(resting ? cycle - inCycle : cfg.work - inCycle);
-    caption = `${resting ? "DESCANSO" : "TRABAJO"} · ${Math.min(idx + 1, cfg.rounds)} DE ${cfg.rounds}`;
+    caption = resting ? "DESCANSO" : "TRABAJO";
+    roundNow = Math.min(idx + 1, cfg.rounds);
+    roundTotal = cfg.rounds;
     progress = resting ? (inCycle - cfg.work) / cfg.rest : inCycle / cfg.work;
   }
   if (phase === "prep") {
@@ -282,8 +288,23 @@ export function WodTimer({
       </div>
 
       <div className={`mt-5 text-center ${phase === "setup" ? "hidden" : ""}`}>
-        <p className="text-[13px] tracking-[0.16em] text-muted-foreground">{caption}</p>
-        <p className={`font-black leading-[0.9] tabular ${resting ? "text-muted-foreground" : ""}`} style={{ ...font, fontSize: "min(38vw, 30vh)" }} role="timer">{big}</p>
+        {phase !== "prep" && roundNow != null && roundTotal != null && (
+          <div className="mb-2" aria-live="polite">
+            <p className="font-black leading-none tabular text-gold" style={{ ...font, fontSize: "min(14vw, 9vh)" }}>
+              RONDA {roundNow}<span className="text-white/40">/{roundTotal}</span>
+            </p>
+            <p className="mt-1 text-sm font-bold text-white/70">
+              {phase === "done" ? "¡Terminado!" : roundTotal === roundNow ? "Última ronda" : `Quedan ${roundTotal - roundNow} ${roundTotal - roundNow === 1 ? "ronda" : "rondas"}`}
+            </p>
+          </div>
+        )}
+        {phase !== "prep" && cfg.kind === "amrap" && rounds > 0 && (
+          <p className="mb-2 font-black leading-none tabular text-gold" style={{ ...font, fontSize: "min(12vw, 8vh)" }}>
+            {rounds} {rounds === 1 ? "RONDA" : "RONDAS"}
+          </p>
+        )}
+        <p className={`text-[13px] tracking-[0.16em] ${resting ? "text-muted-foreground" : caption === "TRABAJO" ? "font-bold text-gold" : "text-muted-foreground"}`}>{caption}</p>
+        <p className={`font-black leading-[0.9] tabular ${resting ? "text-muted-foreground" : ""}`} style={{ ...font, fontSize: roundTotal != null ? "min(34vw, 26vh)" : "min(38vw, 30vh)" }} role="timer">{big}</p>
         <div className="mx-auto mt-3 h-1.5 w-[80%] overflow-hidden rounded-full bg-white/10">
           <div className="h-full rounded-full transition-[width] duration-200" style={{ width: `${Math.min(100, progress * 100)}%`, background: resting ? "#6B6860" : "var(--gold)" }} />
         </div>

@@ -1,26 +1,35 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import logoAsset from "@/assets/rmordie-logo.jpg.asset.json";
 
 /*
- * Entrada de la app: la barra cruza la pantalla, entran los discos, el logo cae
- * sobre la barra con un golpe (destello, anillo y chispas), la barra sube como
- * en un clean y una cortina dorada abre la app. ~2,8 s. Tocar la salta.
- * Solo una vez por sesión.
+ * Entrada de la app (~3,7 s, una vez por sesión, tocar la salta):
+ *  1. El reloj del box cuenta 03 · 02 · 01 · GO (en el oro de la app).
+ *  2. El logo se forma con 36 piezas que vuelan y encajan de golpe:
+ *     sacudida, anillos, chispas, rayos y nube de magnesio.
+ *  3. Cae una barra cargada (disco grande dentro, pequeño fuera, cierre
+ *     dorado) que rebota bajo el logo y levanta magnesio en los extremos.
+ *  4. Un brillo recorre el logo, entra «RM OR DIE» letra a letra y el lema.
+ *  5. El logo se acerca hasta llenar la pantalla y aparece la app.
  */
 
-const TOTAL_MS = 2800; // la app aparece cuando la cortina cubre la pantalla
-const REVEAL_MS = 2370;
-const SPARKS = Array.from({ length: 14 }, (_, i) => {
-  const a = (Math.PI * 2 * i) / 14 + ((i * 37) % 10) / 30;
-  const r = 70 + ((i * 53) % 70);
-  return { x: Math.cos(a) * r, y: Math.sin(a) * r, s: 4 + ((i * 29) % 6) };
-});
+const REVEAL_MS = 3300;
+const TOTAL_MS = 3750;
+const N = 6; // piezas por lado
+
+/** Aleatorio fijo (mismo resultado en servidor y navegador). */
+function seeded(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+type Vars = CSSProperties & Record<`--${string}`, string>;
 
 export function SplashScreen({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(true);
   const [revealed, setRevealed] = useState(false);
-  const [kg, setKg] = useState(0);
-  const rootRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
 
   const finish = useCallback(() => {
@@ -41,33 +50,71 @@ export function SplashScreen({ children }: { children: ReactNode }) {
 
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
-      timers.current.push(window.setTimeout(() => setRevealed(true), 500));
-      timers.current.push(window.setTimeout(() => setVisible(false), 800));
+      timers.current.push(window.setTimeout(() => setRevealed(true), 600));
+      timers.current.push(window.setTimeout(() => setVisible(false), 900));
       return;
     }
-
     // Vibración en los golpes (Android; en iPhone no hace nada)
     const buzz = (p: number | number[]) => { try { navigator.vibrate?.(p); } catch { /* sin vibración */ } };
-    timers.current.push(window.setTimeout(() => buzz(18), 560));
-    timers.current.push(window.setTimeout(() => buzz([40, 30, 20]), 1090));
+    timers.current.push(window.setTimeout(() => buzz([35, 25, 20]), 1500));
+    timers.current.push(window.setTimeout(() => buzz(30), 2040));
     timers.current.push(window.setTimeout(() => setRevealed(true), REVEAL_MS));
     timers.current.push(window.setTimeout(() => setVisible(false), TOTAL_MS));
-
-    // Contador 0 → 100 KG
-    let raf = 0;
-    const start = performance.now() + 1350;
-    const tick = (t: number) => {
-      const p = Math.min(1, Math.max(0, (t - start) / 650));
-      setKg(Math.round(100 * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
     const ts = timers.current;
-    return () => {
-      cancelAnimationFrame(raf);
-      ts.forEach((t) => window.clearTimeout(t));
-    };
+    return () => ts.forEach((t) => window.clearTimeout(t));
   }, []);
+
+  const parts = useMemo(() => {
+    const rnd = seeded(91);
+    const tiles: Vars[] = [];
+    for (let r = 0; r < N; r++)
+      for (let c = 0; c < N; c++) {
+        const dx = c - (N - 1) / 2, dy = r - (N - 1) / 2;
+        const ang = Math.atan2(dy, dx) + (rnd() - 0.5) * 0.9;
+        const far = 60 + rnd() * 90;
+        tiles.push({
+          left: `${(c / N) * 100}%`,
+          top: `${(r / N) * 100}%`,
+          width: `${100 / N + 0.4}%`,
+          height: `${100 / N + 0.4}%`,
+          backgroundImage: `url(${logoAsset.url})`,
+          backgroundPosition: `${(c / (N - 1)) * 100}% ${(r / (N - 1)) * 100}%`,
+          animationDelay: `${Math.round(640 + Math.hypot(dx, dy) * 70 + rnd() * 90)}ms`,
+          "--x": `${Math.cos(ang) * far}cqw`,
+          "--y": `${Math.sin(ang) * far}cqw`,
+          "--z": `${Math.round(rnd() * 300)}px`,
+          "--r": `${Math.round((rnd() - 0.5) * 220)}deg`,
+          "--ry": `${Math.round((rnd() - 0.5) * 160)}deg`,
+        });
+      }
+    const sparks: Vars[] = Array.from({ length: 26 }, (_, i) => {
+      const a = (i / 26) * Math.PI * 2 + rnd() * 0.2, d = 30 + rnd() * 30, z = 3 + rnd() * 6;
+      return { width: z, height: z, animationDelay: `${Math.round(1500 + rnd() * 80)}ms`, "--sx": `${Math.cos(a) * d}cqw`, "--sy": `${Math.sin(a) * d}cqw` };
+    });
+    const puff = (left: string, top: string, n: number, t: number, spread: number): Vars[] =>
+      Array.from({ length: n }, () => {
+        const a = rnd() * Math.PI * 2, d = spread * (0.4 + rnd() * 0.6), sz = 14 + rnd() * 18;
+        return {
+          left, top, width: `${sz}cqw`, height: `${sz}cqw`,
+          animationDelay: `${Math.round(t + rnd() * 90)}ms`,
+          "--cx": `${Math.cos(a) * d}cqw`, "--cy": `${Math.sin(a) * d * 0.6 - 4}cqw`, "--cs": String(1.4 + rnd()),
+        };
+      });
+    const barY = "calc(44% + var(--L) / 2 + 12cqw)";
+    const chalk = [...puff("50%", "44%", 10, 1500, 34), ...puff("14%", barY, 6, 2040, 18), ...puff("86%", barY, 6, 2040, 18)];
+    return { tiles, sparks, chalk };
+  }, []);
+
+  // Barra: tope interior, disco grande, mediano, pequeño dorado y cierre por fuera
+  const side = (dir: "left" | "right") => (
+    <>
+      <div className="rmd-stop" style={{ [dir]: "18cqw" }} />
+      {([["#141311", 16, 13.8], ["#1E1C19", 14.5, 10], ["#C8B38A", 12.5, 6.2]] as const).map(([c, h, o]) => (
+        <div key={`${c}${o}`} className="rmd-plate" style={{ [dir]: `${o}cqw`, height: `${h}cqw`, background: c }} />
+      ))}
+      <div className="rmd-collar" style={{ [dir]: "3.6cqw" }} />
+    </>
+  );
 
   return (
     <>
@@ -76,83 +123,109 @@ export function SplashScreen({ children }: { children: ReactNode }) {
       </div>
 
       {visible && (
-        <div
-          ref={rootRef}
-          aria-hidden
-          onPointerDown={finish}
-          className="rmd-intro fixed inset-0 z-[9999] overflow-hidden"
-        >
-          <div className="rmd-shake">
-            <div className="rmd-bar" />
-            <div className="rmd-plate rmd-l1" />
-            <div className="rmd-plate rmd-l2" />
-            <div className="rmd-plate rmd-r1" />
-            <div className="rmd-plate rmd-r2" />
-            <div className="rmd-logo-wrap">
-              <img src={logoAsset.url} alt="" className="rmd-logo" draggable={false} />
+        <div aria-hidden onPointerDown={finish} className="rmd-intro fixed inset-0 z-[9999] overflow-hidden">
+          <div className="rmd-box">
+            <div className="rmd-clock">
+              <span className="rmd-ghost">88</span>
+              <span className="rmd-c3">03</span>
+              <span className="rmd-c2">02</span>
+              <span className="rmd-c1">01</span>
+              <span className="rmd-go">GO</span>
             </div>
-            <div className="rmd-ring" />
-            <div className="rmd-flash" />
-            <div className="rmd-sparks">
-              {SPARKS.map((s, i) => (
-                <span
-                  key={i}
-                  className="rmd-spark"
-                  style={{ width: s.s, height: s.s, ["--x" as string]: `${s.x}px`, ["--y" as string]: `${s.y}px` }}
-                />
-              ))}
+            <div className="rmd-shake">
+              <div className="rmd-glow" />
+              <div className="rmd-rays" />
+              <div className="rmd-ring rmd-r1" />
+              <div className="rmd-ring rmd-r2" />
+              <div className="rmd-ring rmd-r3" />
+              <div className="rmd-stage">
+                <div className="rmd-logo" style={{ backgroundImage: `url(${logoAsset.url})` }} />
+                {parts.tiles.map((st, i) => <div key={i} className="rmd-tile" style={st} />)}
+                <div className="rmd-shine" />
+              </div>
+              <div className="rmd-barbell">
+                <div className="rmd-bar" />
+                {side("left")}
+                {side("right")}
+              </div>
+              {parts.sparks.map((st, i) => <div key={i} className="rmd-spark" style={st} />)}
+              {parts.chalk.map((st, i) => <div key={i} className="rmd-chalk" style={st} />)}
+              <div className="rmd-flash" />
             </div>
+            <div className="rmd-tag">
+              {"RM OR DIE".split("").map((ch, i) =>
+                ch === " " ? " " : (
+                  <span key={i} className={i >= 3 && i <= 4 ? "rmd-g" : ""} style={{ animationDelay: `${2200 + i * 45}ms` }}>{ch}</span>
+                ),
+              )}
+            </div>
+            <div className="rmd-sub">ENTRENA · REGISTRA · SUPÉRATE</div>
           </div>
-          <div className="rmd-count">{kg} KG</div>
-          <div className="rmd-tag">ENTRENA · REGISTRA · SUPÉRATE</div>
-          <div className="rmd-wipe" />
 
-          <style>{`
-            .rmd-intro { background: #000; --gold: #C8B38A; --gold-soft: #E8DDC8; animation: rmd-out 380ms ease-in 2420ms both; }
-            .rmd-shake { position: absolute; inset: 0; animation: rmd-shake 260ms 560ms both, rmd-shake 380ms 1090ms both; }
-            .rmd-bar { position: absolute; left: 50%; top: 50%; height: 4px; width: 84%; max-width: 520px; translate: -50% -50%;
-              background: linear-gradient(90deg, transparent, var(--gold) 12%, var(--gold-soft) 50%, var(--gold) 88%, transparent);
-              box-shadow: 0 0 24px rgba(200,179,138,.6);
-              animation: rmd-bar 420ms cubic-bezier(.7,0,.2,1) 80ms both, rmd-lift 520ms cubic-bezier(.3,0,.2,1) 1500ms both; }
-            .rmd-plate { position: absolute; top: 50%; width: 14px; border-radius: 3px; background: #F2F0EA; translate: 0 -50%; }
-            .rmd-l1, .rmd-r1 { height: min(120px, 30vw); }
-            .rmd-l2, .rmd-r2 { height: min(92px, 23vw); background: var(--gold); }
-            .rmd-l1 { left: max(8%, calc(50% - 260px)); animation: rmd-plateL 260ms cubic-bezier(.5,0,.2,1.2) 420ms both, rmd-lift 520ms cubic-bezier(.3,0,.2,1) 1500ms both; }
-            .rmd-l2 { left: calc(max(8%, calc(50% - 260px)) + 18px); animation: rmd-plateL 260ms cubic-bezier(.5,0,.2,1.2) 520ms both, rmd-lift 520ms cubic-bezier(.3,0,.2,1) 1500ms both; }
-            .rmd-r1 { right: max(8%, calc(50% - 260px)); animation: rmd-plateR 260ms cubic-bezier(.5,0,.2,1.2) 420ms both, rmd-lift 520ms cubic-bezier(.3,0,.2,1) 1500ms both; }
-            .rmd-r2 { right: calc(max(8%, calc(50% - 260px)) + 18px); animation: rmd-plateR 260ms cubic-bezier(.5,0,.2,1.2) 520ms both, rmd-lift 520ms cubic-bezier(.3,0,.2,1) 1500ms both; }
-            .rmd-logo-wrap { position: absolute; left: 50%; top: 50%; translate: -50% calc(-50% - min(32vw, 150px)); animation: rmd-lift 520ms cubic-bezier(.3,0,.2,1) 1500ms both; }
-            .rmd-logo { display: block; width: min(46vw, 210px); height: min(46vw, 210px); object-fit: cover; border-radius: 22%;
-              box-shadow: 0 0 0 1px rgba(200,179,138,.35), 0 20px 60px rgba(200,179,138,.25);
-              animation: rmd-drop 380ms cubic-bezier(.7,0,.25,1.35) 720ms both; }
-            .rmd-ring { position: absolute; left: 50%; top: 50%; width: min(46vw, 210px); height: min(46vw, 210px); border-radius: 22%;
-              border: 2px solid var(--gold); translate: -50% calc(-50% - min(32vw, 150px)); opacity: 0; animation: rmd-ring 700ms ease-out 1090ms both; }
-            .rmd-flash { position: absolute; inset: 0; background: var(--gold-soft); mix-blend-mode: screen; opacity: 0; animation: rmd-flash 380ms ease-out 1090ms both; }
-            .rmd-sparks { position: absolute; inset: 0; }
-            .rmd-spark { position: absolute; left: 50%; top: calc(50% - min(32vw, 150px)); border-radius: 50%; background: var(--gold); opacity: 0; animation: rmd-spark 560ms ease-out 1090ms both; }
-            .rmd-count { position: absolute; top: 60%; left: 0; right: 0; text-align: center; font-family: var(--font-editorial); font-weight: 800; font-size: 18px; letter-spacing: .2em; color: var(--gold); font-variant-numeric: tabular-nums; animation: rmd-tag 300ms ease-out 1350ms both; }
-            .rmd-tag { position: absolute; bottom: 22%; left: 0; right: 0; text-align: center; font-family: var(--font-display); font-weight: 800; font-size: 12px; letter-spacing: .42em; color: #8E8B83; animation: rmd-tag 500ms ease-out 1350ms both, rmd-lift 520ms cubic-bezier(.3,0,.2,1) 1500ms both; }
-            .rmd-wipe { position: absolute; inset: 0; background: var(--gold); transform: translateY(100%); animation: rmd-wipe 640ms cubic-bezier(.8,0,.2,1) 2050ms both; }
-
-            @keyframes rmd-bar { from { scale: 0 1; opacity: 0; } to { scale: 1 1; opacity: 1; } }
-            @keyframes rmd-plateL { from { translate: -100vw -50%; } to { translate: 0 -50%; } }
-            @keyframes rmd-plateR { from { translate: 100vw -50%; } to { translate: 0 -50%; } }
-            @keyframes rmd-drop { 0% { transform: translateY(-160%) scale(2.2) rotate(-8deg); opacity: 0; filter: blur(8px); } 70% { opacity: 1; filter: blur(0); } 100% { transform: none; opacity: 1; } }
-            @keyframes rmd-ring { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.9); } }
-            @keyframes rmd-shake { 0%,100% { transform: none; } 20% { transform: translate(-6px, 3px); } 40% { transform: translate(5px, -4px); } 60% { transform: translate(-3px, 2px); } 80% { transform: translate(2px, -1px); } }
-            @keyframes rmd-flash { 0% { opacity: .55; } 100% { opacity: 0; } }
-            @keyframes rmd-spark { 0% { opacity: 1; transform: translate(-50%,-50%); } 100% { opacity: 0; transform: translate(-50%,-50%) translate(var(--x), var(--y)) scale(.2); } }
-            @keyframes rmd-tag { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-            @keyframes rmd-lift { from { transform: translateY(0); } 40% { transform: translateY(12px); } to { transform: translateY(-40px); } }
-            @keyframes rmd-wipe { 0% { transform: translateY(100%); } 50% { transform: translateY(0); } 100% { transform: translateY(-100%); } }
-            @keyframes rmd-out { to { opacity: 0; visibility: hidden; } }
-            @media (prefers-reduced-motion: reduce) {
-              .rmd-intro, .rmd-intro * { animation: none !important; }
-              .rmd-wipe, .rmd-ring, .rmd-flash, .rmd-sparks { display: none; }
-            }
-          `}</style>
+          <style>{SPLASH_CSS}</style>
         </div>
       )}
     </>
   );
 }
+
+const SPLASH_CSS = `
+.rmd-intro{--gold:#C8B38A;--gold-soft:#E8DDC8;--ink:#F2F0EA;--muted:#8E8B83;background:radial-gradient(120% 80% at 50% 45%,#1a1610 0%,#000 60%);animation:rmd-out 450ms ease-in 3300ms both}
+.rmd-box{position:absolute;top:0;bottom:0;left:50%;width:min(100vw,480px);translate:-50% 0;container-type:inline-size;perspective:900px;--L:60cqw}
+.rmd-glow{position:absolute;left:50%;top:44%;width:150cqw;height:150cqw;translate:-50% -50%;border-radius:50%;background:radial-gradient(circle,rgba(200,179,138,.35) 0%,rgba(200,179,138,.08) 35%,transparent 62%);opacity:0;animation:rmd-glow 1.6s ease-out 1420ms both}
+.rmd-rays{position:absolute;left:50%;top:44%;width:180cqw;height:180cqw;translate:-50% -50%;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(200,179,138,.12) 0 4deg,transparent 4deg 16deg);-webkit-mask:radial-gradient(circle,#000 0 30%,transparent 62%);mask:radial-gradient(circle,#000 0 30%,transparent 62%);opacity:0;animation:rmd-rays 2.6s linear 1460ms both}
+.rmd-ring{position:absolute;left:50%;top:44%;width:var(--L);height:var(--L);translate:-50% -50%;border-radius:24%;border:2px solid var(--gold);opacity:0}
+.rmd-r1{animation:rmd-ring 900ms cubic-bezier(.2,.7,.3,1) 1500ms both}
+.rmd-r2{animation:rmd-ring 1100ms cubic-bezier(.2,.7,.3,1) 1620ms both}
+.rmd-r3{border-width:1px;animation:rmd-ring 1300ms cubic-bezier(.2,.7,.3,1) 1750ms both}
+.rmd-stage{position:absolute;left:50%;top:44%;width:var(--L);height:var(--L);translate:-50% -50%;transform-style:preserve-3d;animation:rmd-tilt 1.4s cubic-bezier(.2,.8,.2,1) 1500ms both,rmd-zoom 700ms cubic-bezier(.7,0,.3,1) 3050ms both}
+.rmd-tile{position:absolute;background-size:var(--L) var(--L);will-change:transform,opacity;animation:rmd-fly 760ms cubic-bezier(.25,1.2,.35,1) both}
+.rmd-logo{position:absolute;inset:0;border-radius:22%;background-size:cover;opacity:0;box-shadow:0 0 0 1px rgba(200,179,138,.4),0 30px 80px rgba(200,179,138,.25);animation:rmd-show 1ms linear 1500ms both}
+.rmd-shine{position:absolute;inset:0;border-radius:22%;overflow:hidden;opacity:0;animation:rmd-show 1ms linear 1500ms both}
+.rmd-shine::after{content:"";position:absolute;top:-20%;bottom:-20%;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,250,235,.75),transparent);transform:skewX(-18deg);animation:rmd-shine 700ms ease-in-out 2250ms both}
+.rmd-flash{position:absolute;inset:0;background:var(--gold-soft);opacity:0;mix-blend-mode:screen;animation:rmd-flash 420ms ease-out 1500ms both}
+.rmd-spark{position:absolute;left:50%;top:44%;border-radius:50%;background:var(--gold-soft);opacity:0;box-shadow:0 0 8px var(--gold);animation:rmd-spark 800ms cubic-bezier(.1,.7,.3,1) both}
+.rmd-shake{position:absolute;inset:0;animation:rmd-shake 420ms 1500ms both,rmd-shake 300ms 2050ms both}
+.rmd-tag{position:absolute;left:0;right:0;top:calc(44% + var(--L) / 2 + 26cqw);text-align:center;font-family:var(--font-editorial);font-weight:900;font-size:8.5cqw;line-height:1;letter-spacing:.06em;color:var(--ink)}
+.rmd-tag span{display:inline-block;opacity:0;animation:rmd-letter 420ms cubic-bezier(.2,.9,.3,1.3) both}
+.rmd-tag .rmd-g{color:var(--gold)}
+.rmd-sub{position:absolute;left:0;right:0;top:calc(44% + var(--L) / 2 + 37cqw);text-align:center;font-family:var(--font-display);font-weight:800;font-size:3.4cqw;letter-spacing:.38em;color:var(--muted);opacity:0;animation:rmd-fade 500ms ease-out 2500ms both}
+.rmd-clock{position:absolute;left:50%;top:max(13%,calc(env(safe-area-inset-top) + 12px));translate:-50% 0;padding:2.4cqw 5cqw;border-radius:3cqw;background:#0d0c0a;border:1px solid rgba(200,179,138,.25);box-shadow:inset 0 0 0 1px #000,0 0 30px rgba(200,179,138,.12);font-family:var(--font-editorial);font-weight:900;font-size:13cqw;line-height:1;font-variant-numeric:tabular-nums;color:var(--gold-soft);text-shadow:0 0 10px rgba(200,179,138,.9),0 0 26px rgba(200,179,138,.45);letter-spacing:.1em;display:grid;animation:rmd-clockout 400ms ease-in 2900ms both}
+.rmd-clock span{grid-area:1/1;text-align:center;opacity:0}
+.rmd-clock .rmd-ghost{opacity:.08;text-shadow:none}
+.rmd-c3{animation:rmd-blink 350ms steps(1) 100ms both}.rmd-c2{animation:rmd-blink 350ms steps(1) 450ms both}.rmd-c1{animation:rmd-blink 350ms steps(1) 800ms both}
+.rmd-clock .rmd-go{animation:rmd-show 1ms linear 1150ms both,rmd-pulse 600ms ease-out 1150ms both}
+.rmd-barbell{position:absolute;left:50%;top:calc(44% + var(--L) / 2 + 12cqw);width:92cqw;height:20cqw;translate:-50% -50%;animation:rmd-drop 620ms cubic-bezier(.55,0,1,.45) 1420ms both,rmd-bounce 520ms cubic-bezier(.2,.8,.3,1) 2040ms both}
+.rmd-bar{position:absolute;left:0;right:0;top:50%;height:1.3cqw;translate:0 -50%;border-radius:1cqw;background:linear-gradient(#F2F0EA,#8E8B83 60%,#C9C6BE)}
+.rmd-plate{position:absolute;top:50%;translate:0 -50%;width:3.6cqw;border-radius:1cqw;box-shadow:inset -0.6cqw 0 0 rgba(0,0,0,.35),inset 0 0 0 .35cqw rgba(200,179,138,.55)}
+.rmd-stop{position:absolute;top:50%;translate:0 -50%;width:1.4cqw;height:4cqw;border-radius:.5cqw;background:#C9C6BE}
+.rmd-collar{position:absolute;top:50%;translate:0 -50%;width:2cqw;height:5cqw;border-radius:.6cqw;background:var(--gold)}
+.rmd-chalk{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(242,240,234,.8),rgba(232,221,200,.3) 45%,transparent 70%);opacity:0;filter:blur(1.5px);animation:rmd-chalk 1400ms cubic-bezier(.1,.6,.3,1) both}
+
+@keyframes rmd-fly{from{transform:translate3d(var(--x),var(--y),var(--z)) rotate(var(--r)) rotateY(var(--ry)) scale(.4);opacity:0;filter:blur(6px)}60%{opacity:1;filter:blur(0)}to{transform:none;opacity:1}}
+@keyframes rmd-show{to{opacity:1}}
+@keyframes rmd-tilt{0%{transform:scale(1.12) rotateX(14deg) rotateY(-16deg)}35%{transform:scale(.96) rotateX(-4deg) rotateY(6deg)}100%{transform:none}}
+@keyframes rmd-zoom{to{transform:scale(9);opacity:0}}
+@keyframes rmd-glow{0%{opacity:0;transform:scale(.4)}40%{opacity:1}100%{opacity:.7;transform:scale(1)}}
+@keyframes rmd-rays{0%{opacity:0;rotate:0deg}20%{opacity:1}100%{opacity:.6;rotate:40deg}}
+@keyframes rmd-ring{0%{opacity:.95;transform:scale(1)}100%{opacity:0;transform:scale(2.6)}}
+@keyframes rmd-shine{to{left:130%}}
+@keyframes rmd-flash{0%{opacity:.35}100%{opacity:0}}
+@keyframes rmd-spark{0%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:0;transform:translate(-50%,-50%) translate(var(--sx),var(--sy)) scale(.3)}}
+@keyframes rmd-shake{0%,100%{transform:none}15%{transform:translate(-7px,4px)}30%{transform:translate(6px,-5px)}45%{transform:translate(-4px,3px)}60%{transform:translate(3px,-2px)}80%{transform:translate(-1px,1px)}}
+@keyframes rmd-letter{from{opacity:0;transform:translateY(60%) scale(1.6)}to{opacity:1;transform:none}}
+@keyframes rmd-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes rmd-out{to{opacity:0;visibility:hidden}}
+@keyframes rmd-blink{0%{opacity:1}99%{opacity:1}100%{opacity:0}}
+@keyframes rmd-pulse{0%{transform:scale(1.35)}100%{transform:none}}
+@keyframes rmd-clockout{to{opacity:0;transform:translateY(-6cqw)}}
+@keyframes rmd-drop{from{transform:translateY(-95cqw) rotate(-7deg);opacity:0}15%{opacity:1}to{transform:none;opacity:1}}
+@keyframes rmd-bounce{0%{transform:none}35%{transform:translateY(-3.5cqw) rotate(1.2deg)}70%{transform:translateY(0)}85%{transform:translateY(-.8cqw)}100%{transform:none}}
+@keyframes rmd-chalk{0%{opacity:.9;transform:translate(-50%,-50%) scale(.2)}100%{opacity:0;transform:translate(-50%,-50%) translate(var(--cx),var(--cy)) scale(var(--cs))}}
+@media (prefers-reduced-motion:reduce){
+  .rmd-intro,.rmd-intro *{animation:none!important}
+  .rmd-intro .rmd-logo{opacity:1}
+  .rmd-tile,.rmd-ring,.rmd-flash,.rmd-spark,.rmd-chalk,.rmd-rays,.rmd-clock{display:none}
+  .rmd-tag span,.rmd-sub,.rmd-glow{opacity:1}
+}
+`;

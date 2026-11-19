@@ -739,6 +739,42 @@ export type Database = {
           },
         ]
       }
+      planning_shares: {
+        Row: {
+          created_at: string
+          follow: boolean
+          owner_id: string
+          recipient_id: string
+        }
+        Insert: {
+          created_at?: string
+          follow?: boolean
+          owner_id: string
+          recipient_id: string
+        }
+        Update: {
+          created_at?: string
+          follow?: boolean
+          owner_id?: string
+          recipient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planning_shares_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planning_shares_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_comments: {
         Row: {
           content: string

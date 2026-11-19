@@ -10,7 +10,14 @@ import type { AthleteGoal, BodyMetric, PrHistoryRow, WellnessLog } from "./profi
 import { localDay, trainedDay, weeklyConsistency } from "./analytics";
 
 const DAY = 864e5;
-const WEEKS = 12;
+
+export type ReportPeriod = "semana" | "mes" | "año";
+export const PERIODS: Record<ReportPeriod, { days: number; label: string; when: string; button: string }> = {
+  semana: { days: 7, label: "Últimos 7 días", when: "esta semana", button: "Semana" },
+  mes: { days: 30, label: "Últimos 30 días", when: "este mes", button: "Mes" },
+  año: { days: 365, label: "Últimos 12 meses", when: "este año", button: "Año" },
+};
+export type Bar = { label: string; value: number };
 
 export const fmtN = (n: number, d = 1) =>
   Number.isInteger(n) ? String(n) : n.toFixed(d).replace(".", ",").replace(/,0$/, "");
@@ -49,9 +56,13 @@ export function buildCoachReport(input: {
   planning: Planning | null | undefined;
   weeklyTarget: number;
   profileWeight: number | null;
+  period?: ReportPeriod;
   now?: Date;
 }) {
   const now = input.now ?? new Date();
+  const period = input.period ?? "mes";
+  const DAYS = PERIODS[period].days;
+  const WEEKS = Math.max(1, Math.round(DAYS / 7));
   const done = input.results.filter((r) => r.status === "completed");
   const target = Math.max(1, input.weeklyTarget);
 
@@ -65,36 +76,77 @@ export function buildCoachReport(input: {
         })
         .map((r) => `${r.month_key}|${r.week}|${r.day_key}`),
     ).size;
-  const sessions12 = sessionKeys(0, WEEKS * 7);
-  const sessionsPrev = sessionKeys(WEEKS * 7, WEEKS * 14);
+  const sessions12 = sessionKeys(0, DAYS);
+  const sessionsPrev = sessionKeys(DAYS, DAYS * 2);
   const consistency = weeklyConsistency(input.results, target, WEEKS, now);
   const prevConsistency = weeklyConsistency(
-    input.results.filter((r) => daysAgo(`${trainedDay(r)}T12:00:00`, now) >= WEEKS * 7),
+    input.results.filter((r) => daysAgo(`${trainedDay(r)}T12:00:00`, now) >= DAYS),
     target,
     WEEKS,
-    new Date(now.getTime() - WEEKS * 7 * DAY),
+    new Date(now.getTime() - DAYS * DAY),
   );
   const weeksShown = consistency.weeks;
-  const perWeek = weeksShown.length ? sessions12 / weeksShown.length : 0;
+  // Semanas reales del periodo (si empezó a registrar hace poco, solo desde entonces)
+  const firstDay = done.reduce<string | null>((min, r) => {
+    const d = trainedDay(r);
+    return !min || d < min ? d : min;
+  }, null);
+  const activeDays = firstDay ? Math.min(DAYS, Math.max(7, daysAgo(`${firstDay}T12:00:00`, now) + 1)) : DAYS;
+  const perWeek = sessions12 / (activeDays / 7);
   const weeksOk = weeksShown.filter((w) => w.sessions >= target).length;
+  // En la semana, la constancia es entrenos frente al objetivo
+  if (period === "semana") consistency.pct = Math.min(100, Math.round((sessions12 / target) * 100));
+  if (period === "semana") prevConsistency.pct = Math.min(100, Math.round((sessionsPrev / target) * 100));
+
+  // Gráfico de constancia: días (semana), semanas (mes) o meses (año)
+  const sessionDates = new Map<string, Set<string>>();
+  for (const r of done) {
+    const d = trainedDay(r);
+    if (!sessionDates.has(d)) sessionDates.set(d, new Set());
+    sessionDates.get(d)!.add(`${r.month_key}|${r.week}|${r.day_key}`);
+  }
+  let bars: Bar[] = [];
+  let barTarget: number | null = target;
+  if (period === "semana") {
+    barTarget = null;
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * DAY);
+      bars.push({ label: d.toLocaleDateString("es-ES", { weekday: "short" }).replace(".", ""), value: sessionDates.get(localDay(d))?.size ?? 0 });
+    }
+  } else if (period === "mes") {
+    bars = weeklyConsistency(input.results, target, 5, now).weeks.map((w) => ({
+      label: new Date(`${w.start}T12:00:00`).toLocaleDateString("es-ES", { day: "numeric", month: "short" }),
+      value: w.sessions,
+    }));
+  } else {
+    barTarget = Math.round(target * 4.33);
+    for (let i = 11; i >= 0; i--) {
+      const m = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, "0")}`;
+      let n = 0;
+      for (const [d, set] of sessionDates) if (d.startsWith(key)) n += set.size;
+      bars.push({ label: m.toLocaleDateString("es-ES", { month: "short" }).replace(".", ""), value: n });
+    }
+  }
 
   // Récords
-  const prs30 = input.history.filter((h) => (h.rep_max ?? 1) === 1 && daysAgo(h.changed_at, now) <= 30);
+  const prs30 = input.history.filter((h) => (h.rep_max ?? 1) === 1 && daysAgo(h.changed_at, now) <= DAYS);
   const prNames = [...new Set(prs30.map((h) => h.exercise))];
 
   // Esfuerzo
   const rpeIn = (from: number, to: number) =>
     avg(done.filter((r) => r.rpe != null && daysAgo(`${trainedDay(r)}T12:00:00`, now) >= from && daysAgo(`${trainedDay(r)}T12:00:00`, now) < to).map((r) => Number(r.rpe)));
-  const rpe = rpeIn(0, WEEKS * 7);
-  const rpePrev = rpeIn(WEEKS * 7, WEEKS * 14);
+  const rpe = rpeIn(0, DAYS);
+  const rpePrev = rpeIn(DAYS, DAYS * 2);
 
   // Recuperación (últimas 2 semanas frente a las 2 anteriores)
   const wIn = (from: number, to: number, k: keyof WellnessLog) =>
     avg(input.wellness.filter((w) => w[k] != null && daysAgo(`${w.logged_on}T12:00:00`, now) >= from && daysAgo(`${w.logged_on}T12:00:00`, now) < to).map((w) => Number(w[k])));
-  const sleep = wIn(0, 14, "sleep_hours");
-  const sleepPrev = wIn(14, 28, "sleep_hours");
-  const fatigue = wIn(0, 14, "fatigue");
-  const fatiguePrev = wIn(14, 28, "fatigue");
+  const RW = Math.min(DAYS, 30); // recuperación: como mucho el último mes
+  const sleep = wIn(0, RW, "sleep_hours");
+  const sleepPrev = wIn(RW, RW * 2, "sleep_hours");
+  const fatigue = wIn(0, RW, "fatigue");
+  const fatiguePrev = wIn(RW, RW * 2, "fatigue");
 
   // Peso corporal
   const metrics = [...input.metrics].filter((m) => m.weight_kg != null).sort((a, b) => a.measured_on.localeCompare(b.measured_on));
@@ -107,8 +159,8 @@ export function buildCoachReport(input: {
       const h = input.history
         .filter((x) => x.exercise === r.exercise && (x.rep_max ?? 1) === 1)
         .sort((a, b) => a.changed_at.localeCompare(b.changed_at));
-      const before = h.filter((x) => daysAgo(x.changed_at, now) > 90);
-      const after = h.filter((x) => daysAgo(x.changed_at, now) <= 90);
+      const before = h.filter((x) => daysAgo(x.changed_at, now) > DAYS);
+      const after = h.filter((x) => daysAgo(x.changed_at, now) <= DAYS);
       const old = before.length
         ? Number(before[before.length - 1].new_weight)
         : after.length && after[0].previous_weight != null
@@ -121,7 +173,7 @@ export function buildCoachReport(input: {
     .slice(0, 10);
   const bestGain = [...lifts]
     .map((l) => {
-      const h30 = input.history.filter((x) => x.exercise === l.exercise && (x.rep_max ?? 1) === 1 && daysAgo(x.changed_at, now) <= 30);
+      const h30 = input.history.filter((x) => x.exercise === l.exercise && (x.rep_max ?? 1) === 1 && daysAgo(x.changed_at, now) <= DAYS);
       const first = h30.sort((a, b) => a.changed_at.localeCompare(b.changed_at))[0];
       return { exercise: l.exercise, gain: first?.previous_weight != null ? l.now - Number(first.previous_weight) : 0 };
     })
@@ -130,26 +182,30 @@ export function buildCoachReport(input: {
 
   // Veredicto y avisos
   const notes: Note[] = [];
-  if (weeksShown.length) {
-    notes.push({
-      tone: consistency.pct >= 80 ? "good" : consistency.pct >= 60 ? "warn" : "bad",
-      text: `Constancia ${consistency.pct >= 80 ? "alta" : consistency.pct >= 60 ? "irregular" : "baja"}: ${fmtN(perWeek)} entrenos por semana (objetivo ${target}) y ${weeksOk} de ${weeksShown.length} semanas cumplidas.`,
-    });
+  const toneC: Tone = consistency.pct >= 80 ? "good" : consistency.pct >= 60 ? "warn" : "bad";
+  const word = consistency.pct >= 80 ? "alta" : consistency.pct >= 60 ? "irregular" : "baja";
+  if (period === "semana") {
+    notes.push({ tone: toneC, text: `Constancia ${word}: ${sessions12} ${sessions12 === 1 ? "entreno" : "entrenos"} esta semana (objetivo ${target}).` });
+  } else if (weeksShown.length) {
+    notes.push({ tone: toneC, text: `Constancia ${word}: ${fmtN(perWeek)} entrenos por semana (objetivo ${target}) y ${weeksOk} de ${weeksShown.length} semanas cumplidas.` });
   }
-  if (prNames.length) notes.push({ tone: "good", text: `${prs30.length} ${prs30.length === 1 ? "récord nuevo" : "récords nuevos"} en 30 días: ${prNames.slice(0, 4).join(", ")}.` });
-  if (sleep != null && sleep < 7) notes.push({ tone: sleep < 6 ? "bad" : "warn", text: `Duerme ${fmtN(sleep)} h de media en las últimas 2 semanas.` });
+  const span = PERIODS[period].when;
+  if (prNames.length) notes.push({ tone: "good", text: `${prs30.length} ${prs30.length === 1 ? "récord nuevo" : "récords nuevos"} ${span}: ${prNames.slice(0, 4).join(", ")}${prNames.length > 4 ? "…" : ""}.` });
+  const rwText = RW <= 7 ? "esta semana" : "el último mes";
+  if (sleep != null && sleep < 7) notes.push({ tone: sleep < 6 ? "bad" : "warn", text: `Duerme ${fmtN(sleep)} h de media ${rwText}.` });
   if (fatigue != null && fatiguePrev != null && fatigue - fatiguePrev >= 0.8)
-    notes.push({ tone: "warn", text: `La fatiga sube: ${fmtN(fatigue)}/10 frente a ${fmtN(fatiguePrev)}/10 las 2 semanas anteriores.` });
+    notes.push({ tone: "warn", text: `La fatiga sube: ${fmtN(fatigue)}/10 frente a ${fmtN(fatiguePrev)}/10 en el periodo anterior.` });
   if (stalled) notes.push({ tone: "warn", text: `${stalled.exercise} no se mueve desde ${ago(stalled.lastPr!, now)} (${fmtN(stalled.now)} kg).` });
   if (!notes.length) notes.push({ tone: "muted", text: "Aún hay pocos datos registrados para sacar conclusiones." });
 
-  let verdict = weeksShown.length ? `Entrena ${fmtN(perWeek)} días por semana` : "Todavía no hay entrenos registrados";
-  if (bestGain && bestGain.gain > 0) verdict += ` y sigue subiendo: +${fmtN(bestGain.gain)} kg en ${bestGain.exercise} este mes.`;
-  else if (weeksShown.length) verdict += consistency.pct >= 80 ? " con mucha regularidad." : ".";
+  const trainsText = period === "semana" ? `${sessions12} ${sessions12 === 1 ? "entreno" : "entrenos"} esta semana` : `${fmtN(perWeek)} días por semana`;
+  let verdict = sessions12 ? (period === "semana" ? `Ha hecho ${trainsText}` : `Entrena ${trainsText}`) : `Sin entrenos registrados ${span}`;
+  if (bestGain && bestGain.gain > 0) verdict += ` y sigue subiendo: +${fmtN(bestGain.gain)} kg en ${bestGain.exercise} ${span}.`;
+  else if (sessions12) verdict += consistency.pct >= 80 ? " con mucha regularidad." : ".";
   else verdict += ".";
   if (sleep != null && sleep < 7) verdict += " Ojo con el sueño.";
   else if (fatigue != null && fatiguePrev != null && fatigue - fatiguePrev >= 0.8) verdict += " Ojo con la fatiga.";
-  const verdictHighlights = [`${fmtN(perWeek)} días por semana`, bestGain && bestGain.gain > 0 ? `+${fmtN(bestGain.gain)} kg` : ""].filter(Boolean);
+  const verdictHighlights = [trainsText, bestGain && bestGain.gain > 0 ? `+${fmtN(bestGain.gain)} kg` : ""].filter(Boolean);
 
   // Cifras clave
   const sign = (n: number, d = 1) => `${n > 0 ? "+" : n < 0 ? "−" : "±"}${fmtN(Math.abs(n), d)}`;
@@ -162,11 +218,11 @@ export function buildCoachReport(input: {
     },
     {
       value: String(sessions12),
-      label: `Entrenos (${WEEKS} sem.)`,
+      label: period === "semana" ? "Entrenos" : period === "mes" ? "Entrenos (30 días)" : "Entrenos (12 meses)",
       delta: sessionsPrev ? `${sign(sessions12 - sessionsPrev, 0)} vs anteriores` : undefined,
       tone: sessions12 >= sessionsPrev ? "good" : "warn",
     },
-    { value: String(prs30.length), label: "Récords en 30 días" },
+    { value: String(prs30.length), label: period === "semana" ? "Récords esta semana" : period === "mes" ? "Récords en 30 días" : "Récords en el año" },
     {
       value: rpe != null ? fmtN(rpe) : "—",
       label: "RPE medio",
@@ -188,9 +244,9 @@ export function buildCoachReport(input: {
     const bad = lower ? v >= 7 : v <= 4;
     return good ? "good" : bad ? "bad" : "warn";
   };
-  const energy = wIn(0, 14, "energy");
-  const soreness = wIn(0, 14, "soreness");
-  const mood = wIn(0, 14, "mood");
+  const energy = wIn(0, RW, "energy");
+  const soreness = wIn(0, RW, "soreness");
+  const mood = wIn(0, RW, "mood");
   const meters: Meter[] = [
     { label: "Sueño", value: sleep, max: 9, unit: "h", tone: sleep == null ? "muted" : sleep >= 7 ? "good" : sleep >= 6 ? "warn" : "bad" },
     { label: "Energía", value: energy, max: 10, unit: "", tone: tone(energy) },
@@ -200,7 +256,8 @@ export function buildCoachReport(input: {
   ];
 
   // Peso (últimos 16 registros)
-  const weight = metrics.slice(-16).map((m) => ({ date: m.measured_on, kg: Number(m.weight_kg) }));
+  const inWindow = metrics.filter((m) => daysAgo(`${m.measured_on}T12:00:00`, now) <= Math.max(DAYS, 30));
+  const weight = (inWindow.length > 1 ? inWindow : metrics).slice(-24).map((m) => ({ date: m.measured_on, kg: Number(m.weight_kg) }));
   const weightChange = weight.length > 1 ? weight[weight.length - 1].kg - weight[0].kg : null;
 
   // Objetivos
@@ -241,8 +298,9 @@ export function buildCoachReport(input: {
     return parts.join(" · ") || "hecho";
   };
   const sessions: SessionCard[] = [...byDay.entries()]
+    .filter(([d]) => daysAgo(`${d}T12:00:00`, now) <= DAYS)
     .sort(([a], [b]) => b.localeCompare(a))
-    .slice(0, 6)
+    .slice(0, period === "semana" ? 7 : 6)
     .map(([date, rs]) => ({
       date: new Date(`${date}T12:00:00`).toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" }),
       label: `Semana ${rs[0].week} · ${rs[0].day_key.charAt(0)}${rs[0].day_key.slice(1).toLowerCase()}`,
@@ -257,7 +315,12 @@ export function buildCoachReport(input: {
     lifts,
     liftAgo: (iso: string | null) => (iso ? ago(iso, now) : ""),
     weeks: weeksShown,
+    bars,
+    barTarget,
     target,
+    period,
+    periodLabel: PERIODS[period].label,
+    recoveryLabel: RW <= 7 ? "Media de la semana" : "Media del último mes",
     meters,
     weight,
     weightChange,

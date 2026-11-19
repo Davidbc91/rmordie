@@ -10,14 +10,21 @@ import {
   useAllPrHistory,
 } from "@/lib/profile-store";
 import { windowStats, wellnessAverages, fmtNum, plannedPerWeek } from "@/lib/analytics";
-import { buildCoachReport, fmtN, type Tone } from "@/lib/coach-report";
+import { buildCoachReport, fmtN, PERIODS, type ReportPeriod, type Tone } from "@/lib/coach-report";
 import { useEffect, useRef, useState as useStateW } from "react";
 
 export const Route = createFileRoute("/athlete-report")({
+  validateSearch: (search: Record<string, unknown>): { periodo?: ReportPeriod } => {
+    const p = search.periodo;
+    return p === "semana" || p === "mes" || p === "año" ? { periodo: p } : {};
+  },
   component: AthleteReport,
 });
 
 function AthleteReport() {
+  const { periodo } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const period: ReportPeriod = periodo ?? "mes";
   const { data: profile } = useAthleteProfile();
   const { data: records = [] } = usePersonalRecords();
   const { data: results = [] } = useAllResults();
@@ -200,8 +207,9 @@ function AthleteReport() {
         planning: planning?.data,
         weeklyTarget: profile?.weekly_target ?? plannedPerWeek(planning?.data) ?? 4,
         profileWeight: profile?.current_weight_kg ?? null,
+        period,
       }),
-    [results, records, history, metrics, wellness, goals, planning, profile],
+    [results, records, history, metrics, wellness, goals, planning, profile, period],
   );
   const maxLift = Math.max(1, ...report.lifts.map((l) => l.now));
   const toneColor = (t?: Tone) => (t ? `var(--r-${t})` : "var(--r-muted)");
@@ -214,8 +222,21 @@ function AthleteReport() {
     <main className="coach-report min-h-screen">
       <style>{REPORT_CSS}</style>
 
-      <div className="no-print sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[var(--r-line)] bg-[var(--r-bg)]/95 px-4 py-3 backdrop-blur" style={{ paddingTop: "max(env(safe-area-inset-top), 12px)" }}>
+      <div className="no-print sticky top-0 z-50 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--r-line)] bg-[var(--r-bg)]/95 px-4 py-3 backdrop-blur" style={{ paddingTop: "max(env(safe-area-inset-top), 12px)" }}>
         <button type="button" onClick={() => window.history.back()} className="min-h-11 px-1 text-sm font-semibold text-[var(--r-muted)]">‹ Volver</button>
+        <div role="group" aria-label="Periodo del informe" className="flex gap-1 rounded-[12px] bg-[var(--r-line)] p-1">
+          {(Object.keys(PERIODS) as ReportPeriod[]).map((p) => (
+            <button
+              key={p}
+              type="button"
+              aria-pressed={period === p}
+              onClick={() => navigate({ search: { periodo: p }, replace: true })}
+              className={`min-h-10 rounded-[9px] px-3 text-sm font-bold ${period === p ? "bg-[var(--r-ink)] text-[var(--r-paper)]" : "text-[var(--r-muted)]"}`}
+            >
+              {PERIODS[p].button}
+            </button>
+          ))}
+        </div>
         <div className="flex gap-2">
           <button type="button" onClick={printReport} className="min-h-11 rounded-xl bg-[var(--r-ink)] px-4 text-sm font-bold text-[var(--r-paper)]">Guardar PDF / Imprimir</button>
           <button type="button" onClick={downloadPdf} className="min-h-11 rounded-xl border border-[var(--r-line)] px-3 text-sm font-semibold">PDF texto</button>
@@ -231,7 +252,7 @@ function AthleteReport() {
             </div>
             <div className="r-meta">
               {[profile?.level, profile?.box_name, profile?.crossfit_start_date ? `CrossFit desde ${new Date(profile.crossfit_start_date).getFullYear()}` : null].filter(Boolean).join(" · ")}
-              <br />Últimas 12 semanas · {new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })}
+              <br />Informe {period === "semana" ? "semanal" : period === "mes" ? "mensual" : "anual"} · {report.periodLabel} · {new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })}
             </div>
           </header>
 
@@ -254,7 +275,7 @@ function AthleteReport() {
 
           <section>
             <h2>Fuerza</h2>
-            <p className="r-sub">1RM actual{report.lifts[0]?.bw ? `, relación con su peso corporal (${fmtN(report.lifts[0].bw)} kg)` : ""} y lo que ha subido en 90 días.</p>
+            <p className="r-sub">1RM actual{report.lifts[0]?.bw ? `, relación con su peso corporal (${fmtN(report.lifts[0].bw)} kg)` : ""} y lo que ha subido {PERIODS[period].when}.</p>
             {report.lifts.length ? (
               <>
                 {report.lifts.map((l) => {
@@ -267,7 +288,7 @@ function AthleteReport() {
                     </div>
                   );
                 })}
-                <div className="r-legend"><span><i style={{ background: "var(--r-ink)" }} />1RM hace 90 días</span><span><i style={{ background: "var(--r-gold)" }} />Lo que ha subido</span>{report.lifts[0]?.bw ? <span>× = veces su peso corporal</span> : null}</div>
+                <div className="r-legend"><span><i style={{ background: "var(--r-ink)" }} />1RM {period === "semana" ? "hace 7 días" : period === "mes" ? "hace 30 días" : "hace un año"}</span><span><i style={{ background: "var(--r-gold)" }} />Lo que ha subido</span>{report.lifts[0]?.bw ? <span>× = veces su peso corporal</span> : null}</div>
               </>
             ) : <p className="r-empty">Sin 1RM registrados.</p>}
           </section>
@@ -275,12 +296,18 @@ function AthleteReport() {
           <section className="r-two">
             <div>
               <h2>Constancia</h2>
-              <p className="r-sub">Entrenos por semana. La línea dorada es su objetivo ({report.target}); en gris, semanas por debajo.</p>
-              {report.weeks.length ? <WeeksChart weeks={report.weeks.map((w) => w.sessions)} target={report.target} /> : <p className="r-empty">Sin entrenos en estas semanas.</p>}
+              <p className="r-sub">
+                {period === "semana"
+                  ? `Entrenos de cada día. Objetivo: ${report.target} a la semana.`
+                  : period === "mes"
+                    ? `Entrenos por semana. La línea dorada es su objetivo (${report.target}); en gris, semanas por debajo.`
+                    : `Entrenos por mes. La línea dorada es su objetivo (${report.barTarget} al mes); en gris, meses por debajo.`}
+              </p>
+              {report.bars.some((b) => b.value > 0) ? <BarsChart bars={report.bars} target={report.barTarget} /> : <p className="r-empty">Sin entrenos en este periodo.</p>}
             </div>
             <div>
               <h2>Recuperación</h2>
-              <p className="r-sub">Media de las últimas 2 semanas (del 1 al 10, sueño en horas).</p>
+              <p className="r-sub">{report.recoveryLabel} (del 1 al 10, sueño en horas).</p>
               {report.meters.some((m) => m.value != null) ? (
                 <>
                   {report.meters.map((m) => (
@@ -319,7 +346,7 @@ function AthleteReport() {
 
           <section>
             <h2>Últimos entrenos</h2>
-            <p className="r-sub">Lo que ha registrado, con cargas y esfuerzo.</p>
+            <p className="r-sub">Lo que ha registrado {PERIODS[period].when}, con cargas y esfuerzo.</p>
             {report.sessions.length ? (
               <div className="r-sessions">
                 {report.sessions.map((s) => (
@@ -356,28 +383,29 @@ function useSize<T extends HTMLElement>() {
   return [ref, w] as const;
 }
 
-function WeeksChart({ weeks, target }: { weeks: number[]; target: number }) {
+function BarsChart({ bars, target }: { bars: { label: string; value: number }[]; target: number | null }) {
   const [ref, W] = useSize<HTMLDivElement>();
   const H = 210, pad = 22, top = 10;
-  const maxV = Math.max(target + 1, ...weeks, 1);
+  const maxV = Math.max((target ?? 0) + 1, ...bars.map((b) => b.value), 1);
   const y = (v: number) => top + (H - top - pad) * (1 - v / maxV);
-  const bw = W > 0 ? (W - pad) / weeks.length : 0;
+  const bw = W > 0 ? (W - pad) / bars.length : 0;
   const ticks = Array.from(new Set([0, Math.round(maxV / 2), maxV]));
+  const every = bw < 26 ? 2 : 1;
   return (
     <div ref={ref} className="r-fig" style={{ height: H }}>
       {W > 0 && (
-        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Entrenos por semana: ${weeks.join(", ")}`}>
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={bars.map((b) => `${b.label}: ${b.value}`).join(", ")}>
           {ticks.map((g) => <text key={g} x={0} y={y(g) + 4} fontSize={12} fill="var(--r-muted)">{g}</text>)}
-          {weeks.map((v, i) => {
-            const x = pad + i * bw + bw * 0.18, w = bw * 0.64, ok = v >= target;
+          {bars.map((b, i) => {
+            const x = pad + i * bw + bw * 0.18, w = bw * 0.64, ok = target == null ? b.value > 0 : b.value >= target;
             return (
               <g key={i}>
-                <rect x={x} y={y(v)} width={w} height={Math.max(0, y(0) - y(v))} rx={4} fill={ok ? "var(--r-ink)" : "var(--r-muted)"} opacity={ok ? 1 : 0.45} />
-                {(W > 600 || (W > 360 && i % 2 === 1)) && <text x={x + w / 2} y={H - 4} fontSize={12} textAnchor="middle" fill="var(--r-muted)">S{i + 1}</text>}
+                <rect x={x} y={y(b.value)} width={w} height={Math.max(0, y(0) - y(b.value))} rx={4} fill={ok ? "var(--r-ink)" : "var(--r-muted)"} opacity={ok ? 1 : 0.45} />
+                {i % every === every - 1 && <text x={x + w / 2} y={H - 4} fontSize={12} textAnchor="middle" fill="var(--r-muted)">{b.label}</text>}
               </g>
             );
           })}
-          <line x1={pad} x2={W} y1={y(target)} y2={y(target)} stroke="var(--r-gold)" strokeWidth={2} strokeDasharray="5 4" />
+          {target != null && <line x1={pad} x2={W} y1={y(target)} y2={y(target)} stroke="var(--r-gold)" strokeWidth={2} strokeDasharray="5 4" />}
         </svg>
       )}
     </div>

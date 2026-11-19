@@ -71,6 +71,13 @@
       "when": 1795087152168,
       "tag": "0009_planning_shares",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795090324868,
+      "tag": "0010_planning_lineas_y_compartir_varias",
+      "breakpoints": true
     }
   ]
 }

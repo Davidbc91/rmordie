@@ -707,6 +707,7 @@ export type Database = {
           id: string
           imported_at: string
           is_active: boolean
+          plan_key: string | null
           source_filename: string | null
           user_id: string | null
           version: number
@@ -716,6 +717,7 @@ export type Database = {
           id?: string
           imported_at?: string
           is_active?: boolean
+          plan_key?: string | null
           source_filename?: string | null
           user_id?: string | null
           version?: number
@@ -725,6 +727,7 @@ export type Database = {
           id?: string
           imported_at?: string
           is_active?: boolean
+          plan_key?: string | null
           source_filename?: string | null
           user_id?: string | null
           version?: number
@@ -744,18 +747,21 @@ export type Database = {
           created_at: string
           follow: boolean
           owner_id: string
+          plan_key: string
           recipient_id: string
         }
         Insert: {
           created_at?: string
           follow?: boolean
           owner_id: string
+          plan_key: string
           recipient_id: string
         }
         Update: {
           created_at?: string
           follow?: boolean
           owner_id?: string
+          plan_key?: string
           recipient_id?: string
         }
         Relationships: [

@@ -9,7 +9,9 @@ import {
   useMilestones,
   useAllPrHistory,
 } from "@/lib/profile-store";
-import { windowStats, wellnessAverages, fmtNum } from "@/lib/analytics";
+import { windowStats, wellnessAverages, fmtNum, plannedPerWeek } from "@/lib/analytics";
+import { buildCoachReport, fmtN, type Tone } from "@/lib/coach-report";
+import { useEffect, useRef, useState as useStateW } from "react";
 
 export const Route = createFileRoute("/athlete-report")({
   component: AthleteReport,
@@ -186,201 +188,284 @@ function AthleteReport() {
     window.setTimeout(() => URL.revokeObjectURL(url), 5000);
   };
 
-  return (
-    <main className="min-h-screen bg-white text-[#111]">
-      <style>{`
-        @media print {
-          @page { size: A4; margin: 14mm; }
-          .no-print { display: none !important; }
-          body { background: white !important; }
-          .report-page { box-shadow: none !important; }
-          .break-before { break-before: page; }
-          .avoid-break { break-inside: avoid; }
-        }
-      `}</style>
+  const report = useMemo(
+    () =>
+      buildCoachReport({
+        results,
+        records,
+        history,
+        metrics,
+        wellness,
+        goals,
+        planning: planning?.data,
+        weeklyTarget: profile?.weekly_target ?? plannedPerWeek(planning?.data) ?? 4,
+        profileWeight: profile?.current_weight_kg ?? null,
+      }),
+    [results, records, history, metrics, wellness, goals, planning, profile],
+  );
+  const maxLift = Math.max(1, ...report.lifts.map((l) => l.now));
+  const toneColor = (t?: Tone) => (t ? `var(--r-${t})` : "var(--r-muted)");
+  const verdictHtml = report.verdictHighlights.reduce(
+    (html, h) => html.replace(h, `<b>${h}</b>`),
+    report.verdict.replace(/&/g, "&amp;").replace(/</g, "&lt;"),
+  );
 
-      <div className="no-print sticky top-0 z-50 flex items-center justify-between border-b bg-white/95 px-4 py-3 backdrop-blur">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-500">RM OR DIE</p>
-          <p className="text-sm font-semibold">Informe para entrenador</p>
-        </div>
+  return (
+    <main className="coach-report min-h-screen">
+      <style>{REPORT_CSS}</style>
+
+      <div className="no-print sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[var(--r-line)] bg-[var(--r-bg)]/95 px-4 py-3 backdrop-blur" style={{ paddingTop: "max(env(safe-area-inset-top), 12px)" }}>
+        <button type="button" onClick={() => window.history.back()} className="min-h-11 px-1 text-sm font-semibold text-[var(--r-muted)]">‹ Volver</button>
         <div className="flex gap-2">
-          <button
-            onClick={downloadPdf}
-            className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white"
-          >
-            Descargar PDF
-          </button>
-          <button
-            onClick={printReport}
-            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold"
-          >
-            Imprimir
-          </button>
+          <button type="button" onClick={printReport} className="min-h-11 rounded-xl bg-[var(--r-ink)] px-4 text-sm font-bold text-[var(--r-paper)]">Guardar PDF / Imprimir</button>
+          <button type="button" onClick={downloadPdf} className="min-h-11 rounded-xl border border-[var(--r-line)] px-3 text-sm font-semibold">PDF texto</button>
         </div>
       </div>
 
-      <div className="report-page mx-auto max-w-[900px] px-5 py-8">
-        <header className="border-b-2 border-black pb-6">
-          <div className="flex items-start justify-between gap-6">
+      <div className="r-wrap">
+        <article className="r-sheet">
+          <header className="r-top">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-500">RM OR DIE · INFORME DEL ATLETA</p>
-              <h1 className="mt-3 text-4xl font-bold tracking-tight">{profile?.display_name || "Atleta"}</h1>
-              <p className="mt-2 text-sm text-neutral-600">
-                Informe generado el {new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })}
-              </p>
+              <div className="r-brand">RM OR DIE · Informe para el entrenador</div>
+              <h1>{(profile?.display_name || "Atleta").toUpperCase()}</h1>
             </div>
-            <div className="text-right text-sm text-neutral-600">
-              {profile?.level && <div>{profile.level}</div>}
-              {profile?.box_name && <div>{profile.box_name}</div>}
-              {profile?.crossfit_start_date && <div>CrossFit desde {formatDate(profile.crossfit_start_date)}</div>}
+            <div className="r-meta">
+              {[profile?.level, profile?.box_name, profile?.crossfit_start_date ? `CrossFit desde ${new Date(profile.crossfit_start_date).getFullYear()}` : null].filter(Boolean).join(" · ")}
+              <br />Últimas 12 semanas · {new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })}
             </div>
-          </div>
-        </header>
+          </header>
 
-        <Section title="Resumen del atleta">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Kpi label="Peso actual" value={profile?.current_weight_kg != null ? `${profile.current_weight_kg} kg` : "—"} />
-            <Kpi label="Altura" value={profile?.height_cm != null ? `${profile.height_cm} cm` : "—"} />
-            <Kpi label="Entrenamientos" value={String(stats.sessions ?? 0)} />
-            <Kpi label="Bloques registrados" value={String(stats.blocks ?? 0)} />
-            <Kpi label="Volumen total" value={stats.volume != null ? `${Math.round(stats.volume).toLocaleString("es-ES")} kg` : "—"} />
-            <Kpi label="RPE medio" value={stats.avgRpe != null ? fmtNum(stats.avgRpe) : "—"} />
-            <Kpi label="Frecuencia" value={stats.weeklyFreq != null ? `${fmtNum(stats.weeklyFreq)} / sem` : "—"} />
-            <Kpi label="PRs registrados" value={String(history.length)} />
-          </div>
-          {profile?.goals?.length ? (
-            <p className="mt-4 text-sm"><strong>Objetivos:</strong> {profile.goals.join(", ")}</p>
-          ) : null}
-        </Section>
+          <p className="r-verdict" dangerouslySetInnerHTML={{ __html: verdictHtml }} />
+          <ul className="r-notes">
+            {report.notes.map((n) => (
+              <li key={n.text}><span className="r-dot" style={{ background: toneColor(n.tone) }} /><span>{n.text}</span></li>
+            ))}
+          </ul>
 
-        <Section title="1RM actuales" className="break-before">
-          {prRows.length ? (
-            <Table
-              headers={["Movimiento", "1RM", "Actualizado"]}
-              rows={prRows.map((r) => [r.exercise, `${r.weight} kg`, formatDate(r.updated_at)])}
-            />
-          ) : <Empty />}
-        </Section>
-
-        <Section title="Evolución de fuerza">
-          {recentHistory.length ? (
-            <Table
-              headers={["Fecha", "Movimiento", "Anterior", "Nuevo"]}
-              rows={recentHistory.map((r) => [
-                formatDate(r.changed_at),
-                r.exercise,
-                r.previous_weight != null ? `${r.previous_weight} kg` : "—",
-                `${r.new_weight} kg`,
-              ])}
-            />
-          ) : <Empty />}
-        </Section>
-
-        <Section title="Composición corporal">
-          {metrics.length ? (
-            <>
-              <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Kpi label="Primer peso" value={firstMetric?.weight_kg != null ? `${firstMetric.weight_kg} kg` : "—"} />
-                <Kpi label="Peso actual" value={lastMetric?.weight_kg != null ? `${lastMetric.weight_kg} kg` : "—"} />
-                <Kpi label="Cambio" value={weightChange != null ? `${weightChange > 0 ? "+" : ""}${weightChange.toFixed(1)} kg` : "—"} />
-                <Kpi label="Registros" value={String(metrics.length)} />
+          <div className="r-kpis">
+            {report.kpis.map((k) => (
+              <div key={k.label} className="r-kpi">
+                <div className="r-num">{k.value}</div>
+                <div className="r-l">{k.label}</div>
+                {k.delta && <div className="r-d" style={{ color: toneColor(k.tone) }}>{k.delta}</div>}
               </div>
-              <Table
-                headers={["Fecha", "Peso", "% grasa", "Músculo", "Cintura"]}
-                rows={metrics.slice(-20).reverse().map((m) => [
-                  formatDate(m.measured_on),
-                  m.weight_kg != null ? `${m.weight_kg} kg` : "—",
-                  m.body_fat_pct != null ? `${m.body_fat_pct}%` : "—",
-                  m.muscle_mass_kg != null ? `${m.muscle_mass_kg} kg` : "—",
-                  m.waist_cm != null ? `${m.waist_cm} cm` : "—",
-                ])}
-              />
-            </>
-          ) : <Empty />}
-        </Section>
-
-        <Section title="Recuperación y bienestar">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-            <Kpi label="Sueño" value={recovery.sleep != null ? `${fmtNum(recovery.sleep)} h` : "—"} />
-            <Kpi label="Energía" value={recovery.energy != null ? fmtNum(recovery.energy) : "—"} />
-            <Kpi label="Fatiga" value={recovery.fatigue != null ? fmtNum(recovery.fatigue) : "—"} />
-            <Kpi label="Dolor" value={recovery.soreness != null ? fmtNum(recovery.soreness) : "—"} />
-            <Kpi label="Ánimo" value={recovery.mood != null ? fmtNum(recovery.mood) : "—"} />
+            ))}
           </div>
-          {wellness.length ? (
-            <Table
-              headers={["Fecha", "Sueño", "Energía", "Fatiga", "Dolor", "Ánimo"]}
-              rows={wellness.slice(-20).reverse().map((w) => [
-                formatDate(w.logged_on),
-                w.sleep_hours != null ? `${w.sleep_hours} h` : "—",
-                w.energy != null ? String(w.energy) : "—",
-                w.fatigue != null ? String(w.fatigue) : "—",
-                w.soreness != null ? String(w.soreness) : "—",
-                w.mood != null ? String(w.mood) : "—",
-              ])}
-            />
-          ) : null}
-        </Section>
 
-        <Section title="Objetivos y hitos">
-          {goals.length ? (
-            <Table
-              headers={["Objetivo", "Tipo", "Actual", "Objetivo", "Estado"]}
-              rows={goals.map((g) => [
-                g.title,
-                g.goal_type,
-                g.current_value != null ? `${g.current_value} ${g.unit ?? ""}` : "—",
-                `${g.target_value} ${g.unit ?? ""}`,
-                g.status,
-              ])}
-            />
-          ) : <Empty text="Sin objetivos registrados." />}
-          {milestones.length ? (
-            <div className="mt-5">
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Hitos alcanzados</p>
-              <ul className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-2">
-                {milestones.map((m) => <li key={m.id}>✓ {m.label}{m.achieved_at ? ` · ${formatDate(m.achieved_at)}` : ""}</li>)}
-              </ul>
+          <section>
+            <h2>Fuerza</h2>
+            <p className="r-sub">1RM actual{report.lifts[0]?.bw ? `, relación con su peso corporal (${fmtN(report.lifts[0].bw)} kg)` : ""} y lo que ha subido en 90 días.</p>
+            {report.lifts.length ? (
+              <>
+                {report.lifts.map((l) => {
+                  const up = l.now - l.old;
+                  return (
+                    <div key={l.exercise} className="r-lift">
+                      <div className="r-n">{l.exercise}<small>{l.bw ? `× ${fmtN(l.now / l.bw, 2)} · ` : ""}{report.liftAgo(l.lastPr)}</small></div>
+                      <div className="r-bar"><i className={up > 0 ? "up" : ""} style={{ width: `${(l.now / maxLift) * 100}%`, ["--old" as string]: `${(l.old / l.now) * 100}%` }} /></div>
+                      <div className="r-w"><b>{fmtN(l.now)}</b> kg{up > 0 ? <em>+{fmtN(up)} kg</em> : <em className="same">igual</em>}</div>
+                    </div>
+                  );
+                })}
+                <div className="r-legend"><span><i style={{ background: "var(--r-ink)" }} />1RM hace 90 días</span><span><i style={{ background: "var(--r-gold)" }} />Lo que ha subido</span>{report.lifts[0]?.bw ? <span>× = veces su peso corporal</span> : null}</div>
+              </>
+            ) : <p className="r-empty">Sin 1RM registrados.</p>}
+          </section>
+
+          <section className="r-two">
+            <div>
+              <h2>Constancia</h2>
+              <p className="r-sub">Entrenos por semana. La línea dorada es su objetivo ({report.target}); en gris, semanas por debajo.</p>
+              {report.weeks.length ? <WeeksChart weeks={report.weeks.map((w) => w.sessions)} target={report.target} /> : <p className="r-empty">Sin entrenos en estas semanas.</p>}
             </div>
-          ) : null}
-        </Section>
+            <div>
+              <h2>Recuperación</h2>
+              <p className="r-sub">Media de las últimas 2 semanas (del 1 al 10, sueño en horas).</p>
+              {report.meters.some((m) => m.value != null) ? (
+                <>
+                  {report.meters.map((m) => (
+                    <div key={m.label} className="r-meter">
+                      <span>{m.label}</span>
+                      <div className="r-t"><i style={{ width: `${m.value != null ? Math.min(100, (m.value / m.max) * 100) : 0}%`, background: toneColor(m.tone) }} /></div>
+                      <span className="r-v">{m.value != null ? `${fmtN(m.value)}${m.unit ? ` ${m.unit}` : " / 10"}` : "—"}</span>
+                    </div>
+                  ))}
+                  <p className="r-sub" style={{ marginTop: 8 }}>Fatiga y dolor: cuanto más bajo, mejor.</p>
+                </>
+              ) : <p className="r-empty">No ha registrado sueño ni sensaciones.</p>}
+            </div>
+          </section>
 
-        <Section title="Entrenamientos registrados" className="break-before">
-          {recentResults.length ? (
-            <Table
-              headers={["Fecha", "Semana", "Día", "Bloque", "Carga", "Reps", "RPE", "Estado"]}
-              rows={recentResults.map((r) => [
-                formatDate(r.updated_at),
-                String(r.week),
-                r.day_key,
-                r.block_key,
-                r.weight != null ? `${r.weight} kg` : "—",
-                r.reps != null ? String(r.reps) : "—",
-                r.rpe != null ? fmtNum(r.rpe) : "—",
-                r.status,
-              ])}
-            />
-          ) : <Empty text="Sin entrenamientos registrados." />}
-        </Section>
+          <section className="r-two">
+            <div>
+              <h2>Peso corporal</h2>
+              <p className="r-sub">
+                {report.weight.length ? `${fmtN(report.weight[report.weight.length - 1].kg)} kg ahora` : "Sin registros de peso"}
+                {report.weightChange != null ? ` · ${report.weightChange > 0 ? "+" : "−"}${fmtN(Math.abs(report.weightChange))} kg desde ${new Date(`${report.weight[0].date}T12:00:00`).toLocaleDateString("es-ES", { month: "long" })}` : ""}
+              </p>
+              {report.weight.length > 1 && <WeightChart points={report.weight} />}
+            </div>
+            <div>
+              <h2>Objetivos</h2>
+              <p className="r-sub">Progreso hacia lo que se ha marcado.</p>
+              {report.goals.length ? report.goals.map((g) => (
+                <div key={g.title} className="r-goal">
+                  <div className="r-gh"><b>{g.title}</b><span>{g.current} → {g.target}</span></div>
+                  <div className="r-t"><i style={{ width: `${g.pct}%`, background: "var(--r-gold)" }} /></div>
+                </div>
+              )) : <p className="r-empty">Sin objetivos registrados.</p>}
+            </div>
+          </section>
 
-        <Section title="Notas para el entrenador">
-          <div className="min-h-[130px] rounded-xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-500">
-            Espacio reservado para observaciones, prioridades técnicas y objetivos del siguiente bloque.
-          </div>
-          <p className="mt-4 text-xs leading-relaxed text-neutral-500">
-            Este informe se genera con los datos registrados en RM OR DIE. Los 1RM mostrados como actuales son los registros confirmados guardados en la aplicación. Los datos de entrenamiento reflejan las sesiones que has registrado.
+          <section>
+            <h2>Últimos entrenos</h2>
+            <p className="r-sub">Lo que ha registrado, con cargas y esfuerzo.</p>
+            {report.sessions.length ? (
+              <div className="r-sessions">
+                {report.sessions.map((s) => (
+                  <div key={s.date} className="r-ses">
+                    <div className="r-sd"><b>{s.date}</b><span>{s.label}</span></div>
+                    <ul>{s.rows.map((r, i) => <li key={i}><span>{r.name}</span><span>{r.value}</span></li>)}</ul>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="r-empty">Sin entrenos registrados.</p>}
+          </section>
+
+          <p className="r-foot">
+            Datos registrados por el atleta en RM OR DIE. Los 1RM son marcas confirmadas; la recuperación sale de su registro diario.
+            {planning?.source_filename ? ` Plan: ${planning.source_filename}.` : ""}
           </p>
-        </Section>
-
-        <footer className="mt-8 border-t pt-4 text-xs text-neutral-400">
-          RM OR DIE · Informe de atleta · {planning?.source_filename ? `Plan activo: ${planning.source_filename}` : "Sin plan activo"}
-        </footer>
+        </article>
       </div>
     </main>
   );
 }
 
+function useSize<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [w, setW] = useStateW(0);
+  useEffect(() => {
+    if (!ref.current) return;
+    const el = ref.current;
+    const ro = new ResizeObserver(() => setW(el.clientWidth));
+    ro.observe(el);
+    setW(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, w] as const;
+}
+
+function WeeksChart({ weeks, target }: { weeks: number[]; target: number }) {
+  const [ref, W] = useSize<HTMLDivElement>();
+  const H = 210, pad = 22, top = 10;
+  const maxV = Math.max(target + 1, ...weeks, 1);
+  const y = (v: number) => top + (H - top - pad) * (1 - v / maxV);
+  const bw = W > 0 ? (W - pad) / weeks.length : 0;
+  const ticks = Array.from(new Set([0, Math.round(maxV / 2), maxV]));
+  return (
+    <div ref={ref} className="r-fig" style={{ height: H }}>
+      {W > 0 && (
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Entrenos por semana: ${weeks.join(", ")}`}>
+          {ticks.map((g) => <text key={g} x={0} y={y(g) + 4} fontSize={12} fill="var(--r-muted)">{g}</text>)}
+          {weeks.map((v, i) => {
+            const x = pad + i * bw + bw * 0.18, w = bw * 0.64, ok = v >= target;
+            return (
+              <g key={i}>
+                <rect x={x} y={y(v)} width={w} height={Math.max(0, y(0) - y(v))} rx={4} fill={ok ? "var(--r-ink)" : "var(--r-muted)"} opacity={ok ? 1 : 0.45} />
+                {(W > 600 || (W > 360 && i % 2 === 1)) && <text x={x + w / 2} y={H - 4} fontSize={12} textAnchor="middle" fill="var(--r-muted)">S{i + 1}</text>}
+              </g>
+            );
+          })}
+          <line x1={pad} x2={W} y1={y(target)} y2={y(target)} stroke="var(--r-gold)" strokeWidth={2} strokeDasharray="5 4" />
+        </svg>
+      )}
+    </div>
+  );
+}
+
+function WeightChart({ points }: { points: { date: string; kg: number }[] }) {
+  const [ref, W] = useSize<HTMLDivElement>();
+  const H = 180, pad = 30;
+  const kgs = points.map((p) => p.kg);
+  const lo = Math.floor(Math.min(...kgs) - 0.5), hi = Math.ceil(Math.max(...kgs) + 0.5);
+  const x = (i: number) => pad + (W - pad - 8) * (i / Math.max(1, points.length - 1));
+  const y = (v: number) => 10 + (H - 34) * (1 - (v - lo) / Math.max(0.1, hi - lo));
+  const pts = points.map((p, i) => `${x(i)},${y(p.kg)}`).join(" ");
+  const L = points.length - 1;
+  const month = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("es-ES", { month: "short" });
+  const ticks = Array.from(new Set([lo, Math.round((lo + hi) / 2), hi]));
+  return (
+    <div ref={ref} className="r-fig" style={{ height: H }}>
+      {W > 0 && (
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Evolución del peso corporal">
+          {ticks.map((g) => (
+            <g key={g}>
+              <line x1={pad} x2={W} y1={y(g)} y2={y(g)} stroke="var(--r-line)" />
+              <text x={0} y={y(g) + 4} fontSize={12} fill="var(--r-muted)">{g}</text>
+            </g>
+          ))}
+          <polygon points={`${x(0)},${H - 24} ${pts} ${x(L)},${H - 24}`} fill="var(--r-gold-bg)" />
+          <polyline points={pts} fill="none" stroke="var(--r-gold)" strokeWidth={3} strokeLinejoin="round" />
+          <circle cx={x(L)} cy={y(points[L].kg)} r={5} fill="var(--r-ink)" />
+          <text x={pad} y={H - 6} fontSize={12} fill="var(--r-muted)">{month(points[0].date)}</text>
+          <text x={W - 4} y={H - 6} fontSize={12} textAnchor="end" fill="var(--r-muted)">{month(points[L].date)}</text>
+        </svg>
+      )}
+    </div>
+  );
+}
+
+const REPORT_CSS = `
+.coach-report{--r-bg:#F6F4EF;--r-paper:#FFFFFF;--r-ink:#141311;--r-muted:#6E6A62;--r-line:#E6E2D9;--r-gold:#9C7F45;--r-gold-bg:#F3ECDD;--r-good:#2F7D4F;--r-warn:#B06A12;--r-bad:#B23A2B;
+  background:var(--r-bg);color:var(--r-ink);font-family:var(--font-display),Manrope,system-ui,sans-serif;font-size:16px;line-height:1.55}
+.coach-report h1,.coach-report h2,.coach-report .r-num,.coach-report .r-w b{font-family:var(--font-editorial),"Arial Narrow",sans-serif}
+.r-wrap{max-width:980px;margin:0 auto;padding:16px max(16px,4vw) 40px}
+.r-sheet{background:var(--r-paper);border:1px solid var(--r-line);border-radius:20px;padding:clamp(18px,3.4vw,40px)}
+.r-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end;border-bottom:3px solid var(--r-ink);padding-bottom:16px}
+.r-brand{font-weight:800;font-size:13px;color:var(--r-muted)}
+.coach-report h1{margin:4px 0 0;font-size:clamp(40px,7vw,64px);line-height:.95;font-weight:900}
+.r-meta{font-size:14px;color:var(--r-muted);text-align:right}
+.r-verdict{margin:22px 0 0;font-size:clamp(20px,2.6vw,26px);line-height:1.3;font-weight:700;text-wrap:balance;max-width:34ch}
+.r-verdict b{color:var(--r-gold)}
+.r-notes{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:8px}
+.r-notes li{display:flex;gap:10px;align-items:baseline;font-size:15px}
+.r-dot{width:10px;height:10px;border-radius:50%;flex:none;transform:translateY(1px)}
+.r-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:26px}
+.r-kpi{background:var(--r-bg);border-radius:14px;padding:12px 14px}
+.r-num{font-size:clamp(30px,4vw,40px);font-weight:800;line-height:1}
+.r-l{font-size:13px;color:var(--r-muted)}.r-d{font-size:13px;font-weight:700}
+.coach-report section{margin-top:34px}
+.coach-report h2{font-size:30px;line-height:1.05;margin:0;font-weight:800}
+.r-sub{color:var(--r-muted);font-size:14px;margin:2px 0 14px}
+.r-empty{color:var(--r-muted);font-size:14px;border:1px dashed var(--r-line);border-radius:12px;padding:14px}
+.r-lift{display:grid;grid-template-columns:10.5em minmax(0,1fr) 5.5em;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--r-line)}
+.r-n{font-weight:700;font-size:15px}.r-n small{display:block;color:var(--r-muted);font-weight:500;font-size:13px}
+.r-bar{position:relative;height:26px;background:var(--r-bg);border-radius:8px;overflow:hidden}
+.r-bar i{position:absolute;inset:0 auto 0 0;background:var(--r-ink);border-radius:8px}
+.r-bar i.up{background:linear-gradient(90deg,var(--r-ink) 0 var(--old),var(--r-gold) var(--old))}
+.r-w{text-align:right}.r-w b{font-size:26px;font-weight:800}
+.r-w em{display:block;font-style:normal;font-size:13px;font-weight:700;color:var(--r-good)}.r-w em.same{color:var(--r-muted);font-weight:500}
+.r-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--r-muted);margin-top:10px}
+.r-legend i{display:inline-block;width:14px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.r-two{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px}
+.r-fig{position:relative}.r-fig svg{position:absolute;inset:0;width:100%;height:100%}
+.r-meter{display:grid;grid-template-columns:5.5em minmax(0,1fr) 4.5em;gap:10px;align-items:center;padding:6px 0}
+.r-t{height:10px;background:var(--r-bg);border-radius:6px;overflow:hidden}.r-t i{display:block;height:100%;border-radius:6px}
+.r-v{text-align:right;font-weight:700;font-size:15px;white-space:nowrap}
+.r-goal{padding:10px 0;border-bottom:1px solid var(--r-line)}.r-goal .r-t{margin-top:6px;height:8px}
+.r-gh{display:flex;justify-content:space-between;gap:10px;font-size:15px}.r-gh span{color:var(--r-muted);white-space:nowrap}
+.r-sessions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.r-ses{border:1px solid var(--r-line);border-radius:14px;padding:12px 14px;break-inside:avoid}
+.r-sd{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--r-muted)}.r-sd b{color:var(--r-ink);font-size:15px;text-transform:capitalize}
+.r-ses ul{margin:6px 0 0;padding:0;list-style:none;font-size:14px}
+.r-ses li{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+.r-ses li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.r-ses li span:last-child{font-weight:700;white-space:nowrap}
+.r-foot{margin-top:30px;font-size:13px;color:var(--r-muted);border-top:1px solid var(--r-line);padding-top:12px}
+@media(max-width:760px){.r-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.r-kpis .r-kpi:last-child{grid-column:1/-1}.r-two,.r-sessions{grid-template-columns:minmax(0,1fr)}.r-meta{text-align:left}}
+@media(max-width:560px){.r-lift{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n w" "b b";row-gap:6px}.r-n{grid-area:n}.r-w{grid-area:w;white-space:nowrap}.r-w em{display:inline;margin-left:6px}.r-bar{grid-area:b;height:16px}}
+@media print{@page{size:A4;margin:12mm}.no-print{display:none!important}.coach-report{background:#fff}.r-wrap{padding:0;max-width:none}.r-sheet{border:0;padding:0}.coach-report section{break-inside:avoid}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+`;
 
 function buildSimplePdf(lines: string[]): Uint8Array {
   const PAGE_WIDTH = 595;
@@ -454,49 +539,6 @@ function buildSimplePdf(lines: string[]): Uint8Array {
   pdf += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
 
   return new TextEncoder().encode(pdf);
-}
-
-function Section({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
-  return (
-    <section className={`mt-8 ${className}`}>
-      <h2 className="mb-3 border-b border-neutral-200 pb-2 text-sm font-bold uppercase tracking-[0.16em]">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-function Kpi({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">{label}</p>
-      <p className="mt-1 text-lg font-bold tabular-nums">{value}</p>
-    </div>
-  );
-}
-
-function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-neutral-200">
-      <table className="w-full border-collapse text-xs">
-        <thead>
-          <tr className="bg-neutral-100 text-left">
-            {headers.map((h) => <th key={h} className="px-2 py-2 font-semibold">{h}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className="border-t border-neutral-200">
-              {row.map((cell, j) => <td key={j} className="px-2 py-2 align-top">{cell}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function Empty({ text = "Sin datos registrados." }: { text?: string }) {
-  return <p className="rounded-xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-500">{text}</p>;
 }
 
 function formatDate(value: string) {

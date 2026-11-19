@@ -5,7 +5,7 @@ import { needsStartDate, toPlanState, type AiReadResult } from "@/lib/ai-plan-re
 import { DAY_SHORT, blockContent, toPlanning } from "@/lib/plan-builder";
 import { parseISODate } from "@/lib/plan-dates";
 import { mergeMessage, mergePlanningKeepingHistory, resultKeySet } from "@/lib/plan-merge";
-import { useAllResults, usePlanning, useSavePlanning } from "@/lib/store";
+import { useAllResults, useOwnPlanning, useSavePlanning } from "@/lib/store";
 
 const font = { fontFamily: "var(--font-editorial)" };
 
@@ -24,7 +24,7 @@ export function AiReview({
   onReread: (hint: string) => void;
   rereading: boolean;
 }) {
-  const { data: current } = usePlanning();
+  const { data: current } = useOwnPlanning();
   const { data: allResults = [] } = useAllResults();
   const save = useSavePlanning();
   const [name, setName] = useState(result.plan_name || filename.replace(/\.[^.]+$/, ""));

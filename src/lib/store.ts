@@ -132,22 +132,129 @@ export type PlanningRow = {
   imported_at: string;
 };
 
+export type PlanningShare = { owner_id: string; recipient_id: string; follow: boolean; created_at: string };
+
+/** Planes que el administrador me ha compartido (vacío si la tabla aún no existe). */
+async function fetchSharesForMe(uid: string): Promise<PlanningShare[]> {
+  const { data, error } = await (supabase as any).from("planning_shares").select("*").eq("recipient_id", uid);
+  if (error) return [];
+  return (data ?? []) as PlanningShare[];
+}
+
 export function usePlanning() {
   const uid = getCurrentUserId();
   return useQuery({
     queryKey: ["planning", uid],
     queryFn: async (): Promise<PlanningRow | null> =>
       offlineRead(cacheKeys.planning(uid), async () => {
-        // Solo la planificación activa propia y la compartida (sin dueño), no
-        // las de todos los atletas: cada una lleva el año entero dentro.
+        // La activa propia, la compartida sin dueño y la del administrador si
+        // me la ha compartido y la sigo. Nunca las de todos los atletas.
+        const shares = uid ? await fetchSharesForMe(uid) : [];
+        const followed = shares.filter((sh) => sh.follow).map((sh) => sh.owner_id);
         let query = supabase.from("planning").select("*").eq("is_active", true);
-        query = uid ? query.or(`user_id.eq.${uid},user_id.is.null`) : query.is("user_id", null);
-        const { data, error } = await query.order("imported_at", { ascending: false }).limit(4);
+        const owners = [uid, ...followed].filter(Boolean) as string[];
+        query = owners.length ? query.or(`user_id.in.(${owners.join(",")}),user_id.is.null`) : query.is("user_id", null);
+        const { data, error } = await query.order("imported_at", { ascending: false }).limit(8);
         if (error) throw error;
         const rows = (data ?? []) as unknown as PlanningRow[];
-        // prefer the athlete's own active planning, fall back to the shared one
-        return rows.find((r) => uid && r.user_id === uid) ?? rows.find((r) => r.user_id === null) ?? rows[0] ?? null;
+        // 1) el plan compartido que sigo, 2) el mío, 3) el compartido sin dueño
+        return (
+          rows.find((r) => r.user_id && followed.includes(r.user_id)) ??
+          rows.find((r) => uid && r.user_id === uid) ??
+          rows.find((r) => r.user_id === null) ??
+          null
+        );
       }),
+  });
+}
+
+/** Mi plan activo (aunque esté siguiendo el de otro): para editarlo o ampliarlo. */
+export function useOwnPlanning() {
+  const uid = getCurrentUserId();
+  return useQuery({
+    queryKey: ["planning_own", uid],
+    enabled: !!uid,
+    queryFn: async (): Promise<PlanningRow | null> => {
+      const { data, error } = await supabase
+        .from("planning")
+        .select("*")
+        .eq("is_active", true)
+        .eq("user_id", uid!)
+        .order("imported_at", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return ((data ?? [])[0] as unknown as PlanningRow) ?? null;
+    },
+  });
+}
+
+/** Lo que me han compartido (para el aviso y para seguir / dejar de seguir). */
+export function useSharesForMe() {
+  const uid = getCurrentUserId();
+  return useQuery({
+    queryKey: ["planning_shares_me", uid],
+    enabled: !!uid,
+    queryFn: () => fetchSharesForMe(uid!),
+  });
+}
+
+export function useFollowSharedPlan() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+  return useMutation({
+    mutationFn: async ({ ownerId, follow }: { ownerId: string; follow: boolean }) => {
+      const { error } = await (supabase as any)
+        .from("planning_shares")
+        .update({ follow })
+        .eq("owner_id", ownerId)
+        .eq("recipient_id", uid!);
+      if (error) throw error;
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["planning_shares_me", uid] });
+      qc.invalidateQueries({ queryKey: ["planning", uid] });
+      qc.invalidateQueries({ queryKey: ["planning_own", uid] });
+    },
+  });
+}
+
+/** Administrador: a quién comparto mi plan. */
+export function useMyPlanningShares(enabled = true) {
+  const uid = getCurrentUserId();
+  return useQuery({
+    queryKey: ["planning_shares_owner", uid],
+    enabled: !!uid && enabled,
+    queryFn: async (): Promise<PlanningShare[]> => {
+      const { data, error } = await (supabase as any).from("planning_shares").select("*").eq("owner_id", uid!);
+      if (error) throw error;
+      return (data ?? []) as PlanningShare[];
+    },
+  });
+}
+
+export function useSetPlanningShares() {
+  const qc = useQueryClient();
+  const uid = getCurrentUserId();
+  return useMutation({
+    mutationFn: async ({ recipientIds, previous }: { recipientIds: string[]; previous: string[] }) => {
+      const add = recipientIds.filter((id) => !previous.includes(id));
+      const remove = previous.filter((id) => !recipientIds.includes(id));
+      if (add.length) {
+        const { error } = await (supabase as any)
+          .from("planning_shares")
+          .insert(add.map((recipient_id) => ({ owner_id: uid, recipient_id })));
+        if (error) throw error;
+      }
+      if (remove.length) {
+        const { error } = await (supabase as any)
+          .from("planning_shares")
+          .delete()
+          .eq("owner_id", uid!)
+          .in("recipient_id", remove);
+        if (error) throw error;
+      }
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["planning_shares_owner", uid] }),
   });
 }
 
@@ -210,6 +317,7 @@ export function useReorderPlanningMonths() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["planning", uid] });
+      qc.invalidateQueries({ queryKey: ["planning_own", uid] });
       qc.invalidateQueries({ queryKey: ["planning_versions", uid] });
     },
   });
@@ -244,6 +352,7 @@ export function useUpdatePlanningData() {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["planning", uid] });
+      qc.invalidateQueries({ queryKey: ["planning_own", uid] });
     },
   });
 }
@@ -279,6 +388,7 @@ export function useDeletePlanningMonth() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["planning", uid] });
+      qc.invalidateQueries({ queryKey: ["planning_own", uid] });
       qc.invalidateQueries({ queryKey: ["planning_versions", uid] });
     },
   });
@@ -320,6 +430,7 @@ export function useDeletePlanningVersion() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["planning", uid] });
+      qc.invalidateQueries({ queryKey: ["planning_own", uid] });
       qc.invalidateQueries({ queryKey: ["planning_versions", uid] });
     },
   });
@@ -404,6 +515,7 @@ export function useClearAllPlanning() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["planning", uid] });
+      qc.invalidateQueries({ queryKey: ["planning_own", uid] });
       qc.invalidateQueries({ queryKey: ["planning_versions", uid] });
     },
   });

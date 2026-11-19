@@ -5,7 +5,7 @@ import type { Planning } from "@/lib/excel-parser";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Copy, Minus, MoreHorizontal, Plus, Trash2 } from "lucide-react";
-import { usePlanning, useSavePlanning, usePersonalRecords } from "@/lib/store";
+import { useOwnPlanning, useSavePlanning, usePersonalRecords } from "@/lib/store";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
 import { movements } from "@/lib/dictionary/catalog";
@@ -86,7 +86,7 @@ function writeDraft(plan: PlanState | null) {
 
 function PlanBuilderPage() {
   const navigate = useNavigate();
-  const { data: current, isLoading } = usePlanning();
+  const { data: current, isLoading } = useOwnPlanning();
   const save = useSavePlanning();
   const myUid = getCurrentUserId();
   const search = Route.useSearch();

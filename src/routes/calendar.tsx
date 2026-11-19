@@ -3,6 +3,7 @@ import { usePlanning, useAllResults, useUpdatePlanningData } from "@/lib/store";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { dayRefFor, moveDay, shiftDays } from "@/lib/plan-move";
 import { toast } from "sonner";
+import { SharedPlanNotice } from "@/components/import/PlanSharing";
 import type { Planning } from "@/lib/excel-parser";
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Check, Circle, Moon, Calendar, GripVertical, Minus, Plus, Move } from "lucide-react";
@@ -246,6 +247,7 @@ function CalendarPage() {
   if (view === "semana") {
     return (
       <div className="page-enter select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <SharedPlanNotice compact />
         <WeekView
           weekStart={weekStart}
           planIndex={planIndex}

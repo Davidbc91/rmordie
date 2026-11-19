@@ -6,9 +6,10 @@ import { parsePlanningFromArrayBuffer, type Planning } from "@/lib/excel-parser"
 import { importPlanningFile, type ImportEngineResult } from "@/lib/import-engine";
 import { ImportReview } from "@/components/import/ImportReview";
 import { AiReview } from "@/components/import/AiReview";
+import { ShareMyPlan, SharedPlanNotice } from "@/components/import/PlanSharing";
 import { mergeMessage, mergePlanningKeepingHistory, resultKeySet } from "@/lib/plan-merge";
 import { AiReaderUnavailable, defaultStart, extractChunks, readPlanWithAi, type AiReadResult } from "@/lib/ai-plan-reader";
-import { useAllResults, usePlanning, usePlanningVersions, useSavePlanning, useDeletePlanningMonth, useDeletePlanningVersion, useReorderPlanningMonths, useClearAllPlanning } from "@/lib/store";
+import { useAllResults, useOwnPlanning, usePlanningVersions, useSavePlanning, useDeletePlanningMonth, useDeletePlanningVersion, useReorderPlanningMonths, useClearAllPlanning } from "@/lib/store";
 import { toast } from "sonner";
 import { Upload, CheckCircle2, Trash2, Image as ImageIcon, ClipboardPaste, Sparkles } from "lucide-react";
 
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/import")({
 });
 
 function ImportPage() {
-  const { data: current } = usePlanning();
+  const { data: current } = useOwnPlanning();
   const { data: allResults = [] } = useAllResults();
   const { data: planningVersions = [] } = usePlanningVersions();
   const save = useSavePlanning();
@@ -277,6 +278,8 @@ function ImportPage() {
       <p className="eyebrow">Tu programación</p>
       <h1 className="page-title mt-1">Planificación</h1>
 
+      <SharedPlanNotice />
+
       {current && months.length > 0 && (
         <section className="mt-4 rounded-[22px] border border-[color:var(--gold)]/35 bg-[color:var(--gold)]/[0.07] p-4">
           <p className="flex items-center gap-2 text-[13px] font-bold tracking-[0.1em] text-gold">
@@ -293,6 +296,8 @@ function ImportPage() {
           </button>
         </section>
       )}
+
+      <ShareMyPlan />
 
       <label className={`mt-3.5 flex cursor-pointer flex-col items-center gap-2.5 rounded-[22px] border-2 border-dashed border-[color:var(--gold)]/45 px-4 py-7 text-center transition hover:border-[color:var(--gold)]/70 ${busy ? "opacity-80" : ""}`}>
         <span className="gold-gradient grid h-14 w-14 place-items-center rounded-[18px]">

@@ -411,7 +411,7 @@ function WorkoutPage() {
               <>
                 <button type="button" aria-label="Cerrar menú" className="fixed inset-0 z-40 cursor-default" onClick={() => setMenuOpen(false)} />
                 <div role="menu" className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[#141412] shadow-2xl">
-                  <button
+                  {(!planning?.user_id || planning.user_id === getCurrentUserId()) && <button
                     type="button"
                     role="menuitem"
                     onClick={() => { setMenuOpen(false); navigate({ to: "/plan-builder", search: { m: month, w: weekN, d: day } }); }}
@@ -419,7 +419,7 @@ function WorkoutPage() {
                   >
                     <Pencil className="h-4 w-4 text-muted-foreground" />
                     Editar este día del plan
-                  </button>
+                  </button>}
                   {!d.isRest && <button
                     type="button"
                     role="menuitem"

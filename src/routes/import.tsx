@@ -6,8 +6,9 @@ import { parsePlanningFromArrayBuffer, type Planning } from "@/lib/excel-parser"
 import { importPlanningFile, type ImportEngineResult } from "@/lib/import-engine";
 import { ImportReview } from "@/components/import/ImportReview";
 import { AiReview } from "@/components/import/AiReview";
+import { mergeMessage, mergePlanningKeepingHistory, resultKeySet } from "@/lib/plan-merge";
 import { AiReaderUnavailable, defaultStart, extractChunks, readPlanWithAi, type AiReadResult } from "@/lib/ai-plan-reader";
-import { usePlanning, usePlanningVersions, useSavePlanning, useDeletePlanningMonth, useDeletePlanningVersion, useReorderPlanningMonths, useClearAllPlanning } from "@/lib/store";
+import { useAllResults, usePlanning, usePlanningVersions, useSavePlanning, useDeletePlanningMonth, useDeletePlanningVersion, useReorderPlanningMonths, useClearAllPlanning } from "@/lib/store";
 import { toast } from "sonner";
 import { Upload, CheckCircle2, Trash2, Image as ImageIcon, ClipboardPaste, Sparkles } from "lucide-react";
 
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/import")({
 
 function ImportPage() {
   const { data: current } = usePlanning();
+  const { data: allResults = [] } = useAllResults();
   const { data: planningVersions = [] } = usePlanningVersions();
   const save = useSavePlanning();
   const deleteMonth = useDeletePlanningMonth();
@@ -43,9 +45,12 @@ function ImportPage() {
   const [allMonths, setAllMonths] = useState(false);
 
   /** Excel con el formato anual propio: se guarda directamente (solo cambia la programación). */
-  async function saveNativePlanning(planning: Planning, filename: string) {
+  async function saveNativePlanning(incoming: Planning, filename: string) {
+    // No se borra nada de lo anterior: se juntan por fechas
+    const { planning, summary } = mergePlanningKeepingHistory(current?.data, incoming, resultKeySet(allResults));
     try {
       await save.mutateAsync({ planning, filename });
+      if (current?.data.months.length) toast.success(`Programación añadida: ${mergeMessage(summary)}`);
     } catch (e) {
       const err = e as { message?: string; code?: string; details?: string; hint?: string };
       console.error("[import] error guardando la planificación:", err);

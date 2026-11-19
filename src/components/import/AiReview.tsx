@@ -4,8 +4,8 @@ import { toast } from "sonner";
 import { needsStartDate, toPlanState, type AiReadResult } from "@/lib/ai-plan-reader";
 import { DAY_SHORT, blockContent, toPlanning } from "@/lib/plan-builder";
 import { parseISODate } from "@/lib/plan-dates";
-import { mergePlanningPreservingPrevious } from "@/lib/pdf-import";
-import { usePlanning, useSavePlanning } from "@/lib/store";
+import { mergeMessage, mergePlanningKeepingHistory, resultKeySet } from "@/lib/plan-merge";
+import { useAllResults, usePlanning, useSavePlanning } from "@/lib/store";
 
 const font = { fontFamily: "var(--font-editorial)" };
 
@@ -25,6 +25,7 @@ export function AiReview({
   rereading: boolean;
 }) {
   const { data: current } = usePlanning();
+  const { data: allResults = [] } = useAllResults();
   const save = useSavePlanning();
   const [name, setName] = useState(result.plan_name || filename.replace(/\.[^.]+$/, ""));
   const [start, setStart] = useState(defaultStart);
@@ -47,14 +48,15 @@ export function AiReview({
       return;
     }
     const incoming = toPlanning(plan);
-    const planning = hasCurrent && keepOthers ? mergePlanningPreservingPrevious(current!.data, incoming) : incoming;
+    const merged = hasCurrent && keepOthers ? mergePlanningKeepingHistory(current!.data, incoming, resultKeySet(allResults)) : null;
+    const planning = merged?.planning ?? incoming;
     try {
       await save.mutateAsync({ planning, filename: name.trim() || filename });
     } catch (e) {
       toast.error(`No se pudo guardar: ${(e as { message?: string })?.message ?? "error desconocido"}`);
       return;
     }
-    toast.success(`Planificación guardada: ${training.length} entrenos. Tus registros están intactos.`);
+    toast.success(merged ? `Programación añadida: ${mergeMessage(merged.summary)}` : `Planificación guardada: ${training.length} entrenos. Tus registros están intactos.`);
     onSaved(openEditor);
   }
 
@@ -170,8 +172,8 @@ export function AiReview({
         <label className="flex min-h-12 items-start gap-3 text-sm">
           <input type="checkbox" checked={keepOthers} onChange={(e) => setKeepOthers(e.target.checked)} className="mt-1 h-5 w-5 accent-[color:var(--gold)]" />
           <span>
-            Mantener los meses de mi plan actual que no aparecen aquí
-            <span className="block text-[13px] text-muted-foreground">Si lo quitas, esta lectura sustituye a toda la planificación. Tus registros nunca se borran.</span>
+            Añadir a mi planificación sin borrar nada
+            <span className="block text-[13px] text-muted-foreground">Se conserva todo lo anterior. Si un día coincide, se queda lo que ya entrenaste y, de hoy en adelante, manda lo nuevo. Si lo quitas, esta lectura sustituye a toda la planificación (tus registros nunca se borran).</span>
           </span>
         </label>
       )}

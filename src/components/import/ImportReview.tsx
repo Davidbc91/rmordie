@@ -2,10 +2,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { GlassBadge, GlassButton, GlassCard, GlassInput, GlassSection } from "@/components/glass";
-import { usePlanning, useSavePlanning, usePersonalRecords } from "@/lib/store";
+import { useAllResults, usePlanning, useSavePlanning, usePersonalRecords } from "@/lib/store";
 import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
 import { IMPORT_DAYS, type ReviewRow, buildPlanningFromRows, needsReview, rowIssues } from "@/lib/generic-import";
-import { mergePlanningPreservingPrevious } from "@/lib/pdf-import";
+import { mergeMessage, mergePlanningKeepingHistory, resultKeySet } from "@/lib/plan-merge";
 import type { ImportEngineResult } from "@/lib/import-engine";
 
 /**
@@ -24,6 +24,7 @@ export function ImportReview({
   onSaved: () => void;
 }) {
   const { data: current } = usePlanning();
+  const { data: allResults = [] } = useAllResults();
   const { data: records = [] } = usePersonalRecords();
   const save = useSavePlanning();
 
@@ -48,10 +49,10 @@ export function ImportReview({
       return;
     }
     const planning = buildPlanningFromRows(rows, { monthKey, monthLabel });
-    const mergedPlanning = mergePlanningPreservingPrevious(current?.data, planning);
+    const { planning: mergedPlanning, summary } = mergePlanningKeepingHistory(current?.data, planning, resultKeySet(allResults));
     try {
       await save.mutateAsync({ planning: mergedPlanning, filename: filename || "Importación genérica" });
-      toast.success(`Planificación importada: ${validCount} filas.`);
+      toast.success(current?.data.months.length ? `Programación añadida: ${mergeMessage(summary)}` : `Planificación importada: ${validCount} filas.`);
       onSaved();
     } catch (e) {
       const err = e as { message?: string };

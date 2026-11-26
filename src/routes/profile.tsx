@@ -15,6 +15,7 @@ import { ConsistencySection } from "@/components/profile/ConsistencySection";
 import { RecoverySection } from "@/components/profile/RecoverySection";
 import { GoalsSection } from "@/components/profile/GoalsSection";
 import { MedalsShowcase, MedalsStrip } from "@/components/medals/Medals";
+import { CoachPrivacyCard } from "@/components/coach/CoachAthleteSide";
 import { ReportSection } from "@/components/profile/ReportSection";
 import { DataSection } from "@/components/profile/DataSection";
 
@@ -130,6 +131,8 @@ function ProfilePage() {
         </div>
 
         <MedalsStrip onOpen={() => setSection("milestones")} />
+
+        <CoachPrivacyCard />
 
         <Link to="/semana" className="pressable rise rise-3 mt-4 flex min-h-[60px] items-center gap-3 rounded-[18px] border border-white/[0.09] bg-white/[0.045] px-4">
           <span className="min-w-0 flex-1">

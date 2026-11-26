@@ -9,9 +9,10 @@ import { getActiveWorkout, clearActiveWorkout, type ActiveWorkout } from "@/lib/
 import { useChatUnread } from "@/lib/chat-unread";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import { MedalWatcher } from "@/components/medals/Medals";
+import { CoachConsentPrompt } from "@/components/coach/CoachAthleteSide";
 import { useAllResults } from "@/lib/store";
 import { streaks } from "@/lib/analytics";
-import { Zap } from "lucide-react";
+import { Zap, ClipboardList } from "lucide-react";
 import { getCurrentUserId, signOut } from "@/lib/pin-gate";
 import { isVideoAdmin } from "@/lib/admin-videos";
 import { useProfiles } from "@/lib/store";
@@ -134,7 +135,7 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
     staleTime: 5 * 60 * 1000,
   });
   const visibleProfileLinks = useMemo(
-    () => isAdmin ? [...profileLinks, { to: "/admin/videos", label: "Administración de vídeos", hint: "Gestionar vídeos", icon: Film }] : profileLinks,
+    () => isAdmin ? [...profileLinks, { to: "/entrenador", label: "Panel de entrenador", hint: "Cómo van tus atletas", icon: ClipboardList }, { to: "/admin/videos", label: "Administración de vídeos", hint: "Gestionar vídeos", icon: Film }] : profileLinks,
     [isAdmin],
   );
 
@@ -217,6 +218,7 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
 
       <BottomNavigation pathname={pathname} keyboardOpen={keyboardOpen} />
       {currentProfileId && <MedalWatcher />}
+      {currentProfileId && !isAdmin && <CoachConsentPrompt />}
     </div>
   );
 }

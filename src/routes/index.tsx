@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { WeekCard } from "@/components/week/Week";
+import { CoachCommentsCard } from "@/components/coach/CoachAthleteSide";
 import { usePlanning, useAllResults, usePersonalRecords, type PersonalRecord } from "@/lib/store";
 import { useAthleteProfile, useAllPrHistory, useWellnessLogs } from "@/lib/profile-store";
 import { sessionDays, volumeOf, fmtKg, trainedAt, trainedDay } from "@/lib/analytics";
@@ -288,6 +289,8 @@ function Home() {
 
       {/* 2 · Hoy */}
       {planning && <TodayCard next={next} todayPlan={todayPlan} todayDone={todayDone} weekProgress={weekProgress} records={records} />}
+
+      <CoachCommentsCard />
 
       {/* 3 · Semana pasada (hasta que la cierras) */}
       <WeekCard />

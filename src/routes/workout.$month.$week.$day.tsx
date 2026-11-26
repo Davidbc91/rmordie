@@ -34,6 +34,7 @@ import { getCurrentUserId } from "@/lib/pin-gate";
 import { downloadSessionReport } from "@/lib/session-report";
 import { renderWorkoutCard, shareOrDownloadCard } from "@/lib/share-card";
 import { InstaShareSheet } from "@/components/workout/InstaShareSheet";
+import { WorkoutCoachComments } from "@/components/coach/CoachAthleteSide";
 import { useAllPrHistory } from "@/lib/profile-store";
 import { WorkoutReview, WorkoutReviewCard } from "@/components/workout/WorkoutReviewCard";
 import { BlockPayload, BlockCard, type StrengthPr } from "@/components/workout/BlockCard";
@@ -446,6 +447,8 @@ function WorkoutPage() {
           <p className="text-sm text-muted-foreground">Día de descanso y movilidad</p>
         </div>
       )}
+
+      <WorkoutCoachComments month={month} week={weekN} day={day} />
 
       {!d.isRest && d.blocks.length > 0 && <RmCalculator records={personalRecords} settings={settings} />}
 

@@ -445,7 +445,7 @@ function WeightChart({ points }: { points: { date: string; kg: number }[] }) {
 }
 
 const REPORT_CSS = `
-.coach-report{--r-bg:#F6F4EF;--r-paper:#FFFFFF;--r-ink:#141311;--r-muted:#6E6A62;--r-line:#E6E2D9;--r-gold:#D9734A;--r-gold-bg:#FFE8DB;--r-good:#2F7D4F;--r-warn:#B06A12;--r-bad:#B23A2B;
+.coach-report{--r-bg:#F6F4EF;--r-paper:#FFFFFF;--r-ink:#141311;--r-muted:#6E6A62;--r-line:#E6E2D9;--r-gold:#5E7A00;--r-gold-bg:#EEF7CC;--r-good:#2F7D4F;--r-warn:#B06A12;--r-bad:#B23A2B;
   background:var(--r-bg);color:var(--r-ink);font-family:var(--font-display),Manrope,system-ui,sans-serif;font-size:16px;line-height:1.55}
 .coach-report h1,.coach-report h2{font-family:var(--font-editorial),sans-serif;letter-spacing:-.03em}.coach-report .r-num,.coach-report .r-w b{font-family:var(--font-num),"Arial Narrow",sans-serif}
 .r-wrap{max-width:980px;margin:0 auto;padding:16px max(16px,4vw) 40px}

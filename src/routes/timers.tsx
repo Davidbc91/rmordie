@@ -388,7 +388,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
             className="h-full transition-[width] duration-200"
             style={{
               width: `${Math.min(100, progress * 100)}%`,
-              background: phase === "rest" ? "#6F6F6F" : "var(--gold)",
+              background: phase === "rest" ? "#6B6B70" : "var(--gold)",
             }}
           />
         </div>
@@ -426,7 +426,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
       {fullscreen && (
         <div
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
-          style={{ background: "#14161D" }}
+          style={{ background: "#0C0C0E" }}
         >
           <div
             className="absolute inset-x-0 top-0 h-1"
@@ -436,7 +436,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
               className="h-full transition-[width] duration-200"
               style={{
                 width: `${Math.min(100, progress * 100)}%`,
-                background: phase === "rest" ? "#6F6F6F" : "var(--gold)",
+                background: phase === "rest" ? "#6B6B70" : "var(--gold)",
               }}
             />
           </div>
@@ -472,7 +472,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
               fontFamily: "var(--font-num)",
               fontSize: roundTotal != null || countsRounds ? "min(32vw, 42vh)" : "min(38vw, 55vh)",
               color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#FFFFFF" : isPrep ? "#fff" : "var(--gold)",
-              textShadow: phase === "work" || (!isPrep && phase !== "rest" && phase !== "done") ? "0 0 40px rgba(255,179,138,.28)" : "none",
+              textShadow: phase === "work" || (!isPrep && phase !== "rest" && phase !== "done") ? "0 0 40px rgba(198,255,0,.28)" : "none",
               letterSpacing: "0.01em",
             }}
           >

@@ -121,11 +121,11 @@ export function PlateLine({ total, cfg }: { total: number | null; cfg: PlateConf
     <div className="mt-2 flex items-center gap-3 rounded-[12px] bg-black/30 px-3 py-2.5">
       <svg width="116" height="34" viewBox="0 0 116 34" aria-hidden className="shrink-0">
         <rect x="0" y="15" width="116" height="4" rx="2" fill="#6B6860" />
-        <rect x="36" y="11" width="4" height="12" rx="1" fill="#99968E" />
+        <rect x="36" y="11" width="4" height="12" rx="1" fill="#99999A" />
         {r.plates.slice(0, 8).map((p, i) => {
           const h = Math.max(10, Math.round((p / maxPlate) * 32));
           const w = p >= 10 ? 8 : p >= 5 ? 6 : 4;
-          const el = <rect key={i} x={x} y={17 - h / 2} width={w} height={h} rx="1.5" fill={p >= 15 ? "#FFB38A" : p >= 5 ? "#FFD3BC" : "#99968E"} />;
+          const el = <rect key={i} x={x} y={17 - h / 2} width={w} height={h} rx="1.5" fill={p >= 15 ? "#C6FF00" : p >= 5 ? "#DBFF66" : "#99999A"} />;
           x += w + 1.5;
           return el;
         })}

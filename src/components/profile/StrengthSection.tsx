@@ -18,7 +18,7 @@ export function StrengthSection({ records, history, days, bodyWeight }: any) {
             <button className="w-full text-left" onClick={() => setOpenEx(open ? null : s.exercise)}>
               <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs" style={{ color: "#6F6F6F" }}>
+                  <p className="text-xs" style={{ color: "#6B6B70" }}>
                     {s.exercise}
                   </p>
                   <p className="mt-1 text-[40px] font-semibold leading-none tabular tracking-tight">
@@ -26,14 +26,14 @@ export function StrengthSection({ records, history, days, bodyWeight }: any) {
                     <span className="text-base"> kg</span>
                   </p>
                 </div>
-                <div className="text-right text-[13px]" style={{ color: "#6F6F6F" }}>
+                <div className="text-right text-[13px]" style={{ color: "#6B6B70" }}>
                   {s.changePct != null && <div>{s.changePct >= 0 ? "+" : ""}{s.changePct.toFixed(1)}%</div>}
                   <div>{s.updates} registros</div>
                 </div>
               </div>
             </button>
 
-            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-xs" style={{ color: "#6F6F6F" }}>
+            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-xs" style={{ color: "#6B6B70" }}>
               <Row label="1RM real" value={s.realOneRm != null ? fmtKg(s.realOneRm) : "—"} />
               <Row
                 label="1RM estimado"
@@ -51,7 +51,7 @@ export function StrengthSection({ records, history, days, bodyWeight }: any) {
               />
             </div>
             {s.realOneRm == null && s.estimatedOneRm != null && (
-              <p className="mt-3 text-[13px]" style={{ color: "#6F6F6F" }}>
+              <p className="mt-3 text-[13px]" style={{ color: "#6B6B70" }}>
                 Estimado (Epley) a partir de {s.estimatedFrom}. No es un récord real.
               </p>
             )}

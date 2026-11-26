@@ -96,7 +96,7 @@ export function WheelColumn({
                 fontWeight: 800,
                 fontSize: 30,
                 lineHeight: `${ITEM}px`,
-                color: Math.abs(d) < 0.5 ? "var(--foreground, #F2F0EA)" : "var(--muted-foreground, #8E8B83)",
+                color: Math.abs(d) < 0.5 ? "var(--foreground, #F5F5F7)" : "var(--muted-foreground, #8E8B83)",
                 opacity: Math.max(0.25, 1 - Math.abs(d) * 0.28),
                 transform: `perspective(300px) rotateX(${Math.max(-60, Math.min(60, -d * 18))}deg) scale(${1 - Math.min(0.25, Math.abs(d) * 0.08)})`,
               }}
@@ -212,7 +212,7 @@ function PickerSheet({
       <div
         role="dialog"
         aria-label={`Elegir ${label.toLowerCase()}`}
-        className="w-full rounded-t-[24px] border-t border-white/10 bg-[#1E212B] px-4 pt-4 text-foreground"
+        className="w-full rounded-t-[24px] border-t border-white/10 bg-[#1B1B1D] px-4 pt-4 text-foreground"
         style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
         onClick={(e) => e.stopPropagation()}
       >

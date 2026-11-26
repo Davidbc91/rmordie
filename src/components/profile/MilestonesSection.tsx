@@ -27,9 +27,9 @@ export function MilestonesSection({ results, history }: any) {
         <div key={m.code} className="card-elevated p-4">
           <Award className="h-5 w-5" />
           <p className="mt-3 text-sm font-semibold leading-tight">{m.label}</p>
-          {m.detail && <p className="mt-1 text-[13px]" style={{ color: "#6F6F6F" }}>{m.detail}</p>}
+          {m.detail && <p className="mt-1 text-[13px]" style={{ color: "#6B6B70" }}>{m.detail}</p>}
           {m.achieved_at && (
-            <p className="mt-2 text-xs" style={{ color: "#6F6F6F" }}>
+            <p className="mt-2 text-xs" style={{ color: "#6B6B70" }}>
               {new Date(m.achieved_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "2-digit" })}
             </p>
           )}

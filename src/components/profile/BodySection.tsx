@@ -93,7 +93,7 @@ export function BodySection() {
               style={
                 metricKey === f.key
                   ? { background: "var(--aurora)", color: "var(--aurora-ink)" }
-                  : { background: "#F1F1F1", color: "#6F6F6F" }
+                  : { background: "#F1F1F1", color: "#6B6B70" }
               }
             >
               {f.label}

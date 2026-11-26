@@ -36,7 +36,7 @@ export function ConsistencySection({ results, plannedDays, completedSessions, we
         cambiar o borrar la planificación no la toca, ni a la racha.
       </p>
       <Card>
-        <p className="text-xs" style={{ color: "#6F6F6F" }}>Plan actual</p>
+        <p className="text-xs" style={{ color: "#6B6B70" }}>Plan actual</p>
         <div className="mt-3 grid grid-cols-2 gap-3">
           <Stat label="Planificados" value={plannedDays ? String(plannedDays) : "—"} />
           <Stat label="Completados" value={String(completedSessions)} />
@@ -45,7 +45,7 @@ export function ConsistencySection({ results, plannedDays, completedSessions, we
         </div>
       </Card>
       <Card>
-        <p className="text-xs" style={{ color: "#6F6F6F" }}>
+        <p className="text-xs" style={{ color: "#6B6B70" }}>
           Últimas 12 semanas
         </p>
         <div className="mt-4 grid grid-cols-[repeat(14,1fr)] gap-1.5">
@@ -58,7 +58,7 @@ export function ConsistencySection({ results, plannedDays, completedSessions, we
             />
           ))}
         </div>
-        <p className="mt-4 text-xs" style={{ color: "#6F6F6F" }}>
+        <p className="mt-4 text-xs" style={{ color: "#6B6B70" }}>
           Media semanal: {stats.weeklyFreq != null ? fmtNum(stats.weeklyFreq) : "—"} sesiones
           {weeklyTarget ? ` · objetivo ${weeklyTarget}` : ""}
         </p>

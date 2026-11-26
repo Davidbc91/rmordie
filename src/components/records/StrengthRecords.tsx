@@ -416,7 +416,7 @@ export function StrengthRecords({
             <ul className="rise rise-3 overflow-hidden rounded-[20px] border border-white/[0.09] bg-white/[0.045]">
               {groups.map((g) => {
                 const pr = progress.get(g.key);
-                const tone = pr?.trend.kind === "up" ? "text-[#8FD19E]" : pr?.trend.kind === "down" ? "text-red-300" : "text-muted-foreground";
+                const tone = pr?.trend.kind === "up" ? "text-[#C6FF00]" : pr?.trend.kind === "down" ? "text-red-300" : "text-muted-foreground";
                 return (
                   <li key={g.key} className="border-b border-white/[0.07] last:border-b-0">
                     <button

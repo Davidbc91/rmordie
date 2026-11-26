@@ -36,7 +36,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --font-display: "Plus Jakarta Sans", "Manrope", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
-  --shadow-gold: 0 10px 30px -12px rgba(255, 179, 138, 0.28);
+  --shadow-gold: 0 10px 30px -12px rgba(198, 255, 0, 0.28);
   --shadow-elevated: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
 }
 
@@ -44,45 +44,45 @@
  * Tokens (una sola definición; antes había cuatro pasadas que se pisaban)
  * ------------------------------------------------------------------------- */
 :root, .dark {
-  /* Aurora: degradado y colores por tipo de trabajo */
-  --aurora: linear-gradient(135deg, #FFB38A 0%, #F39BB6 50%, #B9A6FF 100%);
-  --c-peach: #FFB38A;
-  --c-rose: #F39BB6;
-  --c-lila: #B9A6FF;
-  --c-mint: #7DE3C3;
-  --aurora-ink: #1A1420;
+  /* Lima: acento único; naranja y cielo solo para detalles */
+  --aurora: linear-gradient(135deg, #D8FF4D 0%, #C6FF00 55%, #AEE600 100%);
+  --c-peach: #C6FF00;
+  --c-rose: #FF8A3D;
+  --c-lila: #3BB8F5;
+  --c-mint: #C6FF00;
+  --aurora-ink: #0C0C0E;
   --radius: 0.95rem;
-  --level-0: #14161D;
-  --level-1: #191C24;
-  --level-2: #1E212B;
-  --background: #14161D;
-  --foreground: #F3F2F7;
+  --level-0: #0C0C0E;
+  --level-1: #141416;
+  --level-2: #1B1B1D;
+  --background: #0C0C0E;
+  --foreground: #F5F5F7;
   --surface: rgba(255, 255, 255, 0.05);
   --surface-2: rgba(255, 255, 255, 0.08);
-  --card: #1E212B;
-  --card-foreground: #F3F2F7;
-  --popover: #1E212B;
-  --popover-foreground: #F3F2F7;
-  --gold: #FFB38A;
-  --gold-soft: #FFD3BC;
-  --gold-foreground: #1A1420;
-  --primary: #F3F2F7;
-  --primary-foreground: #14161D;
+  --card: #1B1B1D;
+  --card-foreground: #F5F5F7;
+  --popover: #1B1B1D;
+  --popover-foreground: #F5F5F7;
+  --gold: #C6FF00;
+  --gold-soft: #DBFF66;
+  --gold-foreground: #0C0C0E;
+  --primary: #F5F5F7;
+  --primary-foreground: #0C0C0E;
   --secondary: rgba(255, 255, 255, 0.07);
   --secondary-foreground: #F4F4F5;
   --muted: rgba(255, 255, 255, 0.06);
-  --muted-foreground: #A4A6B5;
+  --muted-foreground: #99999A;
   --accent: rgba(255, 255, 255, 0.09);
   --accent-foreground: #FFFFFF;
   --destructive: #E5484D;
   --destructive-foreground: #FFFFFF;
-  --success: #7DE3C3;
+  --success: #C6FF00;
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.05);
-  --ring: rgba(255, 179, 138, 0.6);
+  --ring: rgba(198, 255, 0, 0.6);
   --glass-bg: rgba(255, 255, 255, 0.035);
   --glass-bg-2: rgba(255, 255, 255, 0.045);
-  --glass-bg-3: rgba(30, 33, 43, 0.94);
+  --glass-bg-3: rgba(30, 30, 33, 0.94);
   --glass-border: rgba(255, 255, 255, 0.085);
   --glass-border-strong: rgba(255, 255, 255, 0.13);
   --glass-highlight: rgba(255, 255, 255, 0.32);
@@ -95,7 +95,7 @@
   /* Cifras grandes (cronómetros, kilos, récords): condensada para que quepan */
   --font-num: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
   /* Superficies */
-  --surface-card-bg: #1E212B;
+  --surface-card-bg: #1B1B1D;
   --surface-shadow: 0 14px 36px -26px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -115,9 +115,8 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     background-color: var(--level-0);
-    background-image:
-      radial-gradient(80% 36% at 85% -6%, rgba(185, 166, 255, 0.10), transparent 70%),
-      radial-gradient(70% 32% at 0% 0%, rgba(255, 179, 138, 0.07), transparent 68%);
+    background-image: linear-gradient(180deg, #1A222D 0px, #12151B 160px, var(--level-0) 320px);
+    background-repeat: no-repeat;
     min-height: 100dvh;
   }
   @media (max-width: 767px) {
@@ -179,7 +178,7 @@
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: var(--r-md);
   }
-  .cinematic-card-dark { background: #1E212B; }
+  .cinematic-card-dark { background: #1B1B1D; }
 
   .surface-sheet,
   .glass-elevated {
@@ -202,8 +201,8 @@
   }
   .glass-gold,
   .cinematic-outline {
-    border-color: rgba(255, 179, 138, 0.28);
-    box-shadow: var(--surface-shadow), 0 0 0 1px rgba(255, 179, 138, 0.06);
+    border-color: rgba(198, 255, 0, 0.28);
+    box-shadow: var(--surface-shadow), 0 0 0 1px rgba(198, 255, 0, 0.06);
   }
   .glass-refraction {
     position: relative;
@@ -217,7 +216,7 @@
     z-index: -1;
     background:
       radial-gradient(35% 30% at 15% 15%, rgba(255, 255, 255, 0.16), transparent 70%),
-      radial-gradient(30% 28% at 85% 80%, rgba(255, 179, 138, 0.09), transparent 72%);
+      radial-gradient(30% 28% at 85% 80%, rgba(198, 255, 0, 0.09), transparent 72%);
     filter: blur(18px);
     opacity: 0.28;
     pointer-events: none;
@@ -278,7 +277,7 @@
     letter-spacing: 0;
     color: var(--muted-foreground);
   }
-  .cinematic-label { color: #A4A6B5; }
+  .cinematic-label { color: #99999A; }
 
   /* Botón principal (Empezar entreno, Guardar entreno completo) */
   .cta-display {
@@ -323,9 +322,9 @@
   &:hover { filter: brightness(1.045); }
   &:active { transform: scale(0.972); filter: brightness(.985); }
   &:focus-visible {
-    outline: 1px solid rgba(255, 179, 138,.72);
+    outline: 1px solid rgba(198, 255, 0,.72);
     outline-offset: 3px;
-    box-shadow: 0 0 0 5px rgba(255, 179, 138,.08);
+    box-shadow: 0 0 0 5px rgba(198, 255, 0,.08);
   }
 }
 @utility hairline {
@@ -341,7 +340,7 @@
 }
 @utility gold-hairline {
   height: 1px;
-  background: linear-gradient(90deg, rgba(255, 179, 138, 0.60), rgba(255, 179, 138, 0));
+  background: linear-gradient(90deg, rgba(198, 255, 0, 0.60), rgba(198, 255, 0, 0));
 }
 @utility no-scrollbar {
   scrollbar-width: none;
@@ -361,8 +360,8 @@
 }
 @utility glass-breathe { animation: glass-breathe 4.5s ease-in-out infinite; }
 @keyframes gold-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 179, 138,0), 0 0 0 1px rgba(255, 179, 138,.14); }
-  50% { box-shadow: 0 0 0 6px rgba(255, 179, 138,.035), 0 0 0 1px rgba(255, 179, 138,.24); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(198, 255, 0,0), 0 0 0 1px rgba(198, 255, 0,.14); }
+  50% { box-shadow: 0 0 0 6px rgba(198, 255, 0,.035), 0 0 0 1px rgba(198, 255, 0,.24); }
 }
 @utility gold-pulse { animation: gold-pulse 2.8s ease-in-out infinite; }
 @keyframes micro-pop {
@@ -438,7 +437,7 @@
   }
 }
 @utility aura {
-  background-image: radial-gradient(120% 70% at 50% -10%, rgba(255, 179, 138, 0.06) 0%, rgba(255, 179, 138, 0) 60%);
+  background-image: radial-gradient(120% 70% at 50% -10%, rgba(198, 255, 0, 0.06) 0%, rgba(198, 255, 0, 0) 60%);
 }
 @utility dotgrid {
   background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
@@ -480,21 +479,22 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Aurora: fondo azul noche suave, tarjetas redondeadas y pastel con fuerza.
- * Melocotón = fuerza, lila = WOD, menta = gimnásticos.
+ * Paleta lima (inspirada en WodLog): negro con velo azul noche arriba,
+ * tarjetas grafito y un solo acento verde lima. Los nombres aurora-* y
+ * tint-* se mantienen para no tocar los componentes.
  * ------------------------------------------------------------------------- */
 @layer components {
   .aurora-hero { background: var(--aurora); color: var(--aurora-ink); border-radius: 28px; position: relative; overflow: hidden; }
-  .aurora-hero .text-muted-foreground { color: rgba(26, 20, 32, 0.68); }
+  .aurora-hero .text-muted-foreground { color: rgba(12, 12, 14, 0.68); }
   .aurora-hero :is(.gold-text, .text-gold) { color: inherit; }
-  .aurora-btn { background: #1A1420; color: #FFF4EC; }
+  .aurora-btn { background: #0C0C0E; color: #F5F5F7; }
   .aurora-btn:is(:hover, :focus-visible) { background: #000; }
   .tint { border-radius: 22px; }
-  .tint-peach { background: rgba(255, 179, 138, 0.14); color: var(--c-peach); }
-  .tint-lila { background: rgba(185, 166, 255, 0.14); color: var(--c-lila); }
-  .tint-mint { background: rgba(125, 227, 195, 0.13); color: var(--c-mint); }
-  .tint-rose { background: rgba(243, 155, 182, 0.14); color: var(--c-rose); }
-  :is(.tint-peach, .tint-lila, .tint-mint, .tint-rose) .text-muted-foreground { color: rgba(243, 242, 247, 0.78); }
+  .tint-peach { background: #262C12; color: var(--c-peach); }
+  .tint-lila { background: rgba(59, 184, 245, 0.14); color: var(--c-lila); }
+  .tint-mint { background: #262C12; color: var(--c-mint); }
+  .tint-rose { background: rgba(255, 138, 61, 0.14); color: var(--c-rose); }
+  :is(.tint-peach, .tint-lila, .tint-mint, .tint-rose) .text-muted-foreground { color: rgba(245, 245, 247, 0.72); }
   .num { font-family: var(--font-num); }
   .aurora-text { background: var(--aurora); -webkit-background-clip: text; background-clip: text; color: transparent; }
 }

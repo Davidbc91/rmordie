@@ -305,7 +305,7 @@ function Home() {
               <Link to="/calendar" className="mt-4 inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-gold">Ver planificación <ChevronRight className="h-4 w-4" /></Link>
             </GlassCard>
           ) : todayPlan?.day && todayPlan.progress.state === "completed" ? (
-            <div className="tint tint-mint rise rise-2 p-6"><span className="rounded-full bg-[rgba(125,227,195,.18)] px-3 py-1 text-[13px] font-extrabold">Hoy · Completado</span><h2 className="mt-4 text-[28px] font-extrabold tracking-tight text-foreground">Entrenamiento hecho</h2><p className="mt-2 text-sm font-semibold text-muted-foreground">Buen trabajo. Tu próxima sesión aparece a continuación.</p></div>
+            <div className="tint tint-mint rise rise-2 p-6"><span className="rounded-full bg-[rgba(198,255,0,.18)] px-3 py-1 text-[13px] font-extrabold">Hoy · Completado</span><h2 className="mt-4 text-[28px] font-extrabold tracking-tight text-foreground">Entrenamiento hecho</h2><p className="mt-2 text-sm font-semibold text-muted-foreground">Buen trabajo. Tu próxima sesión aparece a continuación.</p></div>
           ) : null}
 
           {/* Próxima sesión: lo primero y con el botón visible sin bajar. */}
@@ -461,7 +461,7 @@ function Home() {
               <ResponsiveContainer width="100%" height="100%"><LineChart data={dashboardTrend.weeks} margin={{ top: 8, right: 6, left: -24, bottom: 0 }} onClick={(state) => {
                 const label = state?.activeLabel;
                 if (typeof label === "string") setSelectedTrendWeek(label);
-              }}><XAxis dataKey="label" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} /><YAxis hide /><Tooltip formatter={(value: number) => [fmtKg(value, 0), "Volumen"]} contentStyle={{ background: "rgba(20,20,20,.94)", border: "1px solid rgba(255,179,138,.25)", borderRadius: 12, fontSize: 13 }} /><Line type="monotone" dataKey="volume" stroke="var(--gold)" strokeWidth={2.5} dot={{ r: 3, fill: "var(--gold)", stroke: "var(--gold)" }} activeDot={{ r: 5 }} connectNulls /></LineChart></ResponsiveContainer>
+              }}><XAxis dataKey="label" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} /><YAxis hide /><Tooltip formatter={(value: number) => [fmtKg(value, 0), "Volumen"]} contentStyle={{ background: "rgba(20,20,20,.94)", border: "1px solid rgba(198,255,0,.25)", borderRadius: 12, fontSize: 13 }} /><Line type="monotone" dataKey="volume" stroke="var(--gold)" strokeWidth={2.5} dot={{ r: 3, fill: "var(--gold)", stroke: "var(--gold)" }} activeDot={{ r: 5 }} connectNulls /></LineChart></ResponsiveContainer>
             </div>
             {selectedTrendWeek && (() => {
               const point = dashboardTrend.weeks.find((w) => w.label === selectedTrendWeek);

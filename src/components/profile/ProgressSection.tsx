@@ -186,7 +186,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       </Card>
 
       <Card>
-        <p className="text-xs" style={{ color: "#6F6F6F" }}>
+        <p className="text-xs" style={{ color: "#6B6B70" }}>
           Resumen del periodo
         </p>
         <p className="mt-3 text-base leading-relaxed">
@@ -197,7 +197,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       <Card>
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs" style={{ color: "#6F6F6F" }}>
+            <p className="text-xs" style={{ color: "#6B6B70" }}>
               Volumen de entrenamiento
             </p>
             <p className="mt-1 text-2xl font-semibold tabular">
@@ -231,7 +231,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       <Card>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs" style={{ color: "#6F6F6F" }}>
+            <p className="text-xs" style={{ color: "#6B6B70" }}>
               Fuerza
             </p>
             <p className="mt-1 text-xs text-muted-foreground">Movimientos con evolución registrada</p>
@@ -270,7 +270,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       <Card>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs" style={{ color: "#6F6F6F" }}>
+            <p className="text-xs" style={{ color: "#6B6B70" }}>
               Tendencias por movimiento
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -318,7 +318,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       </div>
 
       <Card>
-        <p className="text-xs" style={{ color: "#6F6F6F" }}>
+        <p className="text-xs" style={{ color: "#6B6B70" }}>
           Cambios corporales
         </p>
         <div className="mt-3 grid grid-cols-2 gap-3">

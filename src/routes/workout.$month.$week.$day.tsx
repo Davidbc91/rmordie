@@ -324,7 +324,7 @@ function WorkoutPage() {
           <div
             role="dialog"
             aria-label="Elegir bloques para compartir"
-            className="max-h-[85dvh] w-full overflow-y-auto rounded-t-[24px] border-t border-white/10 bg-[#1E212B] px-4 pt-5"
+            className="max-h-[85dvh] w-full overflow-y-auto rounded-t-[24px] border-t border-white/10 bg-[#1B1B1D] px-4 pt-5"
             style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -352,7 +352,7 @@ function WorkoutPage() {
                   >
                     <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[10px] text-lg font-extrabold ${on ? "gold-gradient" : "bg-white/[0.08] text-muted-foreground"}`} style={{ fontFamily: "var(--font-editorial)" }}>{b.key}</span>
                     <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{first}</span>
-                    <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border ${on ? "border-[color:var(--gold)] bg-[color:var(--gold)] text-[#1A1420]" : "border-white/25"}`}>
+                    <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border ${on ? "border-[color:var(--gold)] bg-[color:var(--gold)] text-[#0C0C0E]" : "border-white/25"}`}>
                       {on && <CheckCheck className="h-3.5 w-3.5" />}
                     </span>
                   </button>
@@ -410,7 +410,7 @@ function WorkoutPage() {
             {menuOpen && (
               <>
                 <button type="button" aria-label="Cerrar menú" className="fixed inset-0 z-40 cursor-default" onClick={() => setMenuOpen(false)} />
-                <div role="menu" className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[#141412] shadow-2xl">
+                <div role="menu" className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[#141416] shadow-2xl">
                   {(!planning?.user_id || planning.user_id === getCurrentUserId()) && <button
                     type="button"
                     role="menuitem"

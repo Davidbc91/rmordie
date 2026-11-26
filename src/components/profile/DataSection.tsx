@@ -43,8 +43,8 @@ export function DataSection() {
   return (
     <div className="space-y-3">
       <Card>
-        <p className="text-xs" style={{ color: "#6F6F6F" }}>Privacidad y control</p>
-        <p className="mt-3 text-sm" style={{ color: "#6F6F6F" }}>
+        <p className="text-xs" style={{ color: "#6B6B70" }}>Privacidad y control</p>
+        <p className="mt-3 text-sm" style={{ color: "#6B6B70" }}>
           Tus datos son tuyos. Puedes exportarlos en cualquier momento o eliminarlos por completo. Nunca se borra nada de forma automática.
         </p>
         <a

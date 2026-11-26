@@ -426,7 +426,7 @@ function WeekView({
           const done = wk.filter((d) => !d.rest).length > 0 && wk.filter((d) => !d.rest).every(dayHasContent);
           return (
             <button key={i} role="tab" aria-selected={i === w} onClick={() => setWeekIdx(i)}
-              className={`h-10 min-w-[52px] shrink-0 rounded-[10px] px-2 text-sm font-bold ${i === w ? "bg-[color:var(--gold)] text-[color:var(--gold-foreground)]" : done ? "bg-[#8FD19E]/15 text-[#8FD19E]" : "bg-white/[0.06] text-muted-foreground"}`}>
+              className={`h-10 min-w-[52px] shrink-0 rounded-[10px] px-2 text-sm font-bold ${i === w ? "bg-[color:var(--gold)] text-[color:var(--gold-foreground)]" : done ? "bg-[#C6FF00]/15 text-[#C6FF00]" : "bg-white/[0.06] text-muted-foreground"}`}>
               S{i + 1}{done && i !== w ? " ✓" : ""}
             </button>
           );

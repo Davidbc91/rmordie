@@ -195,7 +195,7 @@ export function WodTimer({
           : { kind: "none" };
     const pr = result.kind !== "none" ? prCheck?.(result) ?? null : null;
     return createPortal(
-      <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-[#14161D] px-4" style={{ paddingTop: "max(env(safe-area-inset-top), 24px)", paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
+      <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-[#0C0C0E] px-4" style={{ paddingTop: "max(env(safe-area-inset-top), 24px)", paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
         <div className="mt-6 text-center">
           <p className="text-[22px] font-extrabold text-gold" style={font}>{timerLabel(cfg).toUpperCase()} · {capHit ? "CAP" : "TIEMPO"}</p>
           <p className="text-[96px] font-black leading-[0.9] tabular" style={font}>
@@ -204,7 +204,7 @@ export function WodTimer({
         </div>
 
         {cfg.kind === "amrap" && (
-          <section className="mt-6 space-y-3.5 rounded-[24px] border border-white/10 bg-[#141412] p-4">
+          <section className="mt-6 space-y-3.5 rounded-[24px] border border-white/10 bg-[#141416] p-4">
             <p className="text-[15px] font-bold">¿Cuánto has hecho?</p>
             <div className="grid grid-cols-2 gap-2.5">
               <Counter label="Rondas" value={rounds} onChange={setRounds} gold />
@@ -214,7 +214,7 @@ export function WodTimer({
           </section>
         )}
         {cfg.kind === "fortime" && (
-          <section className="mt-6 space-y-2 rounded-[24px] border border-white/10 bg-[#141412] p-4">
+          <section className="mt-6 space-y-2 rounded-[24px] border border-white/10 bg-[#141416] p-4">
             <p className="text-[15px]">{capHit ? "Se acabó el time cap: se apunta como no terminado dentro del cap." : "Se apunta el tiempo en el que paraste el reloj."}</p>
             {pr && <p className="rounded-[14px] bg-[color:var(--gold)]/12 px-3.5 py-3 text-sm font-bold text-[color:var(--gold-soft)]">{pr}</p>}
           </section>
@@ -276,7 +276,7 @@ export function WodTimer({
   const lastRound = roundTimes.length ? roundTimes[roundTimes.length - 1] - (roundTimes[roundTimes.length - 2] ?? 0) : null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[#14161D] px-4 text-foreground" style={{ paddingTop: "max(env(safe-area-inset-top), 20px)", paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
+    <div className="fixed inset-0 z-[100] flex flex-col bg-[#0C0C0E] px-4 text-foreground" style={{ paddingTop: "max(env(safe-area-inset-top), 20px)", paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
       <div className="flex items-center justify-between">
         <button type="button" onClick={onClose} aria-label="Salir del timer" className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.08]"><X className="h-5 w-5" /></button>
         <div className="min-w-0 px-2 text-center">
@@ -363,7 +363,7 @@ export function WodTimer({
         {cfg.kind === "amrap" ? (
           <button type="button" onClick={removeRound} disabled={rounds === 0} className="min-h-14 rounded-[16px] bg-white/[0.08] text-[15px] font-bold disabled:opacity-40">−1 ronda</button>
         ) : <span />}
-        <button type="button" onClick={phase === "prep" ? onClose : pause} className="min-h-14 rounded-[16px] bg-[#F2F0EA] text-2xl font-extrabold text-[#1A1420]" style={font}>
+        <button type="button" onClick={phase === "prep" ? onClose : pause} className="min-h-14 rounded-[16px] bg-[#F5F5F7] text-2xl font-extrabold text-[#0C0C0E]" style={font}>
           {phase === "prep" ? "CANCELAR" : phase === "paused" ? "SEGUIR" : "PAUSA"}
         </button>
         <button type="button" onClick={() => finish()} disabled={phase === "prep"} className="min-h-14 rounded-[16px] bg-white/[0.08] text-[15px] font-bold disabled:opacity-40">Terminar</button>

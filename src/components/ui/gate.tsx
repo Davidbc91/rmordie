@@ -160,7 +160,7 @@ export function PinGate({ children }: { children: ReactNode }) {
       />
       <div className="relative w-full max-w-sm">
         <div className="rise rise-1 mb-10 flex flex-col items-center text-center">
-          <img src={logoAsset.url} alt="" className="mb-5 h-24 w-24 rounded-[26%] object-cover shadow-[0_18px_50px_-12px_rgba(185,166,255,.45)]" />
+          <img src={logoAsset.url} alt="" className="mb-5 h-24 w-24 rounded-[26%] object-cover shadow-[0_18px_50px_-12px_rgba(59,184,245,.45)]" />
           <div className="leading-none" style={{ fontFamily: "var(--font-editorial)", fontWeight: 800, fontSize: "44px", letterSpacing: "-0.04em", color: "var(--foreground)" }}>
             RM <span className="aurora-text">OR</span> DIE
           </div>

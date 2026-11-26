@@ -179,7 +179,7 @@ export function useMyCoaches() {
       const { data: profs } = await sb.from("profiles").select("id, name").in("id", owners);
       const name = new Map((profs ?? []).map((p: any) => [p.id, p.name]));
       const dec = new Map((access ?? []).map((a: any) => [a.coach_id, a.allowed as boolean]));
-      return owners.map((o) => ({ coach_id: o, coach_name: (name.get(o) as string) ?? "Tu entrenador", allowed: dec.has(o) ? (dec.get(o) as boolean) : null }));
+      return owners.map((o) => ({ coach_id: o as string, coach_name: (name.get(o) as string) ?? "Tu entrenador", allowed: dec.has(o) ? (dec.get(o) as boolean) : null }));
     },
   });
 }

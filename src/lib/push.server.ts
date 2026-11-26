@@ -31,6 +31,7 @@ export function serverClient() {
 export async function deliver(opts: {
   payload: PushPayload;
   excludeUserId?: string | null;
+  excludeUserIds?: string[];
   onlyUserId?: string | null;
 }): Promise<{ sent: number; removed: number }> {
   const sb = serverClient();
@@ -44,6 +45,7 @@ export async function deliver(opts: {
   let query = sb.from("push_subscriptions").select("endpoint, p256dh, auth");
   if (opts.excludeUserId) query = query.neq("user_id", opts.excludeUserId);
   if (opts.onlyUserId) query = query.eq("user_id", opts.onlyUserId);
+  if (opts.excludeUserIds?.length) query = query.not("user_id", "in", `(${opts.excludeUserIds.join(",")})`);
   const { data: subs, error } = await query;
   if (error || !subs?.length) return { sent: 0, removed: 0 };
 
@@ -99,8 +101,11 @@ export async function notifyChatMessageImpl(messageId: string) {
   }
 
   const preview = msg.content.length > 120 ? `${msg.content.slice(0, 117)}…` : msg.content;
+  // Quien ha quitado los avisos del chat no los recibe (si la columna aún no existe, se ignora)
+  const { data: muted } = await (sb as any).from("notification_preferences").select("user_id").eq("chat_enabled", false);
   return deliver({
     excludeUserId: msg.user_id,
+    excludeUserIds: (muted ?? []).map((m: { user_id: string }) => m.user_id),
     payload: {
       title: `RM OR DIE · ${msg.user_name}`,
       body: preview,

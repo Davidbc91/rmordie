@@ -8,7 +8,20 @@ export type NotificationPreferences = {
   daily_time: string;
   weekly_enabled: boolean;
   timezone: string;
+  // Avisos nuevos (si la migración aún no está aplicada, no vienen)
+  round_enabled?: boolean;
+  challenges_enabled?: boolean;
+  chat_enabled?: boolean;
+  comments_enabled?: boolean;
+  plan_enabled?: boolean;
+  coach_prs_enabled?: boolean;
+  coach_idle_enabled?: boolean;
+  coach_weekly_enabled?: boolean;
+  quiet_start?: string;
+  quiet_end?: string;
 };
+
+export type EditablePrefs = Omit<NotificationPreferences, "user_id" | "timezone">;
 
 export const DEFAULT_NOTIFICATION_PREFERENCES = {
   daily_enabled: false,
@@ -36,7 +49,7 @@ export function useNotificationPreferences() {
     queryFn: async (): Promise<NotificationPreferences | null> => {
       const { data, error } = await sb
         .from("notification_preferences")
-        .select("user_id, daily_enabled, daily_time, weekly_enabled, timezone")
+        .select("*")
         .eq("user_id", uid)
         .maybeSingle();
       if (error) throw error;
@@ -49,7 +62,7 @@ export function useSaveNotificationPreferences() {
   const qc = useQueryClient();
   const uid = getCurrentUserId();
   return useMutation({
-    mutationFn: async (input: Pick<NotificationPreferences, "daily_enabled" | "daily_time" | "weekly_enabled">) => {
+    mutationFn: async (input: Partial<EditablePrefs>) => {
       if (!uid) throw new Error("No hay perfil activo");
       const { error } = await sb.from("notification_preferences").upsert(
         {

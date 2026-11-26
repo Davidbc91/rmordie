@@ -1,101 +1,167 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Switch } from "@/components/ui/switch";
 import { getCurrentUserId } from "@/lib/pin-gate";
-import { enablePush, isPushActive } from "@/lib/push";
-import {
-  DEFAULT_NOTIFICATION_PREFERENCES,
-  useNotificationPreferences,
-  useSaveNotificationPreferences,
-} from "@/lib/notification-preferences";
+import { disablePush, enablePush, iosNeedsInstall, isPushActive, pushSupported } from "@/lib/push";
+import { isVideoAdmin } from "@/lib/admin-videos";
+import { useNotificationPreferences, useSaveNotificationPreferences, type EditablePrefs } from "@/lib/notification-preferences";
 
-/** Ajustes del recordatorio diario y del resumen semanal. */
+type BoolKey = "daily_enabled" | "weekly_enabled" | "round_enabled" | "challenges_enabled" | "chat_enabled" | "comments_enabled" | "plan_enabled" | "coach_prs_enabled" | "coach_idle_enabled" | "coach_weekly_enabled";
+
+const DEFAULTS: Required<EditablePrefs> = {
+  daily_enabled: false, daily_time: "08:00", weekly_enabled: false,
+  round_enabled: true, challenges_enabled: true, chat_enabled: true, comments_enabled: true, plan_enabled: true,
+  coach_prs_enabled: true, coach_idle_enabled: true, coach_weekly_enabled: true,
+  quiet_start: "22:00", quiet_end: "08:00",
+};
+
+type Item = { key: BoolKey; icon: string; title: string; hint?: string; time?: boolean; legacy?: boolean };
+const GROUPS: { label: string; admin?: boolean; items: Item[] }[] = [
+  { label: "Tu entreno", items: [
+    { key: "daily_enabled", icon: "⏰", title: "Recordatorio del entreno", hint: "Qué toca hoy. No avisa en días de descanso.", time: true, legacy: true },
+    { key: "round_enabled", icon: "✅", title: "Semana redonda", hint: "Si te queda 1 día para tu objetivo" },
+    { key: "weekly_enabled", icon: "📊", title: "Resumen del domingo", hint: "Tu semana a las 20:00", legacy: true },
+  ] },
+  { label: "Retos y comunidad", items: [
+    { key: "challenges_enabled", icon: "🏆", title: "Retos", hint: "Te adelantan, quedan 3 días y resultado final" },
+    { key: "chat_enabled", icon: "💬", title: "Chat", hint: "Mensajes nuevos" },
+  ] },
+  { label: "Tu entrenador", items: [
+    { key: "comments_enabled", icon: "🗨️", title: "Comentarios en tus entrenos" },
+    { key: "plan_enabled", icon: "📅", title: "Planificación nueva o cambiada" },
+  ] },
+  { label: "Como entrenador", admin: true, items: [
+    { key: "coach_prs_enabled", icon: "🔥", title: "Récords de tus atletas" },
+    { key: "coach_idle_enabled", icon: "⚠️", title: "Atletas sin entrenar", hint: "A los 4, 7 y 14 días sin registrar nada" },
+    { key: "coach_weekly_enabled", icon: "📋", title: "Resumen de tus atletas", hint: "Domingo a las 20:00" },
+  ] },
+];
+
+function Switch({ on, onChange, label, disabled }: { on: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} disabled={disabled} onClick={() => onChange(!on)} className="relative h-[28px] w-[48px] shrink-0 rounded-full transition-colors disabled:opacity-40" style={{ background: on ? "var(--gold)" : "rgba(255,255,255,.14)" }}>
+      <span className="absolute top-[3px] h-[22px] w-[22px] rounded-full transition-all" style={{ left: on ? 23 : 3, background: on ? "#0C0C0E" : "#fff" }} />
+    </button>
+  );
+}
+
+/** Panel de avisos: activar en este móvil y elegir qué llega. */
 export function NotificationSettings() {
-  const { data: prefs, isLoading, isError } = useNotificationPreferences();
+  const me = getCurrentUserId();
+  const { data: prefs, isLoading } = useNotificationPreferences();
   const save = useSaveNotificationPreferences();
-  const [daily, setDaily] = useState(DEFAULT_NOTIFICATION_PREFERENCES.daily_enabled);
-  const [time, setTime] = useState(DEFAULT_NOTIFICATION_PREFERENCES.daily_time);
-  const [weekly, setWeekly] = useState(DEFAULT_NOTIFICATION_PREFERENCES.weekly_enabled);
-  const [dirty, setDirty] = useState(false);
+  const { data: isAdmin } = useQuery({ queryKey: ["video-admin", me], queryFn: isVideoAdmin, enabled: !!me, staleTime: 5 * 60 * 1000 });
+  const [v, setV] = useState<Required<EditablePrefs>>(DEFAULTS);
+  const [active, setActive] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
+  const extended = !!prefs && "round_enabled" in prefs; // migración de avisos aplicada
 
+  useEffect(() => { void isPushActive().then(setActive).catch(() => setActive(false)); }, []);
   useEffect(() => {
-    if (!prefs || dirty) return;
-    setDaily(prefs.daily_enabled);
-    setTime(prefs.daily_time);
-    setWeekly(prefs.weekly_enabled);
-  }, [prefs, dirty]);
+    if (!prefs) return;
+    setV((cur) => ({ ...cur, ...Object.fromEntries(Object.entries(prefs).filter(([k, x]) => k in DEFAULTS && x != null)) } as Required<EditablePrefs>));
+  }, [prefs]);
 
-  async function onSave() {
-    const uid = getCurrentUserId();
-    if (!uid) return;
-    // Sin permiso de notificaciones en este dispositivo, el aviso no llegaría.
-    if ((daily || weekly) && !(await isPushActive())) {
-      const res = await enablePush(uid);
-      if (!res.ok) {
-        toast.error(res.message);
-        return;
-      }
-    }
+  async function persist(next: Required<EditablePrefs>) {
+    setV(next);
+    const payload: Partial<EditablePrefs> = extended || !prefs
+      ? next
+      : { daily_enabled: next.daily_enabled, daily_time: next.daily_time, weekly_enabled: next.weekly_enabled };
     try {
-      await save.mutateAsync({ daily_enabled: daily, daily_time: time, weekly_enabled: weekly });
-      setDirty(false);
-      toast.success(daily || weekly ? "Avisos guardados." : "Avisos desactivados.");
-    } catch (e) {
-      toast.error((e as { message?: string })?.message ?? "No se pudieron guardar los avisos.");
+      await save.mutateAsync(payload);
+    } catch {
+      // Sin la migración nueva: guarda al menos lo de siempre
+      try { await save.mutateAsync({ daily_enabled: next.daily_enabled, daily_time: next.daily_time, weekly_enabled: next.weekly_enabled }); }
+      catch (e) { toast.error((e as { message?: string })?.message ?? "No se pudieron guardar los avisos"); }
     }
   }
 
-  const change = <T,>(setter: (v: T) => void) => (value: T) => {
-    setter(value);
-    setDirty(true);
-  };
+  async function turnOn() {
+    if (!me) return;
+    setBusy(true);
+    const res = await enablePush(me);
+    setBusy(false);
+    if (!res.ok) return toast.error(res.message);
+    setActive(true);
+    toast.success("Avisos activados en este móvil");
+    if (!prefs) await persist({ ...v, daily_enabled: true, weekly_enabled: true });
+  }
+
+  async function turnOff() {
+    setBusy(true);
+    try { await disablePush(); setActive(false); toast("Avisos desactivados en este móvil"); } finally { setBusy(false); }
+  }
+
+  const needsInstall = iosNeedsInstall();
+  const unsupported = !pushSupported() && !needsInstall;
 
   return (
-    <section className="mt-4 card-elevated p-5">
-      <h2 className="text-sm font-semibold">Avisos</h2>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Se envían como notificación a los dispositivos donde las hayas activado.
-      </p>
-      {isLoading && <p className="mt-2 text-xs text-muted-foreground">Cargando tus avisos…</p>}
-      {isError && <p role="alert" className="mt-2 text-xs text-destructive">No se pudieron cargar tus avisos.</p>}
+    <section className="mt-4 space-y-3">
+      <h2 className="px-1 text-[20px] font-extrabold tracking-tight">Avisos</h2>
 
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <label htmlFor="daily-reminder" className="min-w-0">
-          <span className="block text-sm">Recordatorio diario</span>
-          <span className="block text-xs text-muted-foreground">El entreno que toca hoy. No avisa en días de descanso.</span>
-        </label>
-        <Switch id="daily-reminder" checked={daily} onCheckedChange={change(setDaily)} />
+      {needsInstall ? (
+        <div className="space-y-2 rounded-[20px] bg-card p-4">
+          <p className="text-[14.5px] text-muted-foreground">En iPhone, los avisos solo llegan si la app está en tu pantalla de inicio. Son tres pasos:</p>
+          {[
+            ["Abre la app en Safari", "No funciona desde Instagram ni otros navegadores."],
+            ["Pulsa Compartir ⬆︎ y «Añadir a pantalla de inicio»", "Aparecerá el icono de RM OR DIE junto a tus apps."],
+            ["Abre la app desde ese icono y vuelve aquí", "Pulsa «Activar avisos» y permite las notificaciones."],
+          ].map(([t, h], i) => (
+            <div key={i} className="flex gap-3 rounded-[16px] bg-white/[0.04] p-3">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[14px] font-extrabold" style={{ background: "var(--gold)", color: "var(--gold-foreground)" }}>{i + 1}</span>
+              <span><span className="block text-[14.5px] font-bold">{t}</span><span className="block text-[13px] text-muted-foreground">{h}</span></span>
+            </div>
+          ))}
+        </div>
+      ) : unsupported ? (
+        <p className="rounded-[16px] bg-white/[0.04] p-3.5 text-[13.5px] text-muted-foreground">Este navegador no admite avisos. Prueba desde el móvil con Chrome (Android) o Safari (iPhone).</p>
+      ) : active ? (
+        <div className="flex items-center gap-2.5 rounded-[16px] border px-3.5 py-3 text-[13.5px]" style={{ background: "#262C12", borderColor: "rgba(198,255,0,.22)" }}>
+          <span className="text-gold">✓</span>
+          <span className="min-w-0 flex-1"><b>Activados en este móvil.</b> Elige cuáles te llegan.</span>
+          <button type="button" disabled={busy} onClick={turnOff} className="min-h-9 shrink-0 text-[12.5px] font-semibold text-muted-foreground">Desactivar</button>
+        </div>
+      ) : (
+        <button type="button" disabled={busy} onClick={turnOn} className="min-h-[52px] w-full rounded-full text-[16px] font-extrabold disabled:opacity-60" style={{ background: "var(--gold)", color: "var(--gold-foreground)" }}>
+          {busy ? "Activando…" : "Activar avisos en este móvil"}
+        </button>
+      )}
+
+      {isLoading ? <div className="h-40 animate-pulse rounded-[20px] bg-white/[0.04]" /> : GROUPS.filter((g) => !g.admin || isAdmin).map((g) => (
+        <div key={g.label}>
+          <p className="mb-1.5 px-1 text-[12.5px] font-extrabold text-muted-foreground">{g.label}</p>
+          <div className="rounded-[20px] bg-card px-3.5">
+            {g.items.map((it, i) => {
+              const off = !it.legacy && !extended && !!prefs;
+              return (
+                <div key={it.key} className={`flex min-h-[58px] items-center gap-3 py-2.5 ${i > 0 ? "border-t border-white/[0.06]" : ""}`}>
+                  <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] text-[16px]" style={{ background: "#333B18" }}>{it.icon}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-bold">{it.title}</span>
+                    {it.hint && <span className="block text-[12.5px] text-muted-foreground">{off ? "Disponible al aplicar la actualización de avisos" : it.hint}</span>}
+                  </span>
+                  {it.time && v.daily_enabled && (
+                    <input type="time" step={900} value={v.daily_time} aria-label="Hora del recordatorio" onChange={(e) => e.target.value && persist({ ...v, daily_time: e.target.value.slice(0, 5) })} className="min-h-9 shrink-0 rounded-[10px] bg-white/[0.07] px-2 text-[15px] font-bold outline-none" />
+                  )}
+                  <Switch on={!!v[it.key]} disabled={off} label={it.title} onChange={(on) => persist({ ...v, [it.key]: on })} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      <div>
+        <p className="mb-1.5 px-1 text-[12.5px] font-extrabold text-muted-foreground">Silencio</p>
+        <div className="flex min-h-[58px] items-center gap-3 rounded-[20px] bg-card px-3.5 py-2.5">
+          <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] text-[16px]" style={{ background: "#333B18" }}>🌙</span>
+          <span className="min-w-0 flex-1"><span className="block text-[15px] font-bold">No molestar</span><span className="block text-[12.5px] text-muted-foreground">Los avisos esperan a que acabe</span></span>
+          <input type="time" step={900} disabled={!extended} value={v.quiet_start} aria-label="Silencio desde" onChange={(e) => e.target.value && persist({ ...v, quiet_start: e.target.value.slice(0, 5) })} className="min-h-9 w-[78px] rounded-[10px] bg-white/[0.07] px-1.5 text-[14px] font-bold outline-none disabled:opacity-40" />
+          <span className="text-muted-foreground">–</span>
+          <input type="time" step={900} disabled={!extended} value={v.quiet_end} aria-label="Silencio hasta" onChange={(e) => e.target.value && persist({ ...v, quiet_end: e.target.value.slice(0, 5) })} className="min-h-9 w-[78px] rounded-[10px] bg-white/[0.07] px-1.5 text-[14px] font-bold outline-none disabled:opacity-40" />
+        </div>
       </div>
-
-      <label className="mt-3 block">
-        <span className="mb-1 block text-xs tracking-wider text-muted-foreground">Hora del recordatorio</span>
-        <input
-          type="time"
-          step={900}
-          value={time}
-          disabled={!daily}
-          onChange={(e) => change(setTime)(e.target.value.slice(0, 5))}
-          className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular outline-none focus:border-gold disabled:opacity-50"
-        />
-        <span className="mt-1 block text-xs text-muted-foreground">Llega en un margen de 15 minutos.</span>
-      </label>
-
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <label htmlFor="weekly-summary" className="min-w-0">
-          <span className="block text-sm">Resumen semanal</span>
-          <span className="block text-xs text-muted-foreground">Domingo a las 20:00: sesiones, kilos movidos y PR.</span>
-        </label>
-        <Switch id="weekly-summary" checked={weekly} onCheckedChange={change(setWeekly)} />
-      </div>
-
-      <button
-        onClick={onSave}
-        disabled={save.isPending || isLoading || !dirty}
-        className="mt-4 rounded-xl gold-gradient px-4 py-2 text-sm font-semibold disabled:opacity-50"
-        style={{ color: "var(--gold-foreground)" }}
-      >
-        {save.isPending ? "Guardando…" : "Guardar avisos"}
-      </button>
+      <p className="px-1 text-[12.5px] text-muted-foreground">Como mucho un aviso de cada tipo al día. Al tocarlo, vas directo a lo que cuenta.</p>
     </section>
   );
 }

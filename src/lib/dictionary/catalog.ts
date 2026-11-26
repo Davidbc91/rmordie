@@ -665,56 +665,16 @@ const verifiedVideoUrls: Record<string, string> = {
   "Running": "https://www.youtube.com/watch?v=9cG-grUiJyI",
 };
 
-const movementVideoFallbacks: Array<[RegExp, string]> = [
-  [/overhead squat/i, verifiedVideoUrls["Overhead Squat"]],
-  [/back squat|box squat|zercher squat/i, verifiedVideoUrls["Back Squat"]],
-  [/goblet squat|kettlebell.*squat|air squat|split squat|lunge|cossack squat|step-up/i, verifiedVideoUrls["Pistol Squat"]],
-  [/sumo deadlift/i, verifiedVideoUrls["Sumo Deadlift"]],
-  [/deadlift|good morning|hip thrust|glute bridge/i, verifiedVideoUrls["Deadlift"]],
-  [/dumbbell.*deadlift/i, verifiedVideoUrls["Dumbbell Deadlift"]],
-  [/clean.*jerk/i, verifiedVideoUrls["Clean & Jerk"]],
-  [/power clean|hang power clean/i, verifiedVideoUrls["Power Clean"]],
-  [/hang clean|squat clean|muscle clean|clean pull|clean high pull/i, verifiedVideoUrls["Clean"]],
-  [/snatch/i, verifiedVideoUrls["Snatch"]],
-  [/strict press/i, verifiedVideoUrls["Strict Press"]],
-  [/bench press|floor press|incline bench/i, verifiedVideoUrls["Bench Press"]],
-  [/dumbbell press|shoulder press|arnold press|z-press/i, verifiedVideoUrls["Dumbbell Press"]],
-  [/push press/i, verifiedVideoUrls["Push Press"]],
-  [/push jerk|power jerk|jerk balance/i, verifiedVideoUrls["Push Jerk"]],
-  [/pull-up|chest-to-bar|knees-to-elbows|hanging knee|scapular pull-up|dead hang|active hang|towel hang|muscle-up/i, verifiedVideoUrls["Pull-up"]],
-  [/ring row/i, verifiedVideoUrls["Ring Row"]],
-  [/handstand push-up/i, verifiedVideoUrls["Strict Handstand Push-Up"]],
-  [/handstand walk|handstand hold|freestanding handstand|wall walk|handstand shoulder tap/i, verifiedVideoUrls["Handstand Walk"]],
-  [/pistol/i, verifiedVideoUrls["Pistol Squat"]],
-  [/box jump over|box jump|broad jump|squat jump|triple under|double under|single under|burpee/i, verifiedVideoUrls["Box Jump"]],
-  [/wall ball/i, verifiedVideoUrls["Wall Ball"]],
-  [/kettlebell.*snatch/i, verifiedVideoUrls["Kettlebell Snatch"]],
-  [/kettlebell|swing/i, verifiedVideoUrls["Kettlebell Swing"]],
-  [/dumbbell.*clean/i, verifiedVideoUrls["Dumbbell Clean"]],
-  [/dumbbell.*snatch/i, verifiedVideoUrls["Dumbbell Snatch"] ?? verifiedVideoUrls["Power Snatch"]],
-  [/dumbbell.*push/i, verifiedVideoUrls["Dumbbell Push Press"] ?? verifiedVideoUrls["Dumbbell Press"]],
-  [/devil.*press/i, verifiedVideoUrls["Devil's Press"]],
-  [/farmer|suitcase|waiter|carry/i, verifiedVideoUrls["Farmer Carry"]],
-  [/sled/i, verifiedVideoUrls["Sled Push"]],
-  [/rope climb/i, verifiedVideoUrls["Rope Climb"]],
-  [/ghd sit-up/i, verifiedVideoUrls["GHD Sit-Up"] ?? verifiedVideoUrls["Sit-Up"]],
-  [/ghd hip extension/i, verifiedVideoUrls["GHD Hip Extension"]],
-  [/back extension/i, verifiedVideoUrls["Back Extension"]],
-  [/sit-up|v-up|plank|russian twist/i, verifiedVideoUrls["Sit-Up"]],
-  [/row/i, verifiedVideoUrls["Row"] ?? verifiedVideoUrls["Deadlift"]],
-  [/skierg/i, verifiedVideoUrls["Row"] ?? verifiedVideoUrls["Deadlift"]],
-  [/bikeerg|assault bike/i, verifiedVideoUrls["Row"] ?? verifiedVideoUrls["Deadlift"]],
-  [/running|sprint/i, verifiedVideoUrls["Running"]],
-  [/swimming/i, verifiedVideoUrls["Running"]],
-  [/med ball/i, verifiedVideoUrls["Med Ball Clean"]],
-  [/sandbag/i, verifiedVideoUrls["Deadlift"]],
-];
-
+/**
+ * Solo el vídeo de ese movimiento exacto. Antes se reutilizaba el de un
+ * movimiento «parecido» (las flexiones enseñaban una sentadilla, el remo un peso
+ * muerto…). Si no hay vídeo propio, se guarda una búsqueda de YouTube con el
+ * nombre exacto: la ficha muestra «Vídeo pendiente» y un enlace a esa búsqueda.
+ */
 function getMovementVideoUrl(name: string): string {
   const exact = verifiedVideoUrls[name];
   if (exact) return exact;
-  const match = movementVideoFallbacks.find(([pattern]) => pattern.test(name));
-  return match?.[1] ?? verifiedVideoUrls["Squat"];
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} CrossFit movement demo`)}`;
 }
 
 

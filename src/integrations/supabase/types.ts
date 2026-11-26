@@ -244,6 +244,41 @@ export type Database = {
           },
         ]
       }
+      builder_library: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          owner_id: string
+          payload: Json
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          owner_id: string
+          payload: Json
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          owner_id?: string
+          payload?: Json
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "builder_library_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_participants: {
         Row: {
           challenge_id: string
@@ -1575,6 +1610,14 @@ export type Database = {
           new_weight: number
           previous_weight: number
           rep_max: number
+        }[]
+      }
+      coach_athlete_records: {
+        Args: { p_athlete: string }
+        Returns: {
+          exercise: string
+          rep_max: number
+          weight: number
         }[]
       }
       coach_athlete_results: {

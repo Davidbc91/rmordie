@@ -92,6 +92,13 @@
       "when": 1795723756611,
       "tag": "0012_panel_entrenador",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795724250626,
+      "tag": "0013_biblioteca_planificador",
+      "breakpoints": true
     }
   ]
 }

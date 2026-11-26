@@ -730,6 +730,33 @@ export type Database = {
           },
         ]
       }
+      movement_aliases: {
+        Row: {
+          alias: string
+          alias_norm: string
+          created_at: string
+          created_by: string | null
+          id: string
+          movement_id: string
+        }
+        Insert: {
+          alias: string
+          alias_norm: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_id: string
+        }
+        Update: {
+          alias?: string
+          alias_norm?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_id?: string
+        }
+        Relationships: []
+      }
       movement_video_reviews: {
         Row: {
           created_at: string

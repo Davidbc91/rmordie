@@ -35,7 +35,7 @@ export function Avatar({ profile, size = 38 }: { profile?: SocialProfile | null;
   return (
     <span
       className="flex shrink-0 items-center justify-center overflow-hidden rounded-full"
-      style={{ width: size, height: size, background: "rgba(200,179,138,0.15)" }}
+      style={{ width: size, height: size, background: "rgba(255,179,138,0.15)" }}
     >
       {profile?.avatar_url ? (
         <img src={profile.avatar_url} alt={profile.username} className="h-full w-full object-cover" />
@@ -51,10 +51,10 @@ function DataBlock({ post }: { post: Post }) {
   if (post.kind === "pr") {
     const delta = d.previous_weight != null ? Number(d.weight) - Number(d.previous_weight) : null;
     return (
-      <div className="mt-3 rounded-[18px] px-[18px] py-4" style={{ background: "var(--c-turq)", color: "#0A0A0A" }}>
-        <p className="text-[13px] font-extrabold tracking-[0.14em]">NUEVO RÉCORD · {d.rep_max ? `${d.rep_max}RM` : "PR"}</p>
+      <div className="mt-3 rounded-[18px] px-[18px] py-4" style={{ background: "var(--aurora)", color: "var(--aurora-ink)" }}>
+        <p className="text-[13px] font-extrabold">NUEVO RÉCORD · {d.rep_max ? `${d.rep_max}RM` : "PR"}</p>
         <p className="mt-1 text-base font-bold">{d.exercise ?? "Ejercicio"}</p>
-        <p className="text-[72px] font-black leading-[0.9] tabular" style={{ fontFamily: "var(--font-editorial)" }}>
+        <p className="text-[72px] font-black leading-[0.9] tabular" style={{ fontFamily: "var(--font-num)" }}>
           {d.weight}
           <span className="text-[26px]"> KG</span>
         </p>
@@ -66,10 +66,10 @@ function DataBlock({ post }: { post: Post }) {
   }
   if (post.kind === "wod" || post.kind === "benchmark") {
     return (
-      <div className="mt-3 rounded-[18px] border p-4" style={{ borderColor: "color-mix(in srgb, var(--c-lima) 45%, transparent)", background: "color-mix(in srgb, var(--c-lima) 8%, transparent)" }}>
+      <div className="mt-3 rounded-[18px] border p-4" style={{ borderColor: "rgba(185,166,255,.35)", background: "rgba(185,166,255,.08)" }}>
         <div className="flex items-center justify-between gap-3">
           <p className="text-base font-bold">{d.name || d.benchmark || "WOD"}</p>
-          <span className="rounded-full bg-white/[0.08] px-2.5 py-1 text-xs font-bold uppercase">
+          <span className="rounded-full bg-white/[0.08] px-2.5 py-1 text-xs font-bold">
             {d.scale || "RX"}
           </span>
         </div>
@@ -92,23 +92,23 @@ function DataBlock({ post }: { post: Post }) {
       <div
         className="mt-3 overflow-hidden rounded-[22px] border"
         style={{
-          borderColor: "rgba(200,179,138,0.24)",
-          background: "linear-gradient(145deg, rgba(200,179,138,0.11), rgba(255,255,255,0.035) 42%, rgba(255,255,255,0.02))",
+          borderColor: "rgba(255,179,138,0.24)",
+          background: "linear-gradient(145deg, rgba(255,179,138,0.11), rgba(255,255,255,0.035) 42%, rgba(255,255,255,0.02))",
           boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
         }}
       >
         <div className="border-b px-4 pb-3 pt-4" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
           <div className="flex items-end justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-gold">
+              <p className="text-xs font-bold text-gold">
                 {d.day ? `${String(d.month ?? "").replace(/^\d+\.\s*/, "")} · SEMANA ${d.week ?? ""}` : "ENTRENO"}
               </p>
-              <p className="truncate text-[40px] font-black uppercase leading-[0.9] text-[color:var(--gold-soft)]" style={{ fontFamily: "var(--font-editorial)" }}>
+              <p className="truncate text-[30px] font-extrabold leading-tight tracking-tight text-[color:var(--gold-soft)]">
                 {d.day ?? (d.title ?? "Completado")}
               </p>
             </div>
             {Number(d.prs) > 0 && (
-              <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-[0.16em]" style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}>
+              <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: "var(--aurora)", color: "var(--aurora-ink)" }}>
                 {d.prs} PR{Number(d.prs) === 1 ? "" : "s"}
               </span>
             )}
@@ -186,7 +186,7 @@ function DataBlock({ post }: { post: Post }) {
 function WorkoutMetric({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[28px] font-extrabold leading-none tabular" style={{ fontFamily: "var(--font-editorial)" }}>{value}</p>
+      <p className="text-[28px] font-extrabold leading-none tabular" style={{ fontFamily: "var(--font-num)" }}>{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{label}</p>
     </div>
   );
@@ -196,7 +196,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-[13px] text-muted-foreground">{label}</p>
-      <p className="text-[28px] font-extrabold leading-none tabular" style={{ fontFamily: "var(--font-editorial)" }}>{value}</p>
+      <p className="text-[28px] font-extrabold leading-none tabular" style={{ fontFamily: "var(--font-num)" }}>{value}</p>
     </div>
   );
 }

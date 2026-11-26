@@ -79,7 +79,7 @@ export function ProfileForm() {
           <button
             onClick={() => fileRef.current?.click()}
             className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[24px]"
-            style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}
+            style={{ background: "var(--aurora)", color: "var(--aurora-ink)" }}
           >
             {form.avatar_url ? (
               <img src={form.avatar_url} alt="Foto de perfil" className="h-full w-full object-cover" />
@@ -142,7 +142,7 @@ export function ProfileForm() {
         </div>
 
         <div className="mt-5">
-          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Objetivos principales</p>
+          <p className="text-xs text-muted-foreground">Objetivos principales</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {GOAL_OPTIONS.map((g) => {
               const active = goals.includes(g);

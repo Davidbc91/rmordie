@@ -92,7 +92,7 @@ export function WheelColumn({
               style={{
                 height: ITEM,
                 scrollSnapAlign: "center",
-                fontFamily: "var(--font-editorial)",
+                fontFamily: "var(--font-num)",
                 fontWeight: 800,
                 fontSize: 30,
                 lineHeight: `${ITEM}px`,
@@ -148,7 +148,7 @@ export function PickerField({ label, value, onChange, min = 0, max = 999, kind =
       >
         <span className="text-[15px] text-muted-foreground">{label}</span>
         <span className="flex items-baseline gap-1.5">
-          <span className="tabular-nums" style={{ fontFamily: "var(--font-editorial)", fontWeight: 800, fontSize: big ? 36 : 30, lineHeight: 1 }}>{shown}</span>
+          <span className="tabular-nums" style={{ fontFamily: "var(--font-num)", fontWeight: 800, fontSize: big ? 36 : 30, lineHeight: 1 }}>{shown}</span>
           {unit && kind !== "duration" && <span className="text-sm text-muted-foreground">{unit}</span>}
         </span>
       </button>
@@ -212,7 +212,7 @@ function PickerSheet({
       <div
         role="dialog"
         aria-label={`Elegir ${label.toLowerCase()}`}
-        className="w-full rounded-t-[24px] border-t border-white/10 bg-[#151412] px-4 pt-4 text-foreground"
+        className="w-full rounded-t-[24px] border-t border-white/10 bg-[#1E212B] px-4 pt-4 text-foreground"
         style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -233,7 +233,7 @@ function PickerSheet({
               placeholder={kind === "duration" ? mmss(draft) : String(draft)}
               aria-label={label}
               className="w-full bg-transparent text-center tabular-nums outline-none"
-              style={{ fontFamily: "var(--font-editorial)", fontWeight: 900, fontSize: 64, lineHeight: 1 }}
+              style={{ fontFamily: "var(--font-num)", fontWeight: 900, fontSize: 64, lineHeight: 1 }}
             />
             <p className="mt-2 text-center text-[13px] text-muted-foreground">
               {kind === "duration" ? "Escribe minutos y segundos: 130 = 1:30, 45 = 0:45" : unit ? `En ${unit}` : "Escribe el número"}
@@ -246,7 +246,7 @@ function PickerSheet({
             {kind === "duration" ? (
               <>
                 <WheelColumn label="Minutos" values={minuteValues} value={Math.floor(draft / 60)} format={pad2} onChange={(m) => setDraft(clamp(m * 60 + (draft % 60)))} />
-                <span className="relative pb-1 text-[30px] font-extrabold" style={{ fontFamily: "var(--font-editorial)" }}>:</span>
+                <span className="relative pb-1 text-[30px] font-extrabold" style={{ fontFamily: "var(--font-num)" }}>:</span>
                 <WheelColumn label="Segundos" values={secondValues} value={draft % 60} format={pad2} onChange={(s) => setDraft(clamp(Math.floor(draft / 60) * 60 + s))} />
                 <div className="pointer-events-none absolute inset-x-0 -bottom-1 flex justify-center gap-[70px] text-xs text-muted-foreground">
                   <span>min</span><span>seg</span>

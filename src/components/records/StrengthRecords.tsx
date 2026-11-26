@@ -391,7 +391,7 @@ export function StrengthRecords({
         <>
           {(summary.up > 0 || summary.flat > 0 || summary.prs > 0) && (
             <div className="mb-3 rounded-[18px] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/[0.08] px-4 py-3.5">
-              <p className="text-[13px] font-bold tracking-[0.12em] text-gold">ÚLTIMOS 3 MESES</p>
+              <p className="text-[13px] font-bold text-gold">Últimos 3 meses</p>
               <div className="mt-1.5 flex gap-5">
                 <SummaryStat value={summary.up} label={summary.up === 1 ? "ejercicio subiendo" : "ejercicios subiendo"} />
                 <SummaryStat value={summary.flat} label={summary.flat === 1 ? "estancado" : "estancados"} />
@@ -430,7 +430,7 @@ export function StrengthRecords({
                       </span>
                       <TrendSpark values={pr?.spark ?? []} up={pr?.trend.kind === "up"} />
                       <span className="min-w-[60px] shrink-0 text-right">
-                        <span className="block text-[30px] font-black leading-none tabular" style={{ fontFamily: "var(--font-editorial)" }}>{formatKg(Number(g.primary.weight))}</span>
+                        <span className="block text-[30px] font-black leading-none tabular" style={{ fontFamily: "var(--font-num)" }}>{formatKg(Number(g.primary.weight))}</span>
                         <span className="mt-0.5 block text-xs text-muted-foreground">kg · {g.primary.rep_max ?? 1}RM</span>
                       </span>
                       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -454,7 +454,7 @@ function shortDate(iso: string): string {
 function SummaryStat({ value, label }: { value: number; label: string }) {
   return (
     <span>
-      <span className="block text-[34px] font-black leading-none tabular" style={{ fontFamily: "var(--font-editorial)" }}>{value}</span>
+      <span className="block text-[34px] font-black leading-none tabular" style={{ fontFamily: "var(--font-num)" }}>{value}</span>
       <span className="text-xs text-muted-foreground">{label}</span>
     </span>
   );

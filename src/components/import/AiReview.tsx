@@ -64,7 +64,7 @@ export function AiReview({
   return (
     <div className="mt-4 space-y-4">
       <section className="rounded-[22px] border border-[color:var(--gold)]/35 bg-[color:var(--gold)]/[0.07] p-4">
-        <p className="flex items-center gap-2 text-[13px] font-bold tracking-[0.1em] text-gold">
+        <p className="flex items-center gap-2 text-[13px] font-bold text-gold">
           <Sparkles className="h-4 w-4" /> LECTURA INTELIGENTE
         </p>
         <p className="mt-2 text-[32px] font-extrabold leading-none" style={font}>
@@ -111,7 +111,7 @@ export function AiReview({
         <div className="space-y-3">
           {weeksShown.map((week, wi) => (
             <div key={week[0].date}>
-              <p className="mb-1.5 text-[13px] tracking-[0.12em] text-muted-foreground">SEMANA {wi + 1} · {fmtDay(week[0].date)}</p>
+              <p className="mb-1.5 text-[13px] text-muted-foreground">Semana {wi + 1} · {fmtDay(week[0].date)}</p>
               <div className="space-y-1.5">
                 {week.filter((d) => !d.rest).map((d) => {
                   const date = parseISODate(d.date);
@@ -187,7 +187,7 @@ export function AiReview({
           className="gold-gradient min-h-14 w-full rounded-[16px] text-[22px] font-extrabold disabled:opacity-40"
           style={font}
         >
-          {save.isPending ? "GUARDANDO…" : "GUARDAR PLANIFICACIÓN"}
+          {save.isPending ? "Guardando…" : "Guardar planificación"}
         </button>
         <button type="button" disabled={save.isPending} onClick={() => onSave(true)} className="min-h-12 w-full rounded-[14px] bg-white/[0.08] text-[15px] font-bold">
           Guardar y retocar a mano

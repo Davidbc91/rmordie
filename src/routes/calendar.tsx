@@ -308,7 +308,7 @@ function CalendarPage() {
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 text-center">
-          <p className="eyebrow">PLANIFICACIÓN</p>
+          <p className="eyebrow">Planificación</p>
           <h1 className="page-title mt-1 truncate" style={{ fontSize: "2rem" }}>{month.label} {parseMonthDate(month)?.year ?? ""}</h1>
         </div>
         <button onClick={goNext} className="tap pressable grid h-11 w-11 place-items-center rounded-[14px] text-muted-foreground hover:text-foreground disabled:opacity-25" disabled={idx === months.length - 1} aria-label="Mes siguiente">
@@ -319,7 +319,7 @@ function CalendarPage() {
       <div className="mt-3 flex items-center justify-between gap-3">
         <button
           onClick={() => setIdx(findMonthIndexForDate(months))}
-          className="pressable inline-flex min-h-[40px] items-center gap-2 rounded-full border border-[rgba(200,179,138,0.35)] bg-[rgba(200,179,138,0.10)] px-4 text-xs font-semibold text-gold"
+          className="pressable inline-flex min-h-[40px] items-center gap-2 rounded-full border border-[rgba(255,179,138,0.35)] bg-[rgba(255,179,138,0.10)] px-4 text-xs font-semibold text-gold"
         >
           <Calendar className="h-3.5 w-3.5" />
           Ir a hoy
@@ -329,7 +329,7 @@ function CalendarPage() {
 
       <div className="mt-5 grid grid-cols-7 gap-1.5 px-1">
         {weekdayLabels.map((label) => (
-          <div key={label} className="text-center text-[11px] font-bold tracking-[0.12em] text-muted-foreground/65">
+          <div key={label} className="text-center text-[11px] font-bold text-muted-foreground/65">
             {label}
           </div>
         ))}
@@ -352,7 +352,7 @@ function CalendarPage() {
           return (
             <section key={isoKey(weekDates[0])} className={`rise rise-${Math.min(wi + 1, 5)}`}>
               <div className="mb-1.5 flex items-center justify-between px-1">
-                <span className="eyebrow">{planWeek ? `SEMANA ${planWeek}` : "CALENDARIO"}</span>
+                <span className="eyebrow">{planWeek ? `Semana ${planWeek}` : "Calendario"}</span>
                 {trainDays.length > 0 && (
                   <span className="text-xs font-semibold tabular text-muted-foreground">
                     {doneCount}/{trainDays.length}
@@ -387,8 +387,8 @@ function CalendarPage() {
                             : d
                               ? "glass glass-sheen"
                               : "glass-quiet opacity-45",
-                        done ? "border-[rgba(200,179,138,0.48)] bg-[rgba(200,179,138,0.10)]" : "",
-                        isToday ? "ring-1 ring-[rgba(200,179,138,0.9)]" : "",
+                        done ? "border-[rgba(255,179,138,0.48)] bg-[rgba(255,179,138,0.10)]" : "",
+                        isToday ? "ring-1 ring-[rgba(255,179,138,0.9)]" : "",
                       ].join(" ")}
                     >
                       <div className="flex items-start justify-between gap-1">
@@ -412,7 +412,7 @@ function CalendarPage() {
 
                       {inMonth && (
                         <>
-                          <p className={`mt-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] ${isToday ? "text-gold" : "text-muted-foreground/60"}`}>
+                          <p className={`mt-0.5 text-[11px] font-semibold ${isToday ? "text-gold" : "text-muted-foreground/60"}`}>
                             {dateLabel(date)}
                           </p>
 
@@ -453,7 +453,7 @@ function CalendarPage() {
               <div className="mt-2 h-[2px] w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
                 <div
                   className="h-full rounded-full transition-[width] duration-700"
-                  style={{ width: `${pct}%`, background: "linear-gradient(90deg,#E8DDC8,#C8B38A)" }}
+                  style={{ width: `${pct}%`, background: "var(--aurora)" }}
                 />
               </div>
             </section>
@@ -510,7 +510,7 @@ function WeekView({
     <div>
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="eyebrow">PLANIFICACIÓN · {mid.getFullYear()}</p>
+          <p className="eyebrow">Planificación · {mid.getFullYear()}</p>
           <h1 className="page-title mt-1 truncate">{monthName}</h1>
         </div>
         {viewSwitch}
@@ -579,7 +579,7 @@ function WeekView({
             >
               <button type="button" onClick={() => move?.onPick(iso)} className="flex min-h-16 min-w-0 flex-1 items-center gap-3 text-left">
                 <span className="w-11 shrink-0 text-center">
-                  <span className="block text-[26px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>{date.getDate()}</span>
+                  <span className="block text-[26px] font-extrabold leading-none" style={{ fontFamily: "var(--font-num)" }}>{date.getDate()}</span>
                   <span className="text-xs text-muted-foreground">{WEEKDAY_SHORT[i]}</span>
                 </span>
                 <span className={`min-w-0 flex-1 truncate text-[15px] ${rest ? "text-muted-foreground" : "font-semibold"}`}>
@@ -612,7 +612,7 @@ function WeekView({
           const rest = !p || p.day.isRest;
           const dateBox = (
             <span className="w-12 shrink-0 text-center">
-              <span className={`block text-[30px] font-extrabold leading-none ${isToday ? "" : isDone ? "text-muted-foreground" : ""}`} style={{ fontFamily: "var(--font-editorial)" }}>{date.getDate()}</span>
+              <span className={`block text-[30px] font-extrabold leading-none ${isToday ? "" : isDone ? "text-muted-foreground" : ""}`} style={{ fontFamily: "var(--font-num)" }}>{date.getDate()}</span>
               <span className={`text-xs ${isToday ? "font-extrabold" : "text-muted-foreground"}`}>{isToday ? "HOY" : WEEKDAY_SHORT[i]}</span>
             </span>
           );
@@ -630,7 +630,7 @@ function WeekView({
               key={i}
               to="/workout/$month/$week/$day"
               params={{ month: p.month.key, week: String(p.week), day: p.day.key }}
-              className={`pressable flex items-center gap-3.5 rounded-[18px] px-3.5 ${isToday ? "tile tile-coral min-h-[84px]" : "min-h-[72px] bg-white/[0.045]"}`}
+              className={`pressable flex items-center gap-3.5 rounded-[18px] px-3.5 ${isToday ? "aurora-hero min-h-[84px] !rounded-[20px]" : "min-h-[72px] bg-white/[0.045]"}`}
             >
               {dateBox}
               <span className="min-w-0 flex-1">
@@ -640,9 +640,9 @@ function WeekView({
                 </span>
               </span>
               {isDone ? (
-                <span aria-label="Hecho" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[color:var(--c-lima)] text-[#0A0A0A]"><Check className="h-4 w-4" strokeWidth={3} /></span>
+                <span aria-label="Hecho" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[color:var(--c-mint)] text-[#10241D]"><Check className="h-4 w-4" strokeWidth={3} /></span>
               ) : partial ? (
-                <span aria-label="A medias" className="h-7 w-7 shrink-0 rounded-full border-2 border-[color:var(--c-lima)]" style={{ background: "linear-gradient(90deg, var(--c-lima) 50%, transparent 50%)" }} />
+                <span aria-label="A medias" className="h-7 w-7 shrink-0 rounded-full border-2 border-[color:var(--c-mint)]" style={{ background: "linear-gradient(90deg, var(--c-mint) 50%, transparent 50%)" }} />
               ) : (
                 <span aria-label="Pendiente" className={`h-7 w-7 shrink-0 rounded-full border-2 ${isToday ? "border-black/30" : "border-white/25"}`} />
               )}
@@ -680,10 +680,10 @@ function ShiftSheet({
       <div
         role="dialog"
         aria-label="Mover el plan"
-        className="w-full rounded-t-[24px] bg-[#151412] border-t border-white/10 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-5"
+        className="w-full rounded-t-[24px] bg-[#1E212B] border-t border-white/10 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-5"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-[28px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>MOVER EL PLAN</h2>
+        <h2 className="text-[28px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>Mover el plan</h2>
         {fromIso && (
           <div className="mt-4 grid grid-cols-2 gap-2">
             {(["desde", "todo"] as const).map((s) => (
@@ -703,7 +703,7 @@ function ShiftSheet({
         </p>
         <div className="mt-1.5 flex h-14 items-center justify-between rounded-[14px] border border-white/15 bg-white/[0.06] px-2">
           <button type="button" aria-label="Un día menos" onClick={() => setDays((d) => Math.max(min, d - 1))} className="grid h-12 w-12 place-items-center"><Minus className="h-5 w-5" /></button>
-          <span className="text-[32px] font-extrabold" style={{ fontFamily: "var(--font-editorial)" }}>{days > 0 ? `+${days}` : days}</span>
+          <span className="text-[32px] font-extrabold" style={{ fontFamily: "var(--font-num)" }}>{days > 0 ? `+${days}` : days}</span>
           <button type="button" aria-label="Un día más" onClick={() => setDays((d) => Math.min(60, d + 1))} className="grid h-12 w-12 place-items-center"><Plus className="h-5 w-5" /></button>
         </div>
         <div className="mt-2 flex gap-2">

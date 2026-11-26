@@ -392,11 +392,11 @@ function TimerRunner({ mode }: { mode: Mode }) {
             }}
           />
         </div>
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">{sub}</div>
+        <div className="text-xs tracking-widest text-muted-foreground">{sub}</div>
         <div
           className="mt-2 text-8xl font-black tabular-nums"
           style={{
-            fontFamily: "var(--font-editorial)",
+            fontFamily: "var(--font-num)",
             color: phase === "done" ? "var(--gold)" : phase === "rest" ? "var(--muted-foreground)" : "inherit",
           }}
         >
@@ -409,7 +409,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
         <button
           onClick={toggle}
           className="flex-1 flex items-center justify-center gap-2 rounded-xl py-4 font-semibold"
-          style={{ background: "var(--gold)", color: "#0a0a0a" }}
+          style={{ background: "var(--gold)", color: "var(--aurora-ink)" }}
         >
           {isPrep ? <><Pause className="h-5 w-5" /> Cancelar</> : running ? <><Pause className="h-5 w-5" /> Pausar</> : <><Play className="h-5 w-5" /> {elapsed > 0 ? "Reanudar" : "Empezar"}</>}
         </button>
@@ -426,7 +426,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
       {fullscreen && (
         <div
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
-          style={{ background: "#000" }}
+          style={{ background: "#14161D" }}
         >
           <div
             className="absolute inset-x-0 top-0 h-1"
@@ -444,7 +444,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
             <div className="mb-4 text-center" aria-live="polite">
               {(phase === "work" || phase === "rest") && (
                 <div
-                  className="mx-auto mb-3 w-fit rounded-full px-4 py-1.5 text-sm font-extrabold tracking-[0.18em]"
+                  className="mx-auto mb-3 w-fit rounded-full px-4 py-1.5 text-sm font-extrabold"
                   style={{ background: phase === "work" ? "var(--gold)" : "rgba(255,255,255,0.12)", color: phase === "work" ? "#0a0a0a" : "#fff" }}
                 >
                   {phase === "work" ? "TRABAJO" : "DESCANSO"}
@@ -452,7 +452,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
               )}
               {roundTotal != null && roundNow != null ? (
                 <>
-                  <div className="font-black leading-none tabular-nums" style={{ fontFamily: "var(--font-editorial)", fontSize: "min(16vw, 12vh)", color: "var(--gold)" }}>
+                  <div className="font-black leading-none tabular-nums" style={{ fontFamily: "var(--font-num)", fontSize: "min(16vw, 12vh)", color: "var(--gold)" }}>
                     RONDA {roundNow}<span style={{ color: "rgba(255,255,255,0.45)" }}>/{roundTotal}</span>
                   </div>
                   <div className="mt-1 text-base font-bold" style={{ color: "rgba(255,255,255,0.7)" }}>
@@ -460,7 +460,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
                   </div>
                 </>
               ) : (
-                <div className="font-black leading-none tabular-nums" style={{ fontFamily: "var(--font-editorial)", fontSize: "min(14vw, 10vh)", color: "var(--gold)" }}>
+                <div className="font-black leading-none tabular-nums" style={{ fontFamily: "var(--font-num)", fontSize: "min(14vw, 10vh)", color: "var(--gold)" }}>
                   {rounds_done} {rounds_done === 1 ? "RONDA" : "RONDAS"}
                 </div>
               )}
@@ -469,10 +469,10 @@ function TimerRunner({ mode }: { mode: Mode }) {
           <div
             className="font-black tabular-nums leading-none text-center px-4 max-w-full"
             style={{
-              fontFamily: "var(--font-editorial)",
+              fontFamily: "var(--font-num)",
               fontSize: roundTotal != null || countsRounds ? "min(32vw, 42vh)" : "min(38vw, 55vh)",
-              color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#FFFFFF" : isPrep ? "#fff" : "var(--c-lima)",
-              textShadow: phase === "work" || (!isPrep && phase !== "rest" && phase !== "done") ? "0 0 40px rgba(198,244,50,.25)" : "none",
+              color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#FFFFFF" : isPrep ? "#fff" : "var(--gold)",
+              textShadow: phase === "work" || (!isPrep && phase !== "rest" && phase !== "done") ? "0 0 40px rgba(255,179,138,.28)" : "none",
               letterSpacing: "0.01em",
             }}
           >
@@ -493,7 +493,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
                 type="button"
                 onClick={() => setRoundsDone((n) => n + 1)}
                 className="h-16 rounded-2xl px-8 text-2xl font-black"
-                style={{ background: "var(--gold)", color: "#0a0a0a", fontFamily: "var(--font-editorial)" }}
+                style={{ background: "var(--gold)", color: "var(--aurora-ink)", fontFamily: "var(--font-num)" }}
               >
                 + RONDA
               </button>
@@ -503,7 +503,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
             <button
               onClick={toggle}
               className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold"
-              style={{ background: "var(--gold)", color: "#0a0a0a" }}
+              style={{ background: "var(--gold)", color: "var(--aurora-ink)" }}
             >
               {isPrep ? <><Pause className="h-5 w-5" /> Cancelar</> : running ? <><Pause className="h-5 w-5" /> Pausar</> : <><Play className="h-5 w-5" /> Reanudar</>}
             </button>

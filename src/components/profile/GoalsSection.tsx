@@ -107,7 +107,7 @@ export function GoalsSection({ records, results, metrics }: any) {
           <Card key={g.id}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>{g.title}</p>
+                <p className="text-xs" style={{ color: "#6F6F6F" }}>{g.title}</p>
                 <p className="mt-1 text-[34px] font-semibold leading-none tabular tracking-tight">
                   {current != null ? fmtNum(current) : "—"}
                   <span className="text-sm" style={{ color: "#6F6F6F" }}> / {fmtNum(g.target_value)} {g.unit}</span>
@@ -118,7 +118,7 @@ export function GoalsSection({ records, results, metrics }: any) {
               </button>
             </div>
             <div className="mt-4 h-[6px] w-full overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.10)" }}>
-              <div className="h-full rounded-full" style={{ width: `${pct ?? 0}%`, background: "linear-gradient(140deg,#E8DDC8,#C8B38A)" }} />
+              <div className="h-full rounded-full" style={{ width: `${pct ?? 0}%`, background: "var(--aurora)" }} />
             </div>
             <p className="mt-2 text-[13px]" style={{ color: "#6F6F6F" }}>
               {pct != null ? `${pct}% completado` : "Sin datos suficientes"}

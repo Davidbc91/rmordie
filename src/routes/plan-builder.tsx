@@ -569,7 +569,7 @@ function DayEditor({ plan, weekIdx, dayIdx, onChange, onBack, onNext }: {
 
       <div>
         <p className="eyebrow">{shortDate(day.date)} · Semana {weekIdx + 1}</p>
-        <h1 className="mt-1 text-[64px] font-black uppercase leading-[0.85] text-[color:var(--gold-soft)]" style={font}>
+        <h1 className="mt-1 text-[64px] font-black leading-[0.85] text-[color:var(--gold-soft)]" style={font}>
           {(parseISODate(day.date) ?? new Date()).toLocaleDateString("es-ES", { weekday: "long" })}
         </h1>
       </div>
@@ -668,7 +668,7 @@ function DayEditor({ plan, weekIdx, dayIdx, onChange, onBack, onNext }: {
 
       {preview.length > 0 && (
         <section className="rounded-[18px] bg-black/30 px-4 py-3.5">
-          <p className="text-xs font-bold tracking-[0.14em] text-muted-foreground">ASÍ LO VERÁS EN EL ENTRENO</p>
+          <p className="text-xs font-bold text-muted-foreground">Así lo verás en el entreno</p>
           <div className="mt-2 space-y-2 text-sm leading-relaxed text-foreground/85">
             {preview.map((p) => (
               <p key={p.letter} className="whitespace-pre-wrap"><b className="text-[color:var(--gold-soft)]">{p.letter}</b> · {p.text}</p>

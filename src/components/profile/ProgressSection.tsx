@@ -163,7 +163,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       <Card>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="cinematic-label">ANÁLISIS DEL ENTRENAMIENTO</p>
+            <p className="cinematic-label">Análisis del entrenamiento</p>
             <h2 className="mt-2 text-xl font-semibold">Lectura de tu entrenamiento</h2>
           </div>
           <Activity className="h-5 w-5 text-gold" />
@@ -175,7 +175,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
         <div className="mt-4 space-y-2">
           {intelligence.signals.map((signal) => (
             <div key={signal.label} className="rounded-2xl border border-white/[.07] bg-black/20 p-4">
-              <div className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{signal.label}</div>
+              <div className="text-xs text-muted-foreground">{signal.label}</div>
               <p className="mt-1.5 text-sm leading-relaxed">{signal.text}</p>
             </div>
           ))}
@@ -186,7 +186,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       </Card>
 
       <Card>
-        <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
+        <p className="text-xs" style={{ color: "#6F6F6F" }}>
           Resumen del periodo
         </p>
         <p className="mt-3 text-base leading-relaxed">
@@ -197,7 +197,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       <Card>
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
+            <p className="text-xs" style={{ color: "#6F6F6F" }}>
               Volumen de entrenamiento
             </p>
             <p className="mt-1 text-2xl font-semibold tabular">
@@ -231,7 +231,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       <Card>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
+            <p className="text-xs" style={{ color: "#6F6F6F" }}>
               Fuerza
             </p>
             <p className="mt-1 text-xs text-muted-foreground">Movimientos con evolución registrada</p>
@@ -270,7 +270,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       <Card>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
+            <p className="text-xs" style={{ color: "#6F6F6F" }}>
               Tendencias por movimiento
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -289,7 +289,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
               { label: "A vigilar", items: movementTrends.down },
             ].map((group) => (
               <div key={group.label} className="rounded-2xl border border-border bg-surface p-3.5">
-                <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{group.label}</p>
+                <p className="text-xs text-muted-foreground">{group.label}</p>
                 {group.items.length === 0 ? (
                   <p className="mt-2 text-xs text-muted-foreground">Sin movimientos en esta categoría.</p>
                 ) : (
@@ -318,7 +318,7 @@ export function ProgressSection({ results, history, records, metrics, plannedDay
       </div>
 
       <Card>
-        <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
+        <p className="text-xs" style={{ color: "#6F6F6F" }}>
           Cambios corporales
         </p>
         <div className="mt-3 grid grid-cols-2 gap-3">

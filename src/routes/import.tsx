@@ -288,8 +288,8 @@ function ImportPage() {
 
       {current && months.length > 0 && (
         <section className="mt-4 rounded-[22px] border border-[color:var(--gold)]/35 bg-[color:var(--gold)]/[0.07] p-4">
-          <p className="flex items-center gap-2 text-[13px] font-bold tracking-[0.1em] text-gold">
-            <CheckCircle2 className="h-4 w-4" /> ACTIVA · VERSIÓN {current.version}
+          <p className="flex items-center gap-2 text-[13px] font-bold text-gold">
+            <CheckCircle2 className="h-4 w-4" /> Activa · versión {current.version}
           </p>
           <p className="mt-1.5 truncate text-[17px] font-bold">{current.source_filename ?? "Sin nombre"}</p>
           <p className="text-sm text-muted-foreground">{months.length} meses · importada el {fmtDate(current.imported_at)}</p>
@@ -325,7 +325,7 @@ function ImportPage() {
         <span className="gold-gradient grid h-14 w-14 place-items-center rounded-[18px]">
           {busy && ocrProgress > 0 ? <ImageIcon className="h-6 w-6" /> : <Upload className="h-6 w-6" strokeWidth={2.2} />}
         </span>
-        <span className="text-[26px] font-extrabold uppercase leading-none" style={{ fontFamily: "var(--font-editorial)" }}>
+        <span className="text-[22px] font-extrabold leading-tight tracking-tight">
           {busy
             ? aiProgress
               ? (aiProgress.total > 1 ? `Leyendo… ${aiProgress.done}/${aiProgress.total}` : "Leyendo…")
@@ -397,7 +397,7 @@ function ImportPage() {
           <div className="overflow-hidden rounded-[18px] bg-white/[0.045]">
             {shownMonths.map((month, index) => (
               <div key={month.key} className="flex min-h-14 items-center gap-3 border-b border-white/[0.06] px-3.5 last:border-b-0">
-                <span className="w-7 text-[22px] font-extrabold text-gold" style={{ fontFamily: "var(--font-editorial)" }}>{index + 1}</span>
+                <span className="w-7 text-[22px] font-extrabold text-gold" style={{ fontFamily: "var(--font-num)" }}>{index + 1}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] font-semibold">{month.label}</span>
                   {sorting && <span className="block text-xs text-muted-foreground">{month.weeks.length} semanas</span>}

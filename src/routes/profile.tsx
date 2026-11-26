@@ -131,7 +131,7 @@ function ProfilePage() {
 
         {GROUPS.map((g) => (
           <section key={g.key} className="rise rise-3 mt-4">
-            <h2 className="mb-1.5 px-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{g.title}</h2>
+            <h2 className="mb-1.5 px-1 text-[13px] font-semibold text-muted-foreground">{g.title}</h2>
             <div className="overflow-hidden rounded-[18px] border border-white/[0.09] bg-white/[0.045]">
               {SECTIONS.filter((s) => s.group === g.key).map((s) => (
                 <button

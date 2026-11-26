@@ -43,7 +43,7 @@ export function DataSection() {
   return (
     <div className="space-y-3">
       <Card>
-        <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>Privacidad y control</p>
+        <p className="text-xs" style={{ color: "#6F6F6F" }}>Privacidad y control</p>
         <p className="mt-3 text-sm" style={{ color: "#6F6F6F" }}>
           Tus datos son tuyos. Puedes exportarlos en cualquier momento o eliminarlos por completo. Nunca se borra nada de forma automática.
         </p>
@@ -52,7 +52,7 @@ export function DataSection() {
           target="_blank"
           rel="noreferrer"
           className="mt-5 flex w-full items-center justify-center rounded-[18px] py-3 text-sm font-semibold"
-          style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}
+          style={{ background: "var(--aurora)", color: "var(--aurora-ink)" }}
         >
           Generar informe para entrenador (PDF)
         </a>

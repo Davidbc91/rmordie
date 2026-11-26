@@ -210,7 +210,7 @@ function WodDetailModal({ summary, onClose }: { summary: WodSummary; onClose: ()
       >
         <div className="mb-5 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+            <p className="text-xs tracking-[0.24em] text-muted-foreground">
               {WOD_TYPE_LABEL[summary.type]} · Evolución
             </p>
             <h2 className="mt-1.5 truncate text-xl font-semibold tracking-tight">{summary.name}</h2>
@@ -239,7 +239,7 @@ function WodDetailModal({ summary, onClose }: { summary: WodSummary; onClose: ()
 
         {chartData.length >= 2 && (
           <div className="mb-5 rounded-2xl border border-border p-4">
-            <p className="mb-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">Progresión</p>
+            <p className="mb-3 text-xs tracking-[0.2em] text-muted-foreground">Progresión</p>
             <div className="h-40 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
@@ -298,7 +298,7 @@ function WodDetailModal({ summary, onClose }: { summary: WodSummary; onClose: ()
                 <span className="font-semibold tabular">{formatScore(r)}</span>
                 <span className="rounded-full border border-border px-2 py-0.5 text-xs font-semibold">{SCALE_LABEL[r.scale]}</span>
                 {r.is_pr && (
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold tracking-wide">
                     <Trophy className="h-3 w-3" /> PR
                   </span>
                 )}
@@ -315,7 +315,7 @@ function WodDetailModal({ summary, onClose }: { summary: WodSummary; onClose: ()
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-border p-3 text-center">
-      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 text-sm font-semibold tabular">{value}</p>
     </div>
   );

@@ -106,11 +106,11 @@ function ShareSheet({ plan, shares, onClose }: { plan: PlanSummary; shares: Plan
       <div
         role="dialog"
         aria-label="Compartir planificación"
-        className="max-h-[88dvh] w-full overflow-y-auto rounded-t-[24px] border-t border-white/10 bg-[#151412] px-4 pt-5"
+        className="max-h-[88dvh] w-full overflow-y-auto rounded-t-[24px] border-t border-white/10 bg-[#1E212B] px-4 pt-5"
         style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-[13px] tracking-[0.12em] text-muted-foreground">COMPARTIR</p>
+        <p className="text-[13px] text-muted-foreground">Compartir</p>
         <h2 className="truncate text-[26px] font-extrabold leading-tight" style={{ fontFamily: "var(--font-editorial)" }}>
           {(plan.source_filename ?? "Planificación").toUpperCase()}
         </h2>
@@ -133,7 +133,7 @@ function ShareSheet({ plan, shares, onClose }: { plan: PlanSummary; shares: Plan
               >
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/[0.08] text-xs font-bold">{p.name.slice(0, 2).toUpperCase()}</span>
                 <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{p.name}</span>
-                <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border ${on ? "border-[color:var(--gold)] bg-[color:var(--gold)] text-[#0B0A08]" : "border-white/25"}`}>
+                <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border ${on ? "border-[color:var(--gold)] bg-[color:var(--gold)] text-[#1A1420]" : "border-white/25"}`}>
                   {on && <Check className="h-3.5 w-3.5" />}
                 </span>
               </button>

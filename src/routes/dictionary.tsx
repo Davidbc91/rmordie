@@ -155,7 +155,7 @@ function DictionaryPage() {
 
           {!searching && todayMovements.length > 0 && (
             <section>
-              <p className="mb-1.5 px-1 text-[13px] font-bold tracking-[0.12em] text-gold">EN TU ENTRENO DE HOY</p>
+              <p className="mb-1.5 px-1 text-[13px] font-bold text-gold">En tu entreno de hoy</p>
               <div className="grid grid-cols-2 gap-2">
                 {todayMovements.map((m) => (
                   <Link key={m.id} to="/dictionary/$movementId" params={{ movementId: m.id }} className="pressable min-h-16 rounded-[16px] border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/[0.09] px-3 py-2.5">
@@ -169,7 +169,7 @@ function DictionaryPage() {
 
           {grouped.map(([cat, list]) => (
             <section key={cat}>
-              <p className="mb-1.5 px-1 text-[13px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{cat}</p>
+              <p className="mb-1.5 px-1 text-[13px] font-bold text-muted-foreground">{cat}</p>
               <div className="overflow-hidden rounded-[18px] bg-white/[0.045]">
                 {list.map((m) => (
                   <Link

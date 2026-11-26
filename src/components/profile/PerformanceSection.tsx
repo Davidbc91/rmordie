@@ -43,14 +43,14 @@ export function PerformanceSection({ results, history, records, bodyWeight, days
   return (
     <div className="space-y-4">
       <Card>
-        <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
+        <p className="text-xs" style={{ color: "#6F6F6F" }}>
           Athlete status
         </p>
         <div className="mt-4 space-y-3">
           {statuses.map((s) => (
             <div key={s.label} className="flex items-center justify-between gap-3 border-b pb-3 last:border-0 last:pb-0" style={{ borderColor: "rgba(255,255,255,0.10)" }}>
               <div>
-                <div className="text-sm font-semibold uppercase tracking-[0.1em]">{s.label}</div>
+                <div className="text-sm font-semibold">{s.label}</div>
                 <div className="text-[13px]" style={{ color: "#6F6F6F" }}>{s.detail}</div>
               </div>
               <div className="flex items-center gap-1.5 text-xs font-semibold">
@@ -70,7 +70,7 @@ export function PerformanceSection({ results, history, records, bodyWeight, days
       </div>
 
       <div>
-        <p className="mb-2 text-xs uppercase tracking-[0.12em] text-muted-foreground">Progression</p>
+        <p className="mb-2 text-xs text-muted-foreground">Progression</p>
         {insights.length === 0 ? (
           <Empty text="Necesitas más historial para detectar tendencias." />
         ) : (

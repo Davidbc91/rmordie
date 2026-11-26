@@ -78,7 +78,7 @@ function PublicProfile() {
           <button
             onClick={() => toggleFollow.mutate({ targetId: profile.user_id, following })}
             className="pressable mt-5 w-full rounded-[18px] py-3 text-sm font-semibold"
-            style={following ? { background: "rgba(255,255,255,0.07)", color: "var(--foreground)" } : { background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}
+            style={following ? { background: "rgba(255,255,255,0.07)", color: "var(--foreground)" } : { background: "var(--aurora)", color: "var(--aurora-ink)" }}
           >
             {following ? "Siguiendo" : "Seguir"}
           </button>
@@ -104,7 +104,7 @@ function PublicProfile() {
                 key={t}
                 onClick={() => setTab(t)}
                 className="rounded-full px-3.5 py-2 text-xs"
-                style={tab === t ? { background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
+                style={tab === t ? { background: "var(--aurora)", color: "var(--aurora-ink)" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
               >
                 {t === "posts" ? "Publicaciones" : "PRs"}
               </button>
@@ -147,7 +147,7 @@ function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <p className="text-lg font-semibold tabular">{value}</p>
-      <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+      <p className="text-xs tracking-[0.2em] text-muted-foreground">{label}</p>
     </div>
   );
 }

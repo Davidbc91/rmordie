@@ -143,9 +143,9 @@ function MonthGains() {
   }, [history]);
   if (!lifts) return null;
   return (
-    <div className="tile tile-violeta rise rise-2 mb-3 p-4">
+    <div className="aurora-hero rise rise-2 mb-3 p-5">
       <p className="text-[13px] font-bold text-muted-foreground">Últimos 30 días</p>
-      <p className="metric-pop text-[44px] font-black leading-none" style={{ fontFamily: "var(--font-editorial)" }}>
+      <p className="metric-pop text-[44px] font-black leading-none" style={{ fontFamily: "var(--font-num)" }}>
         +{String(Math.round(total * 10) / 10).replace(".", ",")} KG
       </p>
       <p className="mt-1 text-[13px] font-semibold text-muted-foreground">

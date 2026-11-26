@@ -68,20 +68,20 @@ const BottomNavigation = memo(function BottomNavigation({ pathname, keyboardOpen
   };
   return (
     <nav aria-hidden={keyboardOpen} aria-label="Navegación principal" data-main-navigation className={"pointer-events-none fixed inset-x-0 bottom-0 px-0 transition-opacity duration-150 " + (keyboardOpen ? "pointer-events-none opacity-0" : "opacity-100")} style={{ zIndex: 50, bottom: "max(env(safe-area-inset-bottom), 12px)", transform: "translateZ(0)" }}>
-      <div className="pointer-events-auto mx-auto w-[calc(100vw-32px)] max-w-[380px] rounded-[26px] border" style={{ background: "rgba(14,14,13,.92)", borderColor: "rgba(255,255,255,0.14)", backdropFilter: "blur(24px) saturate(160%)", WebkitBackdropFilter: "blur(24px) saturate(160%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 18px 55px -22px rgba(0,0,0,.98)" }}>
+      <div className="pointer-events-auto mx-auto w-[calc(100vw-32px)] max-w-[380px] rounded-[30px] border" style={{ background: "rgba(30,33,43,.9)", borderColor: "rgba(255,255,255,0.08)", backdropFilter: "blur(24px) saturate(160%)", WebkitBackdropFilter: "blur(24px) saturate(160%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 45px -20px rgba(0,0,0,.7)" }}>
         <div className="relative flex items-stretch gap-0.5 px-1.5 pt-1.5">
           {tabs.map((t) => {
             const isActive = pathname === t.to || (t.to !== "/" && pathname.startsWith(t.to)) || (t.to === "/calendar" && isPlanPath(pathname));
             const Icon = t.icon;
             if (t.center) {
               return <Link key={t.to} to={t.to} aria-label="Temporizador" className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-end gap-[3px] pb-2">
-                <span className="-mt-6 grid h-[54px] w-[54px] place-items-center rounded-full" style={{ background: "var(--c-lima)", boxShadow: "0 10px 26px -8px rgba(0,0,0,.9), 0 0 0 4px rgba(8,8,7,.9)" }}>
-                  <Icon className="h-6 w-6" strokeWidth={2.2} style={{ color: "#0A0A0A" }} />
+                <span className="-mt-6 grid h-[54px] w-[54px] place-items-center rounded-full" style={{ background: "var(--aurora)", boxShadow: "0 10px 26px -8px rgba(185,166,255,.45), 0 0 0 4px rgba(20,22,29,.95)" }}>
+                  <Icon className="h-6 w-6" strokeWidth={2.2} style={{ color: "var(--aurora-ink)" }} />
                 </span>
-                <span className="text-xs font-bold" style={{ color: "var(--c-lima)" }}>{t.label}</span>
+                <span className="text-xs font-bold" style={{ color: "var(--gold-soft)" }}>{t.label}</span>
               </Link>;
             }
-            return <Link key={t.to} to={t.to} onClick={t.to === "/calendar" ? openPlan : undefined} className="pressable relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2" style={{ color: isActive ? TAB_COLOR[t.to] ?? "var(--gold)" : "var(--muted-foreground)" }}>
+            return <Link key={t.to} to={t.to} onClick={t.to === "/calendar" ? openPlan : undefined} className="pressable relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2" style={{ color: isActive ? "var(--gold)" : "var(--muted-foreground)" }}>
               <span aria-hidden className="absolute inset-0 rounded-[18px] transition-opacity duration-300" style={{ background: "currentColor", opacity: isActive ? 0.12 : 0 }} />
               <Icon className="relative h-[20px] w-[20px]" strokeWidth={isActive ? 2.1 : 1.7} />
               <span className="relative text-xs font-semibold">{t.label}</span>
@@ -112,16 +112,6 @@ const ProfileOverlay = memo(function ProfileOverlay({ name, links, chatUnread, o
     </div>
   );
 });
-
-/** Color de cada pestaña («Energía del box») */
-export function sectionFor(pathname: string): "inicio" | "plan" | "timer" | "records" | "social" {
-  if (pathname.startsWith("/timers")) return "timer";
-  if (pathname.startsWith("/records")) return "records";
-  if (pathname.startsWith("/social")) return "social";
-  if (isPlanPath(pathname) || pathname.startsWith("/import")) return "plan";
-  return "inicio";
-}
-const TAB_COLOR: Record<string, string> = { "/": "var(--c-gold)", "/calendar": "var(--c-coral)", "/records": "var(--c-violeta)", "/social": "var(--c-turq)", "/timers": "var(--c-lima)" };
 
 export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -180,9 +170,9 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
   const showResume = !!active && pathname !== activePath && !pathname.startsWith("/timers");
 
   return (
-    <div data-section={sectionFor(pathname)} className={"grain relative min-h-[100dvh] overflow-x-hidden " + (keyboardOpen ? "pb-0" : showResume ? "pb-[calc(168px+env(safe-area-inset-bottom))]" : "pb-[calc(88px+env(safe-area-inset-bottom))]")}>
+    <div className={"grain relative min-h-[100dvh] overflow-x-hidden " + (keyboardOpen ? "pb-0" : showResume ? "pb-[calc(168px+env(safe-area-inset-bottom))]" : "pb-[calc(88px+env(safe-area-inset-bottom))]")}>
       <div aria-hidden className="aura pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
-      <div aria-hidden className="pointer-events-none absolute -left-32 top-28 h-80 w-80 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--accent)_16%,transparent),transparent_68%)] blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute -left-32 top-28 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(185,166,255,.12),transparent_68%)] blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -right-36 top-[34rem] h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(150,160,180,.07),transparent_68%)] blur-3xl" />
       <div
         aria-hidden
@@ -199,15 +189,15 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
         }}
       >
         <header className="mb-5 flex items-center justify-between">
-          <span className="text-[24px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>RM <span className="brand-gold">OR</span> DIE</span>
+          <span className="text-[22px] font-extrabold leading-none tracking-tight" style={{ fontFamily: "var(--font-editorial)" }}>RM <span className="aurora-text">OR</span> DIE</span>
           <SyncIndicator />
           <button
             type="button"
             onClick={() => setProfileOpen((v) => !v)}
             aria-expanded={profileOpen}
             aria-label="Abrir tu perfil y el menú"
-            className="pressable relative grid h-11 w-11 place-items-center rounded-full border-[1.5px] border-[color:var(--gold)] bg-[color:var(--gold)]/12 text-[19px] font-extrabold text-[color:var(--gold-soft)]"
-            style={{ fontFamily: "var(--font-editorial)" }}
+            className="pressable relative grid h-11 w-11 place-items-center rounded-full text-[15px] font-extrabold text-[color:var(--aurora-ink)]"
+            style={{ fontFamily: "var(--font-editorial)", background: "var(--aurora)" }}
           >
             {initials(currentProfile?.name ?? "Atleta")}
             {chatUnread > 0 && <span aria-label={`${chatUnread} mensajes sin leer`} className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold gold-gradient" style={{ color: "var(--gold-foreground)", fontFamily: "var(--font-display)" }}>{chatUnread > 9 ? "9+" : chatUnread}</span>}

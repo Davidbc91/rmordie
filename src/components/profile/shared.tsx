@@ -17,7 +17,7 @@ export function Card({ children, className = "" }: { children: React.ReactNode; 
 export function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="cinematic-card-dark rounded-[20px] border border-white/[.07] p-4">
-      <div className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
+      <div className="text-xs text-muted-foreground">{label}</div>
       <div className="mt-2 text-2xl font-semibold tabular tracking-tight">{value}</div>
       {sub && <div className="mt-1 text-[13px] text-muted-foreground">{sub}</div>}
     </div>
@@ -27,7 +27,7 @@ export function Stat({ label, value, sub }: { label: string; value: string; sub?
 export function Empty({ text = "Aún no hay suficientes datos." }: { text?: string }) {
   return (
     <div className="rounded-[22px] border border-dashed border-border p-6 text-center">
-      <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Aún no hay datos suficientes</p>
+      <p className="text-xs text-muted-foreground">Aún no hay datos suficientes</p>
       <p className="mt-2 text-sm text-muted-foreground">{text}</p>
     </div>
   );
@@ -48,7 +48,7 @@ export function Field({
 }) {
   return (
     <label className="block min-w-0 max-w-full">
-      <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <div className="mt-1.5 min-w-0 max-w-full">{children}</div>
     </label>
   );
@@ -127,7 +127,7 @@ export function Row({ label, value }: { label: string; value: string }) {
 export function ReportList({ title, items }: { title: string; items: string[] }) {
   return (
     <div>
-      <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "var(--muted-foreground)" }}>{title}</p>
+      <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>{title}</p>
       {items.length === 0 ? (
         <p className="mt-2 text-sm" style={{ color: "var(--muted-foreground)" }}>Aún no hay datos suficientes</p>
       ) : (

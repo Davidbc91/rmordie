@@ -82,7 +82,7 @@ function SocialSettings() {
         <Text label="Avatar (URL)" value={form.avatar_url} onChange={(v) => setForm({ ...form, avatar_url: v })} className="col-span-2" />
       </div>
       <label className="mt-2 block">
-        <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Bio</span>
+        <span className="text-xs tracking-[0.2em] text-muted-foreground">Bio</span>
         <textarea
           rows={3}
           value={form.bio}
@@ -103,7 +103,7 @@ function SocialSettings() {
         onClick={submit}
         disabled={save.isPending}
         className="pressable mt-6 w-full rounded-[18px] py-3.5 text-sm font-semibold"
-        style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}
+        style={{ background: "var(--aurora)", color: "var(--aurora-ink)" }}
       >
         Guardar perfil
       </button>
@@ -154,7 +154,7 @@ function Moderation() {
 function Text({ label, value, onChange, className = "" }: { label: string; value: string; onChange: (v: string) => void; className?: string }) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
+      <span className="text-xs tracking-[0.2em] text-muted-foreground">{label}</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}

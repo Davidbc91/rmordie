@@ -121,12 +121,12 @@ function SettingsPage() {
       <section className="mt-4 card-elevated p-5">
         <h2 className="text-sm font-semibold">Perfil y seguridad</h2>
         <label className="mt-3 block">
-          <span className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">PIN actual</span>
+          <span className="mb-1 block text-xs tracking-wider text-muted-foreground">PIN actual</span>
           <input type="password" inputMode="numeric" autoComplete="current-password" value={currentPin} onChange={(e) => setCurrentPin(e.target.value.replace(/[^0-9]/g, ""))} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular tracking-widest outline-none focus:border-gold" />
           <span className="mt-1 block text-xs text-muted-foreground">Necesario para cambiar el PIN o eliminar el perfil.</span>
         </label>
         <label className="mt-3 block">
-          <span className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">PIN nuevo</span>
+          <span className="mb-1 block text-xs tracking-wider text-muted-foreground">PIN nuevo</span>
           <input type="password" inputMode="numeric" autoComplete="new-password" value={pin} onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))} className="min-h-11 w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm tabular tracking-widest outline-none focus:border-gold" />
         </label>
         <div className="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
@@ -150,7 +150,7 @@ function WeightChips({ label, options, value, disabled, onChange }: { label: str
   }
   return (
     <div className="mt-4">
-      <span className="mb-2 block text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="mb-2 block text-xs tracking-wider text-muted-foreground">{label}</span>
       <div className="flex flex-wrap gap-2">
         {all.map((n) => {
           const on = selected.includes(n);

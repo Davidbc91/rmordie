@@ -33,7 +33,7 @@ export function LoadStepper({ value, onChange, placeholder, highlight }: { value
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder ?? "0"}
             className="w-full min-w-0 bg-transparent text-center text-[32px] font-extrabold tabular outline-none placeholder:text-base placeholder:font-normal placeholder:text-muted-foreground/70"
-            style={{ fontFamily: "var(--font-editorial)" }}
+            style={{ fontFamily: "var(--font-num)" }}
           />
           <span className="text-sm text-muted-foreground">kg</span>
         </label>
@@ -61,7 +61,7 @@ export function CountStepper({ label, value, onChange }: { label: string; value:
           onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
           placeholder="–"
           className="w-full min-w-0 bg-transparent text-center text-[30px] font-extrabold tabular outline-none placeholder:text-muted-foreground/60"
-          style={{ fontFamily: "var(--font-editorial)" }}
+          style={{ fontFamily: "var(--font-num)" }}
         />
         <button type="button" aria-label={`${label}: uno más`} onClick={() => set(n + 1)} className="grid h-14 w-12 shrink-0 place-items-center">
           <Plus className="h-5 w-5" />
@@ -96,7 +96,7 @@ export function RpeChips({ value, onChange }: { value: string; onChange: (v: str
               aria-pressed={on}
               onClick={() => onChange(on ? "" : String(v))}
               className={`h-12 rounded-[12px] text-[22px] font-extrabold transition-colors ${on ? "bg-[color:var(--gold)] text-[color:var(--gold-foreground)]" : "border border-white/[0.14] bg-white/[0.05] text-foreground/85"}`}
-              style={{ fontFamily: "var(--font-editorial)" }}
+              style={{ fontFamily: "var(--font-num)" }}
             >
               {v}
             </button>
@@ -125,7 +125,7 @@ export function PlateLine({ total, cfg }: { total: number | null; cfg: PlateConf
         {r.plates.slice(0, 8).map((p, i) => {
           const h = Math.max(10, Math.round((p / maxPlate) * 32));
           const w = p >= 10 ? 8 : p >= 5 ? 6 : 4;
-          const el = <rect key={i} x={x} y={17 - h / 2} width={w} height={h} rx="1.5" fill={p >= 15 ? "#C8B38A" : p >= 5 ? "#E8DDC8" : "#99968E"} />;
+          const el = <rect key={i} x={x} y={17 - h / 2} width={w} height={h} rx="1.5" fill={p >= 15 ? "#FFB38A" : p >= 5 ? "#FFD3BC" : "#99968E"} />;
           x += w + 1.5;
           return el;
         })}
@@ -179,7 +179,7 @@ export function RestTimer({ seconds }: { seconds: number }) {
       <Timer className="h-5 w-5 shrink-0 text-gold" />
       <span className="flex-1 text-sm" role="timer" aria-live={finished ? "assertive" : "off"}>
         {finished ? "¡A por la siguiente serie!" : running ? "Descansando" : "Descanso"}{" "}
-        {!finished && <b className="text-[22px] tabular" style={{ fontFamily: "var(--font-editorial)" }}>{clock(left)}</b>}
+        {!finished && <b className="text-[22px] tabular" style={{ fontFamily: "var(--font-num)" }}>{clock(left)}</b>}
       </span>
       {running && !finished ? (
         <button type="button" onClick={() => setEndAt(null)} className="min-h-11 rounded-[12px] px-3.5 text-sm font-bold text-muted-foreground">Parar</button>

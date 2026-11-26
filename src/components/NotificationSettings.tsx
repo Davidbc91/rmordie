@@ -68,7 +68,7 @@ export function NotificationSettings() {
       </div>
 
       <label className="mt-3 block">
-        <span className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Hora del recordatorio</span>
+        <span className="mb-1 block text-xs tracking-wider text-muted-foreground">Hora del recordatorio</span>
         <input
           type="time"
           step={900}

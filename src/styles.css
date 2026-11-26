@@ -35,8 +35,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-display: "Manrope", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
-  --shadow-gold: 0 10px 30px -12px rgba(200, 179, 138, 0.28);
+  --font-display: "Plus Jakarta Sans", "Manrope", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --shadow-gold: 0 10px 30px -12px rgba(255, 179, 138, 0.28);
   --shadow-elevated: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
 }
 
@@ -44,38 +44,45 @@
  * Tokens (una sola definición; antes había cuatro pasadas que se pisaban)
  * ------------------------------------------------------------------------- */
 :root, .dark {
+  /* Aurora: degradado y colores por tipo de trabajo */
+  --aurora: linear-gradient(135deg, #FFB38A 0%, #F39BB6 50%, #B9A6FF 100%);
+  --c-peach: #FFB38A;
+  --c-rose: #F39BB6;
+  --c-lila: #B9A6FF;
+  --c-mint: #7DE3C3;
+  --aurora-ink: #1A1420;
   --radius: 0.95rem;
-  --level-0: #080807;
-  --level-1: #10100F;
-  --level-2: #171715;
-  --background: #080807;
-  --foreground: #F2F0EA;
-  --surface: rgba(255, 255, 255, 0.045);
-  --surface-2: rgba(255, 255, 255, 0.075);
-  --card: rgba(255, 255, 255, 0.05);
-  --card-foreground: #F4F4F5;
-  --popover: #101114;
-  --popover-foreground: #F4F4F5;
-  --gold: #C8B38A;
-  --gold-soft: #E8DDC8;
-  --gold-foreground: #0B0A08;
-  --primary: #F2F0EA;
-  --primary-foreground: #08080A;
+  --level-0: #14161D;
+  --level-1: #191C24;
+  --level-2: #1E212B;
+  --background: #14161D;
+  --foreground: #F3F2F7;
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-2: rgba(255, 255, 255, 0.08);
+  --card: #1E212B;
+  --card-foreground: #F3F2F7;
+  --popover: #1E212B;
+  --popover-foreground: #F3F2F7;
+  --gold: #FFB38A;
+  --gold-soft: #FFD3BC;
+  --gold-foreground: #1A1420;
+  --primary: #F3F2F7;
+  --primary-foreground: #14161D;
   --secondary: rgba(255, 255, 255, 0.07);
   --secondary-foreground: #F4F4F5;
   --muted: rgba(255, 255, 255, 0.06);
-  --muted-foreground: #99968E;
+  --muted-foreground: #A4A6B5;
   --accent: rgba(255, 255, 255, 0.09);
   --accent-foreground: #FFFFFF;
   --destructive: #E5484D;
   --destructive-foreground: #FFFFFF;
-  --success: #7BD88F;
-  --border: rgba(255, 255, 255, 0.09);
+  --success: #7DE3C3;
+  --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.05);
-  --ring: rgba(200, 179, 138, 0.55);
+  --ring: rgba(255, 179, 138, 0.6);
   --glass-bg: rgba(255, 255, 255, 0.035);
   --glass-bg-2: rgba(255, 255, 255, 0.045);
-  --glass-bg-3: rgba(12, 13, 15, 0.92);
+  --glass-bg-3: rgba(30, 33, 43, 0.94);
   --glass-border: rgba(255, 255, 255, 0.085);
   --glass-border-strong: rgba(255, 255, 255, 0.13);
   --glass-highlight: rgba(255, 255, 255, 0.32);
@@ -83,11 +90,13 @@
   --r-md: 14px;
   --r-lg: 18px;
   --r-xl: 22px;
-  --font-display: "Manrope", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
-  --font-editorial: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-display: "Plus Jakarta Sans", "Manrope", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --font-editorial: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* Cifras grandes (cronómetros, kilos, récords): condensada para que quepan */
+  --font-num: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
   /* Superficies */
-  --surface-card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.02) 48%, rgba(0, 0, 0, 0.12) 100%), #10100F;
-  --surface-shadow: 0 18px 45px -34px rgba(0, 0, 0, 0.96), inset 0 1px 0 rgba(255, 255, 255, 0.065);
+  --surface-card-bg: #1E212B;
+  --surface-shadow: 0 14px 36px -26px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 @layer base {
@@ -107,8 +116,8 @@
     text-rendering: optimizeLegibility;
     background-color: var(--level-0);
     background-image:
-      radial-gradient(70% 32% at 50% -8%, rgba(200, 179, 138, 0.045), transparent 68%),
-      linear-gradient(180deg, #090909 0%, #050506 55%, #080808 100%);
+      radial-gradient(80% 36% at 85% -6%, rgba(185, 166, 255, 0.10), transparent 70%),
+      radial-gradient(70% 32% at 0% 0%, rgba(255, 179, 138, 0.07), transparent 68%);
     min-height: 100dvh;
   }
   @media (max-width: 767px) {
@@ -170,12 +179,12 @@
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: var(--r-md);
   }
-  .cinematic-card-dark { background: #0C0C0B; }
+  .cinematic-card-dark { background: #1E212B; }
 
   .surface-sheet,
   .glass-elevated {
     position: relative;
-    background: #111112;
+    background: #232734;
     border: 1px solid var(--glass-border-strong);
     border-radius: var(--r-lg);
     box-shadow: 0 34px 80px -34px rgba(0, 0, 0, 1), inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -193,8 +202,8 @@
   }
   .glass-gold,
   .cinematic-outline {
-    border-color: rgba(200, 179, 138, 0.28);
-    box-shadow: var(--surface-shadow), 0 0 0 1px rgba(200, 179, 138, 0.06);
+    border-color: rgba(255, 179, 138, 0.28);
+    box-shadow: var(--surface-shadow), 0 0 0 1px rgba(255, 179, 138, 0.06);
   }
   .glass-refraction {
     position: relative;
@@ -208,7 +217,7 @@
     z-index: -1;
     background:
       radial-gradient(35% 30% at 15% 15%, rgba(255, 255, 255, 0.16), transparent 70%),
-      radial-gradient(30% 28% at 85% 80%, rgba(200, 179, 138, 0.09), transparent 72%);
+      radial-gradient(30% 28% at 85% 80%, rgba(255, 179, 138, 0.09), transparent 72%);
     filter: blur(18px);
     opacity: 0.28;
     pointer-events: none;
@@ -221,9 +230,9 @@
   .page-title {
     font-family: var(--font-editorial);
     font-weight: 800;
-    font-size: 2.5rem;
-    line-height: 0.95;
-    letter-spacing: 0.005em;
+    font-size: 2.15rem;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
     color: var(--foreground);
   }
   .day-display {
@@ -231,21 +240,25 @@
     max-width: 100%;
     white-space: nowrap;
     font-family: var(--font-editorial);
-    font-size: clamp(3.75rem, 20vw, 5.75rem);
-    font-weight: 900;
-    line-height: 0.8;
-    letter-spacing: 0.005em;
-    text-transform: uppercase;
-    font-variant-numeric: lining-nums;
+    font-size: clamp(2.4rem, 12vw, 3.4rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    text-transform: lowercase;
   }
+  .day-display::first-letter { text-transform: uppercase; }
   .display-xl,
   .display-lg,
   .metric,
-  .cinematic-number,
+  .cinematic-number {
+    font-family: var(--font-num);
+    font-weight: 800;
+    letter-spacing: 0.005em;
+  }
   .cinematic-title {
     font-family: var(--font-editorial);
     font-weight: 800;
-    letter-spacing: 0.005em;
+    letter-spacing: -0.025em;
   }
   .display-xl { font-size: clamp(2.75rem, 14vw, 4.5rem); line-height: 0.88; font-variant-numeric: tabular-nums; }
   .display-lg { font-size: clamp(2rem, 10vw, 3rem); line-height: 0.9; font-variant-numeric: tabular-nums; }
@@ -260,27 +273,25 @@
   .eyebrow,
   .cinematic-label {
     font-family: var(--font-display);
-    font-size: 12px;
-    font-weight: 650;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0;
     color: var(--muted-foreground);
   }
-  .cinematic-label { color: #AAA69C; }
+  .cinematic-label { color: #A4A6B5; }
 
   /* Botón principal (Empezar entreno, Guardar entreno completo) */
   .cta-display {
     font-family: var(--font-editorial);
-    font-size: 1.6rem;
+    font-size: 1.05rem;
     font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    letter-spacing: -0.01em;
   }
 
   /* Un solo dorado */
   .gold-text { color: var(--gold); }
   .gold-gradient {
-    background-image: linear-gradient(135deg, #E9D9B5 0%, var(--gold) 52%, #A28C66 100%);
+    background-image: var(--aurora);
     color: var(--gold-foreground);
   }
 }
@@ -312,9 +323,9 @@
   &:hover { filter: brightness(1.045); }
   &:active { transform: scale(0.972); filter: brightness(.985); }
   &:focus-visible {
-    outline: 1px solid rgba(200,179,138,.72);
+    outline: 1px solid rgba(255, 179, 138,.72);
     outline-offset: 3px;
-    box-shadow: 0 0 0 5px rgba(200,179,138,.08);
+    box-shadow: 0 0 0 5px rgba(255, 179, 138,.08);
   }
 }
 @utility hairline {
@@ -330,7 +341,7 @@
 }
 @utility gold-hairline {
   height: 1px;
-  background: linear-gradient(90deg, rgba(200, 179, 138, 0.60), rgba(200, 179, 138, 0));
+  background: linear-gradient(90deg, rgba(255, 179, 138, 0.60), rgba(255, 179, 138, 0));
 }
 @utility no-scrollbar {
   scrollbar-width: none;
@@ -350,8 +361,8 @@
 }
 @utility glass-breathe { animation: glass-breathe 4.5s ease-in-out infinite; }
 @keyframes gold-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(200,179,138,0), 0 0 0 1px rgba(200,179,138,.14); }
-  50% { box-shadow: 0 0 0 6px rgba(200,179,138,.035), 0 0 0 1px rgba(200,179,138,.24); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 179, 138,0), 0 0 0 1px rgba(255, 179, 138,.14); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 179, 138,.035), 0 0 0 1px rgba(255, 179, 138,.24); }
 }
 @utility gold-pulse { animation: gold-pulse 2.8s ease-in-out infinite; }
 @keyframes micro-pop {
@@ -427,7 +438,7 @@
   }
 }
 @utility aura {
-  background-image: radial-gradient(120% 70% at 50% -10%, rgba(200, 179, 138, 0.06) 0%, rgba(200, 179, 138, 0) 60%);
+  background-image: radial-gradient(120% 70% at 50% -10%, rgba(255, 179, 138, 0.06) 0%, rgba(255, 179, 138, 0) 60%);
 }
 @utility dotgrid {
   background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
@@ -469,53 +480,23 @@
 }
 
 /* ---------------------------------------------------------------------------
- * «Energía del box»: cada pestaña tiene su color. Negro de fondo y oro para la
- * marca; tarjetas de color sólido con texto oscuro encima.
+ * Aurora: fondo azul noche suave, tarjetas redondeadas y pastel con fuerza.
+ * Melocotón = fuerza, lila = WOD, menta = gimnásticos.
  * ------------------------------------------------------------------------- */
-:root {
-  --c-gold: #C8B38A;
-  --c-coral: #FF5A36;
-  --c-lima: #C6F432;
-  --c-violeta: #7B61FF;
-  --c-turq: #20D3E0;
-  --accent: var(--c-gold);
-  --accent-ink: #0B0A08;
-}
-[data-section="plan"] { --accent: var(--c-coral); --accent-ink: #140500; --accent-soft: #FFB39F; }
-[data-section="timer"] { --accent: var(--c-lima); --accent-ink: #0A0A0A; --accent-soft: #E6FA9E; }
-[data-section="records"] { --accent: var(--c-violeta); --accent-ink: #FFFFFF; --accent-soft: #C3B6FF; }
-[data-section="social"] { --accent: var(--c-turq); --accent-ink: #0A0A0A; --accent-soft: #A6EEF3; }
-/* En cada pestaña, el «dorado» de los detalles pasa a ser su color */
-:is([data-section="plan"], [data-section="timer"], [data-section="records"], [data-section="social"]) {
-  --gold: var(--accent);
-  --gold-soft: var(--accent-soft);
-  --gold-foreground: var(--accent-ink);
-  --ring: color-mix(in srgb, var(--accent) 60%, transparent);
-}
-
 @layer components {
-  [data-section] .page-title { color: var(--accent); }
-  .accent-text { color: var(--accent); }
-  .accent-bg { background: var(--accent); color: var(--accent-ink); }
-  :is([data-section="plan"], [data-section="timer"], [data-section="records"], [data-section="social"]) .gold-gradient {
-    background-image: none;
-    background-color: var(--accent);
-    color: var(--accent-ink);
-  }
-  .brand-gold { color: var(--c-gold); }
-
-  /* Tarjetas sólidas: el texto «apagado» pasa a oscuro translúcido */
-  .tile { border-radius: 22px; position: relative; overflow: hidden; }
-  .tile-gold { background: var(--c-gold); color: #0B0A08; }
-  .tile-coral { background: var(--c-coral); color: #140500; }
-  .tile-lima { background: var(--c-lima); color: #0A0A0A; }
-  .tile-violeta { background: var(--c-violeta); color: #FFFFFF; }
-  .tile-turq { background: var(--c-turq); color: #0A0A0A; }
-  :is(.tile-gold, .tile-coral, .tile-lima, .tile-turq) .text-muted-foreground { color: rgba(10, 6, 2, 0.66); }
-  .tile-violeta .text-muted-foreground { color: rgba(255, 255, 255, 0.78); }
-  :is(.tile-gold, .tile-coral, .tile-lima, .tile-turq, .tile-violeta) :is(.gold-text, .text-gold) { color: inherit; }
-  .tile-dark-btn { background: #140500; color: #FFFFFF; }
-  .tile-dark-btn:is(:hover, :focus-visible) { background: #000; }
+  .aurora-hero { background: var(--aurora); color: var(--aurora-ink); border-radius: 28px; position: relative; overflow: hidden; }
+  .aurora-hero .text-muted-foreground { color: rgba(26, 20, 32, 0.68); }
+  .aurora-hero :is(.gold-text, .text-gold) { color: inherit; }
+  .aurora-btn { background: #1A1420; color: #FFF4EC; }
+  .aurora-btn:is(:hover, :focus-visible) { background: #000; }
+  .tint { border-radius: 22px; }
+  .tint-peach { background: rgba(255, 179, 138, 0.14); color: var(--c-peach); }
+  .tint-lila { background: rgba(185, 166, 255, 0.14); color: var(--c-lila); }
+  .tint-mint { background: rgba(125, 227, 195, 0.13); color: var(--c-mint); }
+  .tint-rose { background: rgba(243, 155, 182, 0.14); color: var(--c-rose); }
+  :is(.tint-peach, .tint-lila, .tint-mint, .tint-rose) .text-muted-foreground { color: rgba(243, 242, 247, 0.78); }
+  .num { font-family: var(--font-num); }
+  .aurora-text { background: var(--aurora); -webkit-background-clip: text; background-clip: text; color: transparent; }
 }
 
 /* Botones que se hunden al pulsar */
@@ -524,7 +505,7 @@
   a.pressable:active { transform: scale(0.97); }
 }
 
-/* Los números de las cifras suben al entrar */
+/* Las cifras entran con un pequeño rebote */
 @keyframes count-pop { from { transform: translateY(6px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
 .metric-pop { animation: count-pop 420ms cubic-bezier(.2,.9,.3,1.2) both; }
 @media (prefers-reduced-motion: reduce) { .metric-pop { animation: none; } }

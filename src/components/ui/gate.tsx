@@ -1,3 +1,4 @@
+import logoAsset from "@/assets/rmordie-logo.jpg.asset.json";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ChevronLeft, Mail, User, UserPlus } from "lucide-react";
 import { authErrorMessage, sendLoginEmail, signInWithPassword, useSession, verifyLoginCode } from "@/lib/auth";
@@ -48,11 +49,11 @@ function rememberProfile(authUserId: string, profile: { id: string; name: string
 const errorText = (e: unknown, fallback: string) => (e as { message?: string })?.message || fallback;
 
 const inputCls =
-  "w-full rounded-xl border border-border bg-surface px-4 py-3 text-center outline-none focus:border-gold";
+  "min-h-12 w-full rounded-2xl border border-border bg-card px-4 py-3 text-center text-base outline-none focus:border-gold focus:ring-2 focus:ring-[color:var(--ring)]";
 const pinCls = `${inputCls} text-lg tabular tracking-widest`;
-const primaryCls = "w-full rounded-xl gold-gradient py-3 font-medium disabled:opacity-60";
+const primaryCls = "min-h-12 w-full rounded-2xl gold-gradient py-3 font-extrabold disabled:opacity-60";
 const secondaryCls =
-  "flex w-full items-center justify-center gap-1 rounded-xl border border-border py-2.5 text-sm text-muted-foreground";
+  "flex min-h-11 w-full items-center justify-center gap-1 rounded-2xl border border-border py-2.5 text-sm font-semibold text-muted-foreground";
 
 type ProfileState =
   | { status: "checking" }
@@ -159,10 +160,11 @@ export function PinGate({ children }: { children: ReactNode }) {
       />
       <div className="relative w-full max-w-sm">
         <div className="rise rise-1 mb-10 flex flex-col items-center text-center">
-          <div className="leading-none" style={{ fontFamily: "var(--font-editorial)", fontWeight: 900, fontSize: "72px", color: "var(--foreground)" }}>
-            RM <span className="text-gold">OR</span> DIE
+          <img src={logoAsset.url} alt="" className="mb-5 h-24 w-24 rounded-[26%] object-cover shadow-[0_18px_50px_-12px_rgba(185,166,255,.45)]" />
+          <div className="leading-none" style={{ fontFamily: "var(--font-editorial)", fontWeight: 800, fontSize: "44px", letterSpacing: "-0.04em", color: "var(--foreground)" }}>
+            RM <span className="aurora-text">OR</span> DIE
           </div>
-          <div className="rule-fade mt-6 w-24" />
+          <p className="mt-2 text-sm font-semibold text-muted-foreground">Entrena · Registra · Supérate</p>
           {subtitle && <p className="mt-6 text-sm text-muted-foreground">{subtitle}</p>}
         </div>
         <div className="rise rise-2">{body}</div>
@@ -611,7 +613,7 @@ function PinPad({ value, onChange, disabled }: { value: string; onChange: (v: st
           <span key={i} className={`h-3.5 w-3.5 rounded-full ${i < value.length ? "bg-[color:var(--gold)]" : "border border-white/25"}`} />
         ))}
       </div>
-      <div className="grid grid-cols-3 gap-2.5" style={{ fontFamily: "var(--font-editorial)" }}>
+      <div className="grid grid-cols-3 gap-2.5" style={{ fontFamily: "var(--font-num)" }}>
         {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
           <button key={d} type="button" disabled={disabled} onClick={() => press(d)} className={keyCls}>{d}</button>
         ))}

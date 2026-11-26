@@ -263,7 +263,7 @@ function RawDayEditor({ date, blocks, onBack, onChange }: {
       </button>
       <div>
         <p className="eyebrow">{d.toLocaleDateString("es-ES", { day: "numeric", month: "long" })}</p>
-        <h1 className="mt-1 text-[60px] font-black uppercase leading-[0.85] text-[color:var(--gold-soft)]" style={font}>
+        <h1 className="mt-1 text-[60px] font-black leading-[0.85] text-[color:var(--gold-soft)]" style={font}>
           {d.toLocaleDateString("es-ES", { weekday: "long" })}
         </h1>
       </div>
@@ -299,7 +299,7 @@ function RawDayEditor({ date, blocks, onBack, onChange }: {
         <label className="w-28">
           <span className="mb-1.5 block text-[13px] text-muted-foreground">Nuevo bloque</span>
           <input value={newKey} onChange={(e) => setNewKey(e.target.value.slice(0, 20))} aria-label="Nombre del bloque nuevo"
-            className="min-h-12 w-full rounded-[14px] border border-white/[0.14] bg-white/[0.06] px-3 text-base font-bold uppercase outline-none focus:border-[color:var(--gold)]/60" />
+            className="min-h-12 w-full rounded-[14px] border border-white/[0.14] bg-white/[0.06] px-3 text-base font-bold outline-none focus:border-[color:var(--gold)]/60" />
         </label>
         <button type="button" onClick={add} className="pressable flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-[14px] border-[1.5px] border-dashed border-[color:var(--gold)]/50 text-sm font-bold text-gold">
           <Plus className="h-4 w-4" /> Añadir bloque

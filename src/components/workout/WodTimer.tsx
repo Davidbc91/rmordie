@@ -11,7 +11,7 @@ export type WodTimerResult =
   | { kind: "none" };
 
 const PREP = 10;
-const font = { fontFamily: "var(--font-editorial)" } as const;
+const font = { fontFamily: "var(--font-num)" } as const;
 
 function clock(sec: number) {
   const s = Math.max(0, Math.floor(sec));
@@ -195,7 +195,7 @@ export function WodTimer({
           : { kind: "none" };
     const pr = result.kind !== "none" ? prCheck?.(result) ?? null : null;
     return createPortal(
-      <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-[#050504] px-4" style={{ paddingTop: "max(env(safe-area-inset-top), 24px)", paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
+      <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-[#14161D] px-4" style={{ paddingTop: "max(env(safe-area-inset-top), 24px)", paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
         <div className="mt-6 text-center">
           <p className="text-[22px] font-extrabold text-gold" style={font}>{timerLabel(cfg).toUpperCase()} · {capHit ? "CAP" : "TIEMPO"}</p>
           <p className="text-[96px] font-black leading-[0.9] tabular" style={font}>
@@ -223,11 +223,11 @@ export function WodTimer({
         <div className="mt-auto space-y-1 pt-6">
           {result.kind !== "none" ? (
             <>
-              <button type="button" onClick={() => onApply(result)} className="pressable gold-gradient cta-display min-h-16 w-full rounded-[18px]">APUNTAR Y VOLVER AL ENTRENO</button>
+              <button type="button" onClick={() => onApply(result)} className="pressable gold-gradient cta-display min-h-16 w-full rounded-[18px]">Apuntar y volver al entreno</button>
               <button type="button" onClick={onClose} className="min-h-12 w-full text-[15px] text-muted-foreground">Volver sin apuntar</button>
             </>
           ) : (
-            <button type="button" onClick={onClose} className="pressable gold-gradient cta-display min-h-16 w-full rounded-[18px]">VOLVER AL ENTRENO</button>
+            <button type="button" onClick={onClose} className="pressable gold-gradient cta-display min-h-16 w-full rounded-[18px]">Volver al entreno</button>
           )}
         </div>
       </div>,
@@ -276,7 +276,7 @@ export function WodTimer({
   const lastRound = roundTimes.length ? roundTimes[roundTimes.length - 1] - (roundTimes[roundTimes.length - 2] ?? 0) : null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[#050504] px-4 text-foreground" style={{ paddingTop: "max(env(safe-area-inset-top), 20px)", paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
+    <div className="fixed inset-0 z-[100] flex flex-col bg-[#14161D] px-4 text-foreground" style={{ paddingTop: "max(env(safe-area-inset-top), 20px)", paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
       <div className="flex items-center justify-between">
         <button type="button" onClick={onClose} aria-label="Salir del timer" className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.08]"><X className="h-5 w-5" /></button>
         <div className="min-w-0 px-2 text-center">
@@ -304,7 +304,7 @@ export function WodTimer({
             {rounds} {rounds === 1 ? "RONDA" : "RONDAS"}
           </p>
         )}
-        <p className={`text-[13px] tracking-[0.16em] ${resting ? "text-muted-foreground" : caption === "TRABAJO" ? "font-bold text-gold" : "text-muted-foreground"}`}>{caption}</p>
+        <p className={`text-[13px] ${resting ? "text-muted-foreground" : caption === "TRABAJO" ? "font-bold text-gold" : "text-muted-foreground"}`}>{caption}</p>
         <p className={`font-black leading-[0.9] tabular ${resting ? "text-muted-foreground" : ""}`} style={{ ...font, fontSize: roundTotal != null ? "min(34vw, 26vh)" : "min(38vw, 30vh)" }} role="timer">{big}</p>
         <div className="mx-auto mt-3 h-1.5 w-[80%] overflow-hidden rounded-full bg-white/10">
           <div className="h-full rounded-full transition-[width] duration-200" style={{ width: `${Math.min(100, progress * 100)}%`, background: resting ? "#6B6860" : "var(--gold)" }} />
@@ -340,7 +340,7 @@ export function WodTimer({
           disabled={phase !== "run"}
           className="mt-6 flex flex-1 flex-col items-center justify-center gap-1 rounded-[28px] border-[1.5px] border-[color:var(--gold)]/55 bg-[color:var(--gold)]/10 active:bg-[color:var(--gold)]/20 disabled:opacity-60"
         >
-          <span className="text-sm font-bold tracking-[0.14em] text-gold">RONDAS</span>
+          <span className="text-sm font-bold text-gold">Rondas</span>
           <span className="text-[min(30vw,120px)] font-black leading-[0.85] text-[color:var(--gold-soft)]" style={font}>{rounds}</span>
           <span className="text-base font-bold">Toca en cualquier sitio: +1 ronda</span>
           {lastRound != null && <span className="text-[13px] text-muted-foreground">Última ronda: {clock(lastRound)}</span>}
@@ -352,7 +352,7 @@ export function WodTimer({
           disabled={phase !== "run"}
           className="mt-6 flex flex-1 flex-col items-center justify-center gap-2 rounded-[28px] border-[1.5px] border-[color:var(--gold)]/55 bg-[color:var(--gold)]/10 active:bg-[color:var(--gold)]/20 disabled:opacity-60"
         >
-          <span className="text-[44px] font-black leading-none text-[color:var(--gold-soft)]" style={font}>¡HECHO!</span>
+          <span className="text-[44px] font-black leading-none text-[color:var(--gold-soft)]" style={font}>¡Hecho!</span>
           <span className="text-base font-bold">Toca al terminar para parar el reloj</span>
         </button>
       ) : (
@@ -363,7 +363,7 @@ export function WodTimer({
         {cfg.kind === "amrap" ? (
           <button type="button" onClick={removeRound} disabled={rounds === 0} className="min-h-14 rounded-[16px] bg-white/[0.08] text-[15px] font-bold disabled:opacity-40">−1 ronda</button>
         ) : <span />}
-        <button type="button" onClick={phase === "prep" ? onClose : pause} className="min-h-14 rounded-[16px] bg-[#F2F0EA] text-2xl font-extrabold text-[#0B0A08]" style={font}>
+        <button type="button" onClick={phase === "prep" ? onClose : pause} className="min-h-14 rounded-[16px] bg-[#F2F0EA] text-2xl font-extrabold text-[#1A1420]" style={font}>
           {phase === "prep" ? "CANCELAR" : phase === "paused" ? "SEGUIR" : "PAUSA"}
         </button>
         <button type="button" onClick={() => finish()} disabled={phase === "prep"} className="min-h-14 rounded-[16px] bg-white/[0.08] text-[15px] font-bold disabled:opacity-40">Terminar</button>

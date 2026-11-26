@@ -248,7 +248,7 @@ function AthleteReport() {
           <header className="r-top">
             <div>
               <div className="r-brand">RM OR DIE · Informe para el entrenador</div>
-              <h1>{(profile?.display_name || "Atleta").toUpperCase()}</h1>
+              <h1>{profile?.display_name || "Atleta"}</h1>
             </div>
             <div className="r-meta">
               {[profile?.level, profile?.box_name, profile?.crossfit_start_date ? `CrossFit desde ${new Date(profile.crossfit_start_date).getFullYear()}` : null].filter(Boolean).join(" · ")}
@@ -445,14 +445,14 @@ function WeightChart({ points }: { points: { date: string; kg: number }[] }) {
 }
 
 const REPORT_CSS = `
-.coach-report{--r-bg:#F6F4EF;--r-paper:#FFFFFF;--r-ink:#141311;--r-muted:#6E6A62;--r-line:#E6E2D9;--r-gold:#9C7F45;--r-gold-bg:#F3ECDD;--r-good:#2F7D4F;--r-warn:#B06A12;--r-bad:#B23A2B;
+.coach-report{--r-bg:#F6F4EF;--r-paper:#FFFFFF;--r-ink:#141311;--r-muted:#6E6A62;--r-line:#E6E2D9;--r-gold:#D9734A;--r-gold-bg:#FFE8DB;--r-good:#2F7D4F;--r-warn:#B06A12;--r-bad:#B23A2B;
   background:var(--r-bg);color:var(--r-ink);font-family:var(--font-display),Manrope,system-ui,sans-serif;font-size:16px;line-height:1.55}
-.coach-report h1,.coach-report h2,.coach-report .r-num,.coach-report .r-w b{font-family:var(--font-editorial),"Arial Narrow",sans-serif}
+.coach-report h1,.coach-report h2{font-family:var(--font-editorial),sans-serif;letter-spacing:-.03em}.coach-report .r-num,.coach-report .r-w b{font-family:var(--font-num),"Arial Narrow",sans-serif}
 .r-wrap{max-width:980px;margin:0 auto;padding:16px max(16px,4vw) 40px}
 .r-sheet{background:var(--r-paper);border:1px solid var(--r-line);border-radius:20px;padding:clamp(18px,3.4vw,40px)}
 .r-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end;border-bottom:3px solid var(--r-ink);padding-bottom:16px}
 .r-brand{font-weight:800;font-size:13px;color:var(--r-muted)}
-.coach-report h1{margin:4px 0 0;font-size:clamp(40px,7vw,64px);line-height:.95;font-weight:900}
+.coach-report h1{margin:4px 0 0;font-size:clamp(34px,6vw,52px);line-height:1;font-weight:800}
 .r-meta{font-size:14px;color:var(--r-muted);text-align:right}
 .r-verdict{margin:22px 0 0;font-size:clamp(20px,2.6vw,26px);line-height:1.3;font-weight:700;text-wrap:balance;max-width:34ch}
 .r-verdict b{color:var(--r-gold)}
@@ -464,7 +464,7 @@ const REPORT_CSS = `
 .r-num{font-size:clamp(30px,4vw,40px);font-weight:800;line-height:1}
 .r-l{font-size:13px;color:var(--r-muted)}.r-d{font-size:13px;font-weight:700}
 .coach-report section{margin-top:34px}
-.coach-report h2{font-size:30px;line-height:1.05;margin:0;font-weight:800}
+.coach-report h2{font-size:26px;line-height:1.1;margin:0;font-weight:800}
 .r-sub{color:var(--r-muted);font-size:14px;margin:2px 0 14px}
 .r-empty{color:var(--r-muted);font-size:14px;border:1px dashed var(--r-line);border-radius:12px;padding:14px}
 .r-lift{display:grid;grid-template-columns:10.5em minmax(0,1fr) 5.5em;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--r-line)}

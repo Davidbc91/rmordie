@@ -305,12 +305,12 @@ function Home() {
               <Link to="/calendar" className="mt-4 inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-gold">Ver planificación <ChevronRight className="h-4 w-4" /></Link>
             </GlassCard>
           ) : todayPlan?.day && todayPlan.progress.state === "completed" ? (
-            <div className="tile tile-lima rise rise-2 p-6"><span className="rounded-full bg-black/10 px-3 py-1 text-[13px] font-extrabold">Hoy · Completado</span><h2 className="mt-4 text-3xl font-extrabold" style={{ fontFamily: "var(--font-editorial)" }}>ENTRENAMIENTO HECHO</h2><p className="mt-2 text-sm font-semibold text-muted-foreground">Buen trabajo. Tu próxima sesión aparece a continuación.</p></div>
+            <div className="tint tint-mint rise rise-2 p-6"><span className="rounded-full bg-[rgba(125,227,195,.18)] px-3 py-1 text-[13px] font-extrabold">Hoy · Completado</span><h2 className="mt-4 text-[28px] font-extrabold tracking-tight text-foreground">Entrenamiento hecho</h2><p className="mt-2 text-sm font-semibold text-muted-foreground">Buen trabajo. Tu próxima sesión aparece a continuación.</p></div>
           ) : null}
 
           {/* Próxima sesión: lo primero y con el botón visible sin bajar. */}
           {next ? (
-            <div className="tile tile-coral rise rise-2 p-5">
+            <div className="aurora-hero rise rise-2 p-5">
               <div className="flex items-center justify-between gap-3">
                 <span className="rounded-full bg-black/15 px-3 py-1 text-[13px] font-extrabold">
                   {next.progress.state === "in_progress" ? "Sesión en curso" : next.isToday ? "Entrenamiento de hoy" : "Próximo entrenamiento"}
@@ -325,7 +325,7 @@ function Home() {
               <div className="mt-5 flex items-end justify-between gap-4">
                 <div className="min-w-0">
                   <div className="day-display">{next.dayLabel}</div>
-                  <p className="mt-3 text-[13px] tracking-[0.12em] text-muted-foreground">{next.monthLabel} · SEMANA {next.week}</p>
+                  <p className="mt-3 text-[13px] text-muted-foreground">{next.monthLabel} · Semana {next.week}</p>
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="cinematic-number tabular">
@@ -389,7 +389,7 @@ function Home() {
               <Link
                 to="/workout/$month/$week/$day"
                 params={{ month: next.monthKey, week: String(next.week), day: next.dayKey }}
-                className="pressable tile-dark-btn cta-display mt-4 flex min-h-[58px] w-full items-center justify-center gap-2.5 rounded-[var(--r-lg)]"
+                className="pressable aurora-btn cta-display mt-4 flex min-h-[58px] w-full items-center justify-center gap-2.5 rounded-[var(--r-lg)]"
               >
                 <Play className="h-4 w-4" fill="currentColor" />{" "}
                 {next.progress.state === "in_progress" ? "Continuar entreno" : "Empezar entreno"}
@@ -403,9 +403,9 @@ function Home() {
 
           {/* Una sola fila de cifras */}
           <div className="rise rise-3 mt-3 grid grid-cols-3 gap-2">
-            <DashboardStat tone="lima" value={String(streak.current)} label="Días de racha" onClick={() => navigate({ to: "/profile", search: { section: "consistency" } })} />
-            <DashboardStat tone="turq" value={String(weekStats.sessions)} label="Esta semana" onClick={() => navigate({ to: "/calendar" })} />
-            <DashboardStat tone="violeta" value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR en 30 días" onClick={() => navigate({ to: "/records" })} />
+            <DashboardStat tone="peach" value={String(streak.current)} label="Días de racha" onClick={() => navigate({ to: "/profile", search: { section: "consistency" } })} />
+            <DashboardStat tone="lila" value={String(weekStats.sessions)} label="Esta semana" onClick={() => navigate({ to: "/calendar" })} />
+            <DashboardStat tone="mint" value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR en 30 días" onClick={() => navigate({ to: "/records" })} />
           </div>
 
           {/* Cómo vas: rendimiento y recuperación juntos */}
@@ -413,7 +413,7 @@ function Home() {
             <GlassCard level={2} className="rise rise-3 glass-panel p-5 pressable">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Cómo vas</p>
+                  <p className="text-xs text-muted-foreground">Cómo vas</p>
                   <h2 className="mt-1.5 text-lg font-semibold tracking-tight">{smartState.title}</h2>
                   <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{smartState.detail}</p>
                 </div>
@@ -461,7 +461,7 @@ function Home() {
               <ResponsiveContainer width="100%" height="100%"><LineChart data={dashboardTrend.weeks} margin={{ top: 8, right: 6, left: -24, bottom: 0 }} onClick={(state) => {
                 const label = state?.activeLabel;
                 if (typeof label === "string") setSelectedTrendWeek(label);
-              }}><XAxis dataKey="label" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} /><YAxis hide /><Tooltip formatter={(value: number) => [fmtKg(value, 0), "Volumen"]} contentStyle={{ background: "rgba(20,20,20,.94)", border: "1px solid rgba(200,179,138,.25)", borderRadius: 12, fontSize: 13 }} /><Line type="monotone" dataKey="volume" stroke="var(--gold)" strokeWidth={2.5} dot={{ r: 3, fill: "var(--gold)", stroke: "var(--gold)" }} activeDot={{ r: 5 }} connectNulls /></LineChart></ResponsiveContainer>
+              }}><XAxis dataKey="label" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} /><YAxis hide /><Tooltip formatter={(value: number) => [fmtKg(value, 0), "Volumen"]} contentStyle={{ background: "rgba(20,20,20,.94)", border: "1px solid rgba(255,179,138,.25)", borderRadius: 12, fontSize: 13 }} /><Line type="monotone" dataKey="volume" stroke="var(--gold)" strokeWidth={2.5} dot={{ r: 3, fill: "var(--gold)", stroke: "var(--gold)" }} activeDot={{ r: 5 }} connectNulls /></LineChart></ResponsiveContainer>
             </div>
             {selectedTrendWeek && (() => {
               const point = dashboardTrend.weeks.find((w) => w.label === selectedTrendWeek);
@@ -576,14 +576,14 @@ function PlanningError({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-function DashboardStat({ value, label, onClick, tone }: { value: string; label: string; onClick?: () => void; tone?: "lima" | "turq" | "violeta" | "coral" | "gold" }) {
+function DashboardStat({ value, label, onClick, tone }: { value: string; label: string; onClick?: () => void; tone?: "peach" | "lila" | "mint" | "rose" }) {
   const inner = (
     <>
       <div className="metric metric-pop truncate tabular">{value}</div>
       <div className="mt-1 truncate text-[13px] font-semibold text-muted-foreground">{label}</div>
     </>
   );
-  const cls = tone ? `tile tile-${tone} min-h-[84px] min-w-0 w-full p-3 text-left` : "glass glass-sheen min-h-[84px] min-w-0 w-full p-3 text-left cinematic-card-dark";
+  const cls = tone ? `tint tint-${tone} min-h-[84px] min-w-0 w-full p-3 text-left` : "glass glass-sheen min-h-[84px] min-w-0 w-full p-3 text-left cinematic-card-dark";
   if (onClick) return <button type="button" onClick={onClick} className={`pressable ${cls}`}>{inner}</button>;
   return <div className={cls}>{inner}</div>;
 }

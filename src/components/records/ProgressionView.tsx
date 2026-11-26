@@ -12,7 +12,7 @@ const PERIODS = [
   { label: "Todo", days: 0 },
 ] as const;
 
-const font = { fontFamily: "var(--font-editorial)" } as const;
+const font = { fontFamily: "var(--font-num)" } as const;
 const kg = (n: number) => formatKg(Math.round(n * 100) / 100);
 const shortDate = (iso: string) => new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "short" }).replace(".", "");
 
@@ -120,7 +120,7 @@ export function ProgressionView({
       </div>
 
       <p className="eyebrow mt-2">Progresión · {repMax}RM</p>
-      <h1 className="mt-1 truncate text-[56px] font-black uppercase leading-[0.9] text-[color:var(--gold-soft)]" style={font}>{record.exercise}</h1>
+      <h1 className="mt-1 truncate text-[36px] font-extrabold leading-tight tracking-tight text-foreground">{record.exercise}</h1>
 
       {sorted.length > 1 && (
         <div role="group" aria-label="Tipo de récord" className="mt-3 flex gap-1.5">
@@ -294,16 +294,16 @@ function ProgressChart({ start, end, current, history, points }: {
       {months.map((m) => (
         <text key={m.t} x={x(m.t)} y={H - 6} fontSize="11" fill="#99968E" textAnchor="middle">{m.label}</text>
       ))}
-      {estPath && <path d={estPath} fill="none" stroke="#E8DDC8" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.45" />}
+      {estPath && <path d={estPath} fill="none" stroke="#FFD3BC" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.45" />}
       {points.map((p, i) => (
-        <circle key={i} cx={x(p.t)} cy={y(p.w)} r="4" fill="#080807" stroke="#E8DDC8" strokeWidth="2" opacity="0.85" />
+        <circle key={i} cx={x(p.t)} cy={y(p.w)} r="4" fill="#14161D" stroke="#FFD3BC" strokeWidth="2" opacity="0.85" />
       ))}
-      <path d={path} fill="none" stroke="#C8B38A" strokeWidth="3" strokeLinejoin="round" />
+      <path d={path} fill="none" stroke="#FFB38A" strokeWidth="3" strokeLinejoin="round" />
       {steps.filter((s) => s.pr).map((s, i) => (
-        <circle key={i} cx={x(s.t)} cy={y(s.w)} r="6" fill="#C8B38A" />
+        <circle key={i} cx={x(s.t)} cy={y(s.w)} r="6" fill="#FFB38A" />
       ))}
       {lastPr && (
-        <text x={Math.min(x(lastPr.t), W - 60)} y={Math.max(12, y(lastPr.w) - 10)} fontSize="15" fontWeight="800" fill="#E8DDC8" style={font}>
+        <text x={Math.min(x(lastPr.t), W - 60)} y={Math.max(12, y(lastPr.w) - 10)} fontSize="15" fontWeight="800" fill="#FFD3BC" style={font}>
           PR {kg(lastPr.w)}
         </text>
       )}
@@ -318,7 +318,7 @@ export function TrendSpark({ values, up }: { values: number[]; up: boolean }) {
   const pts = values.map((v, i) => `${(2 + (i / (values.length - 1)) * 66).toFixed(1)},${(27 - ((v - min) / span) * 22).toFixed(1)}`).join(" ");
   return (
     <svg width="70" height="30" viewBox="0 0 70 30" aria-hidden className="shrink-0">
-      <polyline points={pts} fill="none" stroke={up ? "#C8B38A" : "#99968E"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={pts} fill="none" stroke={up ? "#FFB38A" : "#99968E"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

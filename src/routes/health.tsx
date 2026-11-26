@@ -11,7 +11,7 @@ function HealthPage() {
   return (
     <AppShell>
       <header>
-        <p className="cinematic-label">DATOS DE SALUD</p>
+        <p className="cinematic-label">Datos de salud</p>
         <h1 className="cinematic-title mt-3">Salud<span className="gold-text">.</span></h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
           Centraliza tus datos de recuperación y actividad para futuras funciones de Training Intelligence.
@@ -24,7 +24,7 @@ function HealthPage() {
             <HeartPulse className="h-5 w-5" />
           </div>
           <div>
-            <p className="cinematic-label">INTEGRACIONES</p>
+            <p className="cinematic-label">Integraciones</p>
             <h2 className="mt-1 text-lg font-semibold">Fuentes de salud</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               Esta sección está preparada para conectar proveedores de salud. Todavía no solicita permisos ni datos.

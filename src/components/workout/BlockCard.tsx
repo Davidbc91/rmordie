@@ -314,7 +314,7 @@ export function BlockCard({
             <Check className="h-[18px] w-[18px]" strokeWidth={3} />
           </span>
         ) : (
-          <span className={`grid h-9 min-w-9 shrink-0 place-items-center rounded-[12px] border px-2 text-sm font-bold uppercase ${open ? "border-[color:var(--gold)]/40 text-gold" : "border-white/15 text-muted-foreground"}`}>
+          <span className={`grid h-9 min-w-9 shrink-0 place-items-center rounded-[12px] border px-2 text-sm font-bold ${open ? "border-[color:var(--gold)]/40 text-gold" : "border-white/15 text-muted-foreground"}`}>
             {blockKey}
           </span>
         )}
@@ -344,7 +344,7 @@ export function BlockCard({
             >
               <TimerIcon className="h-6 w-6" strokeWidth={2.2} />
               <span className="flex flex-col items-start leading-none">
-                <span className="cta-display" style={{ fontSize: "1.6rem" }}>INICIAR TIMER</span>
+                <span className="cta-display" style={{ fontSize: "1.6rem" }}>Iniciar timer</span>
                 <span className="mt-0.5 text-[13px] font-bold">{timerConfig.label}</span>
               </span>
             </button>

@@ -276,7 +276,7 @@ function AdminVideosPage() {
           <div className="grid h-12 w-12 place-items-center rounded-2xl border border-[rgba(200,169,107,.24)] bg-white/[.035] text-[var(--gold)]">
             <KeyRound className="h-5 w-5" />
           </div>
-          <span className="cinematic-label mt-6 block">ACCESO DE ADMINISTRADOR</span>
+          <span className="cinematic-label mt-6 block">Acceso de administrador</span>
           <h1 className="cinematic-title mt-2">Gestión de vídeos</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Introduce el PIN de tu perfil BC para gestionar los vídeos del diccionario.
@@ -310,7 +310,7 @@ function AdminVideosPage() {
     <PageShell>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <span className="cinematic-label">ADMIN · VÍDEOS DE MOVIMIENTOS</span>
+          <span className="cinematic-label">Admin · vídeos de movimientos</span>
           <h1 className="cinematic-title mt-2">Vídeos</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             180 movimientos · asociación por ID estable.
@@ -344,7 +344,7 @@ function AdminVideosPage() {
       <div className="mt-5 cinematic-card-strong rounded-[24px] p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <span className="cinematic-label">DICCIONARIO</span>
+            <span className="cinematic-label">Diccionario</span>
             <h2 className="mt-1 text-lg font-semibold">Crear movimiento personalizado</h2>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
               Añade un movimiento que no exista en el catálogo. Quedará disponible para todos y el detector podrá reconocerlo.
@@ -446,7 +446,7 @@ function AdminVideosPage() {
                   <h2 className="mt-1 text-base font-semibold">{movement.name}</h2>
                   <p className="text-xs text-muted-foreground">{movement.nameEs}</p>
                 </div>
-                <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[.14em] ${video ? "border-[rgba(200,169,107,.28)] text-[var(--gold)]" : "border-white/10 text-muted-foreground"}`}>
+                <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold tracking-[.14em] ${video ? "border-[rgba(200,169,107,.28)] text-[var(--gold)]" : "border-white/10 text-muted-foreground"}`}>
                   {video ? video.source_type : hasCatalogVideo ? "catálogo" : "sin vídeo"}
                 </span>
               </div>
@@ -571,7 +571,7 @@ function AdminStat({ label, value }: { label: string; value: number }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[.18em] text-muted-foreground">{label}</span>
+      <span className="mb-1.5 block text-xs font-semibold tracking-[.18em] text-muted-foreground">{label}</span>
       <span className="[&_input]:min-h-11 [&_input]:w-full [&_input]:rounded-xl [&_input]:border [&_input]:border-white/10 [&_input]:bg-black/20 [&_input]:px-3 [&_input]:text-sm [&_input]:outline-none [&_textarea]:w-full [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-white/10 [&_textarea]:bg-black/20 [&_textarea]:px-3 [&_textarea]:py-3 [&_textarea]:text-sm [&_textarea]:outline-none [&_select]:min-h-11 [&_select]:w-full [&_select]:rounded-xl [&_select]:border [&_select]:border-white/10 [&_select]:bg-black/20 [&_select]:px-3 [&_select]:text-sm [&_select]:outline-none">
         {children}
       </span>

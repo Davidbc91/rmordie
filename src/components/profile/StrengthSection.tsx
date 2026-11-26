@@ -18,7 +18,7 @@ export function StrengthSection({ records, history, days, bodyWeight }: any) {
             <button className="w-full text-left" onClick={() => setOpenEx(open ? null : s.exercise)}>
               <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-[0.12em]" style={{ color: "#6F6F6F" }}>
+                  <p className="text-xs" style={{ color: "#6F6F6F" }}>
                     {s.exercise}
                   </p>
                   <p className="mt-1 text-[40px] font-semibold leading-none tabular tracking-tight">

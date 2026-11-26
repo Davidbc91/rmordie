@@ -69,7 +69,7 @@ export function Composer({
               key={k.k}
               onClick={() => setKind(k.k)}
               className="shrink-0 min-h-11 rounded-full px-3.5 py-2 text-xs"
-              style={kind === k.k ? { background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
+              style={kind === k.k ? { background: "var(--aurora)", color: "var(--aurora-ink)" } : { background: "rgba(255,255,255,0.06)", color: "var(--muted-foreground)" }}
             >
               {k.label}
             </button>
@@ -138,7 +138,7 @@ export function Composer({
           onClick={submit}
           disabled={create.isPending}
           className="pressable mt-5 flex w-full items-center justify-center gap-2 rounded-[18px] py-3.5 text-sm font-semibold"
-          style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0A0A0B" }}
+          style={{ background: "var(--aurora)", color: "var(--aurora-ink)" }}
         >
           {create.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           Publicar
@@ -165,7 +165,7 @@ function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
+      <span className="text-xs tracking-[0.2em] text-muted-foreground">{label}</span>
       <input
         type={type}
         inputMode={type === "number" ? "decimal" : undefined}

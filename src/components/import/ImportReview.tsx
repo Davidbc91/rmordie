@@ -75,7 +75,7 @@ export function ImportReview({
           {diagnostics && (
             <div className="mt-3 rounded-2xl border border-[color:var(--glass-border)] bg-white/[0.025] p-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Calidad de lectura</span>
+                <span className="text-xs text-muted-foreground">Calidad de lectura</span>
                 <span className={diagnostics.level === "high" ? "text-emerald-300" : diagnostics.level === "medium" ? "text-gold" : "text-red-300"}>
                   {Math.round(diagnostics.confidence * 100)}%
                 </span>
@@ -148,7 +148,7 @@ export function ImportReview({
                     <GlassBadge tone={issues.length ? "gold" : "neutral"}>
                       {r.day || "SIN DÍA"}
                     </GlassBadge>
-                    <span className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       Semana {r.week} · {r.block || "Sin bloque"}
                     </span>
                   </div>
@@ -191,7 +191,7 @@ export function ImportReview({
                     <button
                       key={d}
                       onClick={() => patch(r.id, { day: d })}
-                      className={`tap rounded-full px-3 text-xs font-semibold uppercase tracking-[0.12em] ${d === r.day ? "gold-gradient" : "glass"}`}
+                      className={`tap rounded-full px-3 text-xs font-semibold ${d === r.day ? "gold-gradient" : "glass"}`}
                     >
                       {d.slice(0, 3)}
                     </button>
@@ -235,7 +235,7 @@ export function ImportReview({
           )}
           <GlassButton variant="gold" className="mt-3 w-full" onClick={onConfirm} disabled={save.isPending}>
             <CheckCircle2 className="h-4 w-4" />
-            {save.isPending ? "Guardando…" : "CONFIRMAR IMPORTACIÓN"}
+            {save.isPending ? "Guardando…" : "Confirmar importación"}
           </GlassButton>
           <GlassButton size="sm" variant="ghost" className="mt-2 w-full" onClick={onCancel}>
             Cancelar y elegir otro archivo

@@ -324,12 +324,12 @@ function WorkoutPage() {
           <div
             role="dialog"
             aria-label="Elegir bloques para compartir"
-            className="max-h-[85dvh] w-full overflow-y-auto rounded-t-[24px] border-t border-white/10 bg-[#151412] px-4 pt-5"
+            className="max-h-[85dvh] w-full overflow-y-auto rounded-t-[24px] border-t border-white/10 bg-[#1E212B] px-4 pt-5"
             style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-[28px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>¿QUÉ COMPARTES?</h2>
+              <h2 className="text-[28px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>¿Qué compartes?</h2>
               <button
                 type="button"
                 onClick={() => setSharePick(sharePick.length === d.blocks.length ? [] : d.blocks.map((b) => b.key))}
@@ -352,7 +352,7 @@ function WorkoutPage() {
                   >
                     <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[10px] text-lg font-extrabold ${on ? "gold-gradient" : "bg-white/[0.08] text-muted-foreground"}`} style={{ fontFamily: "var(--font-editorial)" }}>{b.key}</span>
                     <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{first}</span>
-                    <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border ${on ? "border-[color:var(--gold)] bg-[color:var(--gold)] text-[#0B0A08]" : "border-white/25"}`}>
+                    <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border ${on ? "border-[color:var(--gold)] bg-[color:var(--gold)] text-[#1A1420]" : "border-white/25"}`}>
                       {on && <CheckCheck className="h-3.5 w-3.5" />}
                     </span>
                   </button>
@@ -454,7 +454,7 @@ function WorkoutPage() {
       </div>
 
       <header className="rise rise-1 mb-4 space-y-2.5 px-1">
-        <p className="text-[13px] tracking-[0.12em] text-muted-foreground">{mo.label.toUpperCase()} · SEMANA {weekN}</p>
+        <p className="text-[13px] text-muted-foreground">{mo.label} · Semana {weekN}</p>
         <div className="flex items-end justify-between gap-4">
           <h1 className="display-lg min-w-0 truncate gold-text">{d.date ? weekdayOf(d.date) : d.key}</h1>
           {!d.isRest && (

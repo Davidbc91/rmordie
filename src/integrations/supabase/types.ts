@@ -312,6 +312,45 @@ export type Database = {
           },
         ]
       }
+      challenge_rank_state: {
+        Row: {
+          challenge_id: string
+          profile_id: string
+          rank: number
+          score: number
+          updated_at: string
+        }
+        Insert: {
+          challenge_id: string
+          profile_id: string
+          rank: number
+          score: number
+          updated_at?: string
+        }
+        Update: {
+          challenge_id?: string
+          profile_id?: string
+          rank?: number
+          score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_rank_state_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_rank_state_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenges: {
         Row: {
           created_at: string
@@ -642,32 +681,91 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_log: {
+        Row: {
+          kind: string
+          ref: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          kind: string
+          ref: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          kind?: string
+          ref?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
+          challenges_enabled: boolean
+          chat_enabled: boolean
+          coach_idle_enabled: boolean
+          coach_prs_enabled: boolean
+          coach_weekly_enabled: boolean
+          comments_enabled: boolean
           daily_enabled: boolean
           daily_time: string
           last_daily_on: string | null
           last_weekly_on: string | null
+          plan_enabled: boolean
+          quiet_end: string
+          quiet_start: string
+          round_enabled: boolean
           timezone: string
           updated_at: string
           user_id: string
           weekly_enabled: boolean
         }
         Insert: {
+          challenges_enabled?: boolean
+          chat_enabled?: boolean
+          coach_idle_enabled?: boolean
+          coach_prs_enabled?: boolean
+          coach_weekly_enabled?: boolean
+          comments_enabled?: boolean
           daily_enabled?: boolean
           daily_time?: string
           last_daily_on?: string | null
           last_weekly_on?: string | null
+          plan_enabled?: boolean
+          quiet_end?: string
+          quiet_start?: string
+          round_enabled?: boolean
           timezone?: string
           updated_at?: string
           user_id: string
           weekly_enabled?: boolean
         }
         Update: {
+          challenges_enabled?: boolean
+          chat_enabled?: boolean
+          coach_idle_enabled?: boolean
+          coach_prs_enabled?: boolean
+          coach_weekly_enabled?: boolean
+          comments_enabled?: boolean
           daily_enabled?: boolean
           daily_time?: string
           last_daily_on?: string | null
           last_weekly_on?: string | null
+          plan_enabled?: boolean
+          quiet_end?: string
+          quiet_start?: string
+          round_enabled?: boolean
           timezone?: string
           updated_at?: string
           user_id?: string
@@ -1583,6 +1681,14 @@ export type Database = {
     }
     Functions: {
       challenge_leaderboard: {
+        Args: { p_challenge: string }
+        Returns: {
+          name: string
+          profile_id: string
+          score: number
+        }[]
+      }
+      challenge_scores_admin: {
         Args: { p_challenge: string }
         Returns: {
           name: string

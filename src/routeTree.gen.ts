@@ -19,6 +19,7 @@ import { Route as ImportRouteImport } from './routes/import'
 import { Route as ImportGenericRouteImport } from './routes/import-generic'
 import { Route as PlanBuilderRouteImport } from './routes/plan-builder'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PizarraRouteImport } from './routes/pizarra'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as SemanaRouteImport } from './routes/semana'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -78,6 +79,11 @@ const ImportGenericRoute = ImportGenericRouteImport.update({
 const PlanBuilderRoute = PlanBuilderRouteImport.update({
   id: '/plan-builder',
   path: '/plan-builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PizarraRoute = PizarraRouteImport.update({
+  id: '/pizarra',
+  path: '/pizarra',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
+  '/pizarra': typeof PizarraRoute
   '/records': typeof RecordsRoute
   '/semana': typeof SemanaRoute
   '/settings': typeof SettingsRoute
@@ -199,6 +206,7 @@ export interface FileRoutesByTo {
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
+  '/pizarra': typeof PizarraRoute
   '/records': typeof RecordsRoute
   '/semana': typeof SemanaRoute
   '/settings': typeof SettingsRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
+  '/pizarra': typeof PizarraRoute
   '/records': typeof RecordsRoute
   '/semana': typeof SemanaRoute
   '/settings': typeof SettingsRoute
@@ -256,6 +265,7 @@ export interface FileRouteTypes {
     | '/import-generic'
     | '/plan-builder'
     | '/profile'
+    | '/pizarra'
     | '/records'
     | '/semana'
     | '/settings'
@@ -283,6 +293,7 @@ export interface FileRouteTypes {
     | '/import-generic'
     | '/plan-builder'
     | '/profile'
+    | '/pizarra'
     | '/records'
     | '/semana'
     | '/settings'
@@ -310,6 +321,7 @@ export interface FileRouteTypes {
     | '/import-generic'
     | '/plan-builder'
     | '/profile'
+    | '/pizarra'
     | '/records'
     | '/semana'
     | '/settings'
@@ -338,6 +350,7 @@ export interface RootRouteChildren {
   ImportGenericRoute: typeof ImportGenericRoute
   PlanBuilderRoute: typeof PlanBuilderRoute
   ProfileRoute: typeof ProfileRoute
+  PizarraRoute: typeof PizarraRoute
   RecordsRoute: typeof RecordsRoute
   SemanaRoute: typeof SemanaRoute
   SettingsRoute: typeof SettingsRoute
@@ -417,6 +430,13 @@ declare module '@tanstack/react-router' {
       path: '/plan-builder'
       fullPath: '/plan-builder'
       preLoaderRoute: typeof PlanBuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pizarra': {
+      id: '/pizarra'
+      path: '/pizarra'
+      fullPath: '/pizarra'
+      preLoaderRoute: typeof PizarraRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -557,6 +577,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImportGenericRoute: ImportGenericRoute,
   PlanBuilderRoute: PlanBuilderRoute,
   ProfileRoute: ProfileRoute,
+  PizarraRoute: PizarraRoute,
   RecordsRoute: RecordsRoute,
   SemanaRoute: SemanaRoute,
   SettingsRoute: SettingsRoute,

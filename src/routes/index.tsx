@@ -14,7 +14,7 @@ import {
   isSessionCompleted,
   sessionProgress,
 } from "@/lib/session-progress";
-import { Moon } from "lucide-react";
+import { Moon, Camera } from "lucide-react";
 import { buildPlanDateIndex, findMonthIndexForDate, isoKey, weekdayOf } from "@/lib/plan-dates";
 
 
@@ -296,6 +296,15 @@ function Home() {
       {!planning && !isLoading && !isError && <EmptyState />}
 
       <WeekCard />
+
+      <Link to="/pizarra" className="pressable rise rise-1 mb-4 flex min-h-[58px] items-center gap-3 rounded-[18px] bg-card px-3.5">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px]" style={{ background: "#333B18", color: "var(--gold)" }}><Camera className="h-5 w-5" /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-bold">Escanear la pizarra del box</span>
+          <span className="block truncate text-[13px] text-muted-foreground">Una foto y tienes el entreno de hoy con tus kilos</span>
+        </span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </Link>
 
       {planning && (
         <>

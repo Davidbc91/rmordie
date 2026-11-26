@@ -572,6 +572,129 @@ export type Database = {
         }
         Relationships: []
       }
+      injuries: {
+        Row: {
+          created_at: string
+          healed_on: string | null
+          id: string
+          level: number
+          note: string | null
+          side: string
+          started_on: string
+          status: string
+          updated_at: string
+          user_id: string
+          zone: string
+        }
+        Insert: {
+          created_at?: string
+          healed_on?: string | null
+          id?: string
+          level: number
+          note?: string | null
+          side?: string
+          started_on?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          zone: string
+        }
+        Update: {
+          created_at?: string
+          healed_on?: string | null
+          id?: string
+          level?: number
+          note?: string | null
+          side?: string
+          started_on?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          zone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injuries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      injury_checkins: {
+        Row: {
+          created_at: string
+          day: string
+          injury_id: string
+          level: number
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          injury_id: string
+          level: number
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          injury_id?: string
+          level?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injury_checkins_injury_id_fkey"
+            columns: ["injury_id"]
+            isOneToOne: false
+            referencedRelation: "injuries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      injury_swaps: {
+        Row: {
+          block_key: string
+          created_at: string
+          day_key: string
+          id: string
+          month_key: string
+          original: string
+          replacement: string
+          user_id: string
+          week: number
+        }
+        Insert: {
+          block_key: string
+          created_at?: string
+          day_key: string
+          id?: string
+          month_key: string
+          original: string
+          replacement: string
+          user_id: string
+          week: number
+        }
+        Update: {
+          block_key?: string
+          created_at?: string
+          day_key?: string
+          id?: string
+          month_key?: string
+          original?: string
+          replacement?: string
+          user_id?: string
+          week?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injury_swaps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       milestones: {
         Row: {
           achieved_at: string
@@ -715,6 +838,7 @@ export type Database = {
           challenges_enabled: boolean
           chat_enabled: boolean
           coach_idle_enabled: boolean
+          coach_injury_enabled: boolean
           coach_prs_enabled: boolean
           coach_weekly_enabled: boolean
           comments_enabled: boolean
@@ -735,6 +859,7 @@ export type Database = {
           challenges_enabled?: boolean
           chat_enabled?: boolean
           coach_idle_enabled?: boolean
+          coach_injury_enabled?: boolean
           coach_prs_enabled?: boolean
           coach_weekly_enabled?: boolean
           comments_enabled?: boolean
@@ -755,6 +880,7 @@ export type Database = {
           challenges_enabled?: boolean
           chat_enabled?: boolean
           coach_idle_enabled?: boolean
+          coach_injury_enabled?: boolean
           coach_prs_enabled?: boolean
           coach_weekly_enabled?: boolean
           comments_enabled?: boolean
@@ -1708,6 +1834,7 @@ export type Database = {
         Args: { _pin_hash: string; _profile_id: string }
         Returns: boolean
       }
+      coach_athlete_injuries: { Args: { p_athlete: string }; Returns: Json }
       coach_athlete_prs: {
         Args: { p_athlete: string; p_limit?: number }
         Returns: {

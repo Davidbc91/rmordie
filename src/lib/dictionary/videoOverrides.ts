@@ -24,7 +24,6 @@ const videos: Record<string, string> = {
   "Sled Push":"https://www.youtube.com/watch?v=ICcfa_o2s_E",
   "Farmer Carry":"https://www.youtube.com/watch?v=vi4X2iSOyiA",
   "Waiter's Carry":"https://www.youtube.com/watch?v=9ZF5DZaOPNc",
-  "Running":"https://www.youtube.com/watch?v=9cG-grUiJyI",
 };
 
 function movementNameFromSearchUrl(url?: string | null): string | null {

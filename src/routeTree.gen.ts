@@ -19,8 +19,8 @@ import { Route as ImportRouteImport } from './routes/import'
 import { Route as ImportGenericRouteImport } from './routes/import-generic'
 import { Route as PlanBuilderRouteImport } from './routes/plan-builder'
 import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as SemanaRouteImport } from './routes/semana'
 import { Route as RecordsRouteImport } from './routes/records'
+import { Route as SemanaRouteImport } from './routes/semana'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TimersRouteImport } from './routes/timers'
 import { Route as AdminVideosRouteImport } from './routes/admin.videos'
@@ -80,11 +80,6 @@ const PlanBuilderRoute = PlanBuilderRouteImport.update({
   path: '/plan-builder',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SemanaRoute = SemanaRouteImport.update({
-  id: '/semana',
-  path: '/semana',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -93,6 +88,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const RecordsRoute = RecordsRouteImport.update({
   id: '/records',
   path: '/records',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SemanaRoute = SemanaRouteImport.update({
+  id: '/semana',
+  path: '/semana',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -172,8 +172,8 @@ export interface FileRoutesByFullPath {
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
-  '/semana': typeof SemanaRoute
   '/records': typeof RecordsRoute
+  '/semana': typeof SemanaRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
   '/admin/videos': typeof AdminVideosRoute
@@ -199,8 +199,8 @@ export interface FileRoutesByTo {
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
-  '/semana': typeof SemanaRoute
   '/records': typeof RecordsRoute
+  '/semana': typeof SemanaRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
   '/admin/videos': typeof AdminVideosRoute
@@ -227,8 +227,8 @@ export interface FileRoutesById {
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
-  '/semana': typeof SemanaRoute
   '/records': typeof RecordsRoute
+  '/semana': typeof SemanaRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
   '/admin/videos': typeof AdminVideosRoute
@@ -256,8 +256,8 @@ export interface FileRouteTypes {
     | '/import-generic'
     | '/plan-builder'
     | '/profile'
-    | '/semana'
     | '/records'
+    | '/semana'
     | '/settings'
     | '/timers'
     | '/admin/videos'
@@ -283,8 +283,8 @@ export interface FileRouteTypes {
     | '/import-generic'
     | '/plan-builder'
     | '/profile'
-    | '/semana'
     | '/records'
+    | '/semana'
     | '/settings'
     | '/timers'
     | '/admin/videos'
@@ -310,8 +310,8 @@ export interface FileRouteTypes {
     | '/import-generic'
     | '/plan-builder'
     | '/profile'
-    | '/semana'
     | '/records'
+    | '/semana'
     | '/settings'
     | '/timers'
     | '/admin/videos'
@@ -338,8 +338,8 @@ export interface RootRouteChildren {
   ImportGenericRoute: typeof ImportGenericRoute
   PlanBuilderRoute: typeof PlanBuilderRoute
   ProfileRoute: typeof ProfileRoute
-  SemanaRoute: typeof SemanaRoute
   RecordsRoute: typeof RecordsRoute
+  SemanaRoute: typeof SemanaRoute
   SettingsRoute: typeof SettingsRoute
   TimersRoute: typeof TimersRoute
   AdminVideosRoute: typeof AdminVideosRoute
@@ -419,13 +419,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlanBuilderRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/semana': {
-      id: '/semana'
-      path: '/semana'
-      fullPath: '/semana'
-      preLoaderRoute: typeof SemanaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -438,6 +431,13 @@ declare module '@tanstack/react-router' {
       path: '/records'
       fullPath: '/records'
       preLoaderRoute: typeof RecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/semana': {
+      id: '/semana'
+      path: '/semana'
+      fullPath: '/semana'
+      preLoaderRoute: typeof SemanaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -557,8 +557,8 @@ const rootRouteChildren: RootRouteChildren = {
   ImportGenericRoute: ImportGenericRoute,
   PlanBuilderRoute: PlanBuilderRoute,
   ProfileRoute: ProfileRoute,
-  SemanaRoute: SemanaRoute,
   RecordsRoute: RecordsRoute,
+  SemanaRoute: SemanaRoute,
   SettingsRoute: SettingsRoute,
   TimersRoute: TimersRoute,
   AdminVideosRoute: AdminVideosRoute,

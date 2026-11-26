@@ -21,6 +21,7 @@ import { SplashScreen } from "@/components/ui/splash";
 import { startSyncEngine } from "@/lib/offline/sync";
 import { registerAppSw } from "@/lib/offline/register-sw";
 import { fetchCustomMovements } from "@/lib/dictionary/custom";
+import { fetchMovementAliases } from "@/lib/dictionary/plan-aliases";
 
 function NotFoundComponent() {
   return (
@@ -128,6 +129,7 @@ function RootComponent() {
     const stop = startSyncEngine(queryClient);
     void registerAppSw();
     void fetchCustomMovements().catch(() => undefined);
+    void fetchMovementAliases().catch(() => undefined);
     return () => {
       stop();
     };

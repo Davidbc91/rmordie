@@ -26,6 +26,7 @@ import { Route as SemanaRouteImport } from './routes/semana'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TimersRouteImport } from './routes/timers'
 import { Route as AdminVideosRouteImport } from './routes/admin.videos'
+import { Route as AdminEnlacesRouteImport } from './routes/admin.enlaces'
 import { Route as DictionaryMovementIdRouteImport } from './routes/dictionary.$movementId'
 import { Route as SocialIndexRouteImport } from './routes/social.index'
 import { Route as SocialBoardRouteImport } from './routes/social.board'
@@ -122,6 +123,11 @@ const AdminVideosRoute = AdminVideosRouteImport.update({
   path: '/admin/videos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminEnlacesRoute = AdminEnlacesRouteImport.update({
+  id: '/admin/enlaces',
+  path: '/admin/enlaces',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DictionaryMovementIdRoute = DictionaryMovementIdRouteImport.update({
   id: '/$movementId',
   path: '/$movementId',
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/admin/enlaces': typeof AdminEnlacesRoute
   '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/admin/enlaces': typeof AdminEnlacesRoute
   '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/admin/enlaces': typeof AdminEnlacesRoute
   '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/timers'
     | '/admin/videos'
+    | '/admin/enlaces'
     | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/timers'
     | '/admin/videos'
+    | '/admin/enlaces'
     | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
@@ -339,6 +350,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/timers'
     | '/admin/videos'
+    | '/admin/enlaces'
     | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
@@ -369,6 +381,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   TimersRoute: typeof TimersRoute
   AdminVideosRoute: typeof AdminVideosRoute
+  AdminEnlacesRoute: typeof AdminEnlacesRoute
   SocialBoardRoute: typeof SocialBoardRoute
   SocialDiscoverRoute: typeof SocialDiscoverRoute
   SocialNotificationsRoute: typeof SocialNotificationsRoute
@@ -501,6 +514,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminVideosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/enlaces': {
+      id: '/admin/enlaces'
+      path: '/admin/enlaces'
+      fullPath: '/admin/enlaces'
+      preLoaderRoute: typeof AdminEnlacesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dictionary/$movementId': {
       id: '/dictionary/$movementId'
       path: '/$movementId'
@@ -604,6 +624,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   TimersRoute: TimersRoute,
   AdminVideosRoute: AdminVideosRoute,
+  AdminEnlacesRoute: AdminEnlacesRoute,
   SocialBoardRoute: SocialBoardRoute,
   SocialDiscoverRoute: SocialDiscoverRoute,
   SocialNotificationsRoute: SocialNotificationsRoute,

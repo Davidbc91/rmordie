@@ -6,6 +6,8 @@ export type MovementMatch = {
   matchedText: string;
   confidence: number;
   matchType: "canonical" | "alias";
+  /** Enlace corregido a mano por el administrador: gana a los demás. */
+  manual?: boolean;
   /** Character offsets in the original input, with end exclusive. */
   start: number;
   end: number;

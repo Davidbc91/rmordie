@@ -1,5 +1,6 @@
 import { movements } from "./catalog";
 import { getCustomMovements, getCustomMovementCacheVersion } from "./custom";
+import { getMovementAliases, getMovementAliasVersion } from "./plan-aliases";
 import type { MovementMatch } from "./types";
 
 type Token = { value: string; start: number; end: number };
@@ -8,6 +9,7 @@ type Candidate = {
   matchedName: string;
   words: string[];
   matchType: MovementMatch["matchType"];
+  manual?: boolean;
 };
 
 function normalizeToken(value: string): string {
@@ -46,12 +48,23 @@ function wordMatches(expected: string, actual: string): boolean {
   return false;
 }
 
-let candidatesCache: { version: number; candidates: Candidate[] } | null = null;
+let candidatesCache: { version: string; candidates: Candidate[] } | null = null;
 
 function getCandidates(): Candidate[] {
-  const version = getCustomMovementCacheVersion();
+  const version = `${getCustomMovementCacheVersion()}:${getMovementAliasVersion()}`;
   if (candidatesCache?.version === version) return candidatesCache.candidates;
   const allMovements = [...movements, ...getCustomMovements()];
+  const byId = new Map(allMovements.map((m) => [m.id, m]));
+  const manual: Candidate[] = getMovementAliases()
+    .filter((a) => byId.has(a.movement_id))
+    .map((a) => ({
+      movementId: a.movement_id,
+      matchedName: byId.get(a.movement_id)!.name,
+      words: tokenize(normalizeMovementName(a.alias)).map((token) => token.value),
+      matchType: "alias" as const,
+      manual: true,
+    }))
+    .filter((c) => c.words.length > 0);
   const candidates = allMovements.flatMap((movement) =>
     [
       { label: movement.name, matchType: "canonical" as const },
@@ -66,6 +79,7 @@ function getCandidates(): Candidate[] {
       }))
       .filter((candidate) => candidate.words.length > 0),
   );
+  candidates.unshift(...manual);
   candidatesCache = { version, candidates };
   return candidates;
 }
@@ -99,6 +113,7 @@ function collectMatches(text: string): MovementMatch[] {
         matchedText: text.slice(tokens[startIndex].start, tokens[endIndex - 1].end),
         confidence,
         matchType: candidate.matchType,
+        ...(candidate.manual ? { manual: true } : {}),
         start: tokens[startIndex].start,
         end: tokens[endIndex - 1].end,
       });
@@ -110,6 +125,7 @@ function collectMatches(text: string): MovementMatch[] {
   const ranked = matches.sort(
     (a, b) =>
       b.matchedText.length - a.matchedText.length ||
+      Number(!!b.manual) - Number(!!a.manual) ||
       Number(b.matchType === "canonical") - Number(a.matchType === "canonical") ||
       b.confidence - a.confidence ||
       a.start - b.start,

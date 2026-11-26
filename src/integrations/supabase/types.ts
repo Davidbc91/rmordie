@@ -244,6 +244,83 @@ export type Database = {
           },
         ]
       }
+      challenge_participants: {
+        Row: {
+          challenge_id: string
+          joined_at: string
+          profile_id: string
+        }
+        Insert: {
+          challenge_id: string
+          joined_at?: string
+          profile_id: string
+        }
+        Update: {
+          challenge_id?: string
+          joined_at?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_participants_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          created_at: string
+          ends_on: string
+          goal: number | null
+          id: string
+          metric: string
+          open: boolean
+          owner_id: string
+          starts_on: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          ends_on: string
+          goal?: number | null
+          id?: string
+          metric: string
+          open?: boolean
+          owner_id: string
+          starts_on: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          ends_on?: string
+          goal?: number | null
+          id?: string
+          metric?: string
+          open?: boolean
+          owner_id?: string
+          starts_on?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenges_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           content: string
@@ -1383,6 +1460,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      challenge_leaderboard: {
+        Args: { p_challenge: string }
+        Returns: {
+          name: string
+          profile_id: string
+          score: number
+        }[]
+      }
       change_profile_pin: {
         Args: {
           _current_pin_hash: string

@@ -1,3 +1,4 @@
+import { useAwardMedal } from "@/lib/use-medals";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { usePlanning, useAllResults, usePersonalRecords } from "@/lib/store";
@@ -63,9 +64,11 @@ function AthleteReport() {
       ? lastMetric.weight_kg - firstMetric.weight_kg
       : null;
 
-  const printReport = () => window.print();
+  const awardMedal = useAwardMedal();
+  const printReport = () => { awardMedal("coach_report"); window.print(); };
 
   const downloadPdf = () => {
+    awardMedal("coach_report");
     const lines: string[] = [];
     const add = (text = "") => lines.push(text);
     const section = (text: string) => {

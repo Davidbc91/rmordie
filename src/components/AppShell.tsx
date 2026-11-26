@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getActiveWorkout, clearActiveWorkout, type ActiveWorkout } from "@/lib/active-workout";
 import { useChatUnread } from "@/lib/chat-unread";
 import { SyncIndicator } from "@/components/SyncIndicator";
+import { MedalWatcher } from "@/components/medals/Medals";
 import { getCurrentUserId, signOut } from "@/lib/pin-gate";
 import { isVideoAdmin } from "@/lib/admin-videos";
 import { useProfiles } from "@/lib/store";
@@ -211,6 +212,7 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
       {profileOpen && <ProfileOverlay name={currentProfile?.name ?? "Atleta"} links={visibleProfileLinks as typeof profileLinks} chatUnread={chatUnread} onClose={closeProfile} onSignOut={signOutProfile} />}
 
       <BottomNavigation pathname={pathname} keyboardOpen={keyboardOpen} />
+      {currentProfileId && <MedalWatcher />}
     </div>
   );
 }

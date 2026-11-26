@@ -1,3 +1,4 @@
+import { useAwardMedal } from "@/lib/use-medals";
 import { weekdayOf } from "@/lib/plan-dates";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
@@ -76,6 +77,7 @@ function WorkoutPage() {
     [wodResults, month, weekN, day],
   );
 
+  const awardMedal = useAwardMedal();
   if (!planning && planningLoading) return <AppShell><PageSkeleton label="Cargando entreno" variant="workout" /></AppShell>;
   if (!planning) return <AppShell><p className="text-sm text-muted-foreground">Importa primero tu planificación.</p></AppShell>;
 
@@ -253,6 +255,7 @@ function WorkoutPage() {
       });
       const suffix = blocks.length < d.blocks.length ? `-${blocks.map((b) => b.key).join("")}` : "";
       const outcome = await shareOrDownloadCard(blob, `entreno-${month}-s${weekN}-${day}${suffix}.png`);
+      awardMedal("shared_workout");
       toast.success(outcome === "shared" ? "Imagen del entreno compartida" : "Imagen del entreno descargada");
     } catch (e: any) {
       if (e?.name !== "AbortError") toast.error(e?.message ?? "No se pudo generar la imagen del entreno");

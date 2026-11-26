@@ -14,7 +14,7 @@ import { StrengthSection } from "@/components/profile/StrengthSection";
 import { ConsistencySection } from "@/components/profile/ConsistencySection";
 import { RecoverySection } from "@/components/profile/RecoverySection";
 import { GoalsSection } from "@/components/profile/GoalsSection";
-import { MilestonesSection } from "@/components/profile/MilestonesSection";
+import { MedalsShowcase, MedalsStrip } from "@/components/medals/Medals";
 import { ReportSection } from "@/components/profile/ReportSection";
 import { DataSection } from "@/components/profile/DataSection";
 
@@ -54,7 +54,7 @@ const SECTIONS = [
   { key: "recovery", label: "Recuperación", hint: "Sueño, energía y ánimo", group: "progress" },
   { key: "body", label: "Cuerpo", hint: "Peso y medidas", group: "you" },
   { key: "goals", label: "Objetivos", hint: "Tus metas y cómo vas", group: "you" },
-  { key: "milestones", label: "Hitos", hint: "Logros conseguidos", group: "you" },
+  { key: "milestones", label: "Medallas", hint: "Tu vitrina de logros", group: "you" },
   { key: "report", label: "Informe mensual", hint: "Resumen para ti o tu entrenador", group: "data" },
   { key: "data", label: "Mis datos", hint: "Exportar o borrar tu información", group: "data" },
 ] as const;
@@ -128,6 +128,8 @@ function ProfilePage() {
           <ProfileStat value={`${constancy.pct} %`} label="Constancia" onClick={() => setSection("consistency")} />
           <ProfileStat value={String(streak)} label="Días de racha" accent onClick={() => setSection("consistency")} />
         </div>
+
+        <MedalsStrip onOpen={() => setSection("milestones")} />
 
         {GROUPS.map((g) => (
           <section key={g.key} className="rise rise-3 mt-4">
@@ -207,7 +209,7 @@ function ProfilePage() {
       )}
       {section === "recovery" && <RecoverySection logs={wellness} results={results} days={days} />}
       {section === "goals" && <GoalsSection records={records} results={results} metrics={metrics} />}
-      {section === "milestones" && <MilestonesSection results={results} history={history} />}
+      {section === "milestones" && <MedalsShowcase />}
       {section === "report" && <ReportSection results={results} history={history} metrics={metrics} records={records} />}
       {section === "data" && <DataSection />}
     </AppShell>

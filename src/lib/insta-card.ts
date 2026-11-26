@@ -241,8 +241,7 @@ export async function renderInstaCard(input: InstaInput, mime: "image/png" | "im
 
   // Pie
   ctx.fillStyle = MUTED; ctx.font = `700 30px ${TXT}`;
-  ctx.textAlign = "left"; ctx.fillText("Entrenado con RM OR DIE", P, bottomLimit);
-  ctx.textAlign = "right"; ctx.fillText("rmordie.lovable.app", W - P, bottomLimit);
+  ctx.textAlign = "center"; ctx.fillText("Entrenado con RM OR DIE", W / 2, bottomLimit);
 
   return new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error("No se pudo generar la imagen"))), mime, 0.92));
 }

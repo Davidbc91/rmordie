@@ -33,6 +33,8 @@ import { useWellnessLogs } from "@/lib/profile-store";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { downloadSessionReport } from "@/lib/session-report";
 import { renderWorkoutCard, shareOrDownloadCard } from "@/lib/share-card";
+import { InstaShareSheet } from "@/components/workout/InstaShareSheet";
+import { useAllPrHistory } from "@/lib/profile-store";
 import { WorkoutReview, WorkoutReviewCard } from "@/components/workout/WorkoutReviewCard";
 import { BlockPayload, BlockCard, type StrengthPr } from "@/components/workout/BlockCard";
 
@@ -78,10 +80,17 @@ function WorkoutPage() {
   );
 
   const awardMedal = useAwardMedal();
+  const { data: allPrs = [] } = useAllPrHistory();
   if (!planning && planningLoading) return <AppShell><PageSkeleton label="Cargando entreno" variant="workout" /></AppShell>;
   if (!planning) return <AppShell><p className="text-sm text-muted-foreground">Importa primero tu planificación.</p></AppShell>;
 
   const { month: mo, day: d } = findDay(planning.data, month, weekN, day);
+  const todayPrLabel = (() => {
+    const dayIso = d?.date ?? new Date().toLocaleDateString("sv-SE");
+    const text = (d?.blocks ?? []).map((b) => b.content.toLowerCase()).join("\n");
+    const hit = allPrs.find((h) => new Date(h.changed_at).toLocaleDateString("sv-SE") === dayIso && text.includes(h.exercise.toLowerCase().split(" ")[0]));
+    return hit ? `Nuevo récord · ${hit.exercise}` : null;
+  })();
   if (!mo || !d) return <AppShell><p className="text-sm text-muted-foreground">Día no encontrado.</p></AppShell>;
 
   const isBlockDone = (key: string) => results.some((r) => r.block_key === key) || dayWods.some((r) => r.block_key === key);
@@ -322,59 +331,18 @@ function WorkoutPage() {
       />
       )}
 
-      {sharePick && d && (
-        <div className="fixed inset-0 z-[60] flex items-end bg-black/60" onClick={() => setSharePick(null)}>
-          <div
-            role="dialog"
-            aria-label="Elegir bloques para compartir"
-            className="max-h-[85dvh] w-full overflow-y-auto rounded-t-[24px] border-t border-white/10 bg-[#1B1B1D] px-4 pt-5"
-            style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-[28px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>¿Qué compartes?</h2>
-              <button
-                type="button"
-                onClick={() => setSharePick(sharePick.length === d.blocks.length ? [] : d.blocks.map((b) => b.key))}
-                className="min-h-11 shrink-0 px-2 text-sm font-bold text-gold"
-              >
-                {sharePick.length === d.blocks.length ? "Ninguno" : "Todos"}
-              </button>
-            </div>
-            <div className="mt-4 space-y-2">
-              {d.blocks.map((b) => {
-                const on = sharePick.includes(b.key);
-                const first = b.content.split("\n").map((l) => l.trim()).find(Boolean) ?? "";
-                return (
-                  <button
-                    key={b.key}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => setSharePick(on ? sharePick.filter((k) => k !== b.key) : d.blocks.map((x) => x.key).filter((k) => k === b.key || sharePick.includes(k)))}
-                    className={`flex min-h-16 w-full items-center gap-3 rounded-[16px] px-3 text-left transition-colors ${on ? "bg-[color:var(--gold)]/12 ring-2 ring-[color:var(--gold)]" : "bg-white/[0.045]"}`}
-                  >
-                    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[10px] text-lg font-extrabold ${on ? "gold-gradient" : "bg-white/[0.08] text-muted-foreground"}`} style={{ fontFamily: "var(--font-editorial)" }}>{b.key}</span>
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{first}</span>
-                    <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border ${on ? "border-[color:var(--gold)] bg-[color:var(--gold)] text-[#0C0C0E]" : "border-white/25"}`}>
-                      {on && <CheckCheck className="h-3.5 w-3.5" />}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-5 flex gap-2">
-              <button type="button" onClick={() => setSharePick(null)} className="min-h-12 flex-1 rounded-[14px] bg-white/[0.08] font-bold">Cancelar</button>
-              <button
-                type="button"
-                disabled={!sharePick.length || sharingCard}
-                onClick={() => { const keys = sharePick; setSharePick(null); void shareToday(keys); }}
-                className="gold-gradient min-h-12 flex-[2] rounded-[14px] font-extrabold disabled:opacity-40"
-              >
-                {sharePick.length === d.blocks.length ? "Compartir todo" : sharePick.length === 1 ? `Compartir bloque ${sharePick[0]}` : `Compartir ${sharePick.length} bloques`}
-              </button>
-            </div>
-          </div>
-        </div>
+      {sharePick && d && mo && (
+        <InstaShareSheet
+          blocks={d.blocks.map((b) => ({ key: b.key, content: b.content }))}
+          results={results as any}
+          prLabel={todayPrLabel}
+          title={(d.blocks[0]?.content.split("\n").map((l) => l.trim()).find(Boolean) ?? (d.date ? weekdayOf(d.date) : d.key)).replace(/\s*[@(].*$/, "")}
+          dateLabel={d.date ? (() => { const w = weekdayOf(d.date).toLowerCase(); return `${w.charAt(0).toUpperCase()}${w.slice(1)} ${Number(d.date.slice(8))} ${new Date(`${d.date}T12:00:00`).toLocaleDateString("es-ES", { month: "short" }).replace(".", "")}`; })() : null}
+          weekLabel={`Semana ${weekN}`}
+          filename={`rmordie-${d.date ?? `${month}-s${weekN}-${day}`}`}
+          onDone={() => awardMedal("shared_workout")}
+          onClose={() => setSharePick(null)}
+        />
       )}
 
       {strengthCelebration && (

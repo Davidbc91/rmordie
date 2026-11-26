@@ -182,3 +182,85 @@ export function readBuilder(value: unknown): PlanState | null {
   const v = value as PlanState | null;
   return v && v.v === 1 && Array.isArray(v.weeks) ? v : null;
 }
+
+/* ---------------- Progresiones ---------------- */
+
+export type ProgScheme = "lineal" | "descarga" | "ondulante" | "manual";
+export type ProgStep = { pct: string; sets: string; reps: string };
+export type Progression = { id: string; exercise: string; scheme: ProgScheme; steps: ProgStep[] };
+export type PlanStateWithProg = PlanState & { progressions?: Progression[] };
+
+const normName = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+const r1 = (n: number) => String(Math.round(n * 10) / 10).replace(".", ",");
+const num = (s: string) => Number(String(s).replace(",", "."));
+
+/** Ejercicios de fuerza que aparecen en el plan, con su primera aparición. */
+export function strengthExercises(plan: PlanState): { name: string; first: PExercise; days: number }[] {
+  const map = new Map<string, { name: string; first: PExercise; days: Set<string> }>();
+  plan.weeks.forEach((wk) => wk.forEach((d) => {
+    if (d.rest) return;
+    d.blocks.forEach((b) => {
+      if (b.kind !== "fuerza") return;
+      b.exercises.forEach((e) => {
+        const k = normName(e.name);
+        if (!k) return;
+        const cur = map.get(k) ?? { name: e.name.trim(), first: e, days: new Set<string>() };
+        cur.days.add(d.date);
+        map.set(k, cur);
+      });
+    });
+  }));
+  return [...map.values()].map((v) => ({ name: v.name, first: v.first, days: v.days.size }));
+}
+
+/** Pasos semana a semana según el esquema elegido. */
+export function generateSteps(scheme: ProgScheme, weeks: number, base: ProgStep): ProgStep[] {
+  const p0 = num(base.pct) || 70;
+  const sets = base.sets || "5";
+  const reps = Number(base.reps) || 5;
+  return Array.from({ length: weeks }, (_, w) => {
+    if (scheme === "lineal") return { pct: r1(p0 + 2.5 * w), sets, reps: String(reps) };
+    if (scheme === "ondulante") return w % 2 === 0
+      ? { pct: r1(p0 + 2.5 * (w / 2)), sets, reps: String(reps) }
+      : { pct: r1(p0 + 7.5 + 2.5 * ((w - 1) / 2)), sets, reps: String(Math.max(1, reps - 2)) };
+    if (scheme === "descarga") {
+      const cycle = w % 4, block = Math.floor(w / 4);
+      if (cycle === 3) return { pct: r1(p0 - 10 + 2.5 * block), sets: "3", reps: String(reps) };
+      return { pct: r1(p0 + 5 * cycle + 2.5 * block), sets, reps: String(Math.max(1, reps - cycle)) };
+    }
+    return { ...base };
+  });
+}
+
+/** Escribe los pasos de la progresión en cada día de cada semana donde aparece el ejercicio. */
+export function applyProgression(plan: PlanState, prog: Progression): PlanState {
+  const k = normName(prog.exercise);
+  const weeks = plan.weeks.map((wk, wi) => {
+    const st = prog.steps[wi];
+    if (!st) return wk;
+    return wk.map((d) => ({
+      ...d,
+      blocks: d.blocks.map((b) => b.kind !== "fuerza" ? b : {
+        ...b,
+        exercises: b.exercises.map((e) => normName(e.name) === k ? { ...e, pct: st.pct.replace(",", "."), sets: st.sets, reps: st.reps } : e),
+      }),
+    }));
+  });
+  return { ...plan, weeks };
+}
+
+export function progressionFor(plan: PlanStateWithProg, exercise: string): Progression | undefined {
+  const k = normName(exercise);
+  return (plan.progressions ?? []).find((p) => normName(p.exercise) === k);
+}
+
+/** Plantilla → plan que empieza en otra fecha (mismo contenido, fechas nuevas). */
+export function redatePlan(plan: PlanState, startIso: string, name?: string): PlanState {
+  const monday = mondayOf(parseISODate(startIso) ?? new Date());
+  return {
+    ...plan,
+    name: name?.trim() || plan.name,
+    start: isoKey(monday),
+    weeks: plan.weeks.map((wk, wi) => wk.map((d, di) => ({ ...d, date: isoKey(addDays(monday, wi * 7 + di)), blocks: cloneBlocks(d.blocks) }))),
+  };
+}

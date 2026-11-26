@@ -1,10 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { RawPlanEditor } from "@/components/plan/RawPlanEditor";
+import { LibrarySheet, PlanMap, ProgressionsSection, SaveBlockButton, ShareStep, TemplatesList } from "@/components/plan/BuilderExtras";
+import { useQuery } from "@tanstack/react-query";
+import { isVideoAdmin } from "@/lib/admin-videos";
 import type { Planning } from "@/lib/excel-parser";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Copy, Minus, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, Copy, Minus, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useOwnPlanning, useSavePlanning, usePersonalRecords } from "@/lib/store";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { detectExercise, loadsForPercentages, formatKg } from "@/lib/rm-matcher";
@@ -24,12 +27,14 @@ import {
   newBlock,
   nextMonday,
   readBuilder,
+  redatePlan,
   toPlanning,
   validatePlan,
   type PBlock,
   type PDay,
   type PExercise,
   type PlanState,
+  type PlanStateWithProg,
   type WodFormat,
 } from "@/lib/plan-builder";
 
@@ -102,6 +107,8 @@ function PlanBuilderPage() {
   const [weekIdx, setWeekIdx] = useState(0);
   const [dayIdx, setDayIdx] = useState<number | null>(null);
   const [initialized, setInitialized] = useState(false);
+  const [shareStep, setShareStep] = useState<{ planKey: string | null } | null>(null);
+  const { data: isAdmin } = useQuery({ queryKey: ["video-admin", myUid], queryFn: isVideoAdmin, enabled: !!myUid, staleTime: 5 * 60 * 1000 });
 
   // Al entrar: borrador sin guardar → plan propio del planificador → pantalla de inicio
   useEffect(() => {
@@ -134,11 +141,13 @@ function PlanBuilderPage() {
     const err = validatePlan(plan);
     if (err) return toast.error(err);
     try {
-      await save.mutateAsync({ planning: toPlanning(plan), filename: plan.name });
+      const saved = await save.mutateAsync({ planning: toPlanning(plan), filename: plan.name });
       writeDraft(null);
       setDirty(false);
       toast.success("Plan guardado. Ya está en tu calendario.");
-      backAfterSave();
+      // El administrador revisa y comparte con sus atletas antes de salir
+      if (isAdmin && !focus) setShareStep({ planKey: ((saved as any)?.plan_key as string | undefined) ?? null });
+      else backAfterSave();
     } catch (e) {
       toast.error(`No se pudo guardar: ${(e as { message?: string })?.message ?? "error desconocido"}`);
     }
@@ -209,6 +218,14 @@ function PlanBuilderPage() {
 
   const week = plan.weeks[Math.min(weekIdx, plan.weeks.length - 1)];
 
+  if (shareStep) {
+    return (
+      <AppShell>
+        <ShareStep plan={plan} planKey={shareStep.planKey} onDone={() => navigate({ to: "/calendar" })} />
+      </AppShell>
+    );
+  }
+
   if (dayIdx != null) {
     return (
       <AppShell>
@@ -237,6 +254,7 @@ function PlanBuilderPage() {
         weekIdx={weekIdx}
         setWeekIdx={setWeekIdx}
         onOpenDay={setDayIdx}
+        onOpenAt={(w, d) => { setWeekIdx(w); setDayIdx(d); }}
         onChange={change}
         onSave={onSave}
         saving={save.isPending}
@@ -329,6 +347,8 @@ function StartScreen({ hasActive, onBack, onCreate }: { hasActive: boolean; onBa
         <span className="mt-1.5 block text-[13px] text-muted-foreground">Los demás quedan como descanso. Lo puedes cambiar luego.</span>
       </div>
 
+      <TemplatesList onPick={(tpl, tplName) => onCreate(redatePlan(tpl, start, name || tplName))} />
+
       <button
         type="button"
         disabled={!days.some(Boolean)}
@@ -350,9 +370,9 @@ function StartScreen({ hasActive, onBack, onCreate }: { hasActive: boolean; onBa
 // Paso 2: la semana de un vistazo
 // ---------------------------------------------------------------------------
 function WeekView({
-  plan, weekIdx, setWeekIdx, onOpenDay, onChange, onSave, saving, onExit, onDiscard,
+  plan, weekIdx, setWeekIdx, onOpenDay, onOpenAt, onChange, onSave, saving, onExit, onDiscard,
 }: {
-  plan: PlanState; weekIdx: number; setWeekIdx: (i: number) => void; onOpenDay: (i: number) => void;
+  plan: PlanState; weekIdx: number; setWeekIdx: (i: number) => void; onOpenDay: (i: number) => void; onOpenAt: (w: number, d: number) => void;
   onChange: (p: PlanState) => void; onSave: () => void; saving: boolean; onExit: () => void; onDiscard: () => void;
 }) {
   const w = Math.min(weekIdx, plan.weeks.length - 1);
@@ -421,6 +441,8 @@ function WeekView({
         {shortDate(week[0].date)} – {shortDate(week[6].date)} · {filled} de {train.length} días rellenos
       </p>
 
+      <PlanMap plan={plan} weekIdx={w} onOpen={onOpenAt} />
+
       <div role="tablist" aria-label="Semanas" className="no-scrollbar -mx-1 mt-3 flex gap-1.5 overflow-x-auto px-1">
         {plan.weeks.map((wk, i) => {
           const done = wk.filter((d) => !d.rest).length > 0 && wk.filter((d) => !d.rest).every(dayHasContent);
@@ -486,6 +508,8 @@ function WeekView({
           ))}
         </div>
       </section>
+
+      <ProgressionsSection plan={plan as PlanStateWithProg} onChange={onChange} />
     </div>
   );
 }
@@ -503,6 +527,8 @@ function DayEditor({ plan, weekIdx, dayIdx, onChange, onBack, onNext }: {
   const { data: records = [] } = usePersonalRecords();
   const day = plan.weeks[weekIdx][dayIdx];
   const [copyOpen, setCopyOpen] = useState(false);
+  const [libOpen, setLibOpen] = useState(false);
+  const progNames = new Set(((plan as PlanStateWithProg).progressions ?? []).map((p) => p.exercise.trim().toLowerCase()));
 
   function setDay(fn: (d: PDay) => PDay) {
     const weeks = plan.weeks.map((wk, wi) => (wi === weekIdx ? wk.map((d, di) => (di === dayIdx ? fn(d) : d)) : wk));
@@ -578,7 +604,13 @@ function DayEditor({ plan, weekIdx, dayIdx, onChange, onBack, onNext }: {
         <section key={b.id} className={`space-y-3 rounded-[22px] border bg-white/[0.05] p-4 ${bi === 0 ? "border-[color:var(--gold)]/35" : "border-white/10"}`}>
           <div className="flex items-center gap-2.5">
             <span className="gold-gradient grid h-9 w-9 place-items-center rounded-[12px] text-xl font-black" style={font}>{blockLetter(bi)}</span>
-            <span className="flex-1 text-base font-extrabold">{b.kind === "fuerza" ? "Fuerza" : b.kind === "wod" ? "WOD" : "Texto libre"}</span>
+            <span className="flex flex-1 items-center gap-2 text-base font-extrabold">
+              {b.kind === "fuerza" ? "Fuerza" : b.kind === "wod" ? "WOD" : "Texto libre"}
+              {b.kind === "fuerza" && b.exercises.some((e) => progNames.has(e.name.trim().toLowerCase())) && (
+                <span className="rounded-full px-2 py-0.5 text-[11.5px] font-bold" style={{ background: "#333B18", color: "var(--gold)" }}>Progresión</span>
+              )}
+            </span>
+            <SaveBlockButton block={b} />
             <button type="button" aria-label="Subir bloque" disabled={bi === 0} onClick={() => setBlocks((bs) => swap(bs, bi, bi - 1))} className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground disabled:opacity-25"><ChevronLeft className="h-4 w-4 rotate-90" /></button>
             <button type="button" aria-label="Bajar bloque" disabled={bi === day.blocks.length - 1} onClick={() => setBlocks((bs) => swap(bs, bi, bi + 1))} className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground disabled:opacity-25"><ChevronLeft className="h-4 w-4 -rotate-90" /></button>
             <button type="button" aria-label="Quitar bloque" onClick={() => { if (!blockContent(b).trim() || window.confirm(`¿Quitar el bloque ${blockLetter(bi)}?`)) setBlocks((bs) => bs.filter((x) => x.id !== b.id)); }} className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground"><Trash2 className="h-4 w-4" /></button>
@@ -655,6 +687,9 @@ function DayEditor({ plan, weekIdx, dayIdx, onChange, onBack, onNext }: {
 
       <div>
         <p className="mb-2 text-[13px] text-muted-foreground">{day.blocks.length ? "Añadir bloque" : "Empieza añadiendo un bloque"}</p>
+        <button type="button" onClick={() => setLibOpen(true)} className="pressable mb-1.5 flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] text-sm font-bold" style={{ background: "#333B18", color: "var(--gold)" }}>
+          <BookOpen className="h-4 w-4" /> Biblioteca: benchmarks, calentamientos, tus bloques…
+        </button>
         <div className="grid grid-cols-3 gap-1.5">
           {([["fuerza", "+ Fuerza"], ["wod", "+ WOD"], ["texto", "+ Texto libre"]] as const).map(([k, label]) => (
             <button key={k} type="button" onClick={() => setBlocks((bs) => [...bs, newBlock(k)])}
@@ -665,6 +700,7 @@ function DayEditor({ plan, weekIdx, dayIdx, onChange, onBack, onNext }: {
         </div>
         <p className="mt-1.5 text-xs text-muted-foreground">Texto libre sirve para calentamiento, movilidad, accesorios…</p>
       </div>
+      {libOpen && <LibrarySheet onAdd={(nb) => setBlocks((bs) => [...bs, nb])} onClose={() => setLibOpen(false)} />}
 
       {preview.length > 0 && (
         <section className="rounded-[18px] bg-black/30 px-4 py-3.5">

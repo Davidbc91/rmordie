@@ -9,6 +9,9 @@ import { getActiveWorkout, clearActiveWorkout, type ActiveWorkout } from "@/lib/
 import { useChatUnread } from "@/lib/chat-unread";
 import { SyncIndicator } from "@/components/SyncIndicator";
 import { MedalWatcher } from "@/components/medals/Medals";
+import { useAllResults } from "@/lib/store";
+import { streaks } from "@/lib/analytics";
+import { Zap } from "lucide-react";
 import { getCurrentUserId, signOut } from "@/lib/pin-gate";
 import { isVideoAdmin } from "@/lib/admin-videos";
 import { useProfiles } from "@/lib/store";
@@ -192,6 +195,7 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
         <header className="mb-5 flex items-center justify-between">
           <span className="text-[22px] font-extrabold leading-none tracking-tight" style={{ fontFamily: "var(--font-editorial)" }}>RM <span className="aurora-text">OR</span> DIE</span>
           <SyncIndicator />
+          {pathname === "/" && <StreakPill />}
           <button
             type="button"
             onClick={() => setProfileOpen((v) => !v)}
@@ -214,5 +218,17 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
       <BottomNavigation pathname={pathname} keyboardOpen={keyboardOpen} />
       {currentProfileId && <MedalWatcher />}
     </div>
+  );
+}
+
+/** Racha en la cabecera de Inicio. */
+function StreakPill() {
+  const { data: results = [] } = useAllResults();
+  const n = useMemo(() => streaks(results).current, [results]);
+  return (
+    <Link to="/profile" search={{ section: "consistency" } as any} className="pressable ml-auto mr-2 inline-flex min-h-9 items-center gap-1.5 rounded-full bg-white/[0.08] px-3 text-[13px] font-bold">
+      <Zap className="h-3.5 w-3.5" style={{ color: n > 0 ? "var(--gold)" : "var(--muted-foreground)" }} fill={n > 0 ? "currentColor" : "none"} />
+      {n > 0 ? `${n} ${n === 1 ? "día" : "días"}` : "Sin racha"}
+    </Link>
   );
 }

@@ -85,6 +85,13 @@
       "when": 1795708650434,
       "tag": "0011_retos",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795723756611,
+      "tag": "0012_panel_entrenador",
+      "breakpoints": true
     }
   ]
 }

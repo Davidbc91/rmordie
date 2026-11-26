@@ -353,6 +353,42 @@ export type Database = {
           },
         ]
       }
+      coach_access: {
+        Row: {
+          allowed: boolean
+          athlete_id: string
+          coach_id: string
+          decided_at: string
+        }
+        Insert: {
+          allowed: boolean
+          athlete_id: string
+          coach_id: string
+          decided_at?: string
+        }
+        Update: {
+          allowed?: boolean
+          athlete_id?: string
+          coach_id?: string
+          decided_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_access_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_access_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comment_likes: {
         Row: {
           comment_id: string
@@ -1387,6 +1423,57 @@ export type Database = {
           },
         ]
       }
+      workout_comments: {
+        Row: {
+          athlete_id: string
+          body: string
+          coach_id: string
+          created_at: string
+          day_key: string
+          id: string
+          month_key: string
+          read_at: string | null
+          week: number
+        }
+        Insert: {
+          athlete_id: string
+          body: string
+          coach_id: string
+          created_at?: string
+          day_key: string
+          id?: string
+          month_key: string
+          read_at?: string | null
+          week: number
+        }
+        Update: {
+          athlete_id?: string
+          body?: string
+          coach_id?: string
+          created_at?: string
+          day_key?: string
+          id?: string
+          month_key?: string
+          read_at?: string | null
+          week?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_comments_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_comments_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workout_results: {
         Row: {
           block_key: string
@@ -1479,6 +1566,48 @@ export type Database = {
       claim_profile: {
         Args: { _pin_hash: string; _profile_id: string }
         Returns: boolean
+      }
+      coach_athlete_prs: {
+        Args: { p_athlete: string; p_limit?: number }
+        Returns: {
+          changed_at: string
+          exercise: string
+          new_weight: number
+          previous_weight: number
+          rep_max: number
+        }[]
+      }
+      coach_athlete_results: {
+        Args: { p_athlete: string; p_from: string; p_to: string }
+        Returns: {
+          block_key: string
+          day_key: string
+          month_key: string
+          notes: string
+          reps: number
+          rpe: number
+          sets: number
+          status: string
+          time_seconds: number
+          trained_on: string
+          updated_at: string
+          week: number
+          weight: number
+        }[]
+      }
+      coach_athletes: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          allowed: boolean
+          athlete_id: string
+          avg_rpe: number
+          decided: boolean
+          last_trained: string
+          name: string
+          plan_keys: string[]
+          prs: number
+          trained_days: string[]
+        }[]
       }
       create_linked_profile: {
         Args: { _name: string; _pin_hash: string }

@@ -51,6 +51,7 @@ export function PrCelebration({
       role="status"
       aria-live="polite"
     >
+      <Confetti />
       <div
         className="glass-elevated glass-sheen glass-gold w-full max-w-xs p-7 text-center"
         style={{ animation: "pr-pop 420ms cubic-bezier(0.22,1,0.36,1)" }}
@@ -94,6 +95,38 @@ export function PrCelebration({
         )}
       </div>
       <style>{`@keyframes pr-pop{0%{opacity:0;transform:scale(0.9) translateY(10px)}100%{opacity:1;transform:none}}`}</style>
+    </div>
+  );
+}
+
+const CONFETTI_COLORS = ["#C8B38A", "#FF5A36", "#C6F432", "#7B61FF", "#20D3E0"];
+/** Confeti de colores al batir un récord. */
+function Confetti() {
+  const pieces = Array.from({ length: 60 }, (_, i) => {
+    const r = (n: number) => ((Math.sin(i * 12.9898 + n * 78.233) * 43758.5453) % 1 + 1) % 1;
+    return {
+      left: `${r(1) * 100}%`,
+      delay: `${Math.round(r(2) * 400)}ms`,
+      dur: `${1600 + Math.round(r(3) * 1200)}ms`,
+      rot: `${Math.round(r(4) * 720 - 360)}deg`,
+      dx: `${Math.round(r(5) * 160 - 80)}px`,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      w: 6 + Math.round(r(6) * 6),
+      h: 10 + Math.round(r(7) * 8),
+    };
+  });
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
+      {pieces.map((p, i) => (
+        <span
+          key={i}
+          className="rmd-confetti absolute top-[-20px] rounded-[2px]"
+          style={{ left: p.left, width: p.w, height: p.h, background: p.color, animationDelay: p.delay, animationDuration: p.dur, ["--rot" as string]: p.rot, ["--dx" as string]: p.dx }}
+        />
+      ))}
+      <style>{`.rmd-confetti{animation-name:rmd-confetti;animation-timing-function:cubic-bezier(.2,.6,.4,1);animation-fill-mode:both}
+@keyframes rmd-confetti{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),110vh) rotate(var(--rot));opacity:.9}}
+@media (prefers-reduced-motion:reduce){.rmd-confetti{display:none}}`}</style>
     </div>
   );
 }

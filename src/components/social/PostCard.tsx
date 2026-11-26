@@ -51,7 +51,7 @@ function DataBlock({ post }: { post: Post }) {
   if (post.kind === "pr") {
     const delta = d.previous_weight != null ? Number(d.weight) - Number(d.previous_weight) : null;
     return (
-      <div className="mt-3 rounded-[18px] px-[18px] py-4" style={{ background: "linear-gradient(140deg,#E8DDC8,#C8B38A)", color: "#0B0A08" }}>
+      <div className="mt-3 rounded-[18px] px-[18px] py-4" style={{ background: "var(--c-turq)", color: "#0A0A0A" }}>
         <p className="text-[13px] font-extrabold tracking-[0.14em]">NUEVO RÉCORD · {d.rep_max ? `${d.rep_max}RM` : "PR"}</p>
         <p className="mt-1 text-base font-bold">{d.exercise ?? "Ejercicio"}</p>
         <p className="text-[72px] font-black leading-[0.9] tabular" style={{ fontFamily: "var(--font-editorial)" }}>
@@ -66,7 +66,7 @@ function DataBlock({ post }: { post: Post }) {
   }
   if (post.kind === "wod" || post.kind === "benchmark") {
     return (
-      <div className="mt-3 rounded-[18px] border p-4" style={{ borderColor: "rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.04)" }}>
+      <div className="mt-3 rounded-[18px] border p-4" style={{ borderColor: "color-mix(in srgb, var(--c-lima) 45%, transparent)", background: "color-mix(in srgb, var(--c-lima) 8%, transparent)" }}>
         <div className="flex items-center justify-between gap-3">
           <p className="text-base font-bold">{d.name || d.benchmark || "WOD"}</p>
           <span className="rounded-full bg-white/[0.08] px-2.5 py-1 text-xs font-bold uppercase">

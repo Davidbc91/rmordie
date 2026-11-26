@@ -467,3 +467,64 @@
   .rise-stagger-5 { animation-delay: 120ms; }
   .metric-reveal { animation-duration: 220ms; }
 }
+
+/* ---------------------------------------------------------------------------
+ * «Energía del box»: cada pestaña tiene su color. Negro de fondo y oro para la
+ * marca; tarjetas de color sólido con texto oscuro encima.
+ * ------------------------------------------------------------------------- */
+:root {
+  --c-gold: #C8B38A;
+  --c-coral: #FF5A36;
+  --c-lima: #C6F432;
+  --c-violeta: #7B61FF;
+  --c-turq: #20D3E0;
+  --accent: var(--c-gold);
+  --accent-ink: #0B0A08;
+}
+[data-section="plan"] { --accent: var(--c-coral); --accent-ink: #140500; --accent-soft: #FFB39F; }
+[data-section="timer"] { --accent: var(--c-lima); --accent-ink: #0A0A0A; --accent-soft: #E6FA9E; }
+[data-section="records"] { --accent: var(--c-violeta); --accent-ink: #FFFFFF; --accent-soft: #C3B6FF; }
+[data-section="social"] { --accent: var(--c-turq); --accent-ink: #0A0A0A; --accent-soft: #A6EEF3; }
+/* En cada pestaña, el «dorado» de los detalles pasa a ser su color */
+:is([data-section="plan"], [data-section="timer"], [data-section="records"], [data-section="social"]) {
+  --gold: var(--accent);
+  --gold-soft: var(--accent-soft);
+  --gold-foreground: var(--accent-ink);
+  --ring: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+@layer components {
+  [data-section] .page-title { color: var(--accent); }
+  .accent-text { color: var(--accent); }
+  .accent-bg { background: var(--accent); color: var(--accent-ink); }
+  :is([data-section="plan"], [data-section="timer"], [data-section="records"], [data-section="social"]) .gold-gradient {
+    background-image: none;
+    background-color: var(--accent);
+    color: var(--accent-ink);
+  }
+  .brand-gold { color: var(--c-gold); }
+
+  /* Tarjetas sólidas: el texto «apagado» pasa a oscuro translúcido */
+  .tile { border-radius: 22px; position: relative; overflow: hidden; }
+  .tile-gold { background: var(--c-gold); color: #0B0A08; }
+  .tile-coral { background: var(--c-coral); color: #140500; }
+  .tile-lima { background: var(--c-lima); color: #0A0A0A; }
+  .tile-violeta { background: var(--c-violeta); color: #FFFFFF; }
+  .tile-turq { background: var(--c-turq); color: #0A0A0A; }
+  :is(.tile-gold, .tile-coral, .tile-lima, .tile-turq) .text-muted-foreground { color: rgba(10, 6, 2, 0.66); }
+  .tile-violeta .text-muted-foreground { color: rgba(255, 255, 255, 0.78); }
+  :is(.tile-gold, .tile-coral, .tile-lima, .tile-turq, .tile-violeta) :is(.gold-text, .text-gold) { color: inherit; }
+  .tile-dark-btn { background: #140500; color: #FFFFFF; }
+  .tile-dark-btn:is(:hover, :focus-visible) { background: #000; }
+}
+
+/* Botones que se hunden al pulsar */
+@media (hover: none) {
+  button:not(:disabled):not([role="option"]):active,
+  a.pressable:active { transform: scale(0.97); }
+}
+
+/* Los números de las cifras suben al entrar */
+@keyframes count-pop { from { transform: translateY(6px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+.metric-pop { animation: count-pop 420ms cubic-bezier(.2,.9,.3,1.2) both; }
+@media (prefers-reduced-motion: reduce) { .metric-pop { animation: none; } }

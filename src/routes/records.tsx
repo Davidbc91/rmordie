@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useAllPersonalRecordHistory } from "@/lib/store";
 import { Plus, X } from "lucide-react";
 import { WodRecords } from "@/components/WodRecords";
 import { StrengthRecords } from "@/components/records/StrengthRecords";
@@ -82,6 +83,8 @@ function RecordsPage() {
         )}
       </header>
 
+      <MonthGains />
+
       <div role="tablist" aria-label="Tipo de récord" className="rise rise-2 mb-3 grid grid-cols-2 gap-1 rounded-[16px] bg-white/[0.05] p-1">
         {([
           { label: "Fuerza", value: "strength" as const },
@@ -116,6 +119,38 @@ function RecordsPage() {
           closeView={closeView}
         />
       )}
+    </div>
+  );
+}
+
+/** Lo que has subido en 30 días, en grande y en violeta. */
+function MonthGains() {
+  const { data: history = [] } = useAllPersonalRecordHistory();
+  const { total, lifts } = useMemo(() => {
+    const since = Date.now() - 30 * 864e5;
+    const byEx = new Map<string, { first: number; last: number }>();
+    const rows = (history as Array<{ exercise: string; rep_max?: number | null; previous_weight: number | null; new_weight: number; changed_at: string }>)
+      .filter((h) => (h.rep_max ?? 1) === 1 && new Date(h.changed_at).getTime() >= since)
+      .sort((a, b) => a.changed_at.localeCompare(b.changed_at));
+    for (const h of rows) {
+      const cur = byEx.get(h.exercise);
+      const prev = h.previous_weight != null ? Number(h.previous_weight) : Number(h.new_weight);
+      if (!cur) byEx.set(h.exercise, { first: prev, last: Number(h.new_weight) });
+      else cur.last = Number(h.new_weight);
+    }
+    const gains = [...byEx.values()].map((v) => v.last - v.first).filter((g) => g > 0);
+    return { total: gains.reduce((a, b) => a + b, 0), lifts: gains.length };
+  }, [history]);
+  if (!lifts) return null;
+  return (
+    <div className="tile tile-violeta rise rise-2 mb-3 p-4">
+      <p className="text-[13px] font-bold text-muted-foreground">Últimos 30 días</p>
+      <p className="metric-pop text-[44px] font-black leading-none" style={{ fontFamily: "var(--font-editorial)" }}>
+        +{String(Math.round(total * 10) / 10).replace(".", ",")} KG
+      </p>
+      <p className="mt-1 text-[13px] font-semibold text-muted-foreground">
+        en {lifts} {lifts === 1 ? "levantamiento" : "levantamientos"}
+      </p>
     </div>
   );
 }

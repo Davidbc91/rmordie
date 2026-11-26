@@ -305,16 +305,16 @@ function Home() {
               <Link to="/calendar" className="mt-4 inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-gold">Ver planificación <ChevronRight className="h-4 w-4" /></Link>
             </GlassCard>
           ) : todayPlan?.day && todayPlan.progress.state === "completed" ? (
-            <GlassCard level={3} className="rise rise-2 glass-panel p-6"><GlassBadge tone="gold">Hoy · Completado</GlassBadge><h2 className="mt-4 text-xl font-semibold">Entrenamiento hecho</h2><p className="mt-2 text-sm text-muted-foreground">Buen trabajo. Tu próxima sesión aparece a continuación.</p></GlassCard>
+            <div className="tile tile-lima rise rise-2 p-6"><span className="rounded-full bg-black/10 px-3 py-1 text-[13px] font-extrabold">Hoy · Completado</span><h2 className="mt-4 text-3xl font-extrabold" style={{ fontFamily: "var(--font-editorial)" }}>ENTRENAMIENTO HECHO</h2><p className="mt-2 text-sm font-semibold text-muted-foreground">Buen trabajo. Tu próxima sesión aparece a continuación.</p></div>
           ) : null}
 
           {/* Próxima sesión: lo primero y con el botón visible sin bajar. */}
           {next ? (
-            <GlassCard level={3} gold className="rise rise-2 cinematic-card-strong cinematic-outline p-5">
+            <div className="tile tile-coral rise rise-2 p-5">
               <div className="flex items-center justify-between gap-3">
-                <GlassBadge tone="gold">
+                <span className="rounded-full bg-black/15 px-3 py-1 text-[13px] font-extrabold">
                   {next.progress.state === "in_progress" ? "Sesión en curso" : next.isToday ? "Entrenamiento de hoy" : "Próximo entrenamiento"}
-                </GlassBadge>
+                </span>
                 {weekProgress && (
                   <span className="text-[13px] tabular text-muted-foreground">
                     Semana {next.week} · {weekProgress.done}/{weekProgress.total}
@@ -324,7 +324,7 @@ function Home() {
 
               <div className="mt-5 flex items-end justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="day-display gold-text">{next.dayLabel}</div>
+                  <div className="day-display">{next.dayLabel}</div>
                   <p className="mt-3 text-[13px] tracking-[0.12em] text-muted-foreground">{next.monthLabel} · SEMANA {next.week}</p>
                 </div>
                 <div className="shrink-0 text-right">
@@ -335,17 +335,17 @@ function Home() {
                 </div>
               </div>
 
-              <div className="mt-5 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.09]" aria-hidden>
+              <div className="mt-5 h-2 w-full overflow-hidden rounded-full bg-black/15" aria-hidden>
                 <div
-                  className="h-full rounded-full bg-[color:var(--gold)] transition-[width] duration-700"
+                  className="h-full rounded-full bg-[#140500] transition-[width] duration-700"
                   style={{ width: `${Math.max(next.progress.pct, 2)}%` }}
                 />
               </div>
 
-              <p className="mt-4 line-clamp-2 text-[15px] leading-snug text-foreground/85">{next.headline}</p>
+              <p className="mt-4 line-clamp-2 text-[15px] font-semibold leading-snug">{next.headline}</p>
 
               {(sessionCoach || next.focus.length > 0) && (
-                <div className="mt-4 rounded-[var(--r-md)] border border-[color:var(--glass-border)] bg-black/25">
+                <div className="mt-4 rounded-[var(--r-md)] bg-black/12">
                   <button
                     type="button"
                     onClick={() => setShowKeys((v) => !v)}
@@ -359,7 +359,7 @@ function Home() {
                     <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${showKeys ? "rotate-180" : ""}`} />
                   </button>
                   {showKeys && (
-                    <div className="space-y-3 border-t border-[color:var(--glass-border)] px-3.5 pb-3.5 pt-3">
+                    <div className="space-y-3 border-t border-black/10 px-3.5 pb-3.5 pt-3">
                       {next.focus.map((item) => (
                         <div key={item.exercise} className="flex items-center justify-between gap-3">
                           <span className="min-w-0 truncate text-sm font-medium">{item.exercise}</span>
@@ -373,7 +373,7 @@ function Home() {
                         </div>
                       ))}
                       {sessionCoach?.map((item) => (
-                        <div key={`coach-${item.exercise}`} className="rounded-xl bg-white/[0.04] p-3">
+                        <div key={`coach-${item.exercise}`} className="rounded-xl bg-black/10 p-3">
                           <div className="flex items-center justify-between gap-3">
                             <span className="min-w-0 truncate text-[13px] font-semibold">{item.exercise} · {item.title}</span>
                             {item.avgRpe != null && <span className="shrink-0 text-[13px] font-semibold text-gold">RPE {item.avgRpe.toFixed(1)}</span>}
@@ -389,12 +389,12 @@ function Home() {
               <Link
                 to="/workout/$month/$week/$day"
                 params={{ month: next.monthKey, week: String(next.week), day: next.dayKey }}
-                className="pressable gold-gradient cta-display mt-4 flex min-h-[58px] w-full items-center justify-center gap-2.5 rounded-[var(--r-lg)]"
+                className="pressable tile-dark-btn cta-display mt-4 flex min-h-[58px] w-full items-center justify-center gap-2.5 rounded-[var(--r-lg)]"
               >
                 <Play className="h-4 w-4" fill="currentColor" />{" "}
                 {next.progress.state === "in_progress" ? "Continuar entreno" : "Empezar entreno"}
               </Link>
-            </GlassCard>
+            </div>
           ) : (
             <GlassCard level={3} className="rise rise-2 p-6 text-center">
               <p className="text-sm text-muted-foreground">Planificación completada. Nada pendiente.</p>
@@ -403,9 +403,9 @@ function Home() {
 
           {/* Una sola fila de cifras */}
           <div className="rise rise-3 mt-3 grid grid-cols-3 gap-2">
-            <DashboardStat value={String(streak.current)} label="Días de racha" onClick={() => navigate({ to: "/profile", search: { section: "consistency" } })} />
-            <DashboardStat value={String(weekStats.sessions)} label="Esta semana" onClick={() => navigate({ to: "/calendar" })} />
-            <DashboardStat value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR en 30 días" accent onClick={() => navigate({ to: "/records" })} />
+            <DashboardStat tone="lima" value={String(streak.current)} label="Días de racha" onClick={() => navigate({ to: "/profile", search: { section: "consistency" } })} />
+            <DashboardStat tone="turq" value={String(weekStats.sessions)} label="Esta semana" onClick={() => navigate({ to: "/calendar" })} />
+            <DashboardStat tone="violeta" value={recentPrCount > 0 ? String(recentPrCount) : "—"} label="PR en 30 días" onClick={() => navigate({ to: "/records" })} />
           </div>
 
           {/* Cómo vas: rendimiento y recuperación juntos */}
@@ -576,13 +576,14 @@ function PlanningError({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-function DashboardStat({ value, label, onClick, accent }: { value: string; label: string; onClick?: () => void; accent?: boolean }) {
+function DashboardStat({ value, label, onClick, tone }: { value: string; label: string; onClick?: () => void; tone?: "lima" | "turq" | "violeta" | "coral" | "gold" }) {
   const inner = (
     <>
-      <div className={`metric truncate tabular ${accent ? "text-gold" : ""}`}>{value}</div>
-      <div className="mt-1 truncate text-[13px] text-muted-foreground">{label}</div>
+      <div className="metric metric-pop truncate tabular">{value}</div>
+      <div className="mt-1 truncate text-[13px] font-semibold text-muted-foreground">{label}</div>
     </>
   );
-  if (onClick) return <button type="button" onClick={onClick} className="glass glass-sheen pressable min-h-[84px] min-w-0 w-full p-3 text-left cinematic-card-dark">{inner}</button>;
-  return <div className="glass glass-sheen min-h-[84px] min-w-0 p-3 cinematic-card-dark">{inner}</div>;
+  const cls = tone ? `tile tile-${tone} min-h-[84px] min-w-0 w-full p-3 text-left` : "glass glass-sheen min-h-[84px] min-w-0 w-full p-3 text-left cinematic-card-dark";
+  if (onClick) return <button type="button" onClick={onClick} className={`pressable ${cls}`}>{inner}</button>;
+  return <div className={cls}>{inner}</div>;
 }

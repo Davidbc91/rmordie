@@ -612,13 +612,13 @@ function WeekView({
           const rest = !p || p.day.isRest;
           const dateBox = (
             <span className="w-12 shrink-0 text-center">
-              <span className={`block text-[30px] font-extrabold leading-none ${isToday ? "text-[color:var(--gold-soft)]" : isDone ? "text-muted-foreground" : ""}`} style={{ fontFamily: "var(--font-editorial)" }}>{date.getDate()}</span>
-              <span className={`text-xs ${isToday ? "font-bold text-gold" : "text-muted-foreground"}`}>{isToday ? "HOY" : WEEKDAY_SHORT[i]}</span>
+              <span className={`block text-[30px] font-extrabold leading-none ${isToday ? "" : isDone ? "text-muted-foreground" : ""}`} style={{ fontFamily: "var(--font-editorial)" }}>{date.getDate()}</span>
+              <span className={`text-xs ${isToday ? "font-extrabold" : "text-muted-foreground"}`}>{isToday ? "HOY" : WEEKDAY_SHORT[i]}</span>
             </span>
           );
           if (rest) {
             return (
-              <div key={i} className="flex min-h-14 items-center gap-3.5 px-3.5 text-muted-foreground">
+              <div key={i} className="flex min-h-14 items-center gap-3.5 rounded-[18px] border border-dashed border-white/12 px-3.5 text-muted-foreground">
                 {dateBox}
                 <span className="flex-1 text-[15px]">{p ? "Descanso" : "Sin plan"}</span>
                 {p && <Moon className="h-4 w-4" strokeWidth={1.8} />}
@@ -630,21 +630,21 @@ function WeekView({
               key={i}
               to="/workout/$month/$week/$day"
               params={{ month: p.month.key, week: String(p.week), day: p.day.key }}
-              className={`pressable flex min-h-[72px] items-center gap-3.5 rounded-[18px] px-3.5 ${isToday ? "border-[1.5px] border-[color:var(--gold)] bg-[color:var(--gold)]/8" : "bg-white/[0.045]"}`}
+              className={`pressable flex items-center gap-3.5 rounded-[18px] px-3.5 ${isToday ? "tile tile-coral min-h-[84px]" : "min-h-[72px] bg-white/[0.045]"}`}
             >
               {dateBox}
               <span className="min-w-0 flex-1">
-                <span className={`block truncate text-[15px] ${isToday ? "font-bold" : "font-semibold"}`}>{dayHeadline(p.day)}</span>
-                <span className={`block text-[13px] ${isToday ? "text-gold" : "text-muted-foreground"}`}>
+                <span className={`block truncate ${isToday ? "text-[16px] font-extrabold" : "text-[15px] font-semibold"}`}>{dayHeadline(p.day)}</span>
+                <span className={`block text-[13px] ${isToday ? "font-semibold text-muted-foreground" : "text-muted-foreground"}`}>
                   {isDone ? `${prog?.total ?? 0}/${prog?.total ?? 0} bloques` : partial ? `${prog?.done}/${prog?.total} bloques · sigue` : `${prog?.total ?? p.day.blocks.length} bloques`}
                 </span>
               </span>
               {isDone ? (
-                <span aria-label="Hecho" className="gold-gradient grid h-7 w-7 shrink-0 place-items-center rounded-full"><Check className="h-4 w-4" strokeWidth={3} /></span>
+                <span aria-label="Hecho" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[color:var(--c-lima)] text-[#0A0A0A]"><Check className="h-4 w-4" strokeWidth={3} /></span>
               ) : partial ? (
-                <span aria-label="A medias" className="h-7 w-7 shrink-0 rounded-full border-2 border-[color:var(--gold)]" style={{ background: "linear-gradient(90deg, var(--gold) 50%, transparent 50%)" }} />
+                <span aria-label="A medias" className="h-7 w-7 shrink-0 rounded-full border-2 border-[color:var(--c-lima)]" style={{ background: "linear-gradient(90deg, var(--c-lima) 50%, transparent 50%)" }} />
               ) : (
-                <span aria-label="Pendiente" className="h-7 w-7 shrink-0 rounded-full border-2 border-white/25" />
+                <span aria-label="Pendiente" className={`h-7 w-7 shrink-0 rounded-full border-2 ${isToday ? "border-black/30" : "border-white/25"}`} />
               )}
             </Link>
           );

@@ -75,14 +75,14 @@ const BottomNavigation = memo(function BottomNavigation({ pathname, keyboardOpen
             const Icon = t.icon;
             if (t.center) {
               return <Link key={t.to} to={t.to} aria-label="Temporizador" className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-end gap-[3px] pb-2">
-                <span className="gold-gradient -mt-6 grid h-[54px] w-[54px] place-items-center rounded-full" style={{ boxShadow: "0 10px 26px -8px rgba(0,0,0,.9), 0 0 0 4px rgba(8,8,7,.9)" }}>
-                  <Icon className="h-6 w-6" strokeWidth={2.2} style={{ color: "var(--gold-foreground)" }} />
+                <span className="-mt-6 grid h-[54px] w-[54px] place-items-center rounded-full" style={{ background: "var(--c-lima)", boxShadow: "0 10px 26px -8px rgba(0,0,0,.9), 0 0 0 4px rgba(8,8,7,.9)" }}>
+                  <Icon className="h-6 w-6" strokeWidth={2.2} style={{ color: "#0A0A0A" }} />
                 </span>
-                <span className="text-xs font-bold" style={{ color: "var(--gold-soft)" }}>{t.label}</span>
+                <span className="text-xs font-bold" style={{ color: "var(--c-lima)" }}>{t.label}</span>
               </Link>;
             }
-            return <Link key={t.to} to={t.to} onClick={t.to === "/calendar" ? openPlan : undefined} className="pressable relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2" style={{ color: isActive ? "var(--gold)" : "var(--muted-foreground)" }}>
-              <span aria-hidden className="absolute inset-0 rounded-[18px] transition-opacity duration-300" style={{ background: "rgba(200,179,138,.10)", opacity: isActive ? 1 : 0 }} />
+            return <Link key={t.to} to={t.to} onClick={t.to === "/calendar" ? openPlan : undefined} className="pressable relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2" style={{ color: isActive ? TAB_COLOR[t.to] ?? "var(--gold)" : "var(--muted-foreground)" }}>
+              <span aria-hidden className="absolute inset-0 rounded-[18px] transition-opacity duration-300" style={{ background: "currentColor", opacity: isActive ? 0.12 : 0 }} />
               <Icon className="relative h-[20px] w-[20px]" strokeWidth={isActive ? 2.1 : 1.7} />
               <span className="relative text-xs font-semibold">{t.label}</span>
             </Link>;
@@ -112,6 +112,16 @@ const ProfileOverlay = memo(function ProfileOverlay({ name, links, chatUnread, o
     </div>
   );
 });
+
+/** Color de cada pestaña («Energía del box») */
+export function sectionFor(pathname: string): "inicio" | "plan" | "timer" | "records" | "social" {
+  if (pathname.startsWith("/timers")) return "timer";
+  if (pathname.startsWith("/records")) return "records";
+  if (pathname.startsWith("/social")) return "social";
+  if (isPlanPath(pathname) || pathname.startsWith("/import")) return "plan";
+  return "inicio";
+}
+const TAB_COLOR: Record<string, string> = { "/": "var(--c-gold)", "/calendar": "var(--c-coral)", "/records": "var(--c-violeta)", "/social": "var(--c-turq)", "/timers": "var(--c-lima)" };
 
 export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -170,9 +180,9 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
   const showResume = !!active && pathname !== activePath && !pathname.startsWith("/timers");
 
   return (
-    <div className={"grain relative min-h-[100dvh] overflow-x-hidden " + (keyboardOpen ? "pb-0" : showResume ? "pb-[calc(168px+env(safe-area-inset-bottom))]" : "pb-[calc(88px+env(safe-area-inset-bottom))]")}>
+    <div data-section={sectionFor(pathname)} className={"grain relative min-h-[100dvh] overflow-x-hidden " + (keyboardOpen ? "pb-0" : showResume ? "pb-[calc(168px+env(safe-area-inset-bottom))]" : "pb-[calc(88px+env(safe-area-inset-bottom))]")}>
       <div aria-hidden className="aura pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
-      <div aria-hidden className="pointer-events-none absolute -left-32 top-28 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(200,179,138,.09),transparent_68%)] blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute -left-32 top-28 h-80 w-80 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--accent)_16%,transparent),transparent_68%)] blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -right-36 top-[34rem] h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(150,160,180,.07),transparent_68%)] blur-3xl" />
       <div
         aria-hidden
@@ -189,7 +199,7 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
         }}
       >
         <header className="mb-5 flex items-center justify-between">
-          <span className="text-[24px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>RM <span className="text-gold">OR</span> DIE</span>
+          <span className="text-[24px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>RM <span className="brand-gold">OR</span> DIE</span>
           <SyncIndicator />
           <button
             type="button"

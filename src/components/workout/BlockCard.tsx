@@ -3,7 +3,8 @@ import { usePersonalRecords, useUpsertPersonalRecord, useAllResults, usePlanning
 import { buildBlockMovementIndex, findLastTime, mainMovementId } from "@/lib/last-time";
 import { extractPercentages, extractSetsReps, extractRestSeconds } from "@/lib/plates";
 import { parsePlanLoads, type PlanLoad } from "@/lib/plan-loads";
-import { LoadStepper, CountStepper, RpeChips, PlateLine, RestTimer } from "./QuickLog";
+import { LoadStepper, CountStepper, RpeChips, RestTimer } from "./QuickLog";
+import { PlateButton } from "./PlateSheet";
 import {
   detectExercise,
   loadsForPercentages,
@@ -121,7 +122,6 @@ export function BlockCard({
   const pcts = extractPercentages(content);
   const planSetsReps = useMemo(() => extractSetsReps(content), [content]);
   const restSeconds = useMemo(() => extractRestSeconds(content), [content]);
-  const plateCfg = settings ? { bars: settings.bar_weights, plates: settings.plate_weights } : undefined;
   const detected = useMemo(() => detectExercise(content, records), [content, records]);
   const { data: allResults = [] } = useAllResults();
   const { data: planningData } = usePlanning();
@@ -522,7 +522,7 @@ export function BlockCard({
                 highlight={!!detected}
                 placeholder={targetLoads.length > 0 ? `${formatKg(targetLoads[0].suggested)} objetivo` : undefined}
               />
-              <PlateLine total={actualLoad} cfg={plateCfg} />
+              <PlateButton total={actualLoad} work={targetLoads[0]?.suggested ?? null} onApply={(kg) => setWeight(String(kg))} />
             </div>
             <div className="grid grid-cols-2 gap-2.5">
               <CountStepper label="Series" value={sets} onChange={setSets} />

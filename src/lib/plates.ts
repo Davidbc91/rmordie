@@ -114,3 +114,51 @@ export function extractRestSeconds(content: string): number | null {
   if (unit === "'" || unit === "min" || unit === "m") return n * 60;
   return n <= 10 ? n * 60 : n;
 }
+
+/* ---------------- Calculadora de discos ---------------- */
+
+/** Colores y tamaños de los discos de competición (los de 10 kg o más miden lo mismo). */
+export const PLATE_LOOK: Record<string, { color: string; h: number; w: number }> = {
+  "25": { color: "#D7263D", h: 1, w: 25 },
+  "20": { color: "#1E63D6", h: 1, w: 21 },
+  "15": { color: "#F2C230", h: 1, w: 17 },
+  "10": { color: "#2E9E4F", h: 1, w: 13 },
+  "5": { color: "#F1F1F1", h: 0.64, w: 11 },
+  "2.5": { color: "#D7263D", h: 0.54, w: 9.5 },
+  "2": { color: "#1E63D6", h: 0.5, w: 8.5 },
+  "1.5": { color: "#F2C230", h: 0.46, w: 7.5 },
+  "1.25": { color: "#A9ADB5", h: 0.44, w: 7.5 },
+  "1": { color: "#2E9E4F", h: 0.42, w: 6.5 },
+  "0.5": { color: "#F1F1F1", h: 0.36, w: 5.5 },
+};
+export const ALL_PLATES = [25, 20, 15, 10, 5, 2.5, 2, 1.5, 1.25, 1, 0.5];
+export const plateLook = (kg: number) => PLATE_LOOK[String(kg)] ?? { color: "#8E8E93", h: Math.min(1, 0.3 + kg / 25), w: Math.max(5, kg) };
+
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+/** Discos por lado para una barra concreta. `rest` = kilos totales que faltan (0 si cuadra). */
+export function loadBar(total: number, bar: number, plates: number[], collars = 0): { perSide: number; plates: number[]; rest: number } {
+  const perSide = r2((total - bar - collars) / 2);
+  const used: number[] = [];
+  let left = perSide;
+  for (const p of [...plates].sort((a, b) => b - a)) {
+    while (left + 0.001 >= p) {
+      used.push(p);
+      left = r2(left - p);
+    }
+  }
+  return { perSide, plates: used, rest: perSide < 0 ? 0 : r2(left * 2) };
+}
+
+/** La carga montable más cercana por debajo (-1) o por encima (+1). */
+export function nearestLoadable(total: number, dir: 1 | -1, bar: number, plates: number[], collars = 0): number | null {
+  const min = bar + collars;
+  const step = Math.min(...plates, 2.5) * 2 >= 1 ? 0.25 : 0.1;
+  let t = total;
+  for (let i = 0; i < 800; i++) {
+    t = r2(t + dir * step);
+    if (t < min) return null;
+    if (loadBar(t, bar, plates, collars).rest === 0) return t;
+  }
+  return null;
+}

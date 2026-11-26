@@ -1,3 +1,4 @@
+import { PlateSheet } from "@/components/workout/PlateSheet";
 import { PickerField } from "@/components/ui/wheel-picker";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
@@ -62,6 +63,7 @@ function useBeeper() {
 
 function TimersPage() {
   const [mode, setMode] = useState<Mode>("amrap");
+  const [plates, setPlates] = useState(false);
   return (
     <AppShell>
       <div className="space-y-6">
@@ -69,11 +71,13 @@ function TimersPage() {
           <div className="flex items-center gap-2">
             <TimerIcon className="h-6 w-6" style={{ color: "var(--gold)" }} />
             <h1 className="page-title" style={{ fontSize: "2rem" }}>Temporizador</h1>
+            <button type="button" onClick={() => setPlates(true)} className="pressable ml-auto min-h-10 rounded-full bg-white/[0.07] px-3.5 text-[13.5px] font-bold">Discos</button>
           </div>
           <p className="text-sm text-muted-foreground">
             Elige el formato de tu WOD.
           </p>
         </header>
+        {plates && <PlateSheet initial={60} onClose={() => setPlates(false)} />}
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {MODES.map((m) => {

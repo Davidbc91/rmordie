@@ -14,13 +14,13 @@ import { Route as AthleteReportRouteImport } from './routes/athlete-report'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as DictionaryRouteImport } from './routes/dictionary'
+import { Route as EntrenadorRouteImport } from './routes/entrenador'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as ImportGenericRouteImport } from './routes/import-generic'
+import { Route as PizarraRouteImport } from './routes/pizarra'
 import { Route as PlanBuilderRouteImport } from './routes/plan-builder'
 import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as EntrenadorRouteImport } from './routes/entrenador'
-import { Route as PizarraRouteImport } from './routes/pizarra'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as SemanaRouteImport } from './routes/semana'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -62,6 +62,11 @@ const DictionaryRoute = DictionaryRouteImport.update({
   path: '/dictionary',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EntrenadorRoute = EntrenadorRouteImport.update({
+  id: '/entrenador',
+  path: '/entrenador',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HealthRoute = HealthRouteImport.update({
   id: '/health',
   path: '/health',
@@ -77,19 +82,14 @@ const ImportGenericRoute = ImportGenericRouteImport.update({
   path: '/import-generic',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PlanBuilderRoute = PlanBuilderRouteImport.update({
-  id: '/plan-builder',
-  path: '/plan-builder',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PizarraRoute = PizarraRouteImport.update({
   id: '/pizarra',
   path: '/pizarra',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EntrenadorRoute = EntrenadorRouteImport.update({
-  id: '/entrenador',
-  path: '/entrenador',
+const PlanBuilderRoute = PlanBuilderRouteImport.update({
+  id: '/plan-builder',
+  path: '/plan-builder',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -179,13 +179,13 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/dictionary': typeof DictionaryRouteWithChildren
+  '/entrenador': typeof EntrenadorRoute
   '/health': typeof HealthRoute
   '/import': typeof ImportRoute
   '/import-generic': typeof ImportGenericRoute
+  '/pizarra': typeof PizarraRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
-  '/entrenador': typeof EntrenadorRoute
-  '/pizarra': typeof PizarraRoute
   '/records': typeof RecordsRoute
   '/semana': typeof SemanaRoute
   '/settings': typeof SettingsRoute
@@ -208,13 +208,13 @@ export interface FileRoutesByTo {
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/dictionary': typeof DictionaryRouteWithChildren
+  '/entrenador': typeof EntrenadorRoute
   '/health': typeof HealthRoute
   '/import': typeof ImportRoute
   '/import-generic': typeof ImportGenericRoute
+  '/pizarra': typeof PizarraRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
-  '/entrenador': typeof EntrenadorRoute
-  '/pizarra': typeof PizarraRoute
   '/records': typeof RecordsRoute
   '/semana': typeof SemanaRoute
   '/settings': typeof SettingsRoute
@@ -238,13 +238,13 @@ export interface FileRoutesById {
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/dictionary': typeof DictionaryRouteWithChildren
+  '/entrenador': typeof EntrenadorRoute
   '/health': typeof HealthRoute
   '/import': typeof ImportRoute
   '/import-generic': typeof ImportGenericRoute
+  '/pizarra': typeof PizarraRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
-  '/entrenador': typeof EntrenadorRoute
-  '/pizarra': typeof PizarraRoute
   '/records': typeof RecordsRoute
   '/semana': typeof SemanaRoute
   '/settings': typeof SettingsRoute
@@ -269,13 +269,13 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/chat'
     | '/dictionary'
+    | '/entrenador'
     | '/health'
     | '/import'
     | '/import-generic'
+    | '/pizarra'
     | '/plan-builder'
     | '/profile'
-    | '/entrenador'
-    | '/pizarra'
     | '/records'
     | '/semana'
     | '/settings'
@@ -298,13 +298,13 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/chat'
     | '/dictionary'
+    | '/entrenador'
     | '/health'
     | '/import'
     | '/import-generic'
+    | '/pizarra'
     | '/plan-builder'
     | '/profile'
-    | '/entrenador'
-    | '/pizarra'
     | '/records'
     | '/semana'
     | '/settings'
@@ -327,13 +327,13 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/chat'
     | '/dictionary'
+    | '/entrenador'
     | '/health'
     | '/import'
     | '/import-generic'
+    | '/pizarra'
     | '/plan-builder'
     | '/profile'
-    | '/entrenador'
-    | '/pizarra'
     | '/records'
     | '/semana'
     | '/settings'
@@ -357,13 +357,13 @@ export interface RootRouteChildren {
   CalendarRoute: typeof CalendarRoute
   ChatRoute: typeof ChatRoute
   DictionaryRoute: typeof DictionaryRouteWithChildren
+  EntrenadorRoute: typeof EntrenadorRoute
   HealthRoute: typeof HealthRoute
   ImportRoute: typeof ImportRoute
   ImportGenericRoute: typeof ImportGenericRoute
+  PizarraRoute: typeof PizarraRoute
   PlanBuilderRoute: typeof PlanBuilderRoute
   ProfileRoute: typeof ProfileRoute
-  EntrenadorRoute: typeof EntrenadorRoute
-  PizarraRoute: typeof PizarraRoute
   RecordsRoute: typeof RecordsRoute
   SemanaRoute: typeof SemanaRoute
   SettingsRoute: typeof SettingsRoute
@@ -417,6 +417,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DictionaryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/entrenador': {
+      id: '/entrenador'
+      path: '/entrenador'
+      fullPath: '/entrenador'
+      preLoaderRoute: typeof EntrenadorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/health': {
       id: '/health'
       path: '/health'
@@ -438,13 +445,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImportGenericRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/plan-builder': {
-      id: '/plan-builder'
-      path: '/plan-builder'
-      fullPath: '/plan-builder'
-      preLoaderRoute: typeof PlanBuilderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/pizarra': {
       id: '/pizarra'
       path: '/pizarra'
@@ -452,11 +452,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PizarraRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/entrenador': {
-      id: '/entrenador'
-      path: '/entrenador'
-      fullPath: '/entrenador'
-      preLoaderRoute: typeof EntrenadorRouteImport
+    '/plan-builder': {
+      id: '/plan-builder'
+      path: '/plan-builder'
+      fullPath: '/plan-builder'
+      preLoaderRoute: typeof PlanBuilderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -592,13 +592,13 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarRoute: CalendarRoute,
   ChatRoute: ChatRoute,
   DictionaryRoute: DictionaryRouteWithChildren,
+  EntrenadorRoute: EntrenadorRoute,
   HealthRoute: HealthRoute,
   ImportRoute: ImportRoute,
   ImportGenericRoute: ImportGenericRoute,
+  PizarraRoute: PizarraRoute,
   PlanBuilderRoute: PlanBuilderRoute,
   ProfileRoute: ProfileRoute,
-  EntrenadorRoute: EntrenadorRoute,
-  PizarraRoute: PizarraRoute,
   RecordsRoute: RecordsRoute,
   SemanaRoute: SemanaRoute,
   SettingsRoute: SettingsRoute,

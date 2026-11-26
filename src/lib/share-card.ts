@@ -25,11 +25,11 @@ export type ShareCardInput = {
 
 const W = 1080;
 const H = 1350;
-const BG = "#0b0d12";
-const PANEL = "#14181f";
+const BG = "#0C0C0E";
+const PANEL = "#1B1B1D";
 const BORDER = "rgba(255,255,255,0.08)";
-const GOLD = "#d4af37";
-const TEXT = "#f2f3f5";
+const GOLD = "#C6FF00";
+const TEXT = "#F5F5F7";
 const MUTED = "rgba(242,243,245,0.55)";
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -106,8 +106,8 @@ export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
   ctx.fillStyle = BG;
   ctx.fillRect(0, 0, W, H);
   const glow = ctx.createRadialGradient(W / 2, -120, 80, W / 2, -120, 720);
-  glow.addColorStop(0, "rgba(212,175,55,0.22)");
-  glow.addColorStop(1, "rgba(212,175,55,0)");
+  glow.addColorStop(0, "rgba(26,34,45,0.95)");
+  glow.addColorStop(1, "rgba(26,34,45,0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
 
@@ -116,7 +116,7 @@ export async function renderWorkoutCard(input: ShareCardInput): Promise<Blob> {
   ctx.fillStyle = GOLD;
   ctx.font = "700 30px system-ui, -apple-system, sans-serif";
   ctx.fillText("R M  O R  D I E", W / 2, 96);
-  ctx.strokeStyle = "rgba(212,175,55,0.5)";
+  ctx.strokeStyle = "rgba(198,255,0,0.5)";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(W / 2 - 140, 122);

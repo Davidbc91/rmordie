@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { usePlanning, useAllResults, usePersonalRecords } from "@/lib/store";
@@ -130,6 +130,14 @@ function ProfilePage() {
         </div>
 
         <MedalsStrip onOpen={() => setSection("milestones")} />
+
+        <Link to="/semana" className="pressable rise rise-3 mt-4 flex min-h-[60px] items-center gap-3 rounded-[18px] border border-white/[0.09] bg-white/[0.045] px-4">
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-semibold">Resumen semanal</span>
+            <span className="block truncate text-[13px] text-muted-foreground">Tus semanas, una a una, listas para compartir</span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Link>
 
         {GROUPS.map((g) => (
           <section key={g.key} className="rise rise-3 mt-4">

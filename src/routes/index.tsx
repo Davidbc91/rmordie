@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { WeekCard } from "@/components/week/Week";
 import { usePlanning, useAllResults, usePersonalRecords, type WorkoutResult } from "@/lib/store";
 import { useAthleteProfile, useMilestones, useGoals, useAllPrHistory, useWellnessLogs } from "@/lib/profile-store";
 import { streaks, sessionDays, volumeOf, fmtKg, estimate1rm, trainedAt } from "@/lib/analytics";
@@ -293,6 +294,8 @@ function Home() {
       {isLoading && <DashboardLoading />}
       {isError && !planning && !isLoading && <PlanningError onRetry={() => void refetch()} />}
       {!planning && !isLoading && !isError && <EmptyState />}
+
+      <WeekCard />
 
       {planning && (
         <>

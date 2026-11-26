@@ -19,6 +19,7 @@ import { Route as ImportRouteImport } from './routes/import'
 import { Route as ImportGenericRouteImport } from './routes/import-generic'
 import { Route as PlanBuilderRouteImport } from './routes/plan-builder'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SemanaRouteImport } from './routes/semana'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TimersRouteImport } from './routes/timers'
@@ -77,6 +78,11 @@ const ImportGenericRoute = ImportGenericRouteImport.update({
 const PlanBuilderRoute = PlanBuilderRouteImport.update({
   id: '/plan-builder',
   path: '/plan-builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SemanaRoute = SemanaRouteImport.update({
+  id: '/semana',
+  path: '/semana',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
+  '/semana': typeof SemanaRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
+  '/semana': typeof SemanaRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   '/import-generic': typeof ImportGenericRoute
   '/plan-builder': typeof PlanBuilderRoute
   '/profile': typeof ProfileRoute
+  '/semana': typeof SemanaRoute
   '/records': typeof RecordsRoute
   '/settings': typeof SettingsRoute
   '/timers': typeof TimersRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/import-generic'
     | '/plan-builder'
     | '/profile'
+    | '/semana'
     | '/records'
     | '/settings'
     | '/timers'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/import-generic'
     | '/plan-builder'
     | '/profile'
+    | '/semana'
     | '/records'
     | '/settings'
     | '/timers'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/import-generic'
     | '/plan-builder'
     | '/profile'
+    | '/semana'
     | '/records'
     | '/settings'
     | '/timers'
@@ -326,6 +338,7 @@ export interface RootRouteChildren {
   ImportGenericRoute: typeof ImportGenericRoute
   PlanBuilderRoute: typeof PlanBuilderRoute
   ProfileRoute: typeof ProfileRoute
+  SemanaRoute: typeof SemanaRoute
   RecordsRoute: typeof RecordsRoute
   SettingsRoute: typeof SettingsRoute
   TimersRoute: typeof TimersRoute
@@ -404,6 +417,13 @@ declare module '@tanstack/react-router' {
       path: '/plan-builder'
       fullPath: '/plan-builder'
       preLoaderRoute: typeof PlanBuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/semana': {
+      id: '/semana'
+      path: '/semana'
+      fullPath: '/semana'
+      preLoaderRoute: typeof SemanaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -537,6 +557,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImportGenericRoute: ImportGenericRoute,
   PlanBuilderRoute: PlanBuilderRoute,
   ProfileRoute: ProfileRoute,
+  SemanaRoute: SemanaRoute,
   RecordsRoute: RecordsRoute,
   SettingsRoute: SettingsRoute,
   TimersRoute: TimersRoute,

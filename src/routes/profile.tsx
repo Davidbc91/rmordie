@@ -16,6 +16,7 @@ import { RecoverySection } from "@/components/profile/RecoverySection";
 import { GoalsSection } from "@/components/profile/GoalsSection";
 import { MedalsShowcase, MedalsStrip } from "@/components/medals/Medals";
 import { CoachPrivacyCard } from "@/components/coach/CoachAthleteSide";
+import { InjuriesCard } from "@/components/injuries/Injuries";
 import { ReportSection } from "@/components/profile/ReportSection";
 import { DataSection } from "@/components/profile/DataSection";
 
@@ -131,6 +132,8 @@ function ProfilePage() {
         </div>
 
         <MedalsStrip onOpen={() => setSection("milestones")} />
+
+        <InjuriesCard />
 
         <CoachPrivacyCard />
 

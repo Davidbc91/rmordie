@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Lock, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { CoachInjuriesCard } from "@/components/injuries/Injuries";
 import { isVideoAdmin } from "@/lib/admin-videos";
 import { getCurrentUserId } from "@/lib/pin-gate";
 import { localDay } from "@/lib/analytics";
@@ -268,6 +269,8 @@ function AthleteDetail({ id }: { id: string }) {
           </span>
         ))}
       </div>
+
+      <CoachInjuriesCard athleteId={id} />
 
       {sessions.length === 0 && <p className="rounded-[18px] bg-white/[0.04] p-4 text-[14px] text-muted-foreground">No hay entrenos en las últimas 6 semanas.</p>}
 

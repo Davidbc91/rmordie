@@ -29,11 +29,12 @@ type Prefs = {
   coach_prs_enabled: boolean;
   coach_idle_enabled: boolean;
   coach_weekly_enabled: boolean;
+  coach_injury_enabled: boolean;
 };
 const DEFAULTS: Prefs = {
   timezone: DEFAULT_TZ, quiet_start: "22:00", quiet_end: "08:00",
   round_enabled: true, challenges_enabled: true, comments_enabled: true, plan_enabled: true,
-  coach_prs_enabled: true, coach_idle_enabled: true, coach_weekly_enabled: true,
+  coach_prs_enabled: true, coach_idle_enabled: true, coach_weekly_enabled: true, coach_injury_enabled: true,
 };
 type PrefKey = Exclude<keyof Prefs, "timezone" | "quiet_start" | "quiet_end">;
 
@@ -148,6 +149,24 @@ export async function runEventNotifications(now = new Date()) {
           title: `🔥 ${name(h.user_id)} ha batido un récord`,
           body: `${h.exercise}${h.rep_max && h.rep_max > 1 ? ` ${h.rep_max}RM` : ""}: ${kg(Number(h.new_weight))} kg${up}`,
           url: `/entrenador?a=${h.user_id}`, tag: `coach-pr-${h.id}`,
+        });
+      }
+    }
+  });
+
+  // 3b) Molestias fuertes (4 o 5) → su entrenador
+  await safe("molestias", async () => {
+    const athletes = [...coachesOf.keys()];
+    if (!athletes.length) return;
+    const { data } = await db().from("injuries").select("id, user_id, zone, side, level, status, updated_at").in("user_id", athletes).eq("status", "active").gte("level", 4).gte("updated_at", since);
+    const ZL: Record<string, string> = { cuello: "cuello", hombro: "hombro", codo: "codo", muneca: "muñeca", lumbar: "lumbar", cadera: "cadera", rodilla: "rodilla", tobillo: "tobillo" };
+    const SL: Record<string, string> = { left: " izquierdo", right: " derecho", both: " (los dos)", none: "" };
+    for (const i of data ?? []) {
+      for (const coach of coachesOf.get(i.user_id) ?? []) {
+        await send(coach, "coach_injury_enabled", "coach_injury", `${i.id}:${i.level}`, {
+          title: `🩹 ${name(i.user_id)}: molestia fuerte`,
+          body: `${(ZL[i.zone] ?? i.zone)}${SL[i.side] ?? ""} · ${i.level}/5. Quizá convenga adaptar su plan.`,
+          url: `/entrenador?a=${i.user_id}`, tag: `coach-injury-${i.id}`,
         });
       }
     }

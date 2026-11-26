@@ -35,6 +35,7 @@ import { downloadSessionReport } from "@/lib/session-report";
 import { renderWorkoutCard, shareOrDownloadCard } from "@/lib/share-card";
 import { InstaShareSheet } from "@/components/workout/InstaShareSheet";
 import { WorkoutCoachComments } from "@/components/coach/CoachAthleteSide";
+import { WorkoutInjuryBanner } from "@/components/injuries/Injuries";
 import { useAllPrHistory } from "@/lib/profile-store";
 import { WorkoutReview, WorkoutReviewCard } from "@/components/workout/WorkoutReviewCard";
 import { BlockPayload, BlockCard, type StrengthPr } from "@/components/workout/BlockCard";
@@ -449,6 +450,8 @@ function WorkoutPage() {
       )}
 
       <WorkoutCoachComments month={month} week={weekN} day={day} />
+
+      {!d.isRest && d.blocks.length > 0 && <WorkoutInjuryBanner month={month} week={weekN} day={day} blocks={d.blocks.map((b) => ({ key: b.key, content: b.content }))} />}
 
       {!d.isRest && d.blocks.length > 0 && <RmCalculator records={personalRecords} settings={settings} />}
 

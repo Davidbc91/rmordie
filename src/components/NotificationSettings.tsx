@@ -6,12 +6,12 @@ import { disablePush, enablePush, iosNeedsInstall, isPushActive, pushSupported }
 import { isVideoAdmin } from "@/lib/admin-videos";
 import { useNotificationPreferences, useSaveNotificationPreferences, type EditablePrefs } from "@/lib/notification-preferences";
 
-type BoolKey = "daily_enabled" | "weekly_enabled" | "round_enabled" | "challenges_enabled" | "chat_enabled" | "comments_enabled" | "plan_enabled" | "coach_prs_enabled" | "coach_idle_enabled" | "coach_weekly_enabled";
+type BoolKey = "daily_enabled" | "weekly_enabled" | "round_enabled" | "challenges_enabled" | "chat_enabled" | "comments_enabled" | "plan_enabled" | "coach_prs_enabled" | "coach_idle_enabled" | "coach_weekly_enabled" | "coach_injury_enabled";
 
 const DEFAULTS: Required<EditablePrefs> = {
   daily_enabled: false, daily_time: "08:00", weekly_enabled: false,
   round_enabled: true, challenges_enabled: true, chat_enabled: true, comments_enabled: true, plan_enabled: true,
-  coach_prs_enabled: true, coach_idle_enabled: true, coach_weekly_enabled: true,
+  coach_prs_enabled: true, coach_idle_enabled: true, coach_weekly_enabled: true, coach_injury_enabled: true,
   quiet_start: "22:00", quiet_end: "08:00",
 };
 
@@ -33,6 +33,7 @@ const GROUPS: { label: string; admin?: boolean; items: Item[] }[] = [
   { label: "Como entrenador", admin: true, items: [
     { key: "coach_prs_enabled", icon: "🔥", title: "Récords de tus atletas" },
     { key: "coach_idle_enabled", icon: "⚠️", title: "Atletas sin entrenar", hint: "A los 4, 7 y 14 días sin registrar nada" },
+    { key: "coach_injury_enabled", icon: "🩹", title: "Molestias fuertes", hint: "Si un atleta apunta una de 4 o 5" },
     { key: "coach_weekly_enabled", icon: "📋", title: "Resumen de tus atletas", hint: "Domingo a las 20:00" },
   ] },
 ];
@@ -54,7 +55,8 @@ export function NotificationSettings() {
   const [v, setV] = useState<Required<EditablePrefs>>(DEFAULTS);
   const [active, setActive] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
-  const extended = !!prefs && "round_enabled" in prefs; // migración de avisos aplicada
+  const extended = !!prefs && "round_enabled" in prefs;
+  const hasInjuryPref = !!prefs && "coach_injury_enabled" in prefs; // migración de avisos aplicada
 
   useEffect(() => { void isPushActive().then(setActive).catch(() => setActive(false)); }, []);
   useEffect(() => {
@@ -65,7 +67,7 @@ export function NotificationSettings() {
   async function persist(next: Required<EditablePrefs>) {
     setV(next);
     const payload: Partial<EditablePrefs> = extended || !prefs
-      ? next
+      ? (hasInjuryPref || !prefs ? next : (({ coach_injury_enabled, ...rest }) => rest)(next))
       : { daily_enabled: next.daily_enabled, daily_time: next.daily_time, weekly_enabled: next.weekly_enabled };
     try {
       await save.mutateAsync(payload);
@@ -132,7 +134,7 @@ export function NotificationSettings() {
           <p className="mb-1.5 px-1 text-[12.5px] font-extrabold text-muted-foreground">{g.label}</p>
           <div className="rounded-[20px] bg-card px-3.5">
             {g.items.map((it, i) => {
-              const off = !it.legacy && !extended && !!prefs;
+              const off = (!it.legacy && !extended && !!prefs) || (it.key === "coach_injury_enabled" && !!prefs && !hasInjuryPref);
               return (
                 <div key={it.key} className={`flex min-h-[58px] items-center gap-3 py-2.5 ${i > 0 ? "border-t border-white/[0.06]" : ""}`}>
                   <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] text-[16px]" style={{ background: "#333B18" }}>{it.icon}</span>

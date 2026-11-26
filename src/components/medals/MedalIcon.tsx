@@ -16,6 +16,7 @@ const SHAPES: Record<MedalFamily, string> = {
   records: "M50 4 90 27v46L50 96 10 73V27Z",
   fuerza: "M50 4 88 16v32c0 24-17 40-38 48C29 88 12 72 12 48V16Z",
   habitos: "M50 4 95 50 50 96 5 50Z",
+  retos: "M50 3 62 33 95 35 70 56 78 89 50 72 22 89 30 56 5 35 38 33Z",
 };
 
 function Glyph({ family, code }: { family: MedalFamily; code: string }) {
@@ -34,6 +35,8 @@ function Glyph({ family, code }: { family: MedalFamily; code: string }) {
       return <path d="M37 32h26v10a13 13 0 0 1-26 0Z M43 62h14 M50 55v7 M37 36h-6a6 6 0 0 0 6 9 M63 36h6a6 6 0 0 1-6 9" fill="none" strokeWidth={5} strokeLinecap="round" />;
     case "fuerza":
       return <><path d="M30 50h40" strokeWidth={5} /><rect x="33" y="38" width="7" height="24" rx="2" /><rect x="60" y="38" width="7" height="24" rx="2" /><rect x="26" y="43" width="5" height="14" rx="1.5" /><rect x="69" y="43" width="5" height="14" rx="1.5" /></>;
+    case "retos":
+      return <path d="M41 40h18v6a9 9 0 0 1-18 0Z M46 60h8 M50 55v5" fill="none" strokeWidth={4} strokeLinecap="round" />;
     case "habitos":
       return <><circle cx="50" cy="52" r="9" /><path d="M50 32v6 M50 66v6 M30 52h6 M64 52h6 M36 38l4 4 M60 62l4 4 M64 38l-4 4 M36 66l4-4" strokeWidth={4.5} strokeLinecap="round" /></>;
   }

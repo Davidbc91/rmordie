@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Compass, Bell, Trophy, Settings2, Plus, Bookmark } from "lucide-react";
 import { PostCard } from "@/components/social/PostCard";
+import { ChallengesSection } from "@/components/social/Challenges";
 import { Composer } from "@/components/social/Composer";
 import { useFeed, useNotifications, useMySocialProfile, useSavedPosts, type FeedTab } from "@/lib/social";
 
@@ -55,6 +56,8 @@ function SocialFeed() {
           Crea tu perfil social para publicar y seguir a otros atletas →
         </Link>
       )}
+
+      <ChallengesSection />
 
       <div role="tablist" aria-label="Publicaciones" className="mb-4 flex gap-1 rounded-[14px] bg-white/[0.06] p-1">
         {TABS.map((t) => (

@@ -7,7 +7,7 @@ import { sessionDays, localDay } from "./analytics";
  * (entreno nº 50, el día que la racha llegó a 14…) llevan la fecha real.
  */
 
-export type MedalFamily = "constancia" | "racha" | "semanas" | "records" | "fuerza" | "habitos";
+export type MedalFamily = "constancia" | "racha" | "semanas" | "records" | "fuerza" | "habitos" | "retos";
 export type MedalTier = "bronce" | "plata" | "oro" | "leyenda";
 
 export type MedalDef = {
@@ -38,6 +38,7 @@ export const FAMILIES: { key: MedalFamily; label: string }[] = [
   { key: "records", label: "Récords" },
   { key: "fuerza", label: "Club de fuerza" },
   { key: "habitos", label: "Hábitos" },
+  { key: "retos", label: "Retos" },
 ];
 
 const d = (code: string, family: MedalFamily, tier: MedalTier, name: string, badge: string, how: string): MedalDef => ({ code, family, tier, name, badge, how });
@@ -77,10 +78,13 @@ export const MEDALS: MedalDef[] = [
   d("first_day_3", "habitos", "oro", "Sin excusas", "×3", "Entrena el día 1 de tres meses distintos"),
   d("coach_report", "habitos", "bronce", "Coach informado", "", "Saca tu primer informe para el entrenador"),
   d("shared_workout", "habitos", "bronce", "Compartido", "", "Comparte tu primer entreno"),
+
+  d("challenge_done", "retos", "plata", "Reto cumplido", "META", "Llega a la meta de un reto del mes"),
+  d("challenge_win", "retos", "leyenda", "Campeón del reto", "1º", "Termina primero en un reto del mes"),
 ];
 
 /** Medallas que solo se ganan con una acción (no se calculan): se guardan al hacerla. */
-export const ACTION_MEDALS = new Set(["coach_report", "shared_workout"]);
+export const ACTION_MEDALS = new Set(["coach_report", "shared_workout", "challenge_done", "challenge_win"]);
 
 const dayNum = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 864e5;
 const isoFromNum = (n: number) => new Date(n * 864e5).toISOString().slice(0, 10);

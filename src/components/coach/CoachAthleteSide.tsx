@@ -8,7 +8,7 @@ import { useMarkCommentsRead, useMyCoaches, useMyComments, useSetCoachAccess, ty
 const initials = (n: string) => n.trim().split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "?";
 
 function Badge({ name, size = 30 }: { name: string; size?: number }) {
-  return <span className="grid shrink-0 place-items-center font-extrabold" style={{ width: size, height: size, borderRadius: size * 0.32, fontSize: size * 0.36, background: "#1D1D20", color: "var(--gold)", border: "2px solid var(--gold)" }}>{initials(name)}</span>;
+  return <span className="grid shrink-0 place-items-center font-extrabold" style={{ width: size, height: size, borderRadius: size * 0.32, fontSize: size * 0.36, background: "var(--chip-soft)", color: "var(--gold)", border: "2px solid var(--gold)" }}>{initials(name)}</span>;
 }
 
 /** Pregunta al atleta si su entrenador puede ver sus entrenos (una vez por entrenador). */
@@ -28,7 +28,7 @@ export function CoachConsentPrompt() {
   return createPortal(
     <div className="fixed inset-0 z-[80] flex items-end" role="dialog" aria-label="Permiso para tu entrenador">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-[4px]" />
-      <div className="animate-fade relative mx-auto w-full max-w-2xl rounded-t-[28px] border-t border-white/10 bg-[#141416] px-5 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
+      <div className="animate-fade relative mx-auto w-full max-w-2xl rounded-t-[28px] border-t border-white/10 bg-[color:var(--level-1)] px-5 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
         <div aria-hidden className="mx-auto mb-4 h-[5px] w-10 rounded-full bg-white/20" />
         <div className="flex items-center gap-3">
           <Badge name={pending.coach_name} size={46} />
@@ -83,7 +83,7 @@ function CommentBubble({ c, coachName }: { c: WorkoutComment; coachName: string 
   return (
     <div className="flex items-end gap-2">
       <Badge name={coachName} />
-      <div className="min-w-0 flex-1 rounded-[16px_16px_16px_4px] border px-3 py-2.5 text-[14px]" style={{ background: "#262C12", borderColor: "rgba(198,255,0,.22)" }}>
+      <div className="min-w-0 flex-1 rounded-[16px_16px_16px_4px] border px-3 py-2.5 text-[14px]" style={{ background: "var(--gold-tint-2)", borderColor: "rgba(var(--gold-rgb),.22)" }}>
         {c.body}
         <span className="mt-0.5 block text-[11.5px] text-muted-foreground">{coachName} · {new Date(c.created_at).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}</span>
       </div>

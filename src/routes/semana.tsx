@@ -75,7 +75,7 @@ function WeekPage() {
                       className="block w-full rounded-[8px_8px_4px_4px]"
                       style={
                         s.trainedDays[i]
-                          ? { height: v > 0 ? `${Math.max(8, (v / maxVol) * 100)}%` : "12%", background: v > 0 ? "var(--gold)" : "#333B18" }
+                          ? { height: v > 0 ? `${Math.max(8, (v / maxVol) * 100)}%` : "12%", background: v > 0 ? "var(--gold)" : "var(--gold-tint)" }
                           : { height: 6, background: "rgba(255,255,255,.07)" }
                       }
                     />
@@ -136,7 +136,7 @@ function WeekPage() {
 function Row({ icon, title, sub, tone }: { icon: ReactNode; title: string; sub: string; tone: "lime" | "orange" }) {
   return (
     <div className="flex items-center gap-3 border-t border-white/[0.06] pt-3 first-of-type:border-t-0 first-of-type:pt-0">
-      <span className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-[13px]" style={tone === "lime" ? { background: "#333B18", color: "var(--gold)" } : { background: "#2A1E10", color: "#FF8A3D" }}>{icon}</span>
+      <span className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-[13px]" style={tone === "lime" ? { background: "var(--gold-tint)", color: "var(--gold)" } : { background: "#2A1E10", color: "#FF8A3D" }}>{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[15px] font-bold">{title}</span>
         {sub && <span className="block truncate text-[13px] text-muted-foreground">{sub}</span>}

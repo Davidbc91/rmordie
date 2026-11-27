@@ -25,7 +25,7 @@ function useIsAdmin() {
 
 function Avatar({ name, me, size = 34 }: { name: string; me?: boolean; size?: number }) {
   return (
-    <span className="grid shrink-0 place-items-center font-extrabold" style={{ width: size, height: size, borderRadius: size * 0.32, fontSize: size * 0.36, background: me ? "#333B18" : "#1D1D20", color: "var(--gold)", border: `2px solid ${me ? "var(--gold)" : "rgba(255,255,255,.12)"}` }}>
+    <span className="grid shrink-0 place-items-center font-extrabold" style={{ width: size, height: size, borderRadius: size * 0.32, fontSize: size * 0.36, background: me ? "var(--gold-tint)" : "var(--chip-soft)", color: "var(--gold)", border: `2px solid ${me ? "var(--gold)" : "rgba(255,255,255,.12)"}` }}>
       {initials(name)}
     </span>
   );
@@ -61,7 +61,7 @@ export function ChallengesSection() {
       <div className="flex items-center justify-between px-1">
         <h2 className="text-[17px] font-extrabold tracking-tight">Retos del mes</h2>
         {isAdmin && (
-          <button type="button" onClick={() => setCreating(true)} className="pressable flex min-h-9 items-center gap-1 rounded-full px-3 text-[13px] font-bold" style={{ background: "#333B18", color: "var(--gold)" }}>
+          <button type="button" onClick={() => setCreating(true)} className="pressable flex min-h-9 items-center gap-1 rounded-full px-3 text-[13px] font-bold" style={{ background: "var(--gold-tint)", color: "var(--gold)" }}>
             <Plus className="h-4 w-4" /> Nuevo reto
           </button>
         )}
@@ -104,7 +104,7 @@ function ActiveCard({ c, onOpen }: { c: Challenge; onOpen: () => void }) {
   const upcoming = challengeState(c) === "upcoming";
   const pct = c.goal ? Math.min(1, score / c.goal) : leader && leader.score > 0 ? Math.min(1, score / leader.score) : 0;
   return (
-    <div className="relative flex flex-col gap-3 overflow-hidden rounded-[24px] border p-4" style={{ background: "linear-gradient(140deg, #2a3312 0%, #1B1B1D 60%)", borderColor: "rgba(198,255,0,.2)" }}>
+    <div className="relative flex flex-col gap-3 overflow-hidden rounded-[24px] border p-4" style={{ background: "linear-gradient(140deg, var(--gold-tint-2) 0%, var(--card) 60%)", borderColor: "rgba(var(--gold-rgb),.2)" }}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-[12.5px] font-bold text-gold">Reto de {monthName(c.starts_on)}</span>
         <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.08] px-2.5 py-1 text-[12px] font-bold">
@@ -116,7 +116,7 @@ function ActiveCard({ c, onOpen }: { c: Challenge; onOpen: () => void }) {
         <span className="num text-[40px] leading-none text-gold">{fmtScore(c.metric, score)}</span>
         <span className="text-[15px] text-muted-foreground">{c.goal ? `de ${fmtScore(c.metric, c.goal)} ${METRICS[c.metric].unit(c.goal)}` : METRICS[c.metric].unit(score)}</span>
         <span className="flex-1" />
-        {mine && board && <span className="rounded-full px-2.5 py-1 text-[12px] font-bold" style={{ background: "#333B18", color: "var(--gold)" }}>{mine.pos}º de {board.length}</span>}
+        {mine && board && <span className="rounded-full px-2.5 py-1 text-[12px] font-bold" style={{ background: "var(--gold-tint)", color: "var(--gold)" }}>{mine.pos}º de {board.length}</span>}
       </div>
       <span className="block h-2.5 overflow-hidden rounded-full bg-white/[0.08]"><span className="block h-full rounded-full" style={{ width: `${Math.round(pct * 100)}%`, background: "var(--gold)" }} /></span>
       {leader && leader.profile_id !== me && leader.score > 0 && (
@@ -133,7 +133,7 @@ function JoinCard({ c, onOpen }: { c: Challenge; onOpen: () => void }) {
   return (
     <div className="flex flex-col gap-3 rounded-[24px] bg-card p-4">
       <div className="flex items-center gap-3">
-        <span className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-[13px] text-[12px] font-extrabold" style={{ background: "#262C12", color: "var(--gold)" }}>{METRICS[c.metric].icon}</span>
+        <span className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-[13px] text-[12px] font-extrabold" style={{ background: "var(--gold-tint-2)", color: "var(--gold)" }}>{METRICS[c.metric].icon}</span>
         <div className="min-w-0 flex-1">
           <div className="text-[12.5px] font-semibold text-muted-foreground">Reto abierto · hasta el {Number(c.ends_on.slice(8))} de {monthName(c.ends_on)}</div>
           <div className="truncate text-[15.5px] font-bold">{c.title}</div>
@@ -184,7 +184,7 @@ function Sheet({ children, onClose, label }: { children: ReactNode; onClose: () 
   return createPortal(
     <div className="fixed inset-0 z-[72] flex items-end" role="dialog" aria-label={label}>
       <button aria-label="Cerrar" onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-[6px]" />
-      <div className="animate-fade relative mx-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[#141416] px-4 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
+      <div className="animate-fade relative mx-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[color:var(--level-1)] px-4 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
         <div aria-hidden className="mx-auto mb-3 h-[5px] w-10 rounded-full bg-white/20" />
         {children}
       </div>
@@ -219,7 +219,7 @@ function BoardSheet({ c, isAdmin, onClose }: { c: Challenge; isAdmin: boolean; o
 
   const podium = [top[1], top[0], top[2]];
   const heights = [80, 104, 64];
-  const colors = ["rgba(227,230,236,.2)", "rgba(198,255,0,.25)", "rgba(201,138,85,.2)"];
+  const colors = ["rgba(227,230,236,.2)", "rgba(var(--gold-rgb),.25)", "rgba(201,138,85,.2)"];
 
   return (
     <Sheet onClose={onClose} label={c.title}>
@@ -263,7 +263,7 @@ function BoardSheet({ c, isAdmin, onClose }: { c: Challenge; isAdmin: boolean; o
               {rest.map((r, i) => {
                 const isMe = r.profile_id === me;
                 return (
-                  <div key={r.profile_id} className={`flex items-center gap-3 py-2.5 ${i > 0 ? "border-t border-white/[0.06]" : ""} ${isMe ? "-mx-1.5 my-1 rounded-[14px] border px-2.5" : "px-1"}`} style={isMe ? { background: "#262C12", borderColor: "rgba(198,255,0,.2)" } : undefined}>
+                  <div key={r.profile_id} className={`flex items-center gap-3 py-2.5 ${i > 0 ? "border-t border-white/[0.06]" : ""} ${isMe ? "-mx-1.5 my-1 rounded-[14px] border px-2.5" : "px-1"}`} style={isMe ? { background: "var(--gold-tint-2)", borderColor: "rgba(var(--gold-rgb),.2)" } : undefined}>
                     <span className="w-6 text-center font-extrabold text-muted-foreground">{i + 4}</span>
                     <Avatar name={r.name} me={isMe} />
                     <span className="min-w-0 flex-1 truncate text-[15px] font-bold">{isMe ? "Tú" : r.name}</span>
@@ -273,7 +273,7 @@ function BoardSheet({ c, isAdmin, onClose }: { c: Challenge; isAdmin: boolean; o
               })}
             </div>
           )}
-          {tip && <p className="mt-3 rounded-[18px] border p-3.5 text-[14px]" style={{ background: "#262C12", borderColor: "rgba(198,255,0,.2)" }}>{tip}</p>}
+          {tip && <p className="mt-3 rounded-[18px] border p-3.5 text-[14px]" style={{ background: "var(--gold-tint-2)", borderColor: "rgba(var(--gold-rgb),.2)" }}>{tip}</p>}
         </>
       )}
 
@@ -346,7 +346,7 @@ function CreateSheet({ onClose }: { onClose: () => void }) {
   };
 
   const goalUnit = metric === "days" ? "días" : metric === "volume" ? "kg" : metric === "prs" ? "récords" : "semanas";
-  const segBtn = (on: boolean) => (on ? { background: "#333B18", color: "var(--gold)" } : { color: "var(--muted-foreground)" });
+  const segBtn = (on: boolean) => (on ? { background: "var(--gold-tint)", color: "var(--gold)" } : { color: "var(--muted-foreground)" });
 
   return (
     <Sheet onClose={onClose} label="Nuevo reto">
@@ -359,7 +359,7 @@ function CreateSheet({ onClose }: { onClose: () => void }) {
           <p className="mb-2 text-[13px] font-bold text-muted-foreground">Qué se mide</p>
           <div className="grid grid-cols-2 gap-2">
             {(Object.keys(METRICS) as ChallengeMetric[]).map((k) => (
-              <button key={k} type="button" onClick={() => { setMetric(k); setGoal(k === "days" ? "20" : k === "volume" ? "10000" : k === "prs" ? "3" : "4"); }} className="flex flex-col gap-1 rounded-[16px] border p-3 text-left" style={metric === k ? { background: "#262C12", borderColor: "rgba(198,255,0,.35)" } : { background: "rgba(255,255,255,.04)", borderColor: "transparent" }}>
+              <button key={k} type="button" onClick={() => { setMetric(k); setGoal(k === "days" ? "20" : k === "volume" ? "10000" : k === "prs" ? "3" : "4"); }} className="flex flex-col gap-1 rounded-[16px] border p-3 text-left" style={metric === k ? { background: "var(--gold-tint-2)", borderColor: "rgba(var(--gold-rgb),.35)" } : { background: "rgba(255,255,255,.04)", borderColor: "transparent" }}>
                 <span className="text-[14px] font-bold">{METRICS[k].label}</span>
                 <span className="text-[12px] text-muted-foreground">{METRICS[k].hint}</span>
               </button>
@@ -398,11 +398,11 @@ function CreateSheet({ onClose }: { onClose: () => void }) {
           </div>
           <p className="mt-1.5 text-[13px] text-muted-foreground">{open ? "Cualquiera puede apuntarse. Los que marques entran ya apuntados." : "Solo entran los que marques."}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
-            <button type="button" onClick={() => setMeToo((v) => !v)} className="min-h-9 rounded-full px-3 text-[13px] font-bold" style={meToo ? { background: "#333B18", color: "var(--gold)" } : { background: "rgba(255,255,255,.07)", color: "var(--muted-foreground)" }}>{meToo ? "✓ " : ""}Yo también</button>
+            <button type="button" onClick={() => setMeToo((v) => !v)} className="min-h-9 rounded-full px-3 text-[13px] font-bold" style={meToo ? { background: "var(--gold-tint)", color: "var(--gold)" } : { background: "rgba(255,255,255,.07)", color: "var(--muted-foreground)" }}>{meToo ? "✓ " : ""}Yo también</button>
             {others.map((p) => {
               const on = picked.has(p.id);
               return (
-                <button key={p.id} type="button" onClick={() => setPicked((s) => { const n = new Set(s); on ? n.delete(p.id) : n.add(p.id); return n; })} className="min-h-9 rounded-full px-3 text-[13px] font-bold" style={on ? { background: "#333B18", color: "var(--gold)" } : { background: "rgba(255,255,255,.07)", color: "var(--muted-foreground)" }}>
+                <button key={p.id} type="button" onClick={() => setPicked((s) => { const n = new Set(s); on ? n.delete(p.id) : n.add(p.id); return n; })} className="min-h-9 rounded-full px-3 text-[13px] font-bold" style={on ? { background: "var(--gold-tint)", color: "var(--gold)" } : { background: "rgba(255,255,255,.07)", color: "var(--muted-foreground)" }}>
                   {on ? "✓ " : ""}{p.name}
                 </button>
               );

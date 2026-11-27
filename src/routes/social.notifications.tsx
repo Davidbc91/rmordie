@@ -53,7 +53,7 @@ function NotificationsPage() {
           <div
             key={n.id}
             className="flex items-center gap-3 rounded-[18px] border p-4"
-            style={{ borderColor: n.is_read ? "rgba(255,255,255,0.06)" : "rgba(198,255,0,0.35)", background: n.is_read ? "#1A1D26" : "#1B1B1D" }}
+            style={{ borderColor: n.is_read ? "rgba(255,255,255,0.06)" : "rgba(var(--gold-rgb),0.35)", background: n.is_read ? "#1A1D26" : "var(--card)" }}
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: "#1C1C1C" }}>
               {ICONS[n.kind] ?? <Bell className="h-4 w-4" />}

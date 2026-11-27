@@ -130,7 +130,7 @@ export function InstaShareSheet({
     }
   }
 
-  const chip = (on: boolean) => (on ? { background: "#333B18", color: "var(--gold)" } : { background: "rgba(255,255,255,.07)", color: "var(--muted-foreground)" });
+  const chip = (on: boolean) => (on ? { background: "var(--gold-tint)", color: "var(--gold)" } : { background: "rgba(255,255,255,.07)", color: "var(--muted-foreground)" });
   const [w, h] = FORMAT_SIZE[format];
 
   return createPortal(
@@ -141,7 +141,7 @@ export function InstaShareSheet({
         try { setPhoto(await loadImageFile(f)); setBg("photo"); } catch (err: any) { toast.error(err?.message ?? "No se pudo abrir la foto"); }
       }} />
       <button aria-label="Cerrar" onClick={onClose} className="absolute inset-0 bg-black/70 backdrop-blur-[4px]" />
-      <div className="animate-fade relative mx-auto max-h-[94dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[#141416] px-4 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 18px)" }}>
+      <div className="animate-fade relative mx-auto max-h-[94dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[color:var(--level-1)] px-4 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 18px)" }}>
         <div aria-hidden className="mx-auto mb-2 h-[5px] w-10 rounded-full bg-white/20" />
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-[19px] font-extrabold">Compartir entreno</h2>
@@ -165,7 +165,7 @@ export function InstaShareSheet({
                 const { title: t } = splitBlock(b.content);
                 const res = blockResult(results.filter((r) => r.block_key === b.key));
                 return (
-                  <button key={b.key} type="button" aria-pressed={on} onClick={() => setSel(on ? sel.filter((k) => k !== b.key) : blocks.map((x) => x.key).filter((k) => k === b.key || sel.includes(k)))} className="flex min-h-14 w-full items-center gap-2.5 rounded-[14px] px-3 text-left" style={on ? { background: "#262C12", boxShadow: "inset 0 0 0 1px rgba(198,255,0,.25)" } : { background: "rgba(255,255,255,.04)" }}>
+                  <button key={b.key} type="button" aria-pressed={on} onClick={() => setSel(on ? sel.filter((k) => k !== b.key) : blocks.map((x) => x.key).filter((k) => k === b.key || sel.includes(k)))} className="flex min-h-14 w-full items-center gap-2.5 rounded-[14px] px-3 text-left" style={on ? { background: "var(--gold-tint-2)", boxShadow: "inset 0 0 0 1px rgba(var(--gold-rgb),.25)" } : { background: "rgba(255,255,255,.04)" }}>
                     <span className="grid h-7 w-7 shrink-0 place-items-center rounded-[9px] text-[13px] font-extrabold" style={on ? { background: "var(--gold)", color: "var(--gold-foreground)" } : { background: "rgba(255,255,255,.08)" }}>{b.key}</span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[14.5px] font-bold">{t}</span>
@@ -182,7 +182,7 @@ export function InstaShareSheet({
             <p className="mb-2 text-[13px] font-bold text-muted-foreground">Formato</p>
             <div className="flex gap-1 rounded-[14px] bg-white/[0.05] p-1">
               {FORMATS.map((f) => (
-                <button key={f.key} type="button" onClick={() => setFormat(f.key)} className="flex min-h-12 flex-1 flex-col items-center justify-center rounded-[10px] text-[13px] font-bold" style={format === f.key ? { background: "#333B18", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>
+                <button key={f.key} type="button" onClick={() => setFormat(f.key)} className="flex min-h-12 flex-1 flex-col items-center justify-center rounded-[10px] text-[13px] font-bold" style={format === f.key ? { background: "var(--gold-tint)", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>
                   {f.label}<span className="text-[11px] font-semibold opacity-80">{f.ratio}</span>
                 </button>
               ))}
@@ -193,7 +193,7 @@ export function InstaShareSheet({
             <p className="mb-2 text-[13px] font-bold text-muted-foreground">Fondo</p>
             <div className="flex gap-1 rounded-[14px] bg-white/[0.05] p-1">
               {BGS.map((b) => (
-                <button key={b.key} type="button" onClick={() => (b.key === "photo" && !photo ? photoRef.current?.click() : setBg(b.key))} className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-[10px] text-[13px] font-bold" style={bg === b.key ? { background: "#333B18", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>
+                <button key={b.key} type="button" onClick={() => (b.key === "photo" && !photo ? photoRef.current?.click() : setBg(b.key))} className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-[10px] text-[13px] font-bold" style={bg === b.key ? { background: "var(--gold-tint)", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>
                   {b.key === "photo" && <ImagePlus className="h-4 w-4" />}{b.label}
                 </button>
               ))}

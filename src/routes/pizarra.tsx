@@ -138,7 +138,7 @@ function BoardScanPage() {
             <h1 className="text-[28px] font-extrabold tracking-tight">Escanear pizarra</h1>
             <button type="button" onClick={() => navigate({ to: "/" })} aria-label="Cerrar" className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.07]"><X className="h-[18px] w-[18px]" /></button>
           </div>
-          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[26px] bg-[#1B1B1D]">
+          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[26px] bg-[color:var(--card)]">
             {photo ? <img src={photo} alt="Pizarra" className="absolute inset-0 h-full w-full object-cover" /> : (
               <div className="absolute inset-0 grid place-items-center p-8 text-center text-[15px] text-muted-foreground">
                 Haz una foto a la pizarra del box o elige una captura del WhatsApp o Instagram del box.
@@ -148,7 +148,7 @@ function BoardScanPage() {
               {["left-0 top-0 border-l-4 border-t-4 rounded-tl-[18px]", "right-0 top-0 border-r-4 border-t-4 rounded-tr-[18px]", "left-0 bottom-0 border-l-4 border-b-4 rounded-bl-[18px]", "right-0 bottom-0 border-r-4 border-b-4 rounded-br-[18px]"].map((c) => (
                 <span key={c} className={`absolute h-10 w-10 ${c}`} style={{ borderColor: "var(--gold)" }} />
               ))}
-              {step === "reading" && <span className="board-scan absolute left-2 right-2 h-[3px] rounded-full" style={{ background: "var(--gold)", boxShadow: "0 0 18px 4px rgba(198,255,0,.5)" }} />}
+              {step === "reading" && <span className="board-scan absolute left-2 right-2 h-[3px] rounded-full" style={{ background: "var(--gold)", boxShadow: "0 0 18px 4px rgba(var(--gold-rgb),.5)" }} />}
             </div>
             {step === "reading" && (
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-5 pt-12 text-center text-[15px] font-bold">Leyendo la pizarra…</div>
@@ -208,7 +208,7 @@ function BoardScanPage() {
               <textarea value={b.text} onChange={(e) => setBlocks((bs) => bs.map((x) => (x.id === b.id ? { ...x, text: e.target.value } : x)))} rows={Math.max(2, b.text.split("\n").length)} className="w-full rounded-[12px] border border-dashed border-white/15 bg-white/[0.03] px-3 py-2 text-[14px] leading-relaxed outline-none focus:border-[color:var(--gold)]/55" />
               {(bench || loads.length > 0) && (
                 <div className="flex flex-wrap gap-1.5">
-                  {loads.map((l) => <span key={l.pct} className="rounded-[8px] px-2 py-1 text-[12px] font-bold" style={{ background: "#333B18", color: "var(--gold)" }}>{l.pct} % de tu RM ({formatKg(rec!.weight)}) → {formatKg(l.suggested)} kg</span>)}
+                  {loads.map((l) => <span key={l.pct} className="rounded-[8px] px-2 py-1 text-[12px] font-bold" style={{ background: "var(--gold-tint)", color: "var(--gold)" }}>{l.pct} % de tu RM ({formatKg(rec!.weight)}) → {formatKg(l.suggested)} kg</span>)}
                   {bench && <span className="rounded-[8px] px-2 py-1 text-[12px] font-bold" style={{ background: "#1F3442", color: "#3BB8F5" }}>Benchmark: {bench}</span>}
                 </div>
               )}
@@ -220,8 +220,8 @@ function BoardScanPage() {
         <div className="mt-2 flex flex-col gap-2">
           <p className="text-[13px] font-bold text-muted-foreground">¿Para qué día?</p>
           <div className="flex gap-1 rounded-[14px] bg-white/[0.05] p-1">
-            <button type="button" onClick={() => setDate(today)} className="min-h-10 flex-1 rounded-[10px] text-[13px] font-bold" style={date === today ? { background: "#333B18", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>Hoy · {dayName(today).toLowerCase()}</button>
-            <label className="relative flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-[10px] text-[13px] font-bold" style={date !== today ? { background: "#333B18", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>
+            <button type="button" onClick={() => setDate(today)} className="min-h-10 flex-1 rounded-[10px] text-[13px] font-bold" style={date === today ? { background: "var(--gold-tint)", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>Hoy · {dayName(today).toLowerCase()}</button>
+            <label className="relative flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-[10px] text-[13px] font-bold" style={date !== today ? { background: "var(--gold-tint)", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>
               {date !== today ? `${dayName(date)} ${Number(date.slice(8))}` : "Otro día"}
               <input type="date" min={today} value={date} onChange={(e) => e.target.value && setDate(e.target.value)} className="absolute inset-0 opacity-0" />
             </label>
@@ -230,8 +230,8 @@ function BoardScanPage() {
             <div className="flex flex-col gap-2 rounded-[16px] bg-white/[0.04] p-3">
               <p className="text-[13.5px]">Ese día ya tiene entreno en tu plan ({existing.day.blocks.length} {existing.day.blocks.length === 1 ? "bloque" : "bloques"}).</p>
               <div className="flex gap-1 rounded-[12px] bg-white/[0.05] p-1">
-                <button type="button" onClick={() => setMode("replace")} className="min-h-10 flex-1 rounded-[9px] text-[13px] font-bold" style={mode === "replace" ? { background: "#333B18", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>Sustituirlo</button>
-                <button type="button" onClick={() => setMode("append")} className="min-h-10 flex-1 rounded-[9px] text-[13px] font-bold" style={mode === "append" ? { background: "#333B18", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>Añadir como bloques extra</button>
+                <button type="button" onClick={() => setMode("replace")} className="min-h-10 flex-1 rounded-[9px] text-[13px] font-bold" style={mode === "replace" ? { background: "var(--gold-tint)", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>Sustituirlo</button>
+                <button type="button" onClick={() => setMode("append")} className="min-h-10 flex-1 rounded-[9px] text-[13px] font-bold" style={mode === "append" ? { background: "var(--gold-tint)", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>Añadir como bloques extra</button>
               </div>
             </div>
           )}

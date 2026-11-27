@@ -15,7 +15,7 @@ function Sheet({ children, onClose, label }: { children: ReactNode; onClose: () 
   return createPortal(
     <div className="fixed inset-0 z-[74] flex items-end" role="dialog" aria-label={label}>
       <button aria-label="Cerrar" onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-[4px]" />
-      <div className="animate-fade relative mx-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[#141416] px-4 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 18px)" }}>
+      <div className="animate-fade relative mx-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[color:var(--level-1)] px-4 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 18px)" }}>
         <div aria-hidden className="mx-auto mb-2 h-[5px] w-10 rounded-full bg-white/20" />
         {children}
       </div>
@@ -103,7 +103,7 @@ export function InjuryEditor({ injury, onClose }: { injury?: Injury | null; onCl
         {sided && (
           <div className="flex gap-1 rounded-[12px] bg-white/[0.05] p-1">
             {([["right", "Derecho"], ["left", "Izquierdo"], ["both", "Los dos"]] as const).map(([k, l]) => (
-              <button key={k} type="button" onClick={() => setSide(k)} className="min-h-10 flex-1 rounded-[9px] text-[13px] font-bold" style={side === k ? { background: "#333B18", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>{l}</button>
+              <button key={k} type="button" onClick={() => setSide(k)} className="min-h-10 flex-1 rounded-[9px] text-[13px] font-bold" style={side === k ? { background: "var(--gold-tint)", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>{l}</button>
             ))}
           </div>
         )}
@@ -119,7 +119,7 @@ export function InjuryEditor({ injury, onClose }: { injury?: Injury | null; onCl
             <p className="mb-2 text-[13px] font-bold text-muted-foreground">¿Cuándo empezó?</p>
             <div className="flex gap-1 rounded-[12px] bg-white/[0.05] p-1">
               {([["hoy", "Hoy"], ["semana", "Esta semana"], ["mas", "Hace más"]] as const).map(([k, l]) => (
-                <button key={k} type="button" onClick={() => setWhen(k)} className="min-h-10 flex-1 rounded-[9px] text-[13px] font-bold" style={when === k ? { background: "#333B18", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>{l}</button>
+                <button key={k} type="button" onClick={() => setWhen(k)} className="min-h-10 flex-1 rounded-[9px] text-[13px] font-bold" style={when === k ? { background: "var(--gold-tint)", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>{l}</button>
               ))}
             </div>
           </div>
@@ -208,7 +208,7 @@ export function InjuriesCard() {
           <button type="button" onClick={() => setShowHealed((v) => !v)} className="flex min-h-9 items-center gap-1 px-1 text-left text-[13px] font-semibold text-muted-foreground">Curadas ({healed.length}) <ChevronRight className={`h-4 w-4 transition-transform ${showHealed ? "rotate-90" : ""}`} /></button>
           {showHealed && healed.map((i) => (
             <div key={i.id} className="flex items-center gap-3 rounded-[16px] bg-card px-3.5 py-2.5">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px]" style={{ background: "#262C12", color: "var(--gold)" }}><Check className="h-4 w-4" /></span>
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px]" style={{ background: "var(--gold-tint-2)", color: "var(--gold)" }}><Check className="h-4 w-4" /></span>
               <span className="min-w-0 flex-1"><span className="block text-[14px] font-bold">{zoneLabel(i.zone, i.side)}</span><span className="block text-[12.5px] text-muted-foreground">{i.healed_on ? `Curada el ${new Date(`${i.healed_on}T12:00:00`).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}` : "Curada"}</span></span>
               <button type="button" onClick={() => heal.mutate({ id: i.id, healed: false })} className="min-h-9 text-[12.5px] font-semibold text-muted-foreground">Vuelve a molestar</button>
               <button type="button" onClick={() => { if (window.confirm("¿Borrar esta molestia del historial?")) del.mutate(i.id); }} aria-label="Borrar" className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground"><X className="h-4 w-4" /></button>
@@ -304,7 +304,7 @@ export function CoachInjuriesCard({ athleteId }: { athleteId: string }) {
         const first = pts[0]?.level ?? i.level;
         return (
           <div key={i.id} className="flex items-center gap-2 text-[13.5px]">
-            <span className="rounded-full px-2.5 py-1 text-[12.5px] font-extrabold" style={i.status === "active" ? { background: "#2A1E10", color: levelColor(i.level) } : { background: "#262C12", color: "var(--gold)" }}>
+            <span className="rounded-full px-2.5 py-1 text-[12.5px] font-extrabold" style={i.status === "active" ? { background: "#2A1E10", color: levelColor(i.level) } : { background: "var(--gold-tint-2)", color: "var(--gold)" }}>
               {i.status === "active" ? `🩹 ${zoneLabel(i.zone, i.side, true)} ${i.level}/5` : `✓ ${zoneLabel(i.zone, i.side, true)}`}
             </span>
             <span className="text-muted-foreground">{i.status === "healed" ? "curada" : pts.length > 1 ? (i.level < first ? "mejorando" : i.level > first ? "empeorando" : "igual") : `desde el ${new Date(`${i.started_on}T12:00:00`).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}`}</span>

@@ -823,6 +823,8 @@ export type AppSettings = {
   user_id: string;
   bar_weights: number[];
   plate_weights: number[];
+  /** Apariencia (Ajustes → Apariencia). Vacío = la de siempre. */
+  theme?: Record<string, unknown> | null;
 };
 
 const DEFAULT_SETTINGS = {
@@ -850,7 +852,7 @@ export function useSaveSettings() {
   const qc = useQueryClient();
   const uid = getCurrentUserId();
   return useMutation({
-    mutationFn: async (s: { bar_weights?: number[]; plate_weights?: number[] }) => {
+    mutationFn: async (s: { bar_weights?: number[]; plate_weights?: number[]; theme?: Record<string, unknown> }) => {
       if (!uid) throw new Error("No hay perfil activo");
       const { error } = await supabase.from("app_settings").upsert(
         { user_id: uid, ...s, updated_at: new Date().toISOString() } as never,

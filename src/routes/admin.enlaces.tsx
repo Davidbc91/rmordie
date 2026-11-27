@@ -94,7 +94,7 @@ function Review() {
       {isLoading || !isFetched ? (
         <div className="grid h-40 place-items-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       ) : !planning ? (
-        <p className="rounded-[20px] bg-[#1B1B1D] p-5 text-sm text-muted-foreground">No tienes ninguna planificación activa.</p>
+        <p className="rounded-[20px] bg-[color:var(--card)] p-5 text-sm text-muted-foreground">No tienes ninguna planificación activa.</p>
       ) : (
         <>
           <div className="grid grid-cols-3 gap-2">
@@ -113,7 +113,7 @@ function Review() {
               <button
                 key={k}
                 onClick={() => setFilter(k)}
-                className={`min-h-9 rounded-full px-3.5 text-xs font-bold ${filter === k ? "bg-[#333B18] text-[var(--gold)]" : "bg-[#2C2C2F] text-muted-foreground"}`}
+                className={`min-h-9 rounded-full px-3.5 text-xs font-bold ${filter === k ? "bg-[color:var(--gold-tint)] text-[var(--gold)]" : "bg-[color:var(--chip)] text-muted-foreground"}`}
               >
                 {label}
               </button>
@@ -125,7 +125,7 @@ function Review() {
           )}
 
           {sorted.length === 0 ? (
-            <p className="rounded-[20px] bg-[#1B1B1D] p-5 text-sm text-muted-foreground">
+            <p className="rounded-[20px] bg-[color:var(--card)] p-5 text-sm text-muted-foreground">
               {filter === "missing" ? "Todas las líneas del plan tienen su movimiento enlazado." : "No hay líneas en este grupo."}
             </p>
           ) : (
@@ -159,7 +159,7 @@ function Review() {
 
 function Stat({ n, label, tone }: { n: number; label: string; tone: string }) {
   return (
-    <div className="rounded-[18px] bg-[#1B1B1D] p-3">
+    <div className="rounded-[18px] bg-[color:var(--card)] p-3">
       <div className="text-[28px] font-extrabold leading-none" style={{ fontFamily: "var(--font-num)", color: tone }}>{n}</div>
       <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</div>
     </div>
@@ -185,11 +185,11 @@ function LineCard({ line, all, byId, open, onToggle, onIgnore }: {
   if (cursor < line.text.length) segments.push({ text: line.text.slice(cursor) });
 
   return (
-    <li className="rounded-[20px] bg-[#1B1B1D] p-4">
+    <li className="rounded-[20px] bg-[color:var(--card)] p-4">
       <p className="text-[15px] font-semibold leading-snug">
         {segments.map((s, i) =>
           s.movementId ? (
-            <span key={i} className="rounded-md bg-[#333B18] px-1 text-[var(--gold)]" title={byId.get(s.movementId)?.name}>{s.text}</span>
+            <span key={i} className="rounded-md bg-[color:var(--gold-tint)] px-1 text-[var(--gold)]" title={byId.get(s.movementId)?.name}>{s.text}</span>
           ) : (
             <span key={i}>{s.text}</span>
           ),
@@ -205,11 +205,11 @@ function LineCard({ line, all, byId, open, onToggle, onIgnore }: {
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <button onClick={onToggle} className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-[var(--gold)] px-3.5 text-xs font-extrabold text-[#0C0C0E]">
+        <button onClick={onToggle} className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-[var(--gold)] px-3.5 text-xs font-extrabold text-[color:var(--gold-foreground)]">
           <Link2 className="h-3.5 w-3.5" /> {line.matches.length ? "Corregir enlace" : "Enlazar"}
         </button>
         {line.matches.length === 0 && (
-          <button onClick={onIgnore} className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-[#2C2C2F] px-3.5 text-xs font-bold text-muted-foreground">
+          <button onClick={onIgnore} className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-[color:var(--chip)] px-3.5 text-xs font-bold text-muted-foreground">
             <EyeOff className="h-3.5 w-3.5" /> No es un ejercicio
           </button>
         )}
@@ -254,13 +254,13 @@ function LinkEditor({ line, all, onDone }: { line: AuditLine; all: Movement[]; o
   }
 
   return (
-    <div className="mt-3 space-y-3 rounded-[16px] bg-[#0C0C0E]/60 p-3">
+    <div className="mt-3 space-y-3 rounded-[16px] bg-[color:var(--background)]/60 p-3">
       <label className="block">
         <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Texto del plan que se enlaza</span>
         <input
           value={alias}
           onChange={(e) => setAlias(e.target.value)}
-          className="mt-1 h-11 w-full rounded-xl bg-[#2C2C2F] px-3 text-base outline-none focus:ring-1 focus:ring-[var(--gold)]"
+          className="mt-1 h-11 w-full rounded-xl bg-[color:var(--chip)] px-3 text-base outline-none focus:ring-1 focus:ring-[var(--gold)]"
         />
         <span className="mt-1 block text-[11px] text-muted-foreground">Vale para todas las líneas donde aparezca este texto, en cualquier plan.</span>
       </label>
@@ -273,7 +273,7 @@ function LinkEditor({ line, all, onDone }: { line: AuditLine; all: Movement[]; o
             value={query}
             onChange={(e) => { setQuery(e.target.value); setPicked(null); }}
             placeholder="Buscar movimiento"
-            className="h-11 w-full rounded-xl bg-[#2C2C2F] pl-9 pr-3 text-base outline-none focus:ring-1 focus:ring-[var(--gold)]"
+            className="h-11 w-full rounded-xl bg-[color:var(--chip)] pl-9 pr-3 text-base outline-none focus:ring-1 focus:ring-[var(--gold)]"
           />
         </div>
       </label>
@@ -284,7 +284,7 @@ function LinkEditor({ line, all, onDone }: { line: AuditLine; all: Movement[]; o
           <button
             key={m.id}
             onClick={() => setPicked(m)}
-            className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left ${picked?.id === m.id ? "bg-[#333B18]" : "bg-[#1B1B1D]"}`}
+            className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left ${picked?.id === m.id ? "bg-[color:var(--gold-tint)]" : "bg-[color:var(--card)]"}`}
           >
             <span className="min-w-0">
               <span className="block truncate text-sm font-bold">{m.nameEs || m.name}</span>
@@ -299,11 +299,11 @@ function LinkEditor({ line, all, onDone }: { line: AuditLine; all: Movement[]; o
         <button
           onClick={save}
           disabled={!picked || !alias.trim() || add.isPending}
-          className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-[var(--gold)] px-4 text-sm font-extrabold text-[#0C0C0E] disabled:opacity-40"
+          className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-[var(--gold)] px-4 text-sm font-extrabold text-[color:var(--gold-foreground)] disabled:opacity-40"
         >
           {add.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Guardar enlace
         </button>
-        <button onClick={onDone} className="grid min-h-10 w-10 place-items-center rounded-full bg-[#2C2C2F]" aria-label="Cancelar">
+        <button onClick={onDone} className="grid min-h-10 w-10 place-items-center rounded-full bg-[color:var(--chip)]" aria-label="Cancelar">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -320,14 +320,14 @@ function AliasList({ byId }: { byId: Map<string, Movement> }) {
       <h2 className="text-sm font-extrabold uppercase tracking-wide text-muted-foreground">Enlaces corregidos · {aliases.length}</h2>
       <ul className="space-y-1.5">
         {aliases.map((a) => (
-          <li key={a.id} className="flex items-center justify-between gap-3 rounded-xl bg-[#1B1B1D] px-3 py-2.5">
+          <li key={a.id} className="flex items-center justify-between gap-3 rounded-xl bg-[color:var(--card)] px-3 py-2.5">
             <span className="min-w-0 text-sm">
               <span className="font-semibold">«{a.alias}»</span>
               <span className="text-muted-foreground"> → {byId.get(a.movement_id)?.nameEs || byId.get(a.movement_id)?.name || a.movement_id}</span>
             </span>
             <button
               onClick={() => del.mutate(a.id, { onError: () => toast.error("No se pudo borrar") })}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#2C2C2F] text-muted-foreground"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[color:var(--chip)] text-muted-foreground"
               aria-label="Borrar enlace"
             >
               <Trash2 className="h-4 w-4" />

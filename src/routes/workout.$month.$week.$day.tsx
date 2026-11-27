@@ -383,7 +383,7 @@ function WorkoutPage() {
             {menuOpen && (
               <>
                 <button type="button" aria-label="Cerrar menú" className="fixed inset-0 z-40 cursor-default" onClick={() => setMenuOpen(false)} />
-                <div role="menu" className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[#141416] shadow-2xl">
+                <div role="menu" className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[color:var(--level-1)] shadow-2xl">
                   {(!planning?.user_id || planning.user_id === getCurrentUserId()) && <button
                     type="button"
                     role="menuitem"

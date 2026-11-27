@@ -212,7 +212,7 @@ function PickerSheet({
       <div
         role="dialog"
         aria-label={`Elegir ${label.toLowerCase()}`}
-        className="w-full rounded-t-[24px] border-t border-white/10 bg-[#1B1B1D] px-4 pt-4 text-foreground"
+        className="w-full rounded-t-[24px] border-t border-white/10 bg-[color:var(--card)] px-4 pt-4 text-foreground"
         style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
         onClick={(e) => e.stopPropagation()}
       >

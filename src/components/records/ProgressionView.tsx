@@ -152,7 +152,7 @@ export function ProgressionView({
           </span>
           {delta != null && delta !== 0 && (
             <span className="pb-2">
-              <span className={`block text-[15px] font-bold ${delta > 0 ? "text-[#C6FF00]" : "text-red-300"}`}>{delta > 0 ? "▲ +" : "▼ "}{kg(delta)} kg</span>
+              <span className={`block text-[15px] font-bold ${delta > 0 ? "text-[color:var(--gold)]" : "text-red-300"}`}>{delta > 0 ? "▲ +" : "▼ "}{kg(delta)} kg</span>
               <span className="text-[13px] text-muted-foreground">{periodDays ? `desde ${monthName(start)}` : "desde el principio"}</span>
             </span>
           )}
@@ -183,7 +183,7 @@ export function ProgressionView({
       </section>
 
       {insight && (
-        <div className={`mt-3 rounded-[16px] border px-3.5 py-3 text-sm leading-relaxed ${insight.tone === "good" ? "border-[#C6FF00]/25 bg-[#C6FF00]/[0.08]" : insight.tone === "warn" ? "border-red-300/25 bg-red-300/[0.06]" : "border-white/10 bg-white/[0.04]"}`}>
+        <div className={`mt-3 rounded-[16px] border px-3.5 py-3 text-sm leading-relaxed ${insight.tone === "good" ? "border-[color:var(--gold)]/25 bg-[color:var(--gold)]/[0.08]" : insight.tone === "warn" ? "border-red-300/25 bg-red-300/[0.06]" : "border-white/10 bg-white/[0.04]"}`}>
           {insight.text}
         </div>
       )}
@@ -294,16 +294,16 @@ function ProgressChart({ start, end, current, history, points }: {
       {months.map((m) => (
         <text key={m.t} x={x(m.t)} y={H - 6} fontSize="11" fill="#99999A" textAnchor="middle">{m.label}</text>
       ))}
-      {estPath && <path d={estPath} fill="none" stroke="#DBFF66" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.45" />}
+      {estPath && <path d={estPath} fill="none" stroke="var(--gold-soft)" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.45" />}
       {points.map((p, i) => (
-        <circle key={i} cx={x(p.t)} cy={y(p.w)} r="4" fill="#0C0C0E" stroke="#DBFF66" strokeWidth="2" opacity="0.85" />
+        <circle key={i} cx={x(p.t)} cy={y(p.w)} r="4" fill="#0C0C0E" stroke="var(--gold-soft)" strokeWidth="2" opacity="0.85" />
       ))}
-      <path d={path} fill="none" stroke="#C6FF00" strokeWidth="3" strokeLinejoin="round" />
+      <path d={path} fill="none" stroke="var(--gold)" strokeWidth="3" strokeLinejoin="round" />
       {steps.filter((s) => s.pr).map((s, i) => (
-        <circle key={i} cx={x(s.t)} cy={y(s.w)} r="6" fill="#C6FF00" />
+        <circle key={i} cx={x(s.t)} cy={y(s.w)} r="6" fill="var(--gold)" />
       ))}
       {lastPr && (
-        <text x={Math.min(x(lastPr.t), W - 60)} y={Math.max(12, y(lastPr.w) - 10)} fontSize="15" fontWeight="800" fill="#DBFF66" style={font}>
+        <text x={Math.min(x(lastPr.t), W - 60)} y={Math.max(12, y(lastPr.w) - 10)} fontSize="15" fontWeight="800" fill="var(--gold-soft)" style={font}>
           PR {kg(lastPr.w)}
         </text>
       )}
@@ -318,7 +318,7 @@ export function TrendSpark({ values, up }: { values: number[]; up: boolean }) {
   const pts = values.map((v, i) => `${(2 + (i / (values.length - 1)) * 66).toFixed(1)},${(27 - ((v - min) / span) * 22).toFixed(1)}`).join(" ");
   return (
     <svg width="70" height="30" viewBox="0 0 70 30" aria-hidden className="shrink-0">
-      <polyline points={pts} fill="none" stroke={up ? "#C6FF00" : "#99999A"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={pts} fill="none" stroke={up ? "var(--gold)" : "#99999A"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

@@ -14,14 +14,14 @@ import { useCoachAthletes } from "@/lib/coach";
 import { detectExercise, formatKg, loadsForPercentages } from "@/lib/rm-matcher";
 import { extractPercentages } from "@/lib/plates";
 
-const LIME_BG = { background: "#333B18", color: "var(--gold)" };
+const LIME_BG = { background: "var(--gold-tint)", color: "var(--gold)" };
 const OFF_BG = { background: "rgba(255,255,255,.07)", color: "var(--muted-foreground)" };
 
 function Sheet({ children, onClose, label, tall }: { children: ReactNode; onClose: () => void; label: string; tall?: boolean }) {
   return createPortal(
     <div className="fixed inset-0 z-[72] flex items-end" role="dialog" aria-label={label}>
       <button aria-label="Cerrar" onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-[4px]" />
-      <div className={`animate-fade relative mx-auto flex w-full max-w-2xl flex-col rounded-t-[28px] border-t border-white/10 bg-[#141416] px-4 pt-3 ${tall ? "h-[86dvh]" : "max-h-[90dvh]"}`} style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
+      <div className={`animate-fade relative mx-auto flex w-full max-w-2xl flex-col rounded-t-[28px] border-t border-white/10 bg-[color:var(--level-1)] px-4 pt-3 ${tall ? "h-[86dvh]" : "max-h-[90dvh]"}`} style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
         <div aria-hidden className="mx-auto mb-2 h-[5px] w-10 shrink-0 rounded-full bg-white/20" />
         {children}
       </div>
@@ -65,7 +65,7 @@ function Row({ wk, wi, active, onOpen }: { wk: PlanState["weeks"][number]; wi: n
             onClick={() => onOpen(wi, di)}
             aria-label={`Semana ${wi + 1}, ${parseISODate(d.date)?.toLocaleDateString("es-ES", { weekday: "long", day: "numeric" })}`}
             className="flex h-9 flex-col items-center justify-center gap-[3px] rounded-[8px]"
-            style={d.rest ? { border: "1px dashed rgba(255,255,255,.1)" } : filled ? { background: "rgba(255,255,255,.06)" } : { border: "1px dashed rgba(198,255,0,.4)" }}
+            style={d.rest ? { border: "1px dashed rgba(255,255,255,.1)" } : filled ? { background: "rgba(255,255,255,.06)" } : { border: "1px dashed rgba(var(--gold-rgb),.4)" }}
           >
             {!d.rest && d.blocks.filter((b) => blockContent(b).trim()).slice(0, 3).map((b) => (
               <i key={b.id} className="block h-1 w-[70%] rounded-sm" style={{ background: b.kind === "fuerza" ? "var(--gold)" : b.kind === "wod" ? "#3BB8F5" : "rgba(255,255,255,.4)" }} />
@@ -179,7 +179,7 @@ function ProgressionSheet({ plan, prog, exercises, onClose, onSave, onRemove }: 
           <p className="mb-2 text-[13px] font-bold text-muted-foreground">Cómo sube</p>
           <div className="grid grid-cols-2 gap-1.5">
             {SCHEMES.map((s) => (
-              <button key={s.key} type="button" onClick={() => regen(s.key)} className="flex min-h-14 flex-col items-start justify-center rounded-[14px] border px-3 text-left" style={p.scheme === s.key ? { background: "#262C12", borderColor: "rgba(198,255,0,.35)" } : { background: "rgba(255,255,255,.04)", borderColor: "transparent" }}>
+              <button key={s.key} type="button" onClick={() => regen(s.key)} className="flex min-h-14 flex-col items-start justify-center rounded-[14px] border px-3 text-left" style={p.scheme === s.key ? { background: "var(--gold-tint-2)", borderColor: "rgba(var(--gold-rgb),.35)" } : { background: "rgba(255,255,255,.04)", borderColor: "transparent" }}>
                 <span className="text-[14px] font-bold">{s.label}</span><span className="text-[12px] text-muted-foreground">{s.hint}</span>
               </button>
             ))}
@@ -381,7 +381,7 @@ export function ShareStep({ plan, planKey, onDone }: { plan: PlanState; planKey:
               {viewable.map((a) => <button key={a.athlete_id} type="button" onClick={() => setViewAs(a.athlete_id)} className="min-h-8 rounded-full px-2.5 text-[12.5px] font-bold" style={viewAs === a.athlete_id ? LIME_BG : OFF_BG}>{a.name}</button>)}
             </div>
           </div>
-          <div className="space-y-1.5 rounded-[16px] border border-white/10 bg-[#0C0C0E] p-3">
+          <div className="space-y-1.5 rounded-[16px] border border-white/10 bg-[color:var(--background)] p-3">
             <p className="text-[12.5px] font-extrabold text-gold">{parseISODate(sample.d.date)?.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "short" })} · semana {sample.wi + 1}</p>
             {sample.d.blocks.filter((b) => blockContent(b).trim()).map((b, i) => {
               const content = blockContent(b);

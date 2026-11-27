@@ -36,7 +36,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --font-display: "Plus Jakarta Sans", "Manrope", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
-  --shadow-gold: 0 10px 30px -12px rgba(198, 255, 0, 0.28);
+  --shadow-gold: 0 10px 30px -12px rgba(var(--gold-rgb), 0.28);
   --shadow-elevated: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
 }
 
@@ -45,27 +45,36 @@
  * ------------------------------------------------------------------------- */
 :root, .dark {
   /* Lima: acento único; naranja y cielo solo para detalles */
-  --aurora: linear-gradient(135deg, #D8FF4D 0%, #C6FF00 55%, #AEE600 100%);
-  --c-peach: #C6FF00;
+  /* Color principal: lo puede cambiar cada usuario en Ajustes → Apariencia (src/lib/theme.ts) */
+  --gold: #C6FF00;
+  --gold-rgb: 198, 255, 0;
+  --gold-light: #D8FF4D;
+  --gold-deep: #AEE600;
+  --gold-soft: #DBFF66;
+  --gold-foreground: #0C0C0E;
+  --gold-tint: color-mix(in srgb, var(--gold) 14%, var(--card));
+  --gold-tint-2: color-mix(in srgb, var(--gold) 7%, var(--card));
+  --gold-tint-3: color-mix(in srgb, var(--gold) 8%, var(--background));
+  --aurora: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 55%, var(--gold-deep) 100%);
+  --c-peach: var(--gold);
   --c-rose: #FF8A3D;
   --c-lila: #3BB8F5;
-  --c-mint: #C6FF00;
+  --c-mint: var(--gold);
   --aurora-ink: #0C0C0E;
   --radius: 0.95rem;
-  --level-0: #0C0C0E;
+  --level-0: var(--background);
   --level-1: #141416;
-  --level-2: #1B1B1D;
+  --level-2: var(--card);
   --background: #0C0C0E;
   --foreground: #F5F5F7;
   --surface: rgba(255, 255, 255, 0.05);
   --surface-2: rgba(255, 255, 255, 0.08);
   --card: #1B1B1D;
+  --chip: #2C2C2F;
+  --chip-soft: #232326;
   --card-foreground: #F5F5F7;
-  --popover: #1B1B1D;
+  --popover: var(--card);
   --popover-foreground: #F5F5F7;
-  --gold: #C6FF00;
-  --gold-soft: #DBFF66;
-  --gold-foreground: #0C0C0E;
   --primary: #F5F5F7;
   --primary-foreground: #0C0C0E;
   --secondary: rgba(255, 255, 255, 0.07);
@@ -76,10 +85,10 @@
   --accent-foreground: #FFFFFF;
   --destructive: #E5484D;
   --destructive-foreground: #FFFFFF;
-  --success: #C6FF00;
+  --success: var(--gold);
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.05);
-  --ring: rgba(198, 255, 0, 0.6);
+  --ring: rgba(var(--gold-rgb), 0.6);
   --glass-bg: rgba(255, 255, 255, 0.035);
   --glass-bg-2: rgba(255, 255, 255, 0.045);
   --glass-bg-3: rgba(30, 30, 33, 0.94);
@@ -95,7 +104,7 @@
   /* Cifras grandes (cronómetros, kilos, récords): condensada para que quepan */
   --font-num: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
   /* Superficies */
-  --surface-card-bg: #1B1B1D;
+  --surface-card-bg: var(--card);
   --surface-shadow: 0 14px 36px -26px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -178,7 +187,7 @@
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: var(--r-md);
   }
-  .cinematic-card-dark { background: #1B1B1D; }
+  .cinematic-card-dark { background: var(--card); }
 
   .surface-sheet,
   .glass-elevated {
@@ -201,8 +210,8 @@
   }
   .glass-gold,
   .cinematic-outline {
-    border-color: rgba(198, 255, 0, 0.28);
-    box-shadow: var(--surface-shadow), 0 0 0 1px rgba(198, 255, 0, 0.06);
+    border-color: rgba(var(--gold-rgb), 0.28);
+    box-shadow: var(--surface-shadow), 0 0 0 1px rgba(var(--gold-rgb), 0.06);
   }
   .glass-refraction {
     position: relative;
@@ -216,7 +225,7 @@
     z-index: -1;
     background:
       radial-gradient(35% 30% at 15% 15%, rgba(255, 255, 255, 0.16), transparent 70%),
-      radial-gradient(30% 28% at 85% 80%, rgba(198, 255, 0, 0.09), transparent 72%);
+      radial-gradient(30% 28% at 85% 80%, rgba(var(--gold-rgb), 0.09), transparent 72%);
     filter: blur(18px);
     opacity: 0.28;
     pointer-events: none;
@@ -322,9 +331,9 @@
   &:hover { filter: brightness(1.045); }
   &:active { transform: scale(0.972); filter: brightness(.985); }
   &:focus-visible {
-    outline: 1px solid rgba(198, 255, 0,.72);
+    outline: 1px solid rgba(var(--gold-rgb), .72);
     outline-offset: 3px;
-    box-shadow: 0 0 0 5px rgba(198, 255, 0,.08);
+    box-shadow: 0 0 0 5px rgba(var(--gold-rgb), .08);
   }
 }
 @utility hairline {
@@ -340,7 +349,7 @@
 }
 @utility gold-hairline {
   height: 1px;
-  background: linear-gradient(90deg, rgba(198, 255, 0, 0.60), rgba(198, 255, 0, 0));
+  background: linear-gradient(90deg, rgba(var(--gold-rgb), 0.60), rgba(var(--gold-rgb), 0));
 }
 @utility no-scrollbar {
   scrollbar-width: none;
@@ -360,8 +369,8 @@
 }
 @utility glass-breathe { animation: glass-breathe 4.5s ease-in-out infinite; }
 @keyframes gold-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(198, 255, 0,0), 0 0 0 1px rgba(198, 255, 0,.14); }
-  50% { box-shadow: 0 0 0 6px rgba(198, 255, 0,.035), 0 0 0 1px rgba(198, 255, 0,.24); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--gold-rgb), 0), 0 0 0 1px rgba(var(--gold-rgb), .14); }
+  50% { box-shadow: 0 0 0 6px rgba(var(--gold-rgb), .035), 0 0 0 1px rgba(var(--gold-rgb), .24); }
 }
 @utility gold-pulse { animation: gold-pulse 2.8s ease-in-out infinite; }
 @keyframes micro-pop {
@@ -437,7 +446,7 @@
   }
 }
 @utility aura {
-  background-image: radial-gradient(120% 70% at 50% -10%, rgba(198, 255, 0, 0.06) 0%, rgba(198, 255, 0, 0) 60%);
+  background-image: radial-gradient(120% 70% at 50% -10%, rgba(var(--gold-rgb), 0.06) 0%, rgba(var(--gold-rgb), 0) 60%);
 }
 @utility dotgrid {
   background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
@@ -514,7 +523,7 @@
 .medal-rays {
   position: absolute; left: 50%; top: 40%; width: 440px; height: 440px; border-radius: 50%;
   transform: translate(-50%, -50%);
-  background: repeating-conic-gradient(rgba(198, 255, 0, 0.08) 0 8deg, transparent 8deg 20deg);
+  background: repeating-conic-gradient(rgba(var(--gold-rgb), 0.08) 0 8deg, transparent 8deg 20deg);
   -webkit-mask: radial-gradient(circle, #000 18%, transparent 65%); mask: radial-gradient(circle, #000 18%, transparent 65%);
   animation: medal-spin 18s linear infinite; pointer-events: none;
 }

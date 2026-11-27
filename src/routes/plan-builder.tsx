@@ -448,7 +448,7 @@ function WeekView({
           const done = wk.filter((d) => !d.rest).length > 0 && wk.filter((d) => !d.rest).every(dayHasContent);
           return (
             <button key={i} role="tab" aria-selected={i === w} onClick={() => setWeekIdx(i)}
-              className={`h-10 min-w-[52px] shrink-0 rounded-[10px] px-2 text-sm font-bold ${i === w ? "bg-[color:var(--gold)] text-[color:var(--gold-foreground)]" : done ? "bg-[#C6FF00]/15 text-[#C6FF00]" : "bg-white/[0.06] text-muted-foreground"}`}>
+              className={`h-10 min-w-[52px] shrink-0 rounded-[10px] px-2 text-sm font-bold ${i === w ? "bg-[color:var(--gold)] text-[color:var(--gold-foreground)]" : done ? "bg-[color:var(--gold)]/15 text-[color:var(--gold)]" : "bg-white/[0.06] text-muted-foreground"}`}>
               S{i + 1}{done && i !== w ? " ✓" : ""}
             </button>
           );
@@ -607,7 +607,7 @@ function DayEditor({ plan, weekIdx, dayIdx, onChange, onBack, onNext }: {
             <span className="flex flex-1 items-center gap-2 text-base font-extrabold">
               {b.kind === "fuerza" ? "Fuerza" : b.kind === "wod" ? "WOD" : "Texto libre"}
               {b.kind === "fuerza" && b.exercises.some((e) => progNames.has(e.name.trim().toLowerCase())) && (
-                <span className="rounded-full px-2 py-0.5 text-[11.5px] font-bold" style={{ background: "#333B18", color: "var(--gold)" }}>Progresión</span>
+                <span className="rounded-full px-2 py-0.5 text-[11.5px] font-bold" style={{ background: "var(--gold-tint)", color: "var(--gold)" }}>Progresión</span>
               )}
             </span>
             <SaveBlockButton block={b} />
@@ -687,7 +687,7 @@ function DayEditor({ plan, weekIdx, dayIdx, onChange, onBack, onNext }: {
 
       <div>
         <p className="mb-2 text-[13px] text-muted-foreground">{day.blocks.length ? "Añadir bloque" : "Empieza añadiendo un bloque"}</p>
-        <button type="button" onClick={() => setLibOpen(true)} className="pressable mb-1.5 flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] text-sm font-bold" style={{ background: "#333B18", color: "var(--gold)" }}>
+        <button type="button" onClick={() => setLibOpen(true)} className="pressable mb-1.5 flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] text-sm font-bold" style={{ background: "var(--gold-tint)", color: "var(--gold)" }}>
           <BookOpen className="h-4 w-4" /> Biblioteca: benchmarks, calentamientos, tus bloques…
         </button>
         <div className="grid grid-cols-3 gap-1.5">

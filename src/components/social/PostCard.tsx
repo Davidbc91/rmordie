@@ -35,7 +35,7 @@ export function Avatar({ profile, size = 38 }: { profile?: SocialProfile | null;
   return (
     <span
       className="flex shrink-0 items-center justify-center overflow-hidden rounded-full"
-      style={{ width: size, height: size, background: "rgba(198,255,0,0.15)" }}
+      style={{ width: size, height: size, background: "rgba(var(--gold-rgb),0.15)" }}
     >
       {profile?.avatar_url ? (
         <img src={profile.avatar_url} alt={profile.username} className="h-full w-full object-cover" />
@@ -92,8 +92,8 @@ function DataBlock({ post }: { post: Post }) {
       <div
         className="mt-3 overflow-hidden rounded-[22px] border"
         style={{
-          borderColor: "rgba(198,255,0,0.24)",
-          background: "linear-gradient(145deg, rgba(198,255,0,0.11), rgba(255,255,255,0.035) 42%, rgba(255,255,255,0.02))",
+          borderColor: "rgba(var(--gold-rgb),0.24)",
+          background: "linear-gradient(145deg, rgba(var(--gold-rgb),0.11), rgba(255,255,255,0.035) 42%, rgba(255,255,255,0.02))",
           boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
         }}
       >

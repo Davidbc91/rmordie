@@ -52,7 +52,7 @@ function plannedDays(plans: Record<string, Planning> | undefined, keys: string[]
 
 function Avatar({ name, on, size = 38 }: { name: string; on?: boolean; size?: number }) {
   return (
-    <span className="grid shrink-0 place-items-center font-extrabold" style={{ width: size, height: size, borderRadius: size * 0.32, fontSize: size * 0.34, background: "#1D1D20", color: on ? "var(--gold)" : "var(--muted-foreground)", border: `2px solid ${on ? "var(--gold)" : "rgba(255,255,255,.1)"}` }}>{initials(name)}</span>
+    <span className="grid shrink-0 place-items-center font-extrabold" style={{ width: size, height: size, borderRadius: size * 0.32, fontSize: size * 0.34, background: "var(--chip-soft)", color: on ? "var(--gold)" : "var(--muted-foreground)", border: `2px solid ${on ? "var(--gold)" : "rgba(255,255,255,.1)"}` }}>{initials(name)}</span>
   );
 }
 
@@ -99,17 +99,17 @@ function Overview() {
     ...allowed.filter((r) => (r.x.avg_rpe ?? 0) >= 9).map((r) => ({ id: r.x.athlete_id, tone: "o" as const, icon: "🔥", text: <><b className="text-foreground">{r.x.name}</b> va a RPE {n1(r.x.avg_rpe!)} de media: carga alta</> })),
     ...allowed.filter((r) => (r.x.prs ?? 0) > 0).map((r) => ({ id: r.x.athlete_id, tone: "l" as const, icon: "🏆", text: <><b className="text-foreground">{r.x.name}</b> ha batido {r.x.prs} {r.x.prs === 1 ? "récord" : "récords"}</> })),
   ];
-  const toneStyle = { r: { background: "#2A1414", color: "#FF8E86" }, o: { background: "#2A1E10", color: "#FFB35C" }, l: { background: "#262C12", color: "var(--gold)" } };
+  const toneStyle = { r: { background: "#2A1414", color: "#FF8E86" }, o: { background: "#2A1E10", color: "#FFB35C" }, l: { background: "var(--gold-tint-2)", color: "var(--gold)" } };
 
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex items-center justify-between">
         <h1 className="text-[28px] font-extrabold tracking-tight">Tus atletas</h1>
-        <span className="rounded-full px-2.5 py-1 text-[12px] font-bold" style={{ background: "#333B18", color: "var(--gold)" }}>Entrenador</span>
+        <span className="rounded-full px-2.5 py-1 text-[12px] font-bold" style={{ background: "var(--gold-tint)", color: "var(--gold)" }}>Entrenador</span>
       </div>
       <div className="flex gap-1 rounded-[12px] bg-white/[0.05] p-1">
         {([["week", "Esta semana"], ["month", "Este mes"], ["all", "90 días"]] as const).map(([k, l]) => (
-          <button key={k} type="button" onClick={() => setRange(k)} className="min-h-9 flex-1 rounded-[9px] text-[12.5px] font-bold" style={range === k ? { background: "#333B18", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>{l}</button>
+          <button key={k} type="button" onClick={() => setRange(k)} className="min-h-9 flex-1 rounded-[9px] text-[12.5px] font-bold" style={range === k ? { background: "var(--gold-tint)", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>{l}</button>
         ))}
       </div>
 
@@ -264,7 +264,7 @@ function AthleteDetail({ id }: { id: string }) {
       <div className="grid grid-cols-7 gap-1">
         {weekDays.map((d, i) => (
           <span key={d} className="flex flex-col items-center gap-1">
-            <span className="grid h-9 w-9 place-items-center rounded-full text-[13px] font-bold" style={trainedSet.has(d) ? { background: "#333B18", color: "var(--gold)" } : d === today ? { border: "2px solid var(--foreground)" } : planned.has(d) && d < today ? { background: "#2A1414", color: "#FF8E86" } : { background: "rgba(255,255,255,.08)", color: "var(--muted-foreground)", opacity: planned.has(d) ? 1 : 0.45 }}>{"LMXJVSD"[i]}</span>
+            <span className="grid h-9 w-9 place-items-center rounded-full text-[13px] font-bold" style={trainedSet.has(d) ? { background: "var(--gold-tint)", color: "var(--gold)" } : d === today ? { border: "2px solid var(--foreground)" } : planned.has(d) && d < today ? { background: "#2A1414", color: "#FF8E86" } : { background: "rgba(255,255,255,.08)", color: "var(--muted-foreground)", opacity: planned.has(d) ? 1 : 0.45 }}>{"LMXJVSD"[i]}</span>
             <span className="text-[10.5px] text-muted-foreground">{Number(d.slice(8))}</span>
           </span>
         ))}
@@ -301,7 +301,7 @@ function AthleteDetail({ id }: { id: string }) {
             </div>
             {notes.map((nt, i) => <p key={i} className="text-[13px] text-muted-foreground">«{nt}» — nota de {ath?.name ?? "tu atleta"}</p>)}
             {dayComments.map((c) => (
-              <div key={c.id} className="flex items-start gap-2 rounded-[14px] border p-2.5 text-[13.5px]" style={{ background: "#262C12", borderColor: "rgba(198,255,0,.2)" }}>
+              <div key={c.id} className="flex items-start gap-2 rounded-[14px] border p-2.5 text-[13.5px]" style={{ background: "var(--gold-tint-2)", borderColor: "rgba(var(--gold-rgb),.2)" }}>
                 <span className="min-w-0 flex-1">{c.body}<span className="mt-0.5 block text-[11.5px] text-muted-foreground">{c.read_at ? "Visto" : "Enviado"}</span></span>
                 <button type="button" onClick={() => del.mutate(c.id)} aria-label="Borrar comentario" className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground"><Trash2 className="h-4 w-4" /></button>
               </div>

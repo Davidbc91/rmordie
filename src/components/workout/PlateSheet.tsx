@@ -54,7 +54,7 @@ export function BarbellDrawing({ plates, collars, height = 150 }: { plates: numb
     });
     out.push(
       collars
-        ? <rect key={`c${dir}`} x={dir > 0 ? x : x - 7} y={cy - 14} width={7} height={28} rx={2} fill="#C6FF00" />
+        ? <rect key={`c${dir}`} x={dir > 0 ? x : x - 7} y={cy - 14} width={7} height={28} rx={2} fill="var(--gold)" />
         : <rect key={`c${dir}`} x={dir > 0 ? x + 1 : x - 5} y={cy - 9} width={4} height={18} rx={1.5} fill="#55595F" />,
     );
     return out;
@@ -118,12 +118,12 @@ export function PlateSheet({ initial, work, onApply, onClose }: { initial: numbe
   return createPortal(
     <div className="fixed inset-0 z-[75] flex items-end" role="dialog" aria-label="Calculadora de discos">
       <button aria-label="Cerrar" onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-[4px]" />
-      <div className="animate-fade relative mx-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[#141416] px-4 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 18px)" }}>
+      <div className="animate-fade relative mx-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[color:var(--level-1)] px-4 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 18px)" }}>
         <div aria-hidden className="mx-auto mb-2 h-[5px] w-10 rounded-full bg-white/20" />
         <div className="mb-2 flex items-center justify-between">
           <span className="text-[17px] font-extrabold tracking-tight">{editing ? "Tu material" : "Discos"}</span>
           <div className="flex items-center gap-1">
-            <button type="button" onClick={() => setEditing((v) => !v)} aria-label="Tu material" className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.07]" style={editing ? { background: "#333B18", color: "var(--gold)" } : undefined}>
+            <button type="button" onClick={() => setEditing((v) => !v)} aria-label="Tu material" className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.07]" style={editing ? { background: "var(--gold-tint)", color: "var(--gold)" } : undefined}>
               <Settings2 className="h-[18px] w-[18px]" />
             </button>
             <button type="button" onClick={onClose} aria-label="Cerrar" className="grid h-10 w-10 place-items-center rounded-full bg-white/[0.07]"><X className="h-[18px] w-[18px]" /></button>
@@ -136,7 +136,7 @@ export function PlateSheet({ initial, work, onApply, onClose }: { initial: numbe
               <p className="mb-2 text-[14px] font-bold">Barra</p>
               <div className="flex gap-1 rounded-[14px] bg-white/[0.05] p-1">
                 {bars.map((b) => (
-                  <button key={b} type="button" onClick={() => setPrefs({ ...prefs, bar: b })} className="min-h-10 flex-1 rounded-[10px] text-[13.5px] font-bold" style={bar === b ? { background: "#333B18", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>
+                  <button key={b} type="button" onClick={() => setPrefs({ ...prefs, bar: b })} className="min-h-10 flex-1 rounded-[10px] text-[13.5px] font-bold" style={bar === b ? { background: "var(--gold-tint)", color: "var(--gold)" } : { color: "var(--muted-foreground)" }}>
                     {b === 10 ? "Técnica 10" : `${formatKg(b)} kg`}
                   </button>
                 ))}
@@ -171,7 +171,7 @@ export function PlateSheet({ initial, work, onApply, onClose }: { initial: numbe
                     type="button"
                     onClick={() => { setChip(p); setTarget(Math.max(bar, Math.round((base * p) / 100 / 2.5) * 2.5)); }}
                     className="min-h-9 shrink-0 rounded-full px-3 text-[13px] font-bold"
-                    style={chip === p ? { background: "#333B18", color: "var(--gold)" } : { background: "rgba(255,255,255,.07)", color: "var(--muted-foreground)" }}
+                    style={chip === p ? { background: "var(--gold-tint)", color: "var(--gold)" } : { background: "rgba(255,255,255,.07)", color: "var(--muted-foreground)" }}
                   >
                     {p === 100 ? "Trabajo" : `${p} %`}
                   </button>

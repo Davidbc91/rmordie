@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { PasswordSettings } from "@/components/settings/PasswordSettings";
+import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Ajustes — RM OR DIE" }] }),
@@ -113,6 +114,8 @@ function SettingsPage() {
         />
         <button onClick={saveGym} disabled={!s || save.isPending} className="mt-5 min-h-12 w-full rounded-xl gold-gradient px-4 text-sm font-semibold disabled:opacity-50" style={{ color: "var(--gold-foreground)" }}>{save.isPending ? "Guardando…" : "Guardar"}</button>
       </section>
+
+      <AppearanceSettings />
 
       <NotificationSettings />
 

@@ -15,7 +15,8 @@ import { streaks } from "@/lib/analytics";
 import { Zap, ClipboardList, Link2, BarChart3 } from "lucide-react";
 import { getCurrentUserId, signOut } from "@/lib/pin-gate";
 import { isVideoAdmin } from "@/lib/admin-videos";
-import { useProfiles } from "@/lib/store";
+import { useProfiles, useSettings } from "@/lib/store";
+import { useApplyTheme } from "@/lib/theme";
 
 // El Temporizador va en el centro, destacado.
 const tabs = [
@@ -80,14 +81,14 @@ const BottomNavigation = memo(function BottomNavigation({ pathname, keyboardOpen
             const Icon = t.icon;
             if (t.center) {
               return <Link key={t.to} to={t.to} aria-label="Temporizador" className="pressable relative flex min-w-0 flex-1 flex-col items-center justify-end gap-[3px] pb-2">
-                <span className="-mt-6 grid h-[54px] w-[54px] place-items-center rounded-full" style={{ background: "#1A1F0D", border: "2px solid var(--gold)", boxShadow: "0 0 18px rgba(198,255,0,.35), 0 0 0 4px rgba(12,12,14,.95)" }}>
+                <span className="-mt-6 grid h-[54px] w-[54px] place-items-center rounded-full" style={{ background: "var(--gold-tint-3)", border: "2px solid var(--gold)", boxShadow: "0 0 18px rgba(var(--gold-rgb),.35), 0 0 0 4px rgba(12,12,14,.95)" }}>
                   <Icon className="h-6 w-6" strokeWidth={2.2} style={{ color: "var(--gold)" }} />
                 </span>
                 <span className="text-xs font-bold" style={{ color: "var(--gold-soft)" }}>{t.label}</span>
               </Link>;
             }
             return <Link key={t.to} to={t.to} onClick={t.to === "/calendar" ? openPlan : undefined} className="pressable relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-[4px] rounded-[18px] py-2" style={{ color: isActive ? "var(--gold)" : "var(--muted-foreground)" }}>
-              <span aria-hidden className="absolute inset-0 rounded-[18px] transition-opacity duration-300" style={{ background: "#333B18", opacity: isActive ? 1 : 0 }} />
+              <span aria-hidden className="absolute inset-0 rounded-[18px] transition-opacity duration-300" style={{ background: "var(--gold-tint)", opacity: isActive ? 1 : 0 }} />
               <Icon className="relative h-[20px] w-[20px]" strokeWidth={isActive ? 2.1 : 1.7} />
               <span className="relative text-xs font-semibold">{t.label}</span>
             </Link>;
@@ -102,7 +103,7 @@ const ProfileOverlay = memo(function ProfileOverlay({ name, links, chatUnread, o
   return (
     <div className="fixed inset-0 flex items-end" style={{ zIndex: 60 }}>
       <button aria-label="Cerrar menú del perfil" onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-[6px]" />
-      <div role="dialog" aria-label="Menú del perfil" className="animate-fade relative mx-auto max-h-[85dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[#141416] px-4 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
+      <div role="dialog" aria-label="Menú del perfil" className="animate-fade relative mx-auto max-h-[85dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-white/10 bg-[color:var(--level-1)] px-4 pt-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
         <div aria-hidden className="mx-auto mb-3 h-[5px] w-10 rounded-full bg-white/20" />
         <div className="mb-3 flex items-center gap-3 px-1">
           <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full border border-[color:var(--gold)]/50 bg-[color:var(--gold)]/12 text-[22px] font-extrabold text-[color:var(--gold-soft)]" style={{ fontFamily: "var(--font-editorial)" }}>{initials(name)}</span>
@@ -127,6 +128,8 @@ export function AppShell({ children, hideBottomNav = false }: AppShellProps) {
   const currentProfileId = getCurrentUserId();
   const { data: profiles = [] } = useProfiles();
   const currentProfile = profiles.find((profile) => profile.id === currentProfileId);
+  const { data: userSettings } = useSettings();
+  useApplyTheme(currentProfileId, userSettings?.theme ?? null);
   const { data: isAdmin } = useQuery({
     queryKey: ["video-admin", currentProfileId],
     queryFn: isVideoAdmin,

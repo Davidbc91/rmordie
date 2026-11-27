@@ -125,7 +125,7 @@ export function PlateLine({ total, cfg }: { total: number | null; cfg: PlateConf
         {r.plates.slice(0, 8).map((p, i) => {
           const h = Math.max(10, Math.round((p / maxPlate) * 32));
           const w = p >= 10 ? 8 : p >= 5 ? 6 : 4;
-          const el = <rect key={i} x={x} y={17 - h / 2} width={w} height={h} rx="1.5" fill={p >= 15 ? "#C6FF00" : p >= 5 ? "#DBFF66" : "#99999A"} />;
+          const el = <rect key={i} x={x} y={17 - h / 2} width={w} height={h} rx="1.5" fill={p >= 15 ? "var(--gold)" : p >= 5 ? "var(--gold-soft)" : "#99999A"} />;
           x += w + 1.5;
           return el;
         })}

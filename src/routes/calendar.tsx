@@ -319,7 +319,7 @@ function CalendarPage() {
       <div className="mt-3 flex items-center justify-between gap-3">
         <button
           onClick={() => setIdx(findMonthIndexForDate(months))}
-          className="pressable inline-flex min-h-[40px] items-center gap-2 rounded-full border border-[rgba(198,255,0,0.35)] bg-[rgba(198,255,0,0.10)] px-4 text-xs font-semibold text-gold"
+          className="pressable inline-flex min-h-[40px] items-center gap-2 rounded-full border border-[rgba(var(--gold-rgb),0.35)] bg-[rgba(var(--gold-rgb),0.10)] px-4 text-xs font-semibold text-gold"
         >
           <Calendar className="h-3.5 w-3.5" />
           Ir a hoy
@@ -387,8 +387,8 @@ function CalendarPage() {
                             : d
                               ? "glass glass-sheen"
                               : "glass-quiet opacity-45",
-                        done ? "border-[rgba(198,255,0,0.48)] bg-[rgba(198,255,0,0.10)]" : "",
-                        isToday ? "ring-1 ring-[rgba(198,255,0,0.9)]" : "",
+                        done ? "border-[rgba(var(--gold-rgb),0.48)] bg-[rgba(var(--gold-rgb),0.10)]" : "",
+                        isToday ? "ring-1 ring-[rgba(var(--gold-rgb),0.9)]" : "",
                       ].join(" ")}
                     >
                       <div className="flex items-start justify-between gap-1">
@@ -680,7 +680,7 @@ function ShiftSheet({
       <div
         role="dialog"
         aria-label="Mover el plan"
-        className="w-full rounded-t-[24px] bg-[#1B1B1D] border-t border-white/10 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-5"
+        className="w-full rounded-t-[24px] bg-[color:var(--card)] border-t border-white/10 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-5"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-[28px] font-extrabold leading-none" style={{ fontFamily: "var(--font-editorial)" }}>Mover el plan</h2>

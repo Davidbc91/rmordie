@@ -269,7 +269,7 @@ function Home() {
               <span
                 className="grid h-10 w-10 place-items-center rounded-full text-[14px] font-bold"
                 style={
-                  done ? { background: "#333B18", color: "var(--gold)" }
+                  done ? { background: "var(--gold-tint)", color: "var(--gold)" }
                   : isToday ? { border: "2px solid var(--foreground)", color: "var(--foreground)" }
                   : { background: "rgba(255,255,255,.08)", color: "var(--muted-foreground)", opacity: rest ? 0.45 : 1 }
                 }
@@ -369,7 +369,7 @@ function Home() {
               <div className="flex flex-col rounded-[24px] bg-card px-4 py-1">
                 {recentPrs.map((r, i) => (
                   <Link key={r.id} to="/records" className={`pressable flex min-h-[62px] items-center gap-3 py-2.5 ${i > 0 ? "border-t border-white/[0.06]" : ""}`}>
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px]" style={{ background: "#333B18", color: "var(--gold)" }}><Trophy className="h-[18px] w-[18px]" /></span>
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px]" style={{ background: "var(--gold-tint)", color: "var(--gold)" }}><Trophy className="h-[18px] w-[18px]" /></span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[15px] font-bold">{r.exercise}</span>
                       <span className="block text-[13px] text-muted-foreground">{r.rep_max ? `${r.rep_max}RM` : "RM"} · {new Date(r.changed_at).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}</span>
@@ -475,7 +475,7 @@ function TodayCard({ next, todayPlan, todayDone, weekProgress, records }: {
         </div>
         <h2 className="text-[22px] font-extrabold leading-tight tracking-tight">Entreno completado</h2>
         <div className="flex flex-wrap gap-1.5">
-          {todayDone.prs > 0 && <span className="rounded-full px-3 py-1.5 text-[13px] font-bold" style={{ background: "#333B18", color: "var(--gold)" }}>🏆 {todayDone.prs} {todayDone.prs === 1 ? "récord" : "récords"}</span>}
+          {todayDone.prs > 0 && <span className="rounded-full px-3 py-1.5 text-[13px] font-bold" style={{ background: "var(--gold-tint)", color: "var(--gold)" }}>🏆 {todayDone.prs} {todayDone.prs === 1 ? "récord" : "récords"}</span>}
           {todayDone.volume > 0 && <span className="rounded-full bg-white/[0.07] px-3 py-1.5 text-[13px] font-bold">{Math.round(todayDone.volume).toLocaleString("es-ES")} kg</span>}
           {todayDone.rpe != null && <span className="rounded-full bg-white/[0.07] px-3 py-1.5 text-[13px] font-bold">RPE {formatKg(todayDone.rpe)}</span>}
         </div>

@@ -476,7 +476,7 @@ function TimerRunner({ mode }: { mode: Mode }) {
               fontFamily: "var(--font-num)",
               fontSize: roundTotal != null || countsRounds ? "min(32vw, 42vh)" : "min(38vw, 55vh)",
               color: phase === "done" ? "var(--gold)" : phase === "rest" ? "#FFFFFF" : isPrep ? "#fff" : "var(--gold)",
-              textShadow: phase === "work" || (!isPrep && phase !== "rest" && phase !== "done") ? "0 0 40px rgba(198,255,0,.28)" : "none",
+              textShadow: phase === "work" || (!isPrep && phase !== "rest" && phase !== "done") ? "0 0 40px rgba(var(--gold-rgb),.28)" : "none",
               letterSpacing: "0.01em",
             }}
           >

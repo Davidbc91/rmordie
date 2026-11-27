@@ -119,7 +119,7 @@ export function NotificationSettings() {
       ) : unsupported ? (
         <p className="rounded-[16px] bg-white/[0.04] p-3.5 text-[13.5px] text-muted-foreground">Este navegador no admite avisos. Prueba desde el móvil con Chrome (Android) o Safari (iPhone).</p>
       ) : active ? (
-        <div className="flex items-center gap-2.5 rounded-[16px] border px-3.5 py-3 text-[13.5px]" style={{ background: "#262C12", borderColor: "rgba(198,255,0,.22)" }}>
+        <div className="flex items-center gap-2.5 rounded-[16px] border px-3.5 py-3 text-[13.5px]" style={{ background: "var(--gold-tint-2)", borderColor: "rgba(var(--gold-rgb),.22)" }}>
           <span className="text-gold">✓</span>
           <span className="min-w-0 flex-1"><b>Activados en este móvil.</b> Elige cuáles te llegan.</span>
           <button type="button" disabled={busy} onClick={turnOff} className="min-h-9 shrink-0 text-[12.5px] font-semibold text-muted-foreground">Desactivar</button>
@@ -138,7 +138,7 @@ export function NotificationSettings() {
               const off = (!it.legacy && !extended && !!prefs) || (it.key === "coach_injury_enabled" && !!prefs && !hasInjuryPref);
               return (
                 <div key={it.key} className={`flex min-h-[58px] items-center gap-3 py-2.5 ${i > 0 ? "border-t border-white/[0.06]" : ""}`}>
-                  <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] text-[16px]" style={{ background: "#333B18" }}>{it.icon}</span>
+                  <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] text-[16px]" style={{ background: "var(--gold-tint)" }}>{it.icon}</span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15px] font-bold">{it.title}</span>
                     {it.hint && <span className="block text-[12.5px] text-muted-foreground">{off ? "Disponible al aplicar la actualización de avisos" : it.hint}</span>}
@@ -157,7 +157,7 @@ export function NotificationSettings() {
       <div>
         <p className="mb-1.5 px-1 text-[12.5px] font-extrabold text-muted-foreground">Silencio</p>
         <div className="flex min-h-[58px] items-center gap-3 rounded-[20px] bg-card px-3.5 py-2.5">
-          <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] text-[16px]" style={{ background: "#333B18" }}>🌙</span>
+          <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[10px] text-[16px]" style={{ background: "var(--gold-tint)" }}>🌙</span>
           <span className="min-w-0 flex-1"><span className="block text-[15px] font-bold">No molestar</span><span className="block text-[12.5px] text-muted-foreground">Los avisos esperan a que acabe</span></span>
           <input type="time" step={900} disabled={!extended} value={v.quiet_start} aria-label="Silencio desde" onChange={(e) => e.target.value && persist({ ...v, quiet_start: e.target.value.slice(0, 5) })} className="min-h-9 w-[78px] rounded-[10px] bg-white/[0.07] px-1.5 text-[14px] font-bold outline-none disabled:opacity-40" />
           <span className="text-muted-foreground">–</span>

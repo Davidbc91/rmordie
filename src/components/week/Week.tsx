@@ -64,7 +64,7 @@ export function WeekCard() {
   };
 
   return (
-    <div className="rise rise-2 flex items-center gap-2 rounded-[20px] border py-1 pl-3.5 pr-1" style={{ background: "linear-gradient(135deg, #262C12, #1B1B1D 70%)", borderColor: "rgba(198,255,0,.2)" }}>
+    <div className="rise rise-2 flex items-center gap-2 rounded-[20px] border py-1 pl-3.5 pr-1" style={{ background: "linear-gradient(135deg, var(--gold-tint-2), var(--card) 70%)", borderColor: "rgba(var(--gold-rgb),.2)" }}>
       <Link to="/semana" search={{ w: monday }} className="pressable flex min-h-[54px] min-w-0 flex-1 items-center gap-2 py-1.5">
         <span className="min-w-0 flex-1">
           <span className="block text-[12.5px] font-bold text-gold">Tu semana pasada · {weekRange(monday)}</span>

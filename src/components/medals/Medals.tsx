@@ -49,7 +49,7 @@ export function MedalsStrip({ onOpen }: { onOpen: () => void }) {
           type="button"
           onClick={onOpen}
           className="pressable mt-3 flex w-full items-center gap-3 rounded-[20px] border p-3.5 text-left"
-          style={{ background: "#262C12", borderColor: "rgba(198,255,0,.2)" }}
+          style={{ background: "var(--gold-tint-2)", borderColor: "rgba(var(--gold-rgb),.2)" }}
         >
           <MedalIcon family={next.family} tier={next.tier} code={next.code} badge={next.badge} earned={false} size={54} />
           <span className="min-w-0 flex-1">
@@ -87,7 +87,7 @@ export function MedalsShowcase() {
             type="button"
             onClick={() => setFilter(f.key)}
             className="min-h-9 shrink-0 rounded-full px-3.5 text-[13px] font-semibold"
-            style={filter === f.key ? { background: "#333B18", color: "var(--gold)" } : { background: "rgba(255,255,255,0.07)", color: "var(--muted-foreground)" }}
+            style={filter === f.key ? { background: "var(--gold-tint)", color: "var(--gold)" } : { background: "rgba(255,255,255,0.07)", color: "var(--muted-foreground)" }}
           >
             {f.label}
           </button>
@@ -128,10 +128,10 @@ function MedalSheet({ medal: m, date, onClose }: { medal: MedalState; date: stri
   return createPortal(
     <div className="fixed inset-0 z-[70] flex items-end" role="dialog" aria-label={m.name}>
       <button aria-label="Cerrar" onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-[6px]" />
-      <div className="animate-fade relative mx-auto w-full max-w-2xl rounded-t-[28px] border-t border-white/10 bg-[#141416] px-5 pt-3 text-center" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
+      <div className="animate-fade relative mx-auto w-full max-w-2xl rounded-t-[28px] border-t border-white/10 bg-[color:var(--level-1)] px-5 pt-3 text-center" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
         <div aria-hidden className="mx-auto mb-4 h-[5px] w-10 rounded-full bg-white/20" />
         <div className="mx-auto w-fit"><MedalIcon family={m.family} tier={m.tier} code={m.code} badge={m.badge} earned={m.earned} size={120} /></div>
-        <span className="mt-3 inline-block rounded-full px-3 py-1 text-[12.5px] font-bold" style={m.earned ? { background: "#333B18", color: "var(--gold)" } : { background: "rgba(255,255,255,.07)", color: "var(--muted-foreground)" }}>
+        <span className="mt-3 inline-block rounded-full px-3 py-1 text-[12.5px] font-bold" style={m.earned ? { background: "var(--gold-tint)", color: "var(--gold)" } : { background: "rgba(255,255,255,.07)", color: "var(--muted-foreground)" }}>
           {m.earned ? TIER_LABEL[m.tier] : `Bloqueada · ${TIER_LABEL[m.tier]}`}
         </span>
         <h3 className="mt-2 text-[24px] font-extrabold tracking-tight">{m.name}</h3>
@@ -230,15 +230,15 @@ function MedalCelebration({ medal: m, next, onClose }: { medal: MedalState; next
   return createPortal(
     <div
       className="fixed inset-0 z-[85] flex flex-col items-center justify-center gap-3 px-8 text-center"
-      style={{ background: "radial-gradient(60% 40% at 50% 40%, rgba(198,255,0,.16), transparent 70%), rgba(0,0,0,.86)", backdropFilter: "blur(8px)" }}
+      style={{ background: "radial-gradient(60% 40% at 50% 40%, rgba(var(--gold-rgb),.16), transparent 70%), rgba(0,0,0,.86)", backdropFilter: "blur(8px)" }}
       role="status"
       aria-live="polite"
     >
       <div aria-hidden className="medal-rays" />
-      <div className="medal-pop relative" style={{ filter: "drop-shadow(0 0 30px rgba(198,255,0,.35))" }}>
+      <div className="medal-pop relative" style={{ filter: "drop-shadow(0 0 30px rgba(var(--gold-rgb),.35))" }}>
         <MedalIcon family={m.family} tier={m.tier} code={m.code} badge={m.badge} earned size={170} />
       </div>
-      <span className="relative rounded-full px-3 py-1 text-[12.5px] font-bold" style={{ background: "#333B18", color: "var(--gold)" }}>
+      <span className="relative rounded-full px-3 py-1 text-[12.5px] font-bold" style={{ background: "var(--gold-tint)", color: "var(--gold)" }}>
         Nueva medalla · {TIER_LABEL[m.tier]}
       </span>
       <h2 className="relative text-[30px] font-extrabold leading-tight tracking-tight">{m.name}</h2>

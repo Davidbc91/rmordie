@@ -99,7 +99,7 @@ export function PrCelebration({
   );
 }
 
-const CONFETTI_COLORS = ["#C6FF00", "#FF8A3D", "#3BB8F5", "#C6FF00", "#DBFF66"];
+const CONFETTI_COLORS = ["var(--gold)", "#FF8A3D", "#3BB8F5", "var(--gold)", "var(--gold-soft)"];
 /** Confeti de colores al batir un récord. */
 function Confetti() {
   const pieces = Array.from({ length: 60 }, (_, i) => {

@@ -16,7 +16,7 @@ export const Route = createFileRoute("/admin/usuarios")({
 
 type Filter = "all" | "new" | "active" | "idle" | "noplan";
 const TAGS: Record<UserStatus, { label: string; bg: string; fg: string }> = {
-  new: { label: "Nuevo", bg: "#333B18", fg: "#C6FF00" },
+  new: { label: "Nuevo", bg: "var(--gold-tint)", fg: "var(--gold)" },
   active: { label: "Activo", bg: "#13303D", fg: "#3BB8F5" },
   idle: { label: "Se enfría", bg: "#3A2414", fg: "#FF8A3D" },
   unstarted: { label: "Sin empezar", bg: "#2C2C2F", fg: "#A6A6A0" },
@@ -44,7 +44,7 @@ function Panel() {
   if (isError) {
     const msg = (error as Error)?.message ?? "";
     return (
-      <div className="rounded-[24px] bg-[#1B1B1D] p-5 text-sm text-muted-foreground">
+      <div className="rounded-[24px] bg-[color:var(--card)] p-5 text-sm text-muted-foreground">
         {/admin_users_overview|function|404/i.test(msg)
           ? "Falta aplicar la migración del panel (20261127120000_panel_administrador.sql) en Lovable."
           : `No se pudo cargar el panel: ${msg}`}
@@ -82,7 +82,7 @@ function Panel() {
         <Kpi label="Con avisos" value={s.withPush} note={[s.iphone && `${s.iphone} iPhone`, s.android && `${s.android} Android`, s.other && `${s.other} ordenador`].filter(Boolean).join(" · ") || "Nadie todavía"} tone="#FF8A3D" />
       </div>
 
-      <section className="rounded-[24px] bg-[#1B1B1D] p-[18px]">
+      <section className="rounded-[24px] bg-[color:var(--card)] p-[18px]">
         <div className="flex items-baseline justify-between">
           <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted-foreground">Altas por semana</span>
           <span className="text-xs text-muted-foreground">últimas 12 semanas</span>
@@ -95,7 +95,7 @@ function Panel() {
             const best = w === bestWeek && w.count > 0;
             return (
               <g key={w.monday}>
-                <rect x={x} y={140 - h} width={22} height={h} rx={6} fill={last || best ? "#C6FF00" : "#3A3A3D"} opacity={best && !last ? 0.6 : 1} />
+                <rect x={x} y={140 - h} width={22} height={h} rx={6} fill={last || best ? "var(--gold)" : "#3A3A3D"} opacity={best && !last ? 0.6 : 1} />
                 {(last || best) && w.count > 0 && (
                   <text x={x + 11} y={132 - h} textAnchor="middle" fontSize={14} fontWeight={800} fill="#F4F4F2">{w.count}</text>
                 )}
@@ -112,7 +112,7 @@ function Panel() {
         )}
       </section>
 
-      <section className="rounded-[24px] bg-[#1B1B1D] p-[18px]">
+      <section className="rounded-[24px] bg-[color:var(--card)] p-[18px]">
         <div className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted-foreground">Qué hacen después de entrar</div>
         <div className="mt-3.5 space-y-3">
           {s.funnel.map((f, i) => (
@@ -121,7 +121,7 @@ function Panel() {
                 <span className="text-sm font-bold">{f.label}</span>
                 <span className="text-2xl font-extrabold leading-none" style={NUM}>{f.value}</span>
               </div>
-              <div className="mt-1 h-3.5 rounded-full bg-[#232326]">
+              <div className="mt-1 h-3.5 rounded-full bg-[color:var(--chip-soft)]">
                 <div className="h-3.5 rounded-full bg-[var(--gold)]" style={{ width: `${s.total ? (f.value / s.total) * 100 : 0}%`, opacity: 1 - i * 0.18 }} />
               </div>
             </div>
@@ -136,7 +136,7 @@ function Panel() {
 
       <SignupToggle />
 
-      <section className="rounded-[24px] bg-[#1B1B1D] px-[18px] pb-1.5 pt-[18px]">
+      <section className="rounded-[24px] bg-[color:var(--card)] px-[18px] pb-1.5 pt-[18px]">
         <div className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted-foreground">Usuarios</div>
         <label className="relative block">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -146,7 +146,7 @@ function Panel() {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar por nombre o correo"
             aria-label="Buscar usuario"
-            className="h-11 w-full rounded-[14px] bg-[#2C2C2F] pl-9 pr-3 text-base outline-none focus:ring-1 focus:ring-[var(--gold)]"
+            className="h-11 w-full rounded-[14px] bg-[color:var(--chip)] pl-9 pr-3 text-base outline-none focus:ring-1 focus:ring-[var(--gold)]"
           />
         </label>
         <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Filtrar usuarios">
@@ -155,7 +155,7 @@ function Panel() {
               key={k}
               onClick={() => setFilter(k)}
               aria-pressed={filter === k}
-              className={`min-h-10 shrink-0 rounded-full px-3.5 text-[13px] font-bold ${filter === k ? "bg-[#333B18] text-[var(--gold)]" : "bg-[#2C2C2F] text-muted-foreground"}`}
+              className={`min-h-10 shrink-0 rounded-full px-3.5 text-[13px] font-bold ${filter === k ? "bg-[color:var(--gold-tint)] text-[var(--gold)]" : "bg-[color:var(--chip)] text-muted-foreground"}`}
             >
               {label} · {count(k)}
             </button>
@@ -175,7 +175,7 @@ function Panel() {
 
 function Kpi({ label, value, note, tone, noteTone }: { label: string; value: number; note: string; tone: string; noteTone?: string }) {
   return (
-    <div className="rounded-[20px] bg-[#1B1B1D] p-3.5">
+    <div className="rounded-[20px] bg-[color:var(--card)] p-3.5">
       <div className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted-foreground">{label}</div>
       <div className="mt-1.5 text-[44px] font-extrabold leading-none" style={{ ...NUM, color: tone }}>{value}</div>
       <div className="mt-1 text-xs font-bold" style={{ color: noteTone ?? "var(--muted-foreground)" }}>{note}</div>
@@ -188,7 +188,7 @@ function SignupToggle() {
   const save = useSaveNotificationPreferences();
   const on = prefs?.admin_signups_enabled ?? true;
   return (
-    <section className="flex items-center justify-between gap-3 rounded-[24px] bg-[#1B1B1D] p-[18px]">
+    <section className="flex items-center justify-between gap-3 rounded-[24px] bg-[color:var(--card)] p-[18px]">
       <div>
         <div className="text-[15px] font-extrabold">Avisarme de cada alta</div>
         <div className="mt-0.5 text-[13px] text-muted-foreground">«Laura se ha unido a RM OR DIE». Necesitas los avisos activados en este móvil.</div>
@@ -199,9 +199,9 @@ function SignupToggle() {
         aria-label="Avisarme de cada alta"
         disabled={save.isPending}
         onClick={() => save.mutate({ admin_signups_enabled: !on }, { onError: () => toast.error("No se pudo guardar") })}
-        className={`relative h-[30px] w-[52px] shrink-0 rounded-full transition-colors ${on ? "bg-[var(--gold)]" : "bg-[#2C2C2F]"}`}
+        className={`relative h-[30px] w-[52px] shrink-0 rounded-full transition-colors ${on ? "bg-[var(--gold)]" : "bg-[color:var(--chip)]"}`}
       >
-        <span className={`absolute top-1 h-[22px] w-[22px] rounded-full transition-all ${on ? "right-1 bg-[#0C0C0E]" : "left-1 bg-[#A6A6A0]"}`} />
+        <span className={`absolute top-1 h-[22px] w-[22px] rounded-full transition-all ${on ? "right-1 bg-[color:var(--background)]" : "left-1 bg-[#A6A6A0]"}`} />
       </button>
     </section>
   );
@@ -212,9 +212,9 @@ function UserRow({ u, open, onToggle }: { u: AdminUser; open: boolean; onToggle:
   const tag = TAGS[st];
   const devices = [...new Set((u.devices ?? []).map(deviceKind))];
   return (
-    <div className="border-b border-[#2C2C2F] last:border-0">
+    <div className="border-b border-[color:var(--chip)] last:border-0">
       <button onClick={onToggle} aria-expanded={open} className="flex w-full items-center gap-3 py-3 text-left">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[13px] bg-[#232326] text-sm font-extrabold" style={{ color: tag.fg }}>{initials(u.name)}</span>
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[13px] bg-[color:var(--chip-soft)] text-sm font-extrabold" style={{ color: tag.fg }}>{initials(u.name)}</span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[15px] font-extrabold">{u.name}</span>
           <span className="block truncate text-xs text-muted-foreground">
@@ -245,7 +245,7 @@ function UserRow({ u, open, onToggle }: { u: AdminUser; open: boolean; onToggle:
 
 function Mini({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-[14px] bg-[#232326] p-2.5">
+    <div className="rounded-[14px] bg-[color:var(--chip-soft)] p-2.5">
       <div className="text-[26px] font-extrabold leading-none" style={NUM}>{value}</div>
       <div className="mt-1 text-[11px] text-muted-foreground">{label}</div>
     </div>

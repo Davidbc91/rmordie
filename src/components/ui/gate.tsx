@@ -124,7 +124,7 @@ export function PinGate({ children }: { children: ReactNode }) {
       </div>
     );
   } else if (profile.status === "unlinked") {
-    subtitle = "Vincula tu perfil";
+    subtitle = "Bienvenido a RM OR DIE";
     body = (
       <LinkStep
         email={session.user.email ?? ""}
@@ -160,7 +160,7 @@ export function PinGate({ children }: { children: ReactNode }) {
       />
       <div className="relative w-full max-w-sm">
         <div className="rise rise-1 mb-10 flex flex-col items-center text-center">
-          <img src={logoAsset.url} alt="" className="mb-5 h-24 w-24 rounded-[26%] object-cover shadow-[0_18px_50px_-12px_rgba(59,184,245,.45)]" />
+          <img src={logoAsset.url} alt="" className="mb-5 h-24 w-24 rounded-[26%] object-cover shadow-[0_18px_50px_-12px_rgba(198,255,0,.35)]" />
           <div className="leading-none" style={{ fontFamily: "var(--font-editorial)", fontWeight: 800, fontSize: "44px", letterSpacing: "-0.04em", color: "var(--foreground)" }}>
             RM <span className="aurora-text">OR</span> DIE
           </div>
@@ -384,7 +384,7 @@ function EmailStep() {
 
 function LinkStep({ email, onLinked }: { email: string; onLinked: (profile: Profile, pin: string) => void }) {
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
-  const [mode, setMode] = useState<"pick" | "pin" | "create">("pick");
+  const [mode, setMode] = useState<"pick" | "pin" | "create">("create");
   const [selected, setSelected] = useState<Profile | null>(null);
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
@@ -394,10 +394,7 @@ function LinkStep({ email, onLinked }: { email: string; onLinked: (profile: Prof
 
   useEffect(() => {
     fetchUnlinkedProfiles()
-      .then((list) => {
-        setProfiles(list);
-        if (list.length === 0) setMode("create");
-      })
+      .then((list) => setProfiles(list))
       .catch((e) => setError(errorText(e, "No se pudieron cargar los perfiles.")));
   }, []);
 
@@ -424,15 +421,21 @@ function LinkStep({ email, onLinked }: { email: string; onLinked: (profile: Prof
     e.preventDefault();
     setError(null);
     const n = name.trim();
-    if (n.length < 2) return setError("El nombre es demasiado corto");
-    if (pin.length < 4) return setError("PIN mínimo 4 dígitos");
-    if (pin !== pin2) return setError("Los PIN no coinciden");
+    if (n.length < 2) return setError("Escribe tu nombre (mínimo 2 letras).");
+    if (n.length > 40) return setError("El nombre es demasiado largo (máximo 40 caracteres).");
+    if (pin.length < 4 || pin.length > 8) return setError("El PIN debe tener de 4 a 8 cifras.");
+    if (pin !== pin2) return setError("Los dos PIN no coinciden.");
     setBusy(true);
     try {
       const id = await createMyProfile(n, pin);
       onLinked({ id, name: n, created_at: new Date().toISOString() }, pin);
     } catch (err) {
-      setError(errorText(err, "No se pudo crear el perfil."));
+      const msg = errorText(err, "No se pudo crear el perfil.");
+      setError(/ya existe un perfil con ese nombre/i.test(msg)
+        ? "Ese nombre ya lo usa otra persona. Añade tu apellido o una inicial."
+        : /ya tiene un perfil vinculado/i.test(msg)
+          ? "Tu cuenta ya tiene perfil. Recarga la app para entrar."
+          : msg);
     } finally {
       setBusy(false);
     }
@@ -452,7 +455,7 @@ function LinkStep({ email, onLinked }: { email: string; onLinked: (profile: Prof
     return (
       <div className="space-y-2">
         <p className="mb-3 text-center text-xs text-muted-foreground">
-          Has entrado como <span className="text-foreground">{email}</span>. Elige tu perfil de siempre para conservar tus datos.
+          Has entrado como <span className="text-foreground">{email}</span>. Si ya usabas la app antes de entrar con correo, elige tu perfil de siempre para conservar tus datos.
         </p>
         {(profiles ?? []).map((p) => (
           <button
@@ -474,7 +477,7 @@ function LinkStep({ email, onLinked }: { email: string; onLinked: (profile: Prof
           <div className="flex h-10 w-10 items-center justify-center rounded-[14px] gold-gradient">
             <UserPlus className="h-4 w-4" style={{ color: "var(--gold-foreground)" }} />
           </div>
-          Soy nuevo: crear perfil
+          No estoy en la lista: crear perfil nuevo
         </button>
         {error && <p role="alert" className="text-center text-sm text-destructive">{error}</p>}
         <div className="pt-2">{signOutButton}</div>
@@ -493,10 +496,11 @@ function LinkStep({ email, onLinked }: { email: string; onLinked: (profile: Prof
           type="password"
           inputMode="numeric"
           pattern="[0-9]*"
+          maxLength={8}
           placeholder="PIN"
           aria-label="PIN"
           value={pin}
-          onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))}
+          onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, "").slice(0, 8))}
           className={pinCls}
         />
         {error && <p role="alert" className="text-center text-sm text-destructive">{error}</p>}
@@ -506,26 +510,31 @@ function LinkStep({ email, onLinked }: { email: string; onLinked: (profile: Prof
         <button type="button" onClick={() => { setMode("pick"); setError(null); }} className={secondaryCls}>
           <ChevronLeft className="h-4 w-4" /> Elegir otro perfil
         </button>
+        <button type="button" onClick={() => { setMode("create"); setPin(""); setError(null); }} className={secondaryCls}>
+          Soy nuevo: crear perfil
+        </button>
       </form>
     );
   }
 
   return (
     <form onSubmit={submitCreate} className="space-y-3">
-      <input autoFocus type="text" placeholder="Tu nombre" aria-label="Tu nombre" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
-      <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="PIN (mínimo 4 dígitos)" aria-label="PIN" value={pin} onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ""))} className={pinCls} />
-      <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="Confirma PIN" aria-label="Confirma el PIN" value={pin2} onChange={(e) => setPin2(e.target.value.replace(/[^0-9]/g, ""))} className={pinCls} />
+      <p className="mb-1 text-center text-xs text-muted-foreground">
+        Has entrado como <span className="text-foreground">{email}</span>. Último paso: tu nombre, que verán tus compañeros del box, y un PIN para abrir la app en este móvil.
+      </p>
+      <input autoFocus type="text" autoComplete="name" maxLength={40} placeholder="Nombre y apellido" aria-label="Nombre y apellido" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+      <input type="password" inputMode="numeric" pattern="[0-9]*" maxLength={8} autoComplete="new-password" placeholder="PIN de 4 a 8 cifras" aria-label="PIN de 4 a 8 cifras" value={pin} onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, "").slice(0, 8))} className={pinCls} />
+      <input type="password" inputMode="numeric" pattern="[0-9]*" maxLength={8} autoComplete="new-password" placeholder="Repite el PIN" aria-label="Repite el PIN" value={pin2} onChange={(e) => setPin2(e.target.value.replace(/[^0-9]/g, "").slice(0, 8))} className={pinCls} />
       {error && <p role="alert" className="text-center text-sm text-destructive">{error}</p>}
       <button type="submit" disabled={busy} className={primaryCls} style={{ color: "var(--gold-foreground)" }}>
         {busy ? "Creando…" : "Crear perfil y entrar"}
       </button>
-      {(profiles ?? []).length > 0 ? (
+      {(profiles ?? []).length > 0 && (
         <button type="button" onClick={() => { setMode("pick"); setError(null); }} className={secondaryCls}>
-          <ChevronLeft className="h-4 w-4" /> Ya tengo perfil
+          ¿Usabas la app antes? Recupera tu perfil
         </button>
-      ) : (
-        signOutButton
       )}
+      {signOutButton}
     </form>
   );
 }

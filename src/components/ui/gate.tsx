@@ -1,7 +1,7 @@
 import logoAsset from "@/assets/rmordie-logo.jpg.asset.json";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ChevronLeft, Mail, User, UserPlus } from "lucide-react";
-import { authErrorMessage, sendLoginEmail, signInWithPassword, useSession, verifyLoginCode } from "@/lib/auth";
+import { authErrorMessage, sendLoginEmail, signInWithPassword, signUpWithPassword, useSession, verifyLoginCode } from "@/lib/auth";
 import {
   getCurrentUserId,
   isUnlocked,
@@ -218,8 +218,12 @@ function EmailStep() {
     }
   }, []);
   const [code, setCode] = useState("");
-  const [usePassword, setUsePassword] = useState(false);
+  // Por defecto: crear cuenta con correo y contraseña (el correo de acceso solo trae enlace,
+  // y en la app instalada del iPhone el enlace abre el navegador).
+  const [mode, setMode] = useState<"signup" | "login" | "code">("signup");
   const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
@@ -283,9 +287,68 @@ function EmailStep() {
     }
   }
 
-  if (!sentTo && usePassword) {
+  async function onSubmitSignup(e: FormEvent) {
+    e.preventDefault();
+    setNotice(null);
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError("Escribe un correo válido.");
+    if (password.length < 8) return setError("La contraseña debe tener al menos 8 caracteres.");
+    if (password !== password2) return setError("Las dos contraseñas no coinciden.");
+    setError(null);
+    setBusy(true);
+    try {
+      const result = await signUpWithPassword(email, password);
+      if (result === "exists") {
+        // Puede que ya la tuviera: probamos a entrar con esa contraseña.
+        try {
+          await signInWithPassword(email, password);
+        } catch {
+          setMode("login");
+          setPassword2("");
+          setError("Ese correo ya tiene cuenta. Entra con tu contraseña, o con el código si aún no la creaste.");
+        }
+      } else if (result === "confirm") {
+        setNotice(`Te hemos enviado un correo a ${email.trim()}. Pulsa el enlace para activar la cuenta y luego entra aquí con tu contraseña.`);
+        setMode("login");
+        setPassword2("");
+      }
+      // "signed-in": la sesión llega por onAuthStateChange y la pantalla avanza sola.
+    } catch (err) {
+      setError(authErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const switchTo = (m: "signup" | "login" | "code") => { setMode(m); setError(null); setNotice(null); };
+  const noticeBox = notice && (
+    <div role="status" className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-sm">
+      <Mail className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+      <p className="text-muted-foreground">{notice}</p>
+    </div>
+  );
+
+  if (!sentTo && mode === "signup") {
+    return (
+      <form onSubmit={onSubmitSignup} className="space-y-3">
+        <p className="text-center text-xs text-muted-foreground">¿Nuevo en RM OR DIE? Crea tu cuenta.</p>
+        <input autoFocus type="email" inputMode="email" autoComplete="email" placeholder="tu@correo.com" aria-label="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+        <input type="password" autoComplete="new-password" placeholder="Contraseña (mínimo 8)" aria-label="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
+        <input type="password" autoComplete="new-password" placeholder="Repite la contraseña" aria-label="Repite la contraseña" value={password2} onChange={(e) => setPassword2(e.target.value)} className={inputCls} />
+        {error && <p role="alert" className="text-center text-sm text-destructive">{error}</p>}
+        <button type="submit" disabled={busy} className={primaryCls} style={{ color: "var(--gold-foreground)" }}>
+          {busy ? "Creando cuenta…" : "Crear cuenta"}
+        </button>
+        <button type="button" onClick={() => switchTo("login")} className={secondaryCls}>
+          Ya tengo cuenta: entrar
+        </button>
+      </form>
+    );
+  }
+
+  if (!sentTo && mode === "login") {
     return (
       <form onSubmit={onSubmitPassword} className="space-y-3">
+        {noticeBox}
         <input
           type="email"
           inputMode="email"
@@ -309,10 +372,12 @@ function EmailStep() {
         <button type="submit" disabled={busy} className={primaryCls} style={{ color: "var(--gold-foreground)" }}>
           {busy ? "Entrando…" : "Entrar"}
         </button>
-        <button type="button" onClick={() => { setUsePassword(false); setError(null); }} className={secondaryCls}>
-          <ChevronLeft className="h-4 w-4" /> Entrar con código por correo
+        <button type="button" onClick={() => switchTo("code")} className={secondaryCls}>
+          No tengo contraseña: entrar con el correo
         </button>
-        <p className="text-center text-xs text-muted-foreground">La contraseña se crea en Ajustes, después de entrar una vez con el correo.</p>
+        <button type="button" onClick={() => switchTo("signup")} className={secondaryCls}>
+          <ChevronLeft className="h-4 w-4" /> Crear cuenta nueva
+        </button>
       </form>
     );
   }
@@ -335,9 +400,9 @@ function EmailStep() {
         <button type="submit" disabled={busy} className={primaryCls} style={{ color: "var(--gold-foreground)" }}>
           {busy ? "Enviando…" : "Enviarme el acceso"}
         </button>
-        <p className="text-center text-xs text-muted-foreground">Te llega un correo para entrar.</p>
-        <button type="button" onClick={() => { setUsePassword(true); setError(null); }} className={secondaryCls}>
-          Tengo contraseña
+        <p className="text-center text-xs text-muted-foreground">Te llega un correo con un enlace para entrar. Ábrelo en este mismo navegador.</p>
+        <button type="button" onClick={() => switchTo("login")} className={secondaryCls}>
+          <ChevronLeft className="h-4 w-4" /> Entrar con contraseña
         </button>
       </form>
     );
@@ -348,8 +413,8 @@ function EmailStep() {
       <div className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-sm">
         <Mail className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
         <p className="text-muted-foreground">
-          Correo enviado a <span className="text-foreground">{sentTo}</span>. Escribe aquí el código que trae.
-          Si usas la app instalada en el iPhone, no pulses el enlace: abriría el navegador, no la app.
+          Correo enviado a <span className="text-foreground">{sentTo}</span>. Pulsa el enlace que trae para entrar.
+          Si el correo trae un código, escríbelo aquí. En la app instalada del iPhone el enlace abre el navegador: mejor entra con contraseña.
         </p>
       </div>
       <input

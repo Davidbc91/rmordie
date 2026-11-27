@@ -68,6 +68,28 @@ export async function signInWithPassword(email: string, password: string): Promi
   if (error) throw error;
 }
 
+/**
+ * Crea una cuenta nueva con correo y contraseña.
+ * - "signed-in": la cuenta queda creada y con sesión (confirmación de correo desactivada).
+ * - "confirm": hace falta confirmar el correo con el enlace que se envía.
+ * - "exists": ese correo ya tiene cuenta.
+ */
+export async function signUpWithPassword(email: string, password: string): Promise<"signed-in" | "confirm" | "exists"> {
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim().toLowerCase(),
+    password,
+    options: { emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
+  });
+  if (error) {
+    if (/already registered|already exists/i.test(error.message)) return "exists";
+    throw error;
+  }
+  if (data.session) return "signed-in";
+  // Supabase devuelve un usuario sin identidades cuando el correo ya estaba registrado.
+  if (data.user && (data.user.identities?.length ?? 0) === 0) return "exists";
+  return "confirm";
+}
+
 /** Pone o cambia la contraseña de la cuenta con la sesión actual. */
 export async function setAccountPassword(password: string): Promise<void> {
   const { error } = await supabase.auth.updateUser({ password });
@@ -85,14 +107,16 @@ export function authErrorMessage(error: unknown): string {
     return "El código no es válido o ha caducado. Pide uno nuevo.";
   }
   if (/invalid login credentials/i.test(raw)) {
-    return "Correo o contraseña incorrectos. Si aún no tienes contraseña, entra con el código y créala en Ajustes.";
+    return "Correo o contraseña incorrectos. Si aún no tienes contraseña, entra con el correo y créala en Ajustes.";
   }
-  if (/email not confirmed/i.test(raw)) return "Confirma primero tu correo entrando con el código.";
+  if (/email not confirmed/i.test(raw)) return "Primero activa la cuenta con el enlace que te enviamos al correo (mira también en spam) y vuelve a entrar.";
   if (/reauthentication/i.test(raw)) {
     return "Por seguridad, cierra sesión, vuelve a entrar con el correo y crea la contraseña justo después.";
   }
   if (/same.*password|different from the old/i.test(raw)) return "La contraseña nueva es igual que la anterior.";
-  if (/password/i.test(raw) && /(short|least|weak)/i.test(raw)) return "La contraseña es demasiado corta o débil.";
+  if (/pwned|leaked|compromised/i.test(raw)) return "Esa contraseña aparece en filtraciones conocidas. Elige otra.";
+  if (/signups? not allowed|signup.*disabled/i.test(raw)) return "Ahora mismo no se pueden crear cuentas nuevas. Avisa al administrador.";
+  if (/password/i.test(raw) && /(short|least|weak|characters)/i.test(raw)) return "La contraseña es demasiado corta o débil (mínimo 8 caracteres, mejor con letras y números).";
   if (/email/i.test(raw) && /invalid/i.test(raw)) return "Ese correo no parece válido.";
   return raw || "No se pudo completar el acceso. Inténtalo de nuevo.";
 }

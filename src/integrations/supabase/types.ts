@@ -862,6 +862,7 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
+          admin_signups_enabled: boolean
           challenges_enabled: boolean
           chat_enabled: boolean
           coach_idle_enabled: boolean
@@ -883,6 +884,7 @@ export type Database = {
           weekly_enabled: boolean
         }
         Insert: {
+          admin_signups_enabled?: boolean
           challenges_enabled?: boolean
           chat_enabled?: boolean
           coach_idle_enabled?: boolean
@@ -904,6 +906,7 @@ export type Database = {
           weekly_enabled?: boolean
         }
         Update: {
+          admin_signups_enabled?: boolean
           challenges_enabled?: boolean
           chat_enabled?: boolean
           coach_idle_enabled?: boolean
@@ -1833,6 +1836,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_users_overview: { Args: never; Returns: Json }
       challenge_leaderboard: {
         Args: { p_challenge: string }
         Returns: {

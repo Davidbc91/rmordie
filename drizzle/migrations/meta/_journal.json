@@ -120,6 +120,13 @@
       "when": 1795733563808,
       "tag": "0016_enlaces_movimientos",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795778396705,
+      "tag": "0017_panel_administrador",
+      "breakpoints": true
     }
   ]
 }

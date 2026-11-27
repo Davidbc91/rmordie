@@ -7,8 +7,9 @@ import { isVideoAdmin } from "@/lib/admin-videos";
 import { useNotificationPreferences, useSaveNotificationPreferences, type EditablePrefs } from "@/lib/notification-preferences";
 
 type BoolKey = "daily_enabled" | "weekly_enabled" | "round_enabled" | "challenges_enabled" | "chat_enabled" | "comments_enabled" | "plan_enabled" | "coach_prs_enabled" | "coach_idle_enabled" | "coach_weekly_enabled" | "coach_injury_enabled";
+type SettingsPrefs = Required<Omit<EditablePrefs, "admin_signups_enabled">>;
 
-const DEFAULTS: Required<EditablePrefs> = {
+const DEFAULTS: SettingsPrefs = {
   daily_enabled: false, daily_time: "08:00", weekly_enabled: false,
   round_enabled: true, challenges_enabled: true, chat_enabled: true, comments_enabled: true, plan_enabled: true,
   coach_prs_enabled: true, coach_idle_enabled: true, coach_weekly_enabled: true, coach_injury_enabled: true,
@@ -52,7 +53,7 @@ export function NotificationSettings() {
   const { data: prefs, isLoading } = useNotificationPreferences();
   const save = useSaveNotificationPreferences();
   const { data: isAdmin } = useQuery({ queryKey: ["video-admin", me], queryFn: isVideoAdmin, enabled: !!me, staleTime: 5 * 60 * 1000 });
-  const [v, setV] = useState<Required<EditablePrefs>>(DEFAULTS);
+  const [v, setV] = useState<SettingsPrefs>(DEFAULTS);
   const [active, setActive] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const extended = !!prefs && "round_enabled" in prefs;
@@ -61,10 +62,10 @@ export function NotificationSettings() {
   useEffect(() => { void isPushActive().then(setActive).catch(() => setActive(false)); }, []);
   useEffect(() => {
     if (!prefs) return;
-    setV((cur) => ({ ...cur, ...Object.fromEntries(Object.entries(prefs).filter(([k, x]) => k in DEFAULTS && x != null)) } as Required<EditablePrefs>));
+    setV((cur) => ({ ...cur, ...Object.fromEntries(Object.entries(prefs).filter(([k, x]) => k in DEFAULTS && x != null)) } as SettingsPrefs));
   }, [prefs]);
 
-  async function persist(next: Required<EditablePrefs>) {
+  async function persist(next: SettingsPrefs) {
     setV(next);
     const payload: Partial<EditablePrefs> = extended || !prefs
       ? (hasInjuryPref || !prefs ? next : (({ coach_injury_enabled, ...rest }) => rest)(next))

@@ -19,7 +19,6 @@ export type Database = {
           bar_weights: Json
           id: string
           plate_weights: Json
-          theme: Json
           updated_at: string
           user_id: string
         }
@@ -27,7 +26,6 @@ export type Database = {
           bar_weights?: Json
           id?: string
           plate_weights?: Json
-          theme?: Json
           updated_at?: string
           user_id: string
         }
@@ -35,7 +33,6 @@ export type Database = {
           bar_weights?: Json
           id?: string
           plate_weights?: Json
-          theme?: Json
           updated_at?: string
           user_id?: string
         }

@@ -18,6 +18,7 @@ export type NotificationPreferences = {
   coach_idle_enabled?: boolean;
   coach_weekly_enabled?: boolean;
   coach_injury_enabled?: boolean;
+  admin_signups_enabled?: boolean;
   quiet_start?: string;
   quiet_end?: string;
 };

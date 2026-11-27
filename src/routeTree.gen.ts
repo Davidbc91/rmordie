@@ -27,6 +27,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TimersRouteImport } from './routes/timers'
 import { Route as AdminEnlacesRouteImport } from './routes/admin.enlaces'
 import { Route as AdminVideosRouteImport } from './routes/admin.videos'
+import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
 import { Route as DictionaryMovementIdRouteImport } from './routes/dictionary.$movementId'
 import { Route as SocialIndexRouteImport } from './routes/social.index'
 import { Route as SocialBoardRouteImport } from './routes/social.board'
@@ -128,6 +129,11 @@ const AdminVideosRoute = AdminVideosRouteImport.update({
   path: '/admin/videos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
+  id: '/admin/usuarios',
+  path: '/admin/usuarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DictionaryMovementIdRoute = DictionaryMovementIdRouteImport.update({
   id: '/$movementId',
   path: '/$movementId',
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/timers': typeof TimersRoute
   '/admin/enlaces': typeof AdminEnlacesRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/timers': typeof TimersRoute
   '/admin/enlaces': typeof AdminEnlacesRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
@@ -259,6 +267,7 @@ export interface FileRoutesById {
   '/timers': typeof TimersRoute
   '/admin/enlaces': typeof AdminEnlacesRoute
   '/admin/videos': typeof AdminVideosRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/dictionary/$movementId': typeof DictionaryMovementIdRoute
   '/social/board': typeof SocialBoardRoute
   '/social/discover': typeof SocialDiscoverRoute
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/timers'
     | '/admin/enlaces'
     | '/admin/videos'
+    | '/admin/usuarios'
     | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/timers'
     | '/admin/enlaces'
     | '/admin/videos'
+    | '/admin/usuarios'
     | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/timers'
     | '/admin/enlaces'
     | '/admin/videos'
+    | '/admin/usuarios'
     | '/dictionary/$movementId'
     | '/social/board'
     | '/social/discover'
@@ -382,6 +394,7 @@ export interface RootRouteChildren {
   TimersRoute: typeof TimersRoute
   AdminEnlacesRoute: typeof AdminEnlacesRoute
   AdminVideosRoute: typeof AdminVideosRoute
+  AdminUsuariosRoute: typeof AdminUsuariosRoute
   SocialBoardRoute: typeof SocialBoardRoute
   SocialDiscoverRoute: typeof SocialDiscoverRoute
   SocialNotificationsRoute: typeof SocialNotificationsRoute
@@ -521,6 +534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminVideosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/usuarios': {
+      id: '/admin/usuarios'
+      path: '/admin/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminUsuariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dictionary/$movementId': {
       id: '/dictionary/$movementId'
       path: '/$movementId'
@@ -625,6 +645,7 @@ const rootRouteChildren: RootRouteChildren = {
   TimersRoute: TimersRoute,
   AdminEnlacesRoute: AdminEnlacesRoute,
   AdminVideosRoute: AdminVideosRoute,
+  AdminUsuariosRoute: AdminUsuariosRoute,
   SocialBoardRoute: SocialBoardRoute,
   SocialDiscoverRoute: SocialDiscoverRoute,
   SocialNotificationsRoute: SocialNotificationsRoute,

@@ -30,11 +30,13 @@ type Prefs = {
   coach_idle_enabled: boolean;
   coach_weekly_enabled: boolean;
   coach_injury_enabled: boolean;
+  admin_signups_enabled: boolean;
 };
 const DEFAULTS: Prefs = {
   timezone: DEFAULT_TZ, quiet_start: "22:00", quiet_end: "08:00",
   round_enabled: true, challenges_enabled: true, comments_enabled: true, plan_enabled: true,
   coach_prs_enabled: true, coach_idle_enabled: true, coach_weekly_enabled: true, coach_injury_enabled: true,
+  admin_signups_enabled: true,
 };
 type PrefKey = Exclude<keyof Prefs, "timezone" | "quiet_start" | "quiet_end">;
 
@@ -295,6 +297,26 @@ export async function runEventNotifications(now = new Date()) {
           title: "La semana de tus atletas",
           body: [`${trained.length} de ${athletes.length} han entrenado`, prs?.length ? `${prs.length} récords` : null, none.length ? `sin entrenar: ${none.map(name).join(", ")}` : null].filter(Boolean).join(" · "),
           url: "/entrenador", tag: "coach-weekly",
+        });
+      }
+    }
+  });
+
+  // 8) Administrador: cada persona nueva que se une a la app
+  await safe("altas", async () => {
+    const { data: admins } = await db().from("video_admins").select("profile_id");
+    const adminIds: string[] = (admins ?? []).map((a: any) => a.profile_id);
+    if (!adminIds.length) return;
+    const { data: fresh } = await db().from("profiles").select("id, name, created_at").gte("created_at", since);
+    if (!fresh?.length) return;
+    const { count } = await db().from("profiles").select("id", { count: "exact", head: true });
+    for (const p of fresh) {
+      for (const admin of adminIds) {
+        if (admin === p.id) continue;
+        await send(admin, "admin_signups_enabled", "admin_signup", p.id, {
+          title: `${p.name} se ha unido a RM OR DIE`,
+          body: count ? `Ya sois ${count}. Toca para verlo en tu panel.` : "Toca para verlo en tu panel.",
+          url: "/admin/usuarios", tag: "admin-signup",
         });
       }
     }

@@ -7,6 +7,7 @@
 // - Tras comprobar el PIN con conexión se guarda una huella local para poder
 //   desbloquear también sin conexión.
 import { supabase } from "@/integrations/supabase/client";
+import { clearAllBiometric } from "@/lib/biometric";
 
 const UNLOCK_KEY = "malitos_unlocked_v3";
 const USER_KEY = "malitos_current_user_v1";
@@ -64,6 +65,7 @@ export async function matchesLocalPin(profileId: string, pin: string): Promise<b
 /** Cierra la sesión en este dispositivo y olvida el perfil y el candado. */
 export async function signOut() {
   setUnlocked(false);
+  clearAllBiometric();
   setCurrentUserId(null);
   safeStorage("local")?.removeItem(LOCAL_PIN_KEY);
   try {

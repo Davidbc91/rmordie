@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { PasswordSettings } from "@/components/settings/PasswordSettings";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
+import { BiometricSettings } from "@/components/settings/BiometricSettings";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Ajustes — RM OR DIE" }] }),
@@ -118,6 +119,8 @@ function SettingsPage() {
       <AppearanceSettings />
 
       <NotificationSettings />
+
+      <BiometricSettings />
 
       <PasswordSettings />
 

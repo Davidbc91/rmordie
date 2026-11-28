@@ -1,6 +1,7 @@
 import logoAsset from "@/assets/rmordie-logo.jpg.asset.json";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { ChevronLeft, Mail, User, UserPlus } from "lucide-react";
+import { ChevronLeft, Mail, ScanFace, User, UserPlus } from "lucide-react";
+import { biometricLabel, isBiometricAvailable, isBiometricEnabled, unlockWithBiometric } from "@/lib/biometric";
 import { authErrorMessage, sendLoginEmail, signInWithPassword, signUpWithPassword, useSession, verifyLoginCode } from "@/lib/auth";
 import {
   getCurrentUserId,
@@ -612,6 +613,59 @@ function PinLock({ profileId, onUnlocked }: { profileId: string; onUnlocked: () 
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Face ID: "pin" = teclado normal; "ask" = esperando cara; "fail" = no reconoció.
+  const [bio, setBio] = useState<"pin" | "ask" | "scan" | "fail">(() => (isBiometricEnabled(profileId) ? "ask" : "pin"));
+  const label = biometricLabel();
+
+  const tryBiometric = useCallback(async () => {
+    setBio("scan");
+    setError(null);
+    const r = await unlockWithBiometric(profileId);
+    if (r === "ok") onUnlocked();
+    else if (r === "cancelled") setBio("ask");
+    else setBio(isBiometricEnabled(profileId) ? "fail" : "pin");
+  }, [profileId, onUnlocked]);
+
+  // Al abrir, salta solo. Si el sistema pide un toque antes, queda el botón.
+  useEffect(() => {
+    if (bio !== "ask") return;
+    let cancelled = false;
+    void isBiometricAvailable().then((ok) => {
+      if (cancelled) return;
+      if (ok) void tryBiometric();
+      else setBio("pin");
+    });
+    return () => { cancelled = true; };
+    // Solo al montar
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (bio !== "pin") {
+    const failed = bio === "fail";
+    return (
+      <div className="space-y-4 text-center">
+        <button
+          type="button"
+          onClick={() => void tryBiometric()}
+          disabled={bio === "scan"}
+          aria-label={`Entrar con ${label}`}
+          className={`mx-auto grid h-24 w-24 place-items-center rounded-[30px] border transition ${bio === "scan" ? "animate-pulse" : ""}`}
+          style={{ background: "var(--card)", borderColor: failed ? "var(--destructive)" : "var(--border)" }}
+        >
+          <ScanFace className="h-12 w-12" strokeWidth={1.6} style={{ color: failed ? "var(--destructive)" : "#C6FF00" }} />
+        </button>
+        <p role={failed ? "alert" : undefined} className={`min-h-5 text-sm font-semibold ${failed ? "text-destructive" : "text-muted-foreground"}`}>
+          {bio === "scan" ? "Mira al móvil…" : failed ? `${label} no te ha reconocido` : `Toca para entrar con ${label}`}
+        </p>
+        <button type="button" onClick={() => void tryBiometric()} disabled={bio === "scan"} className={primaryCls} style={{ color: "var(--gold-foreground)" }}>
+          {failed ? "Intentar de nuevo" : `Usar ${label}`}
+        </button>
+        <button type="button" onClick={() => setBio("pin")} className={secondaryCls}>
+          Usar PIN
+        </button>
+      </div>
+    );
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -652,6 +706,11 @@ function PinLock({ profileId, onUnlocked }: { profileId: string; onUnlocked: () 
       <button type="submit" disabled={busy || pin.length < 4} className={primaryCls} style={{ color: "var(--gold-foreground)" }}>
         {busy ? "Comprobando…" : "Entrar"}
       </button>
+      {isBiometricEnabled(profileId) && (
+        <button type="button" onClick={() => void tryBiometric()} className={secondaryCls}>
+          <ScanFace className="h-4 w-4" /> Usar {label}
+        </button>
+      )}
       <button
         type="button"
         onClick={async () => { await signOut(); window.location.reload(); }}
